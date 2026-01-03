@@ -1,0 +1,3 @@
+EXIT 0
+OUT "A"
+REG R0 0

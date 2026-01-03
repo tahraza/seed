@@ -1,0 +1,5 @@
+.text
+.global _start
+_start:
+  ADD R0, R0, #5000
+  HALT

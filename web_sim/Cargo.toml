@@ -1,0 +1,15 @@
+[package]
+name = "web_sim"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+hdl_core = { path = "../hdl_core" }
+a32_core = { path = "../a32_core" }
+wasm-bindgen = { version = "0.2", optional = true }
+
+[features]
+wasm = ["wasm-bindgen"]

@@ -1,0 +1,7 @@
+[package]
+name = "hdl_cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hdl_core = { path = "../hdl_core" }

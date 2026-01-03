@@ -1,0 +1,7 @@
+.text
+.global _start
+_start:
+  LDR R1, =0xFFFF0000
+  MOV R0, #65
+  STRB R0, [R1]
+  HALT

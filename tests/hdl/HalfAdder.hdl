@@ -1,0 +1,14 @@
+entity HalfAdder is
+  port(
+    a : in bit;
+    b : in bit;
+    sum : out bit;
+    carry : out bit
+  );
+end entity;
+
+architecture rtl of HalfAdder is
+begin
+  sum <= a xor b;
+  carry <= a and b;
+end architecture;

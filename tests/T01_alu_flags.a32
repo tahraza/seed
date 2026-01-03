@@ -1,0 +1,8 @@
+.text
+.global _start
+_start:
+  MOV R0, #1
+  MOV R1, #2
+  ADD.S R2, R0, R1
+  SUB.S R3, R2, #3
+  HALT

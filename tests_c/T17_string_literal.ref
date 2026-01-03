@@ -1,0 +1,3 @@
+EXIT 0
+OUT "Hi"
+REG R0 0

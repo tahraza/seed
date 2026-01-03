@@ -1,0 +1,3 @@
+LINKER tests/T17_custom_layout.lds
+EXIT 0
+REG R0 0x12345678

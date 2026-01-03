@@ -1,0 +1,8 @@
+.text
+.global _start
+_start:
+  B far
+  .pool
+  .space 17000000
+far:
+  HALT

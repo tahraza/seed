@@ -1,0 +1,65 @@
+entity PrimTest is
+  port(
+    clk : in bit;
+    a : in bits(3 downto 0);
+    b : in bits(3 downto 0);
+    sel : in bit;
+    we : in bit;
+    addr : in bits(1 downto 0);
+    y_and : out bits(3 downto 0);
+    y_not : out bits(3 downto 0);
+    y_mux : out bits(3 downto 0);
+    q : out bits(3 downto 0);
+    ram_out : out bits(3 downto 0)
+  );
+end entity;
+
+architecture rtl of PrimTest is
+  component and2
+    port(
+      a : in bits(3 downto 0);
+      b : in bits(3 downto 0);
+      y : out bits(3 downto 0)
+    );
+  end component;
+
+  component not1
+    port(
+      a : in bits(3 downto 0);
+      y : out bits(3 downto 0)
+    );
+  end component;
+
+  component mux2
+    port(
+      a : in bits(3 downto 0);
+      b : in bits(3 downto 0);
+      sel : in bit;
+      y : out bits(3 downto 0)
+    );
+  end component;
+
+  component dff
+    port(
+      clk : in bit;
+      d : in bits(3 downto 0);
+      q : out bits(3 downto 0)
+    );
+  end component;
+
+  component ram
+    port(
+      clk : in bit;
+      we : in bit;
+      addr : in bits(1 downto 0);
+      din : in bits(3 downto 0);
+      dout : out bits(3 downto 0)
+    );
+  end component;
+begin
+  u_and: and2 port map (a => a, b => b, y => y_and);
+  u_not: not1 port map (a => a, y => y_not);
+  u_mux: mux2 port map (a => a, b => b, sel => sel, y => y_mux);
+  u_dff: dff port map (clk => clk, d => a, q => q);
+  u_ram: ram port map (clk => clk, we => we, addr => addr, din => a, dout => ram_out);
+end architecture;

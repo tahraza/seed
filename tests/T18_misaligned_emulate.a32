@@ -1,0 +1,8 @@
+.text
+.global _start
+_start:
+  LDR R0, =0x00020001
+  LDR R1, =0x00020000
+  STR R1, [R1]
+  LDR R2, [R0]
+  HALT

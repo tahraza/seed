@@ -1,0 +1,8 @@
+.text
+.global _start
+_start:
+  LDR R0, =0x12345678
+  HALT
+
+.data
+val: .word 0x12345678

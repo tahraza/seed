@@ -1,0 +1,11 @@
+.text
+.global _start
+_start:
+  LDR R0, =0x00020000
+  MOV R1, #0x12
+  STRB R1, [R0]
+  LDRB R2, [R0]
+  MOV R3, #0x1234
+  STR R3, [R0, #4]
+  LDR R4, [R0, #4]
+  HALT

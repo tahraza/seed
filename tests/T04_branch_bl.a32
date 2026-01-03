@@ -1,0 +1,12 @@
+.text
+.global _start
+_start:
+  MOV R0, #7
+  MOV R1, #5
+  BL sum
+  MOV R2, R0
+  HALT
+
+sum:
+  ADD R0, R0, R1
+  MOV PC, LR

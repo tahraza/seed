@@ -1,0 +1,10 @@
+.text
+.global _start
+_start:
+  MOV R0, #1
+  MOV R1, #10
+  CMP R0, #1
+  ADD.S.EQ R2, R1, #5
+  CMP R0, #2
+  ADD.S.EQ R2, R2, #1
+  HALT

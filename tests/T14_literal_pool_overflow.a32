@@ -1,0 +1,8 @@
+.text
+.global _start
+_start:
+  LDR R0, =0x11111111
+  B far
+  .space 9000
+far:
+  HALT

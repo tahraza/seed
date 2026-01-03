@@ -1,0 +1,3 @@
+CONFIG ram_size 0x04000000
+LINKER tests/T16_branch_relax.lds
+EXIT 0

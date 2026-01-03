@@ -1,0 +1,6 @@
+[workspace]
+resolver = "2"
+members = [
+  "hdl_core",
+  "hdl_cli", "a32_core", "a32_asm", "web_sim",
+]

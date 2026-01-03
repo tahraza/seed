@@ -1,0 +1,5 @@
+.text
+.global _start
+_start:
+  .word 0xEE000000
+  HALT
