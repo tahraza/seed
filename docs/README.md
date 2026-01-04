@@ -17,6 +17,7 @@ docs/
 ├── 02_assembleur/       # Programmer en assembleur
 ├── 03_compilateur/      # Construire un compilateur
 ├── 04_os/               # Créer un mini-OS
+├── 05_timer_interrupts/ # Timer, interruptions, multitâche
 └── exercices/           # Travaux pratiques
     ├── niveau1_asm/
     ├── niveau2_compilateur/
@@ -49,6 +50,12 @@ docs/
 4. [Drivers](04_os/04_drivers.md)
 5. [Shell](04_os/05_shell.md)
 
+### Semaine 13-14 : Timer, Interruptions, Multitâche
+1. [Timer Hardware](05_timer_interrupts/01_timer.md)
+2. [Interruptions](05_timer_interrupts/02_interrupts.md)
+3. [Coroutines](05_timer_interrupts/03_coroutines.md)
+4. [Scheduler Préemptif](05_timer_interrupts/04_scheduler_preemptif.md)
+
 ## 🎮 Démos
 
 Des programmes d'exemple sont disponibles dans `demos/` :
@@ -60,6 +67,8 @@ Des programmes d'exemple sont disponibles dans `demos/` :
 | [graphics](../demos/03_graphics/) | Dessins graphiques | Framebuffer, algorithmes |
 | [snake](../demos/04_snake/) | Jeu Snake | Game loop, clavier |
 | [shell](../demos/05_shell/) | Mini shell | Parsing, REPL |
+| [coroutines](../demos/06_coroutines/) | Multitâche coopératif | Scheduler, yield |
+| [scheduler](../demos/07_scheduler/) | Timer et interruptions | MMIO, polling |
 
 ## 📝 Exercices
 

@@ -7,6 +7,18 @@ const MMIO_PUTC: u32 = 0xFFFF_0000;
 const MMIO_GETC: u32 = 0xFFFF_0004;
 const MMIO_EXIT: u32 = 0xFFFF_0010;
 
+// Timer MMIO registers
+const TIMER_VALUE: u32 = 0xFFFF_0100;   // Current value (counts down each step)
+const TIMER_RELOAD: u32 = 0xFFFF_0104;  // Reload value on underflow
+const TIMER_CTRL: u32 = 0xFFFF_0108;    // Control: bit0=enable, bit1=int_enable, bit2=auto_reload
+const TIMER_STATUS: u32 = 0xFFFF_010C;  // Status: bit0=interrupt_pending (write 1 to clear)
+
+// Interrupt MMIO registers
+const INT_ENABLE: u32 = 0xFFFF_0200;    // Global interrupt enable
+const INT_PENDING: u32 = 0xFFFF_0204;   // Pending interrupts (read-only, bit0=timer)
+const INT_HANDLER: u32 = 0xFFFF_0208;   // Interrupt handler address
+const INT_SAVED_PC: u32 = 0xFFFF_020C;  // Saved PC when interrupt occurs
+
 // Screen: 320x240 pixels, 1 bit per pixel (black/white)
 // Memory-mapped framebuffer
 pub const SCREEN_WIDTH: u32 = 320;
@@ -144,6 +156,17 @@ pub struct Machine {
     screen: Vec<u8>,
     screen_dirty: bool,
     keyboard: u32,
+    // Timer state
+    timer_value: u32,
+    timer_reload: u32,
+    timer_ctrl: u32,      // bit0=enable, bit1=int_enable, bit2=auto_reload
+    timer_status: u32,    // bit0=interrupt_pending
+    // Interrupt state
+    int_enable: u32,      // Global interrupt enable
+    int_pending: u32,     // Pending interrupts (bit0=timer)
+    int_handler: u32,     // Handler address
+    int_saved_pc: u32,    // Saved PC
+    int_in_handler: bool, // Currently in interrupt handler
 }
 
 impl Machine {
@@ -169,6 +192,17 @@ impl Machine {
             screen: vec![0u8; SCREEN_SIZE as usize],
             screen_dirty: false,
             keyboard: 0,
+            // Timer
+            timer_value: 0,
+            timer_reload: 0,
+            timer_ctrl: 0,
+            timer_status: 0,
+            // Interrupts
+            int_enable: 0,
+            int_pending: 0,
+            int_handler: 0,
+            int_saved_pc: 0,
+            int_in_handler: false,
         }
     }
 
@@ -232,6 +266,16 @@ impl Machine {
         self.screen.fill(0);
         self.screen_dirty = false;
         self.keyboard = 0;
+        // Reset timer and interrupts
+        self.timer_value = 0;
+        self.timer_reload = 0;
+        self.timer_ctrl = 0;
+        self.timer_status = 0;
+        self.int_enable = 0;
+        self.int_pending = 0;
+        self.int_handler = 0;
+        self.int_saved_pc = 0;
+        self.int_in_handler = false;
         Ok(())
     }
 
@@ -316,6 +360,108 @@ impl Machine {
     /// Get the currently pressed key
     pub fn get_key(&self) -> u32 {
         self.keyboard
+    }
+
+    // ========== Timer ==========
+
+    /// Tick the timer (called each step)
+    fn tick_timer(&mut self) {
+        // Check if timer is enabled (bit 0)
+        if (self.timer_ctrl & 1) == 0 {
+            return;
+        }
+
+        if self.timer_value > 0 {
+            self.timer_value -= 1;
+        }
+
+        // Check for underflow
+        if self.timer_value == 0 {
+            // Set interrupt pending in timer status (bit 0)
+            self.timer_status |= 1;
+
+            // If interrupt enabled (bit 1), set pending interrupt
+            if (self.timer_ctrl & 2) != 0 {
+                self.int_pending |= 1; // Timer interrupt is bit 0
+            }
+
+            // Auto-reload if enabled (bit 2)
+            if (self.timer_ctrl & 4) != 0 {
+                self.timer_value = self.timer_reload;
+            }
+        }
+    }
+
+    /// Get timer value
+    pub fn timer_value(&self) -> u32 {
+        self.timer_value
+    }
+
+    /// Check if timer interrupt is pending
+    pub fn timer_interrupt_pending(&self) -> bool {
+        (self.timer_status & 1) != 0
+    }
+
+    // ========== Interrupts ==========
+
+    /// Check and handle pending interrupts
+    /// Returns true if an interrupt was taken
+    fn check_interrupts(&mut self) -> bool {
+        // Don't interrupt if:
+        // - Already in handler
+        // - Global interrupts disabled
+        // - No pending interrupts
+        if self.int_in_handler {
+            return false;
+        }
+        if self.int_enable == 0 {
+            return false;
+        }
+        if self.int_pending == 0 {
+            return false;
+        }
+        if self.int_handler == 0 {
+            return false;
+        }
+
+        // Save current PC
+        self.int_saved_pc = self.cpu.pc();
+
+        // Enter interrupt handler
+        self.int_in_handler = true;
+
+        // Jump to handler
+        self.cpu.set_pc(self.int_handler);
+
+        true
+    }
+
+    /// Return from interrupt (called by SVC RETI)
+    fn return_from_interrupt(&mut self) {
+        if !self.int_in_handler {
+            return;
+        }
+
+        // Restore PC
+        self.cpu.set_pc(self.int_saved_pc);
+
+        // Clear in-handler flag
+        self.int_in_handler = false;
+    }
+
+    /// Check if currently in interrupt handler
+    pub fn in_interrupt(&self) -> bool {
+        self.int_in_handler
+    }
+
+    /// Get pending interrupts
+    pub fn interrupts_pending(&self) -> u32 {
+        self.int_pending
+    }
+
+    /// Acknowledge interrupt (clear pending bit)
+    pub fn ack_interrupt(&mut self, bit: u32) {
+        self.int_pending &= !(1 << bit);
     }
 
     // ========== Debugger: Breakpoints ==========
@@ -548,6 +694,17 @@ impl Machine {
                 StopReason::Trap(trap) => StepOutcome::Trap(trap),
             };
         }
+
+        // Tick timer
+        self.tick_timer();
+
+        // Check for pending interrupts before executing instruction
+        if self.check_interrupts() {
+            // Interrupt was taken, PC has been updated
+            // Don't count this as a step, just continue
+            return StepOutcome::Continue;
+        }
+
         let pc = self.cpu.pc();
         let instr = match self.fetch32(pc) {
             Ok(word) => word,
@@ -857,6 +1014,12 @@ impl Machine {
                 self.cpu.set_pc(pc.wrapping_add(4));
                 StepOutcome::Continue
             }
+            // RETI - Return from interrupt
+            0x20 => {
+                self.return_from_interrupt();
+                // PC already set by return_from_interrupt
+                StepOutcome::Continue
+            }
             _ => self.handle_illegal(pc, instr),
         }
     }
@@ -919,6 +1082,16 @@ impl Machine {
         if is_mmio_addr(addr) {
             let value = match addr {
                 MMIO_GETC => self.input.pop_front().map(u32::from).unwrap_or(0xFFFF_FFFF),
+                // Timer registers
+                TIMER_VALUE => self.timer_value,
+                TIMER_RELOAD => self.timer_reload,
+                TIMER_CTRL => self.timer_ctrl,
+                TIMER_STATUS => self.timer_status,
+                // Interrupt registers
+                INT_ENABLE => self.int_enable,
+                INT_PENDING => self.int_pending,
+                INT_HANDLER => self.int_handler,
+                INT_SAVED_PC => self.int_saved_pc,
                 _ => return Err(Trap::mem_fault(addr)),
             };
             return Ok(value);
@@ -1001,6 +1174,42 @@ impl Machine {
             match addr {
                 MMIO_PUTC => {
                     self.output.push((value & 0xFF) as u8);
+                    return Ok(());
+                }
+                // Timer registers
+                TIMER_VALUE => {
+                    self.timer_value = value;
+                    return Ok(());
+                }
+                TIMER_RELOAD => {
+                    self.timer_reload = value;
+                    return Ok(());
+                }
+                TIMER_CTRL => {
+                    self.timer_ctrl = value;
+                    return Ok(());
+                }
+                TIMER_STATUS => {
+                    // Writing 1 clears the corresponding bit
+                    self.timer_status &= !value;
+                    return Ok(());
+                }
+                // Interrupt registers
+                INT_ENABLE => {
+                    self.int_enable = value;
+                    return Ok(());
+                }
+                INT_PENDING => {
+                    // Writing 1 clears the corresponding bit (acknowledge)
+                    self.int_pending &= !value;
+                    return Ok(());
+                }
+                INT_HANDLER => {
+                    self.int_handler = value;
+                    return Ok(());
+                }
+                INT_SAVED_PC => {
+                    self.int_saved_pc = value;
                     return Ok(());
                 }
                 _ => return Err(Trap::mem_fault(addr)),
@@ -1144,7 +1353,12 @@ fn is_ram_addr(addr: u32, ram_size: u32) -> bool {
 }
 
 fn is_mmio_addr(addr: u32) -> bool {
-    matches!(addr, MMIO_PUTC | MMIO_GETC | MMIO_EXIT)
+    matches!(
+        addr,
+        MMIO_PUTC | MMIO_GETC | MMIO_EXIT |
+        TIMER_VALUE | TIMER_RELOAD | TIMER_CTRL | TIMER_STATUS |
+        INT_ENABLE | INT_PENDING | INT_HANDLER | INT_SAVED_PC
+    )
 }
 
 struct LoadedSegment {

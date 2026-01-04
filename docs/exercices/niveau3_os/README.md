@@ -162,6 +162,97 @@ $ calc $x + $y
 
 ---
 
+## Exercice 3.11 : Timer Hardware
+
+**Objectif** : Utiliser le timer MMIO.
+
+```c
+void timer_init(int interval);
+void timer_wait(void);        // Polling
+int timer_elapsed(void);      // Temps écoulé
+```
+
+**Registres** :
+- `0xFFFF0100` : TIMER_VALUE
+- `0xFFFF0104` : TIMER_RELOAD
+- `0xFFFF0108` : TIMER_CTRL
+- `0xFFFF010C` : TIMER_STATUS
+
+**Test** : Créer un chronomètre qui affiche le temps toutes les secondes.
+
+**Demo** : `demos/07_scheduler/scheduler.c`
+
+---
+
+## Exercice 3.12 : Interruptions
+
+**Objectif** : Configurer les interruptions timer.
+
+```c
+void irq_init(void (*handler)(void));
+void irq_enable(void);
+void irq_disable(void);
+```
+
+**Registres** :
+- `0xFFFF0200` : INT_ENABLE
+- `0xFFFF0204` : INT_PENDING
+- `0xFFFF0208` : INT_HANDLER
+
+**Test** : Incrémenter un compteur global via interruption.
+
+---
+
+## Exercice 3.13 : Coroutines coopératives
+
+**Objectif** : Implémenter un scheduler coopératif.
+
+```c
+void task_create(void (*func)(void));
+void task_yield(void);
+void scheduler_run(void);
+```
+
+**Fonctionnalités** :
+- 4 tâches maximum
+- Round-robin
+- Terminaison propre
+
+**Demo** : `demos/06_coroutines/coroutines.c`
+
+---
+
+## Exercice 3.14 : Scheduler préemptif
+
+**Objectif** : Combiner timer + interruptions + tasks.
+
+```c
+struct Task {
+    int state;
+    int counter;
+};
+
+void preemptive_scheduler_init(int quantum);
+void task_switch(void);
+```
+
+**Bonus** : Sauvegarder/restaurer le contexte complet.
+
+---
+
+## Exercice 3.15 : Mutex simple
+
+**Objectif** : Protéger les sections critiques.
+
+```c
+void mutex_lock(int *mutex);
+void mutex_unlock(int *mutex);
+```
+
+**Test** : Deux tâches incrémentent un compteur partagé sans race condition.
+
+---
+
 ## Projet final : Mini-OS
 
 **Objectif** : Créer un OS complet avec :

@@ -1649,7 +1649,70 @@ Initial state:
 - All other registers are zeroed
 - Flags N/Z/C/V are cleared
 
-### 24.8 Complete memory map
+### 24.8 Timer (hardware timer)
+
+The simulator provides a countdown timer with interrupt capability.
+
+MMIO registers:
+```
+Address      Size  Name          Description
+─────────────────────────────────────────────────────────
+0xFFFF0100   4 B   TIMER_VALUE   Current value (counts down each step)
+0xFFFF0104   4 B   TIMER_RELOAD  Reload value on underflow
+0xFFFF0108   4 B   TIMER_CTRL    Control register
+0xFFFF010C   4 B   TIMER_STATUS  Status register
+```
+
+TIMER_CTRL bits:
+- Bit 0: Enable (1 = timer running)
+- Bit 1: Interrupt enable (1 = trigger interrupt on underflow)
+- Bit 2: Auto-reload (1 = reload TIMER_VALUE from TIMER_RELOAD on underflow)
+
+TIMER_STATUS bits:
+- Bit 0: Interrupt pending (write 1 to clear)
+
+Timer behavior:
+- When enabled, TIMER_VALUE decrements by 1 each CPU step
+- When TIMER_VALUE reaches 0:
+  - TIMER_STATUS bit 0 is set
+  - If interrupt enabled, INT_PENDING bit 0 is set
+  - If auto-reload enabled, TIMER_VALUE is reloaded from TIMER_RELOAD
+
+### 24.9 Interrupts (hardware interrupt system)
+
+The simulator provides a simple interrupt mechanism.
+
+MMIO registers:
+```
+Address      Size  Name          Description
+─────────────────────────────────────────────────────────
+0xFFFF0200   4 B   INT_ENABLE    Global interrupt enable (0 = disabled)
+0xFFFF0204   4 B   INT_PENDING   Pending interrupts (read-only, write 1 to clear)
+0xFFFF0208   4 B   INT_HANDLER   Interrupt handler address
+0xFFFF020C   4 B   INT_SAVED_PC  Saved PC when interrupt occurs
+```
+
+INT_PENDING bits:
+- Bit 0: Timer interrupt pending
+
+Interrupt behavior:
+- Before each instruction, if all conditions are met:
+  - INT_ENABLE != 0
+  - INT_PENDING != 0
+  - INT_HANDLER != 0
+  - Not already in interrupt handler
+- Then:
+  - INT_SAVED_PC = current PC
+  - PC = INT_HANDLER
+  - Enter interrupt handler mode
+
+Return from interrupt:
+- `SVC #0x20` (RETI) restores PC from INT_SAVED_PC and exits handler mode
+
+SVC services (updated):
+- `#0x20` `RETI`: Return from interrupt handler
+
+### 24.10 Complete memory map
 
 ```
 Address Range           Size      Description
@@ -1660,6 +1723,14 @@ Address Range           Size      Description
 0xFFFF0000              4 B       PUTC (write byte)
 0xFFFF0004              4 B       GETC (read byte)
 0xFFFF0010              4 B       EXIT (write exit code)
+0xFFFF0100              4 B       TIMER_VALUE
+0xFFFF0104              4 B       TIMER_RELOAD
+0xFFFF0108              4 B       TIMER_CTRL
+0xFFFF010C              4 B       TIMER_STATUS
+0xFFFF0200              4 B       INT_ENABLE
+0xFFFF0204              4 B       INT_PENDING
+0xFFFF0208              4 B       INT_HANDLER
+0xFFFF020C              4 B       INT_SAVED_PC
 ```
 
 Notes:
