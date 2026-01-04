@@ -1,0 +1,8 @@
+EXIT 0
+OUT "=== SNAKE Demo ===\n"
+OUT "Demonstration du jeu Snake\n"
+OUT "\n"
+OUT "Simulation terminee!\n"
+OUT "Mouvements effectues: 10\n"
+OUT "Score: 10\n"
+OUT "Longueur serpent: 4\n"

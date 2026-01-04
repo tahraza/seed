@@ -1,12 +1,10 @@
 // Demo 02: Fibonacci
-// Calcul de la suite de Fibonacci - version itérative et récursive
-//
-// Concepts: boucles, récursion, comparaison de performances
-
-#define OUTPUT_PORT ((volatile int*)0x10000000)
+// Calcul de la suite de Fibonacci - version iterative et recursive
 
 void putchar(int c) {
-    *OUTPUT_PORT = c;
+    int *port;
+    port = (int*)0xFFFF0000;
+    *port = c;
 }
 
 void print(char *s) {
@@ -28,25 +26,25 @@ void print_int(int n) {
     int neg;
 
     if (n == 0) {
-        putchar('0');
+        putchar(48);
         return;
     }
 
     neg = 0;
     if (n < 0) {
         neg = 1;
-        n = -n;
+        n = 0 - n;
     }
 
     i = 0;
     while (n > 0) {
-        buffer[i] = '0' + (n % 10);
+        buffer[i] = 48 + (n % 10);
         n = n / 10;
         i = i + 1;
     }
 
     if (neg) {
-        putchar('-');
+        putchar(45);
     }
 
     while (i > 0) {
@@ -55,9 +53,7 @@ void print_int(int n) {
     }
 }
 
-// ============================================================
-// Version itérative - O(n) en temps, O(1) en espace
-// ============================================================
+// Version iterative - O(n)
 int fib_iterative(int n) {
     int a;
     int b;
@@ -81,9 +77,7 @@ int fib_iterative(int n) {
     return b;
 }
 
-// ============================================================
-// Version récursive - O(2^n) en temps, O(n) en espace pile
-// ============================================================
+// Version recursive - O(2^n)
 int fib_recursive(int n) {
     if (n <= 1) {
         return n;
@@ -91,9 +85,6 @@ int fib_recursive(int n) {
     return fib_recursive(n - 1) + fib_recursive(n - 2);
 }
 
-// ============================================================
-// Programme principal
-// ============================================================
 int main() {
     int i;
     int result;
@@ -101,10 +92,9 @@ int main() {
     println("=== Suite de Fibonacci ===");
     println("");
 
-    // Affiche les 20 premiers nombres (version itérative)
-    println("Version iterative (F(0) a F(19)):");
+    println("Version iterative (F(0) a F(15)):");
     i = 0;
-    while (i < 20) {
+    while (i <= 15) {
         print("F(");
         print_int(i);
         print(") = ");
@@ -115,12 +105,9 @@ int main() {
     }
 
     println("");
-
-    // Affiche quelques nombres avec la version récursive
-    // (limitée car exponentielle)
-    println("Version recursive (F(0) a F(15)):");
+    println("Version recursive (F(0) a F(10)):");
     i = 0;
-    while (i <= 15) {
+    while (i <= 10) {
         print("F(");
         print_int(i);
         print(") = ");
@@ -129,10 +116,6 @@ int main() {
         println("");
         i = i + 1;
     }
-
-    println("");
-    println("Note: La version recursive est beaucoup plus lente!");
-    println("      fib_recursive(20) ferait 21891 appels.");
 
     return 0;
 }

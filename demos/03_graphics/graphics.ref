@@ -1,0 +1,4 @@
+EXIT 0
+OUT "=== Demo Graphique ===\n"
+OUT "Dessin sur ecran 320x240...\n"
+OUT "Termine!\n"

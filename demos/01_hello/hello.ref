@@ -1,0 +1,8 @@
+EXIT 0
+OUT "Hello, World!\n"
+OUT "Bienvenue dans A32-Lite!\n"
+OUT "\n"
+OUT "Ce programme demontre:\n"
+OUT "  - L'affichage de texte\n"
+OUT "  - Les chaines de caracteres\n"
+OUT "  - Les fonctions\n"

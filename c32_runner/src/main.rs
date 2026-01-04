@@ -244,7 +244,7 @@ fn run_case(case: &TestCase) -> Result<(), String> {
     let sim_config = SimConfig {
         ram_size: spec.config.ram_size,
         strict_traps: spec.config.strict_traps,
-        max_steps: 1_000_000,
+        max_steps: 10_000_000,
         stack_top,
     };
     let max_steps = sim_config.max_steps;

@@ -1,17 +1,15 @@
 // Demo 01: Hello World
 // Le programme le plus simple - affiche un message
-//
-// Concepts: sortie texte, chaînes de caractères, point d'entrée
 
-// Adresse du port de sortie texte (memory-mapped I/O)
-#define OUTPUT_PORT ((volatile int*)0x10000000)
-
-// Fonction pour afficher un caractère
+// Fonction pour afficher un caractere
+// Port de sortie MMIO a 0xFFFF0000
 void putchar(int c) {
-    *OUTPUT_PORT = c;
+    int *port;
+    port = (int*)0xFFFF0000;
+    *port = c;
 }
 
-// Fonction pour afficher une chaîne
+// Fonction pour afficher une chaine
 void print(char *s) {
     while (*s) {
         putchar(*s);
@@ -19,13 +17,13 @@ void print(char *s) {
     }
 }
 
-// Fonction pour afficher une chaîne avec retour à la ligne
+// Fonction pour afficher une chaine avec retour a la ligne
 void println(char *s) {
     print(s);
-    putchar(10);  // 10 = '\n'
+    putchar(10);
 }
 
-// Point d'entrée du programme
+// Point d'entree du programme
 int main() {
     println("Hello, World!");
     println("Bienvenue dans A32-Lite!");
