@@ -1,0 +1,263 @@
+entity Alu32 is
+  port(
+    a : in bits(31 downto 0);
+    b : in bits(31 downto 0);
+    op : in bits(3 downto 0);
+    y : out bits(31 downto 0);
+    n : out bit;
+    z : out bit;
+    c : out bit;
+    v : out bit
+  );
+end entity;
+
+architecture rtl of Alu32 is
+  component mux2
+    port(
+      a : in bits(31 downto 0);
+      b : in bits(31 downto 0);
+      sel : in bit;
+      y : out bits(31 downto 0)
+    );
+  end component;
+
+  component Mux2
+    port(
+      a : in bit;
+      b : in bit;
+      sel : in bit;
+      y : out bit
+    );
+  end component;
+
+  signal op0 : bit;
+  signal op1 : bit;
+  signal op2 : bit;
+  signal op3 : bit;
+
+  signal sum_ext : bits(32 downto 0);
+  signal diff_ext : bits(32 downto 0);
+
+  signal res0 : bits(31 downto 0);
+  signal res1 : bits(31 downto 0);
+  signal res2 : bits(31 downto 0);
+  signal res3 : bits(31 downto 0);
+  signal res4 : bits(31 downto 0);
+  signal res5 : bits(31 downto 0);
+  signal res6 : bits(31 downto 0);
+  signal res7 : bits(31 downto 0);
+  signal res8 : bits(31 downto 0);
+  signal res9 : bits(31 downto 0);
+  signal res10 : bits(31 downto 0);
+  signal res11 : bits(31 downto 0);
+  signal res12 : bits(31 downto 0);
+  signal res13 : bits(31 downto 0);
+  signal res14 : bits(31 downto 0);
+  signal res15 : bits(31 downto 0);
+
+  signal m00 : bits(31 downto 0);
+  signal m01 : bits(31 downto 0);
+  signal m02 : bits(31 downto 0);
+  signal m03 : bits(31 downto 0);
+  signal m04 : bits(31 downto 0);
+  signal m05 : bits(31 downto 0);
+  signal m06 : bits(31 downto 0);
+  signal m07 : bits(31 downto 0);
+  signal m10 : bits(31 downto 0);
+  signal m11 : bits(31 downto 0);
+  signal m12 : bits(31 downto 0);
+  signal m13 : bits(31 downto 0);
+  signal m20 : bits(31 downto 0);
+  signal m21 : bits(31 downto 0);
+  signal m30 : bits(31 downto 0);
+
+  signal c0 : bit;
+  signal c1 : bit;
+  signal c2 : bit;
+  signal c3 : bit;
+  signal c4 : bit;
+  signal c5 : bit;
+  signal c6 : bit;
+  signal c7 : bit;
+  signal c8 : bit;
+  signal c9 : bit;
+  signal c10 : bit;
+  signal c11 : bit;
+  signal c12 : bit;
+  signal c13 : bit;
+  signal c14 : bit;
+  signal c15 : bit;
+
+  signal v0 : bit;
+  signal v1 : bit;
+  signal v2 : bit;
+  signal v3 : bit;
+  signal v4 : bit;
+  signal v5 : bit;
+  signal v6 : bit;
+  signal v7 : bit;
+  signal v8 : bit;
+  signal v9 : bit;
+  signal v10 : bit;
+  signal v11 : bit;
+  signal v12 : bit;
+  signal v13 : bit;
+  signal v14 : bit;
+  signal v15 : bit;
+
+  signal cm00 : bit;
+  signal cm01 : bit;
+  signal cm02 : bit;
+  signal cm03 : bit;
+  signal cm04 : bit;
+  signal cm05 : bit;
+  signal cm06 : bit;
+  signal cm07 : bit;
+  signal cm10 : bit;
+  signal cm11 : bit;
+  signal cm12 : bit;
+  signal cm13 : bit;
+  signal cm20 : bit;
+  signal cm21 : bit;
+  signal cm30 : bit;
+
+  signal vm00 : bit;
+  signal vm01 : bit;
+  signal vm02 : bit;
+  signal vm03 : bit;
+  signal vm04 : bit;
+  signal vm05 : bit;
+  signal vm06 : bit;
+  signal vm07 : bit;
+  signal vm10 : bit;
+  signal vm11 : bit;
+  signal vm12 : bit;
+  signal vm13 : bit;
+  signal vm20 : bit;
+  signal vm21 : bit;
+  signal vm30 : bit;
+begin
+  op0 <= op(0);
+  op1 <= op(1);
+  op2 <= op(2);
+  op3 <= op(3);
+
+  sum_ext <= ('0' & a) + ('0' & b);
+  diff_ext <= ('0' & a) - ('0' & b);
+
+  res0 <= a and b;
+  res1 <= a xor b;
+  res2 <= diff_ext(31 downto 0);
+  res3 <= sum_ext(31 downto 0);
+  res4 <= a or b;
+  res5 <= b;
+  res6 <= not b;
+  res7 <= diff_ext(31 downto 0);
+  res8 <= a and b;
+  res9 <= 0;
+  res10 <= 0;
+  res11 <= 0;
+  res12 <= 0;
+  res13 <= 0;
+  res14 <= 0;
+  res15 <= 0;
+
+  c0 <= '0';
+  c1 <= '0';
+  c2 <= not diff_ext(32);
+  c3 <= sum_ext(32);
+  c4 <= '0';
+  c5 <= '0';
+  c6 <= '0';
+  c7 <= not diff_ext(32);
+  c8 <= '0';
+  c9 <= '0';
+  c10 <= '0';
+  c11 <= '0';
+  c12 <= '0';
+  c13 <= '0';
+  c14 <= '0';
+  c15 <= '0';
+
+  v0 <= '0';
+  v1 <= '0';
+  v2 <= (a(31) and (not b(31)) and (not diff_ext(31)))
+        or ((not a(31)) and b(31) and diff_ext(31));
+  v3 <= (a(31) and b(31) and (not sum_ext(31)))
+        or ((not a(31)) and (not b(31)) and sum_ext(31));
+  v4 <= '0';
+  v5 <= '0';
+  v6 <= '0';
+  v7 <= v2;
+  v8 <= '0';
+  v9 <= '0';
+  v10 <= '0';
+  v11 <= '0';
+  v12 <= '0';
+  v13 <= '0';
+  v14 <= '0';
+  v15 <= '0';
+
+  u_m00: mux2 port map (a => res0, b => res1, sel => op0, y => m00);
+  u_m01: mux2 port map (a => res2, b => res3, sel => op0, y => m01);
+  u_m02: mux2 port map (a => res4, b => res5, sel => op0, y => m02);
+  u_m03: mux2 port map (a => res6, b => res7, sel => op0, y => m03);
+  u_m04: mux2 port map (a => res8, b => res9, sel => op0, y => m04);
+  u_m05: mux2 port map (a => res10, b => res11, sel => op0, y => m05);
+  u_m06: mux2 port map (a => res12, b => res13, sel => op0, y => m06);
+  u_m07: mux2 port map (a => res14, b => res15, sel => op0, y => m07);
+
+  u_m10: mux2 port map (a => m00, b => m01, sel => op1, y => m10);
+  u_m11: mux2 port map (a => m02, b => m03, sel => op1, y => m11);
+  u_m12: mux2 port map (a => m04, b => m05, sel => op1, y => m12);
+  u_m13: mux2 port map (a => m06, b => m07, sel => op1, y => m13);
+
+  u_m20: mux2 port map (a => m10, b => m11, sel => op2, y => m20);
+  u_m21: mux2 port map (a => m12, b => m13, sel => op2, y => m21);
+
+  u_m30: mux2 port map (a => m20, b => m21, sel => op3, y => m30);
+  y <= m30;
+
+  u_cm00: Mux2 port map (a => c0, b => c1, sel => op0, y => cm00);
+  u_cm01: Mux2 port map (a => c2, b => c3, sel => op0, y => cm01);
+  u_cm02: Mux2 port map (a => c4, b => c5, sel => op0, y => cm02);
+  u_cm03: Mux2 port map (a => c6, b => c7, sel => op0, y => cm03);
+  u_cm04: Mux2 port map (a => c8, b => c9, sel => op0, y => cm04);
+  u_cm05: Mux2 port map (a => c10, b => c11, sel => op0, y => cm05);
+  u_cm06: Mux2 port map (a => c12, b => c13, sel => op0, y => cm06);
+  u_cm07: Mux2 port map (a => c14, b => c15, sel => op0, y => cm07);
+
+  u_cm10: Mux2 port map (a => cm00, b => cm01, sel => op1, y => cm10);
+  u_cm11: Mux2 port map (a => cm02, b => cm03, sel => op1, y => cm11);
+  u_cm12: Mux2 port map (a => cm04, b => cm05, sel => op1, y => cm12);
+  u_cm13: Mux2 port map (a => cm06, b => cm07, sel => op1, y => cm13);
+
+  u_cm20: Mux2 port map (a => cm10, b => cm11, sel => op2, y => cm20);
+  u_cm21: Mux2 port map (a => cm12, b => cm13, sel => op2, y => cm21);
+
+  u_cm30: Mux2 port map (a => cm20, b => cm21, sel => op3, y => cm30);
+  c <= cm30;
+
+  u_vm00: Mux2 port map (a => v0, b => v1, sel => op0, y => vm00);
+  u_vm01: Mux2 port map (a => v2, b => v3, sel => op0, y => vm01);
+  u_vm02: Mux2 port map (a => v4, b => v5, sel => op0, y => vm02);
+  u_vm03: Mux2 port map (a => v6, b => v7, sel => op0, y => vm03);
+  u_vm04: Mux2 port map (a => v8, b => v9, sel => op0, y => vm04);
+  u_vm05: Mux2 port map (a => v10, b => v11, sel => op0, y => vm05);
+  u_vm06: Mux2 port map (a => v12, b => v13, sel => op0, y => vm06);
+  u_vm07: Mux2 port map (a => v14, b => v15, sel => op0, y => vm07);
+
+  u_vm10: Mux2 port map (a => vm00, b => vm01, sel => op1, y => vm10);
+  u_vm11: Mux2 port map (a => vm02, b => vm03, sel => op1, y => vm11);
+  u_vm12: Mux2 port map (a => vm04, b => vm05, sel => op1, y => vm12);
+  u_vm13: Mux2 port map (a => vm06, b => vm07, sel => op1, y => vm13);
+
+  u_vm20: Mux2 port map (a => vm10, b => vm11, sel => op2, y => vm20);
+  u_vm21: Mux2 port map (a => vm12, b => vm13, sel => op2, y => vm21);
+
+  u_vm30: Mux2 port map (a => vm20, b => vm21, sel => op3, y => vm30);
+  v <= vm30;
+
+  n <= y(31);
+  z <= (y = 0);
+end architecture;

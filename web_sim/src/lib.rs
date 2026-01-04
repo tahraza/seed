@@ -3,14 +3,19 @@ use hdl_core::elab::elaborate;
 use hdl_core::parser::parse_str;
 use hdl_core::sim::Simulator;
 use hdl_core::value::BitVec;
+use a32_core::{Machine, SimConfig, StepOutcome};
 
 pub struct HdlSession {
     sim: Option<Simulator>,
+    clock_name: String,
 }
 
 impl HdlSession {
     pub fn new() -> Self {
-        Self { sim: None }
+        Self {
+            sim: None,
+            clock_name: "clk".to_string(),
+        }
     }
 
     pub fn load(&mut self, top: &str, sources: &[String]) -> Result<(), String> {
@@ -37,6 +42,14 @@ impl HdlSession {
         sim.set_signal(name, v).map_err(|e| e.to_string())
     }
 
+    pub fn set_clock(&mut self, name: &str) {
+        let trimmed = name.trim();
+        if trimmed.is_empty() {
+            return;
+        }
+        self.clock_name = trimmed.to_string();
+    }
+
     pub fn get_signal(&self, name: &str) -> Result<String, String> {
         let sim = self.sim.as_ref().ok_or("simulator not loaded")?;
         let v = sim.get_signal(name).map_err(|e| e.to_string())?;
@@ -48,18 +61,97 @@ impl HdlSession {
         sim.eval_comb().map_err(|e| e.to_string())
     }
 
-    pub fn tick(&mut self, clock: &str) -> Result<(), String> {
+    pub fn tick(&mut self) -> Result<(), String> {
         let sim = self.sim.as_mut().ok_or("simulator not loaded")?;
-        sim.set_signal(clock, BitVec::new(1, 1))
+        let clock = self.clock_name.clone();
+        sim.set_signal(&clock, BitVec::new(1, 1))
             .map_err(|e| e.to_string())?;
         sim.tick().map_err(|e| e.to_string())
     }
 
-    pub fn tock(&mut self, clock: &str) -> Result<(), String> {
+    pub fn tock(&mut self) -> Result<(), String> {
         let sim = self.sim.as_mut().ok_or("simulator not loaded")?;
-        sim.set_signal(clock, BitVec::new(1, 0))
+        let clock = self.clock_name.clone();
+        sim.set_signal(&clock, BitVec::new(1, 0))
             .map_err(|e| e.to_string())?;
         sim.tock().map_err(|e| e.to_string())
+    }
+}
+
+pub struct A32Session {
+    machine: Option<Machine>,
+    program: Option<Vec<u8>>,
+    config: SimConfig,
+}
+
+impl A32Session {
+    pub fn new() -> Self {
+        Self {
+            machine: None,
+            program: None,
+            config: SimConfig::default(),
+        }
+    }
+
+    pub fn load_a32b(
+        &mut self,
+        bytes: &[u8],
+        ram_size: u32,
+        strict_traps: bool,
+    ) -> Result<(), String> {
+        let mut config = SimConfig::default();
+        if ram_size != 0 {
+            config.ram_size = ram_size;
+        }
+        config.strict_traps = strict_traps;
+        let machine = Machine::from_a32b(bytes, config.clone()).map_err(|e| e.to_string())?;
+        self.machine = Some(machine);
+        self.program = Some(bytes.to_vec());
+        self.config = config;
+        Ok(())
+    }
+
+    pub fn reset(&mut self) -> Result<(), String> {
+        let bytes = self.program.as_ref().ok_or("program not loaded")?;
+        let machine = Machine::from_a32b(bytes, self.config.clone()).map_err(|e| e.to_string())?;
+        self.machine = Some(machine);
+        Ok(())
+    }
+
+    pub fn step(&mut self) -> Result<String, String> {
+        let machine = self.machine.as_mut().ok_or("program not loaded")?;
+        let outcome = machine.step();
+        Ok(format_outcome(outcome))
+    }
+
+    pub fn run(&mut self, max_steps: u32) -> Result<String, String> {
+        let machine = self.machine.as_mut().ok_or("program not loaded")?;
+        let limit = if max_steps == 0 {
+            self.config.max_steps
+        } else {
+            max_steps as u64
+        };
+        let outcome = machine.run(limit).map_err(|e| e.to_string())?;
+        if let Some(exit) = outcome.exit {
+            return Ok(format!("exit {}", exit.code));
+        }
+        if let Some(trap) = outcome.trap {
+            return Ok(format!("trap {}", trap.code.as_str()));
+        }
+        Ok("running".to_string())
+    }
+
+    pub fn output(&self) -> Result<String, String> {
+        let machine = self.machine.as_ref().ok_or("program not loaded")?;
+        Ok(machine.output_string())
+    }
+}
+
+fn format_outcome(outcome: StepOutcome) -> String {
+    match outcome {
+        StepOutcome::Continue => "running".to_string(),
+        StepOutcome::Exit(exit) => format!("exit {}", exit.code),
+        StepOutcome::Trap(trap) => format!("trap {}", trap.code.as_str()),
     }
 }
 
@@ -84,7 +176,7 @@ fn parse_value(input: &str) -> Result<BitVec, String> {
     if t == "0" || t == "1" {
         return Ok(BitVec::new(1, if t == "1" { 1 } else { 0 }));
     }
-    let val: i64 = t.parse().map_err(|e| e.to_string())?;
+    let val: i64 = t.parse::<i64>().map_err(|e| e.to_string())?;
     Ok(BitVec::from_i64(32, val))
 }
 
@@ -99,7 +191,7 @@ fn format_value(bits: &BitVec) -> String {
 
 #[cfg(feature = "wasm")]
 mod wasm_api {
-    use super::HdlSession;
+    use super::{A32Session, HdlSession};
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
@@ -120,6 +212,10 @@ mod wasm_api {
             self.inner.load(top, &sources).map_err(js_err)
         }
 
+        pub fn set_clock(&mut self, name: &str) {
+            self.inner.set_clock(name);
+        }
+
         pub fn set_signal(&mut self, name: &str, value: &str) -> Result<(), JsValue> {
             self.inner.set_signal(name, value).map_err(js_err)
         }
@@ -132,12 +228,54 @@ mod wasm_api {
             self.inner.eval().map_err(js_err)
         }
 
-        pub fn tick(&mut self, clock: &str) -> Result<(), JsValue> {
-            self.inner.tick(clock).map_err(js_err)
+        pub fn tick(&mut self) -> Result<(), JsValue> {
+            self.inner.tick().map_err(js_err)
         }
 
-        pub fn tock(&mut self, clock: &str) -> Result<(), JsValue> {
-            self.inner.tock(clock).map_err(js_err)
+        pub fn tock(&mut self) -> Result<(), JsValue> {
+            self.inner.tock().map_err(js_err)
+        }
+    }
+
+    #[wasm_bindgen]
+    pub struct WasmA32 {
+        inner: A32Session,
+    }
+
+    #[wasm_bindgen]
+    impl WasmA32 {
+        #[wasm_bindgen(constructor)]
+        pub fn new() -> WasmA32 {
+            WasmA32 {
+                inner: A32Session::new(),
+            }
+        }
+
+        pub fn load_a32b(
+            &mut self,
+            bytes: Vec<u8>,
+            ram_size: u32,
+            strict_traps: bool,
+        ) -> Result<(), JsValue> {
+            self.inner
+                .load_a32b(&bytes, ram_size, strict_traps)
+                .map_err(js_err)
+        }
+
+        pub fn reset(&mut self) -> Result<(), JsValue> {
+            self.inner.reset().map_err(js_err)
+        }
+
+        pub fn step(&mut self) -> Result<String, JsValue> {
+            self.inner.step().map_err(js_err)
+        }
+
+        pub fn run(&mut self, max_steps: u32) -> Result<String, JsValue> {
+            self.inner.run(max_steps).map_err(js_err)
+        }
+
+        pub fn output(&self) -> Result<String, JsValue> {
+            self.inner.output().map_err(js_err)
         }
     }
 

@@ -1,26 +1,17 @@
 use std::fmt;
 
 #[derive(Debug, Clone)]
-pub struct AsmError {
-    code: Option<String>,
+pub struct CError {
+    code: String,
     message: String,
     line: Option<usize>,
     column: Option<usize>,
 }
 
-impl AsmError {
-    pub fn new(message: impl Into<String>) -> Self {
+impl CError {
+    pub fn new(code: &str, message: impl Into<String>) -> Self {
         Self {
-            code: None,
-            message: message.into(),
-            line: None,
-            column: None,
-        }
-    }
-
-    pub fn code(code: impl Into<String>, message: impl Into<String>) -> Self {
-        Self {
-            code: Some(code.into()),
+            code: code.to_string(),
             message: message.into(),
             line: None,
             column: None,
@@ -33,17 +24,14 @@ impl AsmError {
         self
     }
 
-    pub fn code_str(&self) -> Option<&str> {
-        self.code.as_deref()
+    pub fn code_str(&self) -> &str {
+        &self.code
     }
 }
 
-impl fmt::Display for AsmError {
+impl fmt::Display for CError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let prefix = match &self.code {
-            Some(code) => format!("{} ", code),
-            None => String::new(),
-        };
+        let prefix = format!("{} ", self.code);
         match (self.line, self.column) {
             (Some(line), Some(column)) => {
                 write!(f, "{}{}:{}: {}", prefix, line, column, self.message)
@@ -53,4 +41,4 @@ impl fmt::Display for AsmError {
     }
 }
 
-impl std::error::Error for AsmError {}
+impl std::error::Error for CError {}

@@ -1,0 +1,31 @@
+entity Or2 is
+  port(
+    a : in bit;
+    b : in bit;
+    y : out bit
+  );
+end entity;
+
+architecture rtl of Or2 is
+  component Nand2
+    port(
+      a : in bit;
+      b : in bit;
+      y : out bit
+    );
+  end component;
+
+  component Not1
+    port(
+      a : in bit;
+      y : out bit
+    );
+  end component;
+
+  signal na : bit;
+  signal nb : bit;
+begin
+  u_na: Not1 port map (a => a, y => na);
+  u_nb: Not1 port map (a => b, y => nb);
+  u_or: Nand2 port map (a => na, b => nb, y => y);
+end architecture;

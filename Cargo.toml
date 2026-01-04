@@ -2,5 +2,6 @@
 resolver = "2"
 members = [
   "hdl_core",
-  "hdl_cli", "a32_core", "a32_asm", "web_sim",
+  "hdl_cli", "a32_core", "a32_asm", "web_sim", "a32_cli", "a32_runner",
+  "c32_core", "c32_cli", "c32_runner",
 ]

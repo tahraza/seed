@@ -1,0 +1,328 @@
+# TOOLS
+
+Ce document decrit le mode d'emploi des outils CLI du projet, avec une
+explication exhaustive de leur role, leurs entrees/sorties, et les erreurs
+possibles. Il est organise en pipeline top-down, puis detaille chaque outil.
+
+## 1. Pipeline d'utilisation (top-down)
+
+### 1.1 Definition des sources
+1) HDL (VHDL-like): ecrire les entites/architectures dans des fichiers .hdl.
+2) A32 (ASM): ecrire les programmes assembleur dans des fichiers .a32.
+3) (Optionnel) Linker script A32LDS: definir le layout sections/entry/stack
+   dans un fichier .lds.
+4) C-like: ecrire les sources dans des fichiers .c.
+5) (Optionnel) Tests A32: ecrire un .ref associe a chaque .a32.
+6) (Optionnel) Tests HDL: ecrire un script .tst pour piloter le simulateur HDL.
+
+### 1.2 HDL flow
+1) Preparer un .tst qui charge le top entity et les fichiers .hdl.
+2) Lancer hdl_cli pour interpreter le script.
+3) Le script controle: set/expect, eval, tick/tock/step.
+
+### 1.3 A32 flow (assembleur + binaire)
+1) Assembler le .a32 en .a32b via a32_cli.
+2) Charger le .a32b dans le simulateur web ou le runner.
+3) (Optionnel) Utiliser un .lds pour changer les bases sections et l'entry.
+
+### 1.4 C-like flow (compilateur -> ASM -> binaire)
+1) Compiler le .c en .a32 via c32_cli.
+2) Assembler le .a32 en .a32b via a32_cli.
+3) Executer le .a32b via a32_runner ou le panel web A32.
+
+### 1.5 A32 flow (tests de reference)
+1) Placer .a32 et .ref dans le meme dossier (meme nom de base).
+2) Executer a32_runner sur un fichier ou un dossier.
+3) Le runner assemble, charge, execute, puis compare la sortie aux attentes.
+
+### 1.6 Web flow (interaction)
+1) Generer un .a32b avec a32_cli.
+2) Charger le .a32b dans la page web (panel A32).
+3) Step/Run/Reset et lire la sortie.
+
+## 2. Outils CLI (mode d'emploi + explication exhaustive)
+
+### 2.1 hdl_cli
+
+**Role**
+- Interprete un script .tst pour simuler des designs HDL.
+- Utilise hdl_core pour parser, elaborer, puis simuler.
+
+**Usage**
+```
+hdl_cli <test.tst>
+```
+Avec Cargo:
+```
+cargo run -p hdl_cli -- path/to/test.tst
+```
+
+**Entrees**
+- Fichier .tst (script ligne par ligne).
+- Fichiers .hdl referencés par `load`.
+
+**Sorties**
+- Aucun fichier genere.
+- En cas d'erreur: message "error: ..." sur stderr, exit code 1.
+- Si usage invalide: exit code 2.
+
+**Syntaxe du script .tst**
+Chaque ligne est un ordre. Les lignes vides et commentaires sont ignores.
+Commentaires acceptes: `# ...`, `// ...`, `-- ...`.
+
+Commandes:
+- `load <TopEntity> <file1.hdl> [file2.hdl ...]`
+  - Parse et assemble tous les fichiers HDL.
+  - Elabore le top entity.
+  - Oblige d'etre appele avant toute autre commande.
+
+- `clock <signal>`
+  - Change le signal d'horloge utilise par tick/tock/step.
+  - Par defaut: `clk`.
+
+- `set <signal> <value>`
+  - Force la valeur d'un signal.
+  - `value` utilise les formats ci-dessous.
+
+- `eval`
+  - Evalue la logique combinatoire jusqu'a stabilite.
+
+- `tick`
+  - Met l'horloge a 1 puis execute le front montant.
+
+- `tock`
+  - Met l'horloge a 0 puis execute le front descendant.
+
+- `step`
+  - Raccourci: tick puis tock.
+
+- `expect <signal> <value>`
+  - Compare la valeur courante du signal avec la valeur attendue.
+  - L'attendu est resize (zero-extend) a la largeur du signal.
+  - Erreur si mismatch: "line N: expect <signal> != got".
+
+**Formats de valeurs**
+- Bit: `0` ou `1`
+- Binaire: `0b1010` ou `b"1010"`
+- Hex: `0x2A` ou `x"2A"`
+- Decimal: `42` ou `-1`
+
+**Erreurs typiques**
+- `load requires ...`: top manquant ou aucun fichier.
+- `simulator not loaded`: set/eval/tick/tock/step/expect sans load.
+- `unknown command`: mot-cle non reconnu.
+
+**Exemple minimal**
+```
+load HalfAdder examples/half_adder.hdl
+set a 1
+set b 0
+eval
+expect sum 1
+```
+
+### 2.2 a32_cli
+
+**Role**
+- Assemble un fichier .a32 en binaire A32B (.a32b).
+- Utilise a32_asm et les specs A32-Lite.
+
+**Usage**
+```
+a32_cli <input.a32> [-o output.a32b]
+```
+Avec Cargo:
+```
+cargo run -p a32_cli -- path/to/prog.a32
+cargo run -p a32_cli -- path/to/prog.a32 -o out/prog.a32b
+```
+
+**Entrees**
+- Fichier .a32 (ASM). Syntaxe: README.md section 2.8.
+- Directives: README.md section 2.9.
+
+**Sorties**
+- Fichier .a32b (format A32B, SPECS.md section 3).
+- Nom par defaut: meme nom de base que le .a32.
+- En cas d'erreur: message "error: ..." + code E1xxx/E3xxx.
+
+**Ce que fait l'assembleur**
+- Parse le code, calcule les labels et sections.
+- Genere des literal pools (LDR Rd, =imm32) dans .text.
+- Encode en A32-Lite (cond, classes ALU/LS/Branch/System).
+- Produit un binaire A32B avec segments text/data/bss.
+
+**Erreurs typiques**
+- `E1001`: mnemonic inconnu.
+- `E1002`: operand invalide, directive invalide, suffix invalid.
+- `E1004`: immediate/offset hors plage.
+- `E1006`: label duplique.
+- `E1008`: literal pool overflow.
+- `E1009`: ordre suffix invalide (ex: .cond avant .S).
+- `E3002`: entry manquant.
+- `E3004`: layout depasse la taille RAM (si config ram_size utilisee).
+
+**Exemple**
+```
+; prog.a32
+.text
+.global _start
+_start:
+  MOV R0, #7
+  SVC #0x10
+```
+```
+cargo run -p a32_cli -- prog.a32
+```
+
+### 2.3 a32_runner
+
+**Role**
+- Lance des tests A32 a partir de paires `.a32` + `.ref`.
+- Assemble, charge, execute, puis compare aux attentes.
+- Supporte un linker script A32LDS via `LINKER` dans .ref.
+
+**Usage**
+```
+a32_runner <path>
+```
+Avec Cargo:
+```
+cargo run -p a32_runner -- tests
+cargo run -p a32_runner -- tests/T01_alu_flags.a32
+```
+
+**Entrees**
+- Soit un dossier (scanne tous les .a32), soit un fichier .a32.
+- Chaque .a32 attend un .ref du meme nom de base.
+
+**Sorties**
+- Aucune sortie de fichier.
+- Si un test echoue, liste des erreurs et exit code 1.
+- Si OK, exit code 0 (pas de sortie).
+
+**Format .ref (resume)**
+Voir SPECS.md section 2.1 pour le format complet.
+Lignes valides:
+- `CONFIG ram_size <value>`
+- `CONFIG strict_traps <true|false>`
+- `LINKER <path/to/script.lds>`
+- `ERROR <E1004>`
+- `EXIT <code>`
+- `OUT "text\n"`
+- `REG R0 <value>`
+- `FLAG Z <0|1>`
+- `MEM <addr> <value>`
+- `TRAP <MISALIGNED|MEM_FAULT|ILLEGAL|DIV_ZERO>`
+- `TRAPPC <addr>`, `TRAPADDR <addr>`, `TRAPINSTR <word>`
+
+**Regles cle**
+- Si `ERROR` est present, le runner attend un echec d'assemblage et ignore
+  les autres lignes.
+- Sinon, il execute le binaire et compare EXIT/OUT/REG/FLAG/MEM.
+- `OUT` compare une sortie exacte (par defaut sortie vide).
+- `TRAP` est exclusif d'un EXIT.
+- `CONFIG` s'applique au test courant.
+
+**Linker script A32LDS**
+Voir SPECS.md section 26.
+Directives supportees:
+- `ENTRY <symbol>`
+- `SECTION <name> BASE <addr> ALIGN <pow2>`
+- `ORDER ...` (valide les noms, ignore l'ordre au runtime)
+- `STACK <size>` (SP = ram_size - size)
+- `SYMBOL <name> = <expr>`
+
+Le runner:
+- Resolue `LINKER` relatif au .ref.
+- Applique le layout aux sections text/data/bss.
+- Verifie les overlaps/overflow RAM (codes E3001/E3004).
+
+**Execution**
+- RAM par defaut: 0x00100000
+- strict_traps par defaut: true
+- max_steps: 1_000_000
+- MMIO: 0xFFFF0000 (putc), 0xFFFF0004 (getc), 0xFFFF0010 (exit)
+
+**Exemple**
+```
+; tests/MyTest.ref
+CONFIG strict_traps false
+EXIT 0
+REG R0 0x1234
+```
+```
+cargo run -p a32_runner -- tests/MyTest.a32
+```
+
+### 2.4 a32_cli + web (workflow rapide)
+
+1) Assembler:
+```
+cargo run -p a32_cli -- prog.a32
+```
+2) Charger `prog.a32b` dans la page web (panel A32).
+3) Utiliser Step/Run/Reset pour voir la sortie.
+
+### 2.5 c32_cli
+
+**Role**
+- Compile un fichier C-like (.c) en assembleur A32-Lite (.a32).
+- Cible volontairement le format texte `.a32` pour faciliter le reverse engineering.
+
+**Usage**
+```
+c32_cli <input.c> [-o output.a32]
+```
+Avec Cargo:
+```
+cargo run -p c32_cli -- path/to/prog.c
+cargo run -p c32_cli -- path/to/prog.c -o out/prog.a32
+```
+
+**Entrees**
+- Fichier .c conforme au subset de README.md section 3 (types/ops/ABI).
+
+**Sorties**
+- Fichier .a32 (assembleur A32-Lite).
+- Nom par defaut: meme nom de base que le .c.
+- En cas d'erreur: message "error: ..." + code E2xxx.
+
+**Etat actuel (MVP)**
+Le compilateur est volontairement minimal:
+- Supporte uniquement des fonctions sans parametres.
+- Supporte `return <constante>` et les appels a `putc`, `getc`, `exit` avec
+  arguments immediats numeriques.
+- Pas de variables, pas de `if/while/for`, pas de types complexes.
+- Les fonctions doivent retourner explicitement; sinon `E2008`.
+
+**Exemple**
+```
+int main() {
+  return 7;
+}
+```
+```
+cargo run -p c32_cli -- main.c
+```
+Puis assembler et executer:
+```
+cargo run -p a32_cli -- main.a32
+cargo run -p a32_runner -- main.a32
+```
+
+## 3. Statut par outil (resume)
+
+| Outil | Statut | Notes |
+| --- | --- | --- |
+| hdl_cli | OK | Parser + simulateur + script .tst fonctionnels. |
+| a32_cli | OK | Assembleur A32-Lite stable, produit A32B. |
+| a32_runner | OK | Tests A32 .a32/.ref + support A32LDS. |
+| c32_cli | MVP | C-like -> A32 texte, subset tres reduit. |
+
+## 4. Limitations connues
+
+- c32_cli: pas de variables, pas de controle de flux, pas de types complets.
+- c32_cli: arguments de fonctions non supportes.
+- c32_cli: pas d'ABI complet (seulement appels built-ins).
+- A32 HDL: CPU A32-Lite en HDL pas encore implemente (a venir).

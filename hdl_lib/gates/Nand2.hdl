@@ -1,0 +1,29 @@
+entity Nand2 is
+  port(
+    a : in bit;
+    b : in bit;
+    y : out bit
+  );
+end entity;
+
+architecture rtl of Nand2 is
+  component and2
+    port(
+      a : in bit;
+      b : in bit;
+      y : out bit
+    );
+  end component;
+
+  component not1
+    port(
+      a : in bit;
+      y : out bit
+    );
+  end component;
+
+  signal t : bit;
+begin
+  u_and: and2 port map (a => a, b => b, y => t);
+  u_not: not1 port map (a => t, y => y);
+end architecture;

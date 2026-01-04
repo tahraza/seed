@@ -3,6 +3,9 @@
 Current specs and decisions captured so far for a web interactive nand2tetris-like
 platform with a VHDL-like HDL, an ARM-inspired 32-bit CPU, and a C-like language.
 
+CLI usage:
+- See `TOOLS.md` for a top-down pipeline and detailed CLI tool guides.
+
 ## 1. HDL (VHDL-like, sync-only)
 
 Status: validated.

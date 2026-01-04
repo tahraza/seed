@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>nand2tetris A32 + HDL</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <div class="app">
+      <header class="hero">
+        <div>
+          <div class="eyebrow">nand2tetris-codex</div>
+          <h1>HDL + A32 Lab</h1>
+          <p>Simulate HDL designs and run A32-Lite binaries right in the browser.</p>
+        </div>
+        <div class="hero-actions">
+          <label class="field">
+            <span>Top entity</span>
+            <input id="top-entity" type="text" value="HalfAdder" />
+          </label>
+          <label class="field">
+            <span>Clock</span>
+            <input id="clock-name" type="text" value="clk" />
+          </label>
+          <button id="btn-load" class="btn primary">Load</button>
+        </div>
+      </header>
+
+      <main class="grid">
+        <section class="panel">
+          <h2>HDL Sources</h2>
+          <div class="source-block">
+            <div class="source-head">
+              <span>Source 1</span>
+              <span class="hint">HDL</span>
+            </div>
+            <textarea class="source" id="source-1"></textarea>
+          </div>
+          <div class="source-block">
+            <div class="source-head">
+              <span>Source 2</span>
+              <span class="hint">optional</span>
+            </div>
+            <textarea class="source" id="source-2"></textarea>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Controls</h2>
+          <div class="controls">
+            <div class="row">
+              <button id="btn-eval" class="btn">Eval</button>
+              <button id="btn-tick" class="btn">Tick</button>
+              <button id="btn-tock" class="btn">Tock</button>
+            </div>
+            <div class="row">
+              <label class="field">
+                <span>Signal</span>
+                <input id="set-name" type="text" placeholder="a" />
+              </label>
+              <label class="field">
+                <span>Value</span>
+                <input id="set-value" type="text" placeholder="0b1" />
+              </label>
+              <button id="btn-set" class="btn">Set</button>
+            </div>
+            <div class="row">
+              <label class="field">
+                <span>Signal</span>
+                <input id="get-name" type="text" placeholder="sum" />
+              </label>
+              <button id="btn-get" class="btn">Get</button>
+            </div>
+          </div>
+          <div class="log" id="log"></div>
+        </section>
+
+        <section class="panel wide">
+          <h2>A32 Runner</h2>
+          <div class="controls">
+            <div class="row">
+              <label class="field">
+                <span>Binary</span>
+                <input id="a32-file" type="file" accept=".a32b" />
+              </label>
+              <label class="field">
+                <span>RAM size</span>
+                <input id="a32-ram" type="text" value="0x00100000" />
+              </label>
+              <label class="field">
+                <span>Strict traps</span>
+                <select id="a32-strict">
+                  <option value="true" selected>on</option>
+                  <option value="false">off</option>
+                </select>
+              </label>
+              <button id="a32-load" class="btn primary">Load</button>
+            </div>
+            <div class="row">
+              <button id="a32-step" class="btn">Step</button>
+              <button id="a32-run" class="btn">Run</button>
+              <button id="a32-reset" class="btn">Reset</button>
+            </div>
+          </div>
+          <div class="log" id="a32-log"></div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

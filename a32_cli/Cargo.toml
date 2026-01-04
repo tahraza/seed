@@ -1,0 +1,7 @@
+[package]
+name = "a32_cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+a32_asm = { path = "../a32_asm" }
