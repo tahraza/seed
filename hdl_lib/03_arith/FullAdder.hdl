@@ -1,0 +1,29 @@
+-- Full Adder
+-- sum = a XOR b XOR cin
+-- cout = (a AND b) OR (cin AND (a XOR b))
+
+entity FullAdder is
+  port(
+    a : in bit;
+    b : in bit;
+    cin : in bit;
+    sum : out bit;
+    cout : out bit
+  );
+end entity;
+
+architecture rtl of FullAdder is
+  component HalfAdder
+    port(a : in bit; b : in bit; sum : out bit; carry : out bit);
+  end component;
+  component Or
+    port(a : in bit; b : in bit; y : out bit);
+  end component;
+  signal s1 : bit;
+  signal c1 : bit;
+  signal c2 : bit;
+begin
+  u_ha1: HalfAdder port map (a => a, b => b, sum => s1, carry => c1);
+  u_ha2: HalfAdder port map (a => s1, b => cin, sum => sum, carry => c2);
+  u_or: Or port map (a => c1, b => c2, y => cout);
+end architecture;

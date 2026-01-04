@@ -1,0 +1,26 @@
+-- 1-to-2 Demultiplexer
+-- a = (sel=0) ? in : 0
+-- b = (sel=1) ? in : 0
+
+entity DMux is
+  port(
+    i : in bit;
+    sel : in bit;
+    a : out bit;
+    b : out bit
+  );
+end entity;
+
+architecture rtl of DMux is
+  component And
+    port(a : in bit; b : in bit; y : out bit);
+  end component;
+  component Not
+    port(a : in bit; y : out bit);
+  end component;
+  signal nsel : bit;
+begin
+  u_nsel: Not port map (a => sel, y => nsel);
+  u_a: And port map (a => i, b => nsel, y => a);
+  u_b: And port map (a => i, b => sel, y => b);
+end architecture;

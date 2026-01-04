@@ -1,0 +1,107 @@
+-- 32-bit Barrel Shifter
+-- Supports LSL, LSR, ASR, ROR based on 2-bit mode
+-- mode: 00=LSL, 01=LSR, 10=ASR, 11=ROR
+-- amt: shift amount (0-31)
+
+entity Shifter32 is
+  port(
+    a : in bits(31 downto 0);
+    amt : in bits(4 downto 0);
+    mode : in bits(1 downto 0);
+    y : out bits(31 downto 0);
+    cout : out bit
+  );
+end entity;
+
+architecture rtl of Shifter32 is
+  component Mux32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); sel : in bit; y : out bits(31 downto 0));
+  end component;
+  component Mux4Way32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); c : in bits(31 downto 0); d : in bits(31 downto 0); sel : in bits(1 downto 0); y : out bits(31 downto 0));
+  end component;
+
+  signal lsl1, lsl2, lsl4, lsl8, lsl16 : bits(31 downto 0);
+  signal lsr1, lsr2, lsr4, lsr8, lsr16 : bits(31 downto 0);
+  signal asr1, asr2, asr4, asr8, asr16 : bits(31 downto 0);
+  signal ror1, ror2, ror4, ror8, ror16 : bits(31 downto 0);
+
+  signal s0_lsl, s0_lsr, s0_asr, s0_ror : bits(31 downto 0);
+  signal s1_lsl, s1_lsr, s1_asr, s1_ror : bits(31 downto 0);
+  signal s2_lsl, s2_lsr, s2_asr, s2_ror : bits(31 downto 0);
+  signal s3_lsl, s3_lsr, s3_asr, s3_ror : bits(31 downto 0);
+  signal s4_lsl, s4_lsr, s4_asr, s4_ror : bits(31 downto 0);
+
+  signal sign : bit;
+  signal sign16 : bits(15 downto 0);
+  signal sign8 : bits(7 downto 0);
+  signal sign4 : bits(3 downto 0);
+  signal sign2 : bits(1 downto 0);
+begin
+  sign <= a(31);
+  sign16 <= (others => sign);
+  sign8 <= (others => sign);
+  sign4 <= (others => sign);
+  sign2 <= (others => sign);
+
+  -- Stage 0: shift by 1 if amt(0)=1
+  lsl1 <= a(30 downto 0) & '0';
+  lsr1 <= '0' & a(31 downto 1);
+  asr1 <= sign & a(31 downto 1);
+  ror1 <= a(0) & a(31 downto 1);
+
+  m0_lsl: Mux32 port map (a => a, b => lsl1, sel => amt(0), y => s0_lsl);
+  m0_lsr: Mux32 port map (a => a, b => lsr1, sel => amt(0), y => s0_lsr);
+  m0_asr: Mux32 port map (a => a, b => asr1, sel => amt(0), y => s0_asr);
+  m0_ror: Mux32 port map (a => a, b => ror1, sel => amt(0), y => s0_ror);
+
+  -- Stage 1: shift by 2 if amt(1)=1
+  lsl2 <= s0_lsl(29 downto 0) & b"00";
+  lsr2 <= b"00" & s0_lsr(31 downto 2);
+  asr2 <= sign2 & s0_asr(31 downto 2);
+  ror2 <= s0_ror(1 downto 0) & s0_ror(31 downto 2);
+
+  m1_lsl: Mux32 port map (a => s0_lsl, b => lsl2, sel => amt(1), y => s1_lsl);
+  m1_lsr: Mux32 port map (a => s0_lsr, b => lsr2, sel => amt(1), y => s1_lsr);
+  m1_asr: Mux32 port map (a => s0_asr, b => asr2, sel => amt(1), y => s1_asr);
+  m1_ror: Mux32 port map (a => s0_ror, b => ror2, sel => amt(1), y => s1_ror);
+
+  -- Stage 2: shift by 4 if amt(2)=1
+  lsl4 <= s1_lsl(27 downto 0) & b"0000";
+  lsr4 <= b"0000" & s1_lsr(31 downto 4);
+  asr4 <= sign4 & s1_asr(31 downto 4);
+  ror4 <= s1_ror(3 downto 0) & s1_ror(31 downto 4);
+
+  m2_lsl: Mux32 port map (a => s1_lsl, b => lsl4, sel => amt(2), y => s2_lsl);
+  m2_lsr: Mux32 port map (a => s1_lsr, b => lsr4, sel => amt(2), y => s2_lsr);
+  m2_asr: Mux32 port map (a => s1_asr, b => asr4, sel => amt(2), y => s2_asr);
+  m2_ror: Mux32 port map (a => s1_ror, b => ror4, sel => amt(2), y => s2_ror);
+
+  -- Stage 3: shift by 8 if amt(3)=1
+  lsl8 <= s2_lsl(23 downto 0) & b"00000000";
+  lsr8 <= b"00000000" & s2_lsr(31 downto 8);
+  asr8 <= sign8 & s2_asr(31 downto 8);
+  ror8 <= s2_ror(7 downto 0) & s2_ror(31 downto 8);
+
+  m3_lsl: Mux32 port map (a => s2_lsl, b => lsl8, sel => amt(3), y => s3_lsl);
+  m3_lsr: Mux32 port map (a => s2_lsr, b => lsr8, sel => amt(3), y => s3_lsr);
+  m3_asr: Mux32 port map (a => s2_asr, b => asr8, sel => amt(3), y => s3_asr);
+  m3_ror: Mux32 port map (a => s2_ror, b => ror8, sel => amt(3), y => s3_ror);
+
+  -- Stage 4: shift by 16 if amt(4)=1
+  lsl16 <= s3_lsl(15 downto 0) & x"0000";
+  lsr16 <= x"0000" & s3_lsr(31 downto 16);
+  asr16 <= sign16 & s3_asr(31 downto 16);
+  ror16 <= s3_ror(15 downto 0) & s3_ror(31 downto 16);
+
+  m4_lsl: Mux32 port map (a => s3_lsl, b => lsl16, sel => amt(4), y => s4_lsl);
+  m4_lsr: Mux32 port map (a => s3_lsr, b => lsr16, sel => amt(4), y => s4_lsr);
+  m4_asr: Mux32 port map (a => s3_asr, b => asr16, sel => amt(4), y => s4_asr);
+  m4_ror: Mux32 port map (a => s3_ror, b => ror16, sel => amt(4), y => s4_ror);
+
+  -- Final mux to select based on mode
+  u_out: Mux4Way32 port map (a => s4_lsl, b => s4_lsr, c => s4_asr, d => s4_ror, sel => mode, y => y);
+
+  -- Carry out: last bit shifted out (simplified - actual depends on shift amount)
+  cout <= '0';  -- TODO: proper carry calculation
+end architecture;

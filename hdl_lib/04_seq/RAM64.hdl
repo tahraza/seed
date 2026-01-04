@@ -1,0 +1,42 @@
+-- 64-word RAM (each word is 32 bits)
+-- 6-bit address: upper 3 bits select RAM8, lower 3 bits select word
+
+entity RAM64 is
+  port(
+    clk : in bit;
+    d : in bits(31 downto 0);
+    addr : in bits(5 downto 0);
+    load : in bit;
+    q : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of RAM64 is
+  component RAM8
+    port(clk : in bit; d : in bits(31 downto 0); addr : in bits(2 downto 0); load : in bit; q : out bits(31 downto 0));
+  end component;
+  component DMux8Way
+    port(i : in bit; sel : in bits(2 downto 0); a : out bit; b : out bit; c : out bit; d : out bit; e : out bit; f : out bit; g : out bit; h : out bit);
+  end component;
+  component Mux8Way32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); c : in bits(31 downto 0); d : in bits(31 downto 0);
+         e : in bits(31 downto 0); f : in bits(31 downto 0); g : in bits(31 downto 0); h : in bits(31 downto 0);
+         sel : in bits(2 downto 0); y : out bits(31 downto 0));
+  end component;
+
+  signal load0, load1, load2, load3, load4, load5, load6, load7 : bit;
+  signal r0, r1, r2, r3, r4, r5, r6, r7 : bits(31 downto 0);
+begin
+  u_dmux: DMux8Way port map (i => load, sel => addr(5 downto 3), a => load0, b => load1, c => load2, d => load3, e => load4, f => load5, g => load6, h => load7);
+
+  u_r0: RAM8 port map (clk => clk, d => d, addr => addr(2 downto 0), load => load0, q => r0);
+  u_r1: RAM8 port map (clk => clk, d => d, addr => addr(2 downto 0), load => load1, q => r1);
+  u_r2: RAM8 port map (clk => clk, d => d, addr => addr(2 downto 0), load => load2, q => r2);
+  u_r3: RAM8 port map (clk => clk, d => d, addr => addr(2 downto 0), load => load3, q => r3);
+  u_r4: RAM8 port map (clk => clk, d => d, addr => addr(2 downto 0), load => load4, q => r4);
+  u_r5: RAM8 port map (clk => clk, d => d, addr => addr(2 downto 0), load => load5, q => r5);
+  u_r6: RAM8 port map (clk => clk, d => d, addr => addr(2 downto 0), load => load6, q => r6);
+  u_r7: RAM8 port map (clk => clk, d => d, addr => addr(2 downto 0), load => load7, q => r7);
+
+  u_mux: Mux8Way32 port map (a => r0, b => r1, c => r2, d => r3, e => r4, f => r5, g => r6, h => r7, sel => addr(5 downto 3), y => q);
+end architecture;

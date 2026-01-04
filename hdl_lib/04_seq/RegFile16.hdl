@@ -1,0 +1,87 @@
+-- 16x32-bit Register File for A32-Lite CPU
+-- R0-R15 with R13=SP, R14=LR, R15=PC
+-- Two read ports, one write port
+-- Note: PC (R15) is handled specially by CPU
+
+entity RegFile16 is
+  port(
+    clk : in bit;
+    -- Write port
+    wd : in bits(31 downto 0);      -- Write data
+    wa : in bits(3 downto 0);       -- Write address
+    we : in bit;                     -- Write enable
+    -- Read port A
+    ra : in bits(3 downto 0);       -- Read address A
+    qa : out bits(31 downto 0);     -- Read data A
+    -- Read port B
+    rb : in bits(3 downto 0);       -- Read address B
+    qb : out bits(31 downto 0)      -- Read data B
+  );
+end entity;
+
+architecture rtl of RegFile16 is
+  component Register
+    port(clk : in bit; d : in bits(31 downto 0); load : in bit; q : out bits(31 downto 0));
+  end component;
+  component Mux16Way32
+    port(r0 : in bits(31 downto 0); r1 : in bits(31 downto 0); r2 : in bits(31 downto 0); r3 : in bits(31 downto 0);
+         r4 : in bits(31 downto 0); r5 : in bits(31 downto 0); r6 : in bits(31 downto 0); r7 : in bits(31 downto 0);
+         r8 : in bits(31 downto 0); r9 : in bits(31 downto 0); r10 : in bits(31 downto 0); r11 : in bits(31 downto 0);
+         r12 : in bits(31 downto 0); r13 : in bits(31 downto 0); r14 : in bits(31 downto 0); r15 : in bits(31 downto 0);
+         sel : in bits(3 downto 0); y : out bits(31 downto 0));
+  end component;
+
+  -- Write enable for each register
+  signal we0, we1, we2, we3, we4, we5, we6, we7 : bit;
+  signal we8, we9, we10, we11, we12, we13, we14, we15 : bit;
+
+  -- Register outputs
+  signal r0, r1, r2, r3, r4, r5, r6, r7 : bits(31 downto 0);
+  signal r8, r9, r10, r11, r12, r13, r14, r15 : bits(31 downto 0);
+begin
+  -- Decode write address
+  we0 <= we when wa = b"0000" else '0';
+  we1 <= we when wa = b"0001" else '0';
+  we2 <= we when wa = b"0010" else '0';
+  we3 <= we when wa = b"0011" else '0';
+  we4 <= we when wa = b"0100" else '0';
+  we5 <= we when wa = b"0101" else '0';
+  we6 <= we when wa = b"0110" else '0';
+  we7 <= we when wa = b"0111" else '0';
+  we8 <= we when wa = b"1000" else '0';
+  we9 <= we when wa = b"1001" else '0';
+  we10 <= we when wa = b"1010" else '0';
+  we11 <= we when wa = b"1011" else '0';
+  we12 <= we when wa = b"1100" else '0';
+  we13 <= we when wa = b"1101" else '0';
+  we14 <= we when wa = b"1110" else '0';
+  we15 <= we when wa = b"1111" else '0';
+
+  -- Instantiate 16 registers
+  u_r0: Register port map (clk => clk, d => wd, load => we0, q => r0);
+  u_r1: Register port map (clk => clk, d => wd, load => we1, q => r1);
+  u_r2: Register port map (clk => clk, d => wd, load => we2, q => r2);
+  u_r3: Register port map (clk => clk, d => wd, load => we3, q => r3);
+  u_r4: Register port map (clk => clk, d => wd, load => we4, q => r4);
+  u_r5: Register port map (clk => clk, d => wd, load => we5, q => r5);
+  u_r6: Register port map (clk => clk, d => wd, load => we6, q => r6);
+  u_r7: Register port map (clk => clk, d => wd, load => we7, q => r7);
+  u_r8: Register port map (clk => clk, d => wd, load => we8, q => r8);
+  u_r9: Register port map (clk => clk, d => wd, load => we9, q => r9);
+  u_r10: Register port map (clk => clk, d => wd, load => we10, q => r10);
+  u_r11: Register port map (clk => clk, d => wd, load => we11, q => r11);
+  u_r12: Register port map (clk => clk, d => wd, load => we12, q => r12);
+  u_r13: Register port map (clk => clk, d => wd, load => we13, q => r13);
+  u_r14: Register port map (clk => clk, d => wd, load => we14, q => r14);
+  u_r15: Register port map (clk => clk, d => wd, load => we15, q => r15);
+
+  -- Read port A
+  u_muxa: Mux16Way32 port map (r0 => r0, r1 => r1, r2 => r2, r3 => r3, r4 => r4, r5 => r5, r6 => r6, r7 => r7,
+                               r8 => r8, r9 => r9, r10 => r10, r11 => r11, r12 => r12, r13 => r13, r14 => r14, r15 => r15,
+                               sel => ra, y => qa);
+
+  -- Read port B
+  u_muxb: Mux16Way32 port map (r0 => r0, r1 => r1, r2 => r2, r3 => r3, r4 => r4, r5 => r5, r6 => r6, r7 => r7,
+                               r8 => r8, r9 => r9, r10 => r10, r11 => r11, r12 => r12, r13 => r13, r14 => r14, r15 => r15,
+                               sel => rb, y => qb);
+end architecture;

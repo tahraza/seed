@@ -1,0 +1,17 @@
+-- NAND gate: the fundamental building block
+-- This is the ONLY primitive - all other gates are built from this
+-- In hardware, this would be implemented with transistors
+
+entity Nand is
+  port(
+    a : in bit;
+    b : in bit;
+    y : out bit
+  );
+end entity;
+
+architecture primitive of Nand is
+begin
+  -- Built-in primitive: y = NOT(a AND b)
+  y <= not (a and b);
+end architecture;

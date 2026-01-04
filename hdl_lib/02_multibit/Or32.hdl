@@ -1,0 +1,14 @@
+-- 32-bit OR gate
+
+entity Or32 is
+  port(
+    a : in bits(31 downto 0);
+    b : in bits(31 downto 0);
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Or32 is
+begin
+  y <= a or b;
+end architecture;

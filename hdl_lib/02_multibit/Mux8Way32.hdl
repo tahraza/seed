@@ -1,0 +1,32 @@
+-- 8-way 32-bit multiplexer
+-- Selects one of 8 32-bit inputs based on 3-bit selector
+
+entity Mux8Way32 is
+  port(
+    a : in bits(31 downto 0);
+    b : in bits(31 downto 0);
+    c : in bits(31 downto 0);
+    d : in bits(31 downto 0);
+    e : in bits(31 downto 0);
+    f : in bits(31 downto 0);
+    g : in bits(31 downto 0);
+    h : in bits(31 downto 0);
+    sel : in bits(2 downto 0);
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Mux8Way32 is
+  component Mux32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); sel : in bit; y : out bits(31 downto 0));
+  end component;
+  component Mux4Way32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); c : in bits(31 downto 0); d : in bits(31 downto 0); sel : in bits(1 downto 0); y : out bits(31 downto 0));
+  end component;
+  signal t0 : bits(31 downto 0);
+  signal t1 : bits(31 downto 0);
+begin
+  u_lo: Mux4Way32 port map (a => a, b => b, c => c, d => d, sel => sel(1 downto 0), y => t0);
+  u_hi: Mux4Way32 port map (a => e, b => f, c => g, d => h, sel => sel(1 downto 0), y => t1);
+  u_out: Mux32 port map (a => t0, b => t1, sel => sel(2), y => y);
+end architecture;

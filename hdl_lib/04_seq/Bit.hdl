@@ -1,0 +1,27 @@
+-- 1-bit register with load enable
+-- When load=1, stores input d on clock edge
+-- When load=0, maintains current value
+
+entity Bit is
+  port(
+    clk : in bit;
+    d : in bit;
+    load : in bit;
+    q : out bit
+  );
+end entity;
+
+architecture rtl of Bit is
+  component DFF
+    port(clk : in bit; d : in bit; q : out bit);
+  end component;
+  component Mux
+    port(a : in bit; b : in bit; sel : in bit; y : out bit);
+  end component;
+  signal mux_out : bit;
+  signal dff_out : bit;
+begin
+  u_mux: Mux port map (a => dff_out, b => d, sel => load, y => mux_out);
+  u_dff: DFF port map (clk => clk, d => mux_out, q => dff_out);
+  q <= dff_out;
+end architecture;

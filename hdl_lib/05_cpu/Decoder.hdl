@@ -1,0 +1,67 @@
+-- Instruction Decoder for A32-Lite CPU
+-- Extracts fields from 32-bit instruction
+
+entity Decoder is
+  port(
+    instr : in bits(31 downto 0);
+    -- Extracted fields
+    cond : out bits(3 downto 0);     -- Condition [31:28]
+    class : out bits(2 downto 0);    -- Instruction class [27:25]
+    op : out bits(3 downto 0);       -- ALU op / system op [24:21]
+    s_flag : out bit;                -- Update flags [20]
+    rd : out bits(3 downto 0);       -- Destination register
+    rn : out bits(3 downto 0);       -- First source register
+    rm : out bits(3 downto 0);       -- Second source register (ALU reg)
+    shift_amt : out bits(5 downto 0); -- Shift amount [5:0]
+    shift_type : out bits(1 downto 0); -- Shift type [7:6]
+    imm12 : out bits(11 downto 0);   -- 12-bit immediate (ALU imm)
+    off13 : out bits(12 downto 0);   -- 13-bit offset (Load/Store)
+    imm24 : out bits(23 downto 0);   -- 24-bit immediate (Branch)
+    imm21 : out bits(20 downto 0);   -- 21-bit immediate (System)
+    -- Load/Store flags
+    ls_load : out bit;               -- L bit [24]
+    ls_byte : out bit;               -- B bit [23]
+    ls_wb : out bit;                 -- W bit [22] (writeback)
+    ls_up : out bit;                 -- U bit [21] (add/sub offset)
+    -- Branch flag
+    br_link : out bit                -- L bit [24] for BL
+  );
+end entity;
+
+architecture rtl of Decoder is
+begin
+  cond <= instr(31 downto 28);
+  class <= instr(27 downto 25);
+  op <= instr(24 downto 21);
+  s_flag <= instr(20);
+
+  -- Register fields depend on instruction class
+  -- ALU reg/imm: Rd[19:16], Rn[15:12], Rm[11:8] for reg
+  -- Load/Store: Rd[20:17], Rn[16:13]
+  rd <= instr(19 downto 16);
+  rn <= instr(15 downto 12);
+  rm <= instr(11 downto 8);
+
+  -- Shift for ALU reg
+  shift_type <= instr(7 downto 6);
+  shift_amt <= instr(5 downto 0);
+
+  -- Immediate for ALU imm
+  imm12 <= instr(11 downto 0);
+
+  -- Load/Store offset
+  off13 <= instr(12 downto 0);
+
+  -- Load/Store flags (class=010)
+  ls_load <= instr(24);
+  ls_byte <= instr(23);
+  ls_wb <= instr(22);
+  ls_up <= instr(21);
+
+  -- Branch (class=011)
+  br_link <= instr(24);
+  imm24 <= instr(23 downto 0);
+
+  -- System (class=100)
+  imm21 <= instr(20 downto 0);
+end architecture;

@@ -3,7 +3,7 @@ use hdl_core::elab::elaborate;
 use hdl_core::parser::parse_str;
 use hdl_core::sim::Simulator;
 use hdl_core::value::BitVec;
-use a32_core::{Machine, SimConfig, StepOutcome};
+use a32_core::{Machine, SimConfig, StepOutcome, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 pub struct HdlSession {
     sim: Option<Simulator>,
@@ -145,6 +145,43 @@ impl A32Session {
         let machine = self.machine.as_ref().ok_or("program not loaded")?;
         Ok(machine.output_string())
     }
+
+    /// Get screen dimensions
+    pub fn screen_size(&self) -> (u32, u32) {
+        (SCREEN_WIDTH, SCREEN_HEIGHT)
+    }
+
+    /// Get screen framebuffer as bytes
+    pub fn screen(&self) -> Result<Vec<u8>, String> {
+        let machine = self.machine.as_ref().ok_or("program not loaded")?;
+        Ok(machine.screen().to_vec())
+    }
+
+    /// Check if screen has been modified
+    pub fn screen_dirty(&self) -> Result<bool, String> {
+        let machine = self.machine.as_ref().ok_or("program not loaded")?;
+        Ok(machine.screen_dirty())
+    }
+
+    /// Clear screen dirty flag
+    pub fn clear_screen_dirty(&mut self) -> Result<(), String> {
+        let machine = self.machine.as_mut().ok_or("program not loaded")?;
+        machine.clear_screen_dirty();
+        Ok(())
+    }
+
+    /// Set keyboard key (0 = no key)
+    pub fn set_key(&mut self, key: u32) -> Result<(), String> {
+        let machine = self.machine.as_mut().ok_or("program not loaded")?;
+        machine.set_key(key);
+        Ok(())
+    }
+
+    /// Get current keyboard key
+    pub fn get_key(&self) -> Result<u32, String> {
+        let machine = self.machine.as_ref().ok_or("program not loaded")?;
+        Ok(machine.get_key())
+    }
 }
 
 fn format_outcome(outcome: StepOutcome) -> String {
@@ -276,6 +313,41 @@ mod wasm_api {
 
         pub fn output(&self) -> Result<String, JsValue> {
             self.inner.output().map_err(js_err)
+        }
+
+        /// Get screen width
+        pub fn screen_width(&self) -> u32 {
+            self.inner.screen_size().0
+        }
+
+        /// Get screen height
+        pub fn screen_height(&self) -> u32 {
+            self.inner.screen_size().1
+        }
+
+        /// Get screen framebuffer as bytes (1 bit per pixel, MSB first)
+        pub fn screen(&self) -> Result<Vec<u8>, JsValue> {
+            self.inner.screen().map_err(js_err)
+        }
+
+        /// Check if screen has been modified since last clear
+        pub fn screen_dirty(&self) -> Result<bool, JsValue> {
+            self.inner.screen_dirty().map_err(js_err)
+        }
+
+        /// Clear the screen dirty flag
+        pub fn clear_screen_dirty(&mut self) -> Result<(), JsValue> {
+            self.inner.clear_screen_dirty().map_err(js_err)
+        }
+
+        /// Set keyboard key (0 = no key pressed)
+        pub fn set_key(&mut self, key: u32) -> Result<(), JsValue> {
+            self.inner.set_key(key).map_err(js_err)
+        }
+
+        /// Get current keyboard key
+        pub fn get_key(&self) -> Result<u32, JsValue> {
+            self.inner.get_key().map_err(js_err)
         }
     }
 

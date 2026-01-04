@@ -1,0 +1,281 @@
+-- A32-Lite CPU (Single-cycle implementation)
+-- 32-bit ARM-inspired CPU with 16 registers, NZCV flags
+-- Implements: ALU ops, Load/Store, Branch, System
+
+entity CPU is
+  port(
+    clk : in bit;
+    reset : in bit;
+    -- Instruction memory interface
+    instr_addr : out bits(31 downto 0);
+    instr_data : in bits(31 downto 0);
+    -- Data memory interface
+    mem_addr : out bits(31 downto 0);
+    mem_wdata : out bits(31 downto 0);
+    mem_rdata : in bits(31 downto 0);
+    mem_read : out bit;
+    mem_write : out bit;
+    mem_byte : out bit;
+    -- Status
+    halted : out bit
+  );
+end entity;
+
+architecture rtl of CPU is
+  -- Components
+  component PC
+    port(clk : in bit; d : in bits(31 downto 0); inc : in bit; load : in bit; reset : in bit; q : out bits(31 downto 0));
+  end component;
+
+  component Decoder
+    port(instr : in bits(31 downto 0);
+         cond : out bits(3 downto 0); class : out bits(2 downto 0);
+         op : out bits(3 downto 0); s_flag : out bit;
+         rd : out bits(3 downto 0); rn : out bits(3 downto 0); rm : out bits(3 downto 0);
+         shift_amt : out bits(5 downto 0); shift_type : out bits(1 downto 0);
+         imm12 : out bits(11 downto 0); off13 : out bits(12 downto 0);
+         imm24 : out bits(23 downto 0); imm21 : out bits(20 downto 0);
+         ls_load : out bit; ls_byte : out bit; ls_wb : out bit; ls_up : out bit;
+         br_link : out bit);
+  end component;
+
+  component CondCheck
+    port(cond : in bits(3 downto 0); n : in bit; z : in bit; c : in bit; v : in bit; ok : out bit);
+  end component;
+
+  component Control
+    port(class : in bits(2 downto 0); op : in bits(3 downto 0);
+         s_flag : in bit; cond_ok : in bit; ls_load : in bit; br_link : in bit;
+         reg_write : out bit; mem_read : out bit; mem_write : out bit;
+         alu_src : out bit; mem_to_reg : out bit; branch : out bit;
+         update_flags : out bit; pc_write : out bit; link : out bit; halt : out bit);
+  end component;
+
+  component RegFile16
+    port(clk : in bit; wd : in bits(31 downto 0); wa : in bits(3 downto 0); we : in bit;
+         ra : in bits(3 downto 0); qa : out bits(31 downto 0);
+         rb : in bits(3 downto 0); qb : out bits(31 downto 0));
+  end component;
+
+  component ALU32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); op : in bits(3 downto 0);
+         y : out bits(31 downto 0); n_flag : out bit; z_flag : out bit; c_flag : out bit; v_flag : out bit);
+  end component;
+
+  component Shifter32
+    port(a : in bits(31 downto 0); amt : in bits(4 downto 0); mode : in bits(1 downto 0);
+         y : out bits(31 downto 0); cout : out bit);
+  end component;
+
+  component Add32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); cin : in bit;
+         y : out bits(31 downto 0); cout : out bit);
+  end component;
+
+  component Register
+    port(clk : in bit; d : in bits(31 downto 0); load : in bit; q : out bits(31 downto 0));
+  end component;
+
+  component Mux32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); sel : in bit; y : out bits(31 downto 0));
+  end component;
+
+  -- PC signals
+  signal pc_out : bits(31 downto 0);
+  signal pc_next : bits(31 downto 0);
+  signal pc_plus4 : bits(31 downto 0);
+  signal pc_branch : bits(31 downto 0);
+  signal pc_load : bit;
+  signal pc_inc : bit;
+
+  -- Decoder outputs
+  signal dec_cond : bits(3 downto 0);
+  signal dec_class : bits(2 downto 0);
+  signal dec_op : bits(3 downto 0);
+  signal dec_s : bit;
+  signal dec_rd : bits(3 downto 0);
+  signal dec_rn : bits(3 downto 0);
+  signal dec_rm : bits(3 downto 0);
+  signal dec_shift_amt : bits(5 downto 0);
+  signal dec_shift_type : bits(1 downto 0);
+  signal dec_imm12 : bits(11 downto 0);
+  signal dec_off13 : bits(12 downto 0);
+  signal dec_imm24 : bits(23 downto 0);
+  signal dec_imm21 : bits(20 downto 0);
+  signal dec_ls_load : bit;
+  signal dec_ls_byte : bit;
+  signal dec_ls_wb : bit;
+  signal dec_ls_up : bit;
+  signal dec_br_link : bit;
+
+  -- Condition check
+  signal cond_ok : bit;
+
+  -- Control signals
+  signal ctrl_reg_write : bit;
+  signal ctrl_mem_read : bit;
+  signal ctrl_mem_write : bit;
+  signal ctrl_alu_src : bit;
+  signal ctrl_mem_to_reg : bit;
+  signal ctrl_branch : bit;
+  signal ctrl_update_flags : bit;
+  signal ctrl_pc_write : bit;
+  signal ctrl_link : bit;
+  signal ctrl_halt : bit;
+
+  -- Register file signals
+  signal rf_rd1 : bits(31 downto 0);  -- Rn value
+  signal rf_rd2 : bits(31 downto 0);  -- Rm value
+  signal rf_wd : bits(31 downto 0);   -- Write data
+  signal rf_we : bit;
+
+  -- ALU signals
+  signal alu_a : bits(31 downto 0);
+  signal alu_b : bits(31 downto 0);
+  signal alu_result : bits(31 downto 0);
+  signal alu_n : bit;
+  signal alu_z : bit;
+  signal alu_c : bit;
+  signal alu_v : bit;
+
+  -- Shifter
+  signal shifted_rm : bits(31 downto 0);
+  signal shift_cout : bit;
+
+  -- Flags register
+  signal flag_n : bit;
+  signal flag_z : bit;
+  signal flag_c : bit;
+  signal flag_v : bit;
+
+  -- Immediate extension
+  signal imm12_ext : bits(31 downto 0);
+  signal off13_ext : bits(31 downto 0);
+  signal branch_offset : bits(31 downto 0);
+
+  -- Memory address calculation
+  signal mem_eff_addr : bits(31 downto 0);
+  signal mem_offset : bits(31 downto 0);
+
+  -- Halt register
+  signal halt_reg : bit;
+
+  -- Temporary signals
+  signal add_cout : bit;
+begin
+  -- PC unit
+  u_pc: PC port map (clk => clk, d => pc_next, inc => pc_inc, load => pc_load, reset => reset, q => pc_out);
+
+  -- Instruction address is PC
+  instr_addr <= pc_out;
+
+  -- Decoder
+  u_dec: Decoder port map (
+    instr => instr_data,
+    cond => dec_cond, class => dec_class, op => dec_op, s_flag => dec_s,
+    rd => dec_rd, rn => dec_rn, rm => dec_rm,
+    shift_amt => dec_shift_amt, shift_type => dec_shift_type,
+    imm12 => dec_imm12, off13 => dec_off13,
+    imm24 => dec_imm24, imm21 => dec_imm21,
+    ls_load => dec_ls_load, ls_byte => dec_ls_byte,
+    ls_wb => dec_ls_wb, ls_up => dec_ls_up, br_link => dec_br_link
+  );
+
+  -- Condition check
+  u_cond: CondCheck port map (
+    cond => dec_cond, n => flag_n, z => flag_z, c => flag_c, v => flag_v,
+    ok => cond_ok
+  );
+
+  -- Control unit
+  u_ctrl: Control port map (
+    class => dec_class, op => dec_op, s_flag => dec_s, cond_ok => cond_ok,
+    ls_load => dec_ls_load, br_link => dec_br_link,
+    reg_write => ctrl_reg_write, mem_read => ctrl_mem_read, mem_write => ctrl_mem_write,
+    alu_src => ctrl_alu_src, mem_to_reg => ctrl_mem_to_reg, branch => ctrl_branch,
+    update_flags => ctrl_update_flags, pc_write => ctrl_pc_write,
+    link => ctrl_link, halt => ctrl_halt
+  );
+
+  -- Register file
+  u_rf: RegFile16 port map (
+    clk => clk, wd => rf_wd, wa => dec_rd, we => rf_we,
+    ra => dec_rn, qa => rf_rd1,
+    rb => dec_rm, qb => rf_rd2
+  );
+
+  -- Shifter for Rm
+  u_shift: Shifter32 port map (
+    a => rf_rd2, amt => dec_shift_amt(4 downto 0), mode => dec_shift_type,
+    y => shifted_rm, cout => shift_cout
+  );
+
+  -- Sign-extend imm12
+  imm12_ext <= (19 downto 0 => dec_imm12(11)) & dec_imm12;
+
+  -- Sign-extend off13 for load/store
+  off13_ext <= (18 downto 0 => dec_off13(12)) & dec_off13;
+
+  -- Branch offset: imm24 << 2, sign-extended
+  branch_offset <= dec_imm24(21 downto 0) & b"00";
+
+  -- ALU inputs
+  alu_a <= rf_rd1;
+  u_alu_b_mux: Mux32 port map (a => shifted_rm, b => imm12_ext, sel => ctrl_alu_src, y => alu_b);
+
+  -- ALU
+  u_alu: ALU32 port map (
+    a => alu_a, b => alu_b, op => dec_op,
+    y => alu_result, n_flag => alu_n, z_flag => alu_z, c_flag => alu_c, v_flag => alu_v
+  );
+
+  -- Memory address for load/store
+  mem_offset <= off13_ext when dec_ls_up = '1' else (not off13_ext);
+  u_mem_add: Add32 port map (a => rf_rd1, b => mem_offset, cin => not dec_ls_up, y => mem_eff_addr, cout => add_cout);
+
+  mem_addr <= mem_eff_addr;
+  mem_wdata <= rf_rd2;
+  mem_read <= ctrl_mem_read;
+  mem_write <= ctrl_mem_write;
+  mem_byte <= dec_ls_byte;
+
+  -- Register write data: ALU result or memory data
+  u_rf_wd_mux: Mux32 port map (a => alu_result, b => mem_rdata, sel => ctrl_mem_to_reg, y => rf_wd);
+
+  -- Register write enable
+  rf_we <= ctrl_reg_write and (not halt_reg);
+
+  -- PC next value
+  u_pc_add: Add32 port map (a => pc_out, b => branch_offset, cin => '0', y => pc_branch, cout => add_cout);
+
+  pc_next <= pc_branch when ctrl_branch = '1' else pc_plus4;
+  pc_inc <= not halt_reg and not ctrl_branch;
+  pc_load <= ctrl_branch and (not halt_reg);
+
+  -- PC + 4
+  u_pc_plus4: Add32 port map (a => pc_out, b => x"00000004", cin => '0', y => pc_plus4, cout => add_cout);
+
+  -- Flags update (on clock edge)
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        flag_n <= '0';
+        flag_z <= '0';
+        flag_c <= '0';
+        flag_v <= '0';
+        halt_reg <= '0';
+      elsif ctrl_update_flags = '1' then
+        flag_n <= alu_n;
+        flag_z <= alu_z;
+        flag_c <= alu_c;
+        flag_v <= alu_v;
+      end if;
+      if ctrl_halt = '1' then
+        halt_reg <= '1';
+      end if;
+    end if;
+  end process;
+
+  halted <= halt_reg;
+end architecture;

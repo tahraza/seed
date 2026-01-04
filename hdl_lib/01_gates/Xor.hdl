@@ -1,0 +1,24 @@
+-- XOR gate built from NAND
+-- y = a XOR b = NAND(NAND(a, NAND(a,b)), NAND(b, NAND(a,b)))
+
+entity Xor is
+  port(
+    a : in bit;
+    b : in bit;
+    y : out bit
+  );
+end entity;
+
+architecture rtl of Xor is
+  component Nand
+    port(a : in bit; b : in bit; y : out bit);
+  end component;
+  signal nab : bit;
+  signal t1 : bit;
+  signal t2 : bit;
+begin
+  u_nab: Nand port map (a => a, b => b, y => nab);
+  u_t1: Nand port map (a => a, b => nab, y => t1);
+  u_t2: Nand port map (a => b, b => nab, y => t2);
+  u_out: Nand port map (a => t1, b => t2, y => y);
+end architecture;

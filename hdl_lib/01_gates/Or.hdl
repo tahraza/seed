@@ -1,0 +1,25 @@
+-- OR gate built from NAND
+-- y = a OR b = NAND(NOT a, NOT b)
+
+entity Or is
+  port(
+    a : in bit;
+    b : in bit;
+    y : out bit
+  );
+end entity;
+
+architecture rtl of Or is
+  component Nand
+    port(a : in bit; b : in bit; y : out bit);
+  end component;
+  component Not
+    port(a : in bit; y : out bit);
+  end component;
+  signal na : bit;
+  signal nb : bit;
+begin
+  u_na: Not port map (a => a, y => na);
+  u_nb: Not port map (a => b, y => nb);
+  u_or: Nand port map (a => na, b => nb, y => y);
+end architecture;

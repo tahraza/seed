@@ -41,4 +41,9 @@ impl Cpu {
     pub fn flags_mut(&mut self) -> &mut Flags {
         &mut self.flags
     }
+
+    /// Get a copy of all registers as an array
+    pub fn regs_array(&self) -> [u32; REG_COUNT] {
+        self.regs
+    }
 }

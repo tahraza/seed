@@ -1539,6 +1539,136 @@ Memory primitive:
 - If `strict_traps=false`, misaligned word loads/stores are emulated by
   byte accesses (little-endian), unless they cross RAM bounds.
 
+### 24.5 Screen (memory-mapped framebuffer)
+
+The simulator provides a 320x240 pixel monochrome display.
+
+Memory layout:
+- Base address: `0x00400000`
+- Size: 9600 bytes (320 × 240 / 8)
+- Format: 1 bit per pixel, row-major order
+- Bit order: MSB is leftmost pixel within each byte
+
+Address calculation:
+```
+byte_index = (y * 320 + x) / 8
+bit_offset = 7 - ((y * 320 + x) % 8)
+pixel_on = (screen[byte_index] >> bit_offset) & 1
+```
+
+Word access (32-bit aligned):
+- Each 32-bit word contains 32 consecutive horizontal pixels
+- Word 0 at `0x00400000` contains pixels (0,0) to (31,0)
+- Word 1 at `0x00400004` contains pixels (32,0) to (63,0)
+- Row 0 spans words 0-9, row 1 spans words 10-19, etc.
+
+Screen constants:
+```
+SCREEN_WIDTH  = 320
+SCREEN_HEIGHT = 240
+SCREEN_BASE   = 0x00400000
+SCREEN_SIZE   = 9600
+```
+
+### 24.6 Keyboard (memory-mapped register)
+
+The simulator provides a keyboard input register.
+
+Memory layout:
+- Address: `0x00402600`
+- Size: 4 bytes (32-bit register)
+- Access: Read-only from CPU perspective (writes are ignored)
+
+Register value:
+- Contains the ASCII/scan code of the currently pressed key
+- Contains 0 when no key is pressed
+
+Key codes:
+```
+Printable ASCII:    32-126 (space to ~)
+Enter:              10
+Backspace:          8
+Tab:                9
+Escape:             27
+Delete:             127
+Arrow Up:           128
+Arrow Down:         129
+Arrow Left:         130
+Arrow Right:        131
+F1-F12:             132-143
+Home:               144
+End:                145
+PageUp:             146
+PageDown:           147
+Insert:             148
+```
+
+Keyboard constant:
+```
+KEYBOARD_ADDR = 0x00402600
+```
+
+### 24.7 RAM configuration
+
+The simulator RAM is configurable at load time.
+
+Default configuration:
+```
+ram_size    = 0x00100000  (1 MB)
+stack_top   = ram_size    (SP initialized to top of RAM)
+strict_traps = true
+max_steps   = 1000000
+```
+
+Configuration options:
+- `ram_size`: Size of RAM in bytes (must be > 0, max 0x00400000 to avoid screen overlap)
+- `stack_top`: Initial SP value (defaults to `ram_size` if not specified)
+- `strict_traps`: Enable strict trap checking for misaligned access
+- `max_steps`: Maximum instructions before timeout
+
+RAM constraints:
+- RAM base is always `0x00000000`
+- RAM must not overlap with screen (`0x00400000`+)
+- Recommended sizes: `0x00010000` (64 KB), `0x00040000` (256 KB), `0x00100000` (1 MB)
+
+Configuration in test files (`.ref`):
+```
+CONFIG ram_size 0x00100000
+CONFIG strict_traps true
+CONFIG max_steps 1000000
+```
+
+Configuration in web interface:
+- RAM size field accepts hex (`0x00100000`) or decimal (`1048576`)
+- Strict traps toggle (on/off)
+
+Initial state:
+- All RAM is zeroed at load time
+- SP is set to `stack_top` (or `ram_size` by default)
+- PC is set to the entry point from the binary
+- All other registers are zeroed
+- Flags N/Z/C/V are cleared
+
+### 24.8 Complete memory map
+
+```
+Address Range           Size      Description
+─────────────────────────────────────────────────────────
+0x00000000-0x000FFFFF   1 MB      RAM (configurable, default)
+0x00400000-0x004025FF   9600 B    Screen framebuffer
+0x00402600-0x00402603   4 B       Keyboard register
+0xFFFF0000              4 B       PUTC (write byte)
+0xFFFF0004              4 B       GETC (read byte)
+0xFFFF0010              4 B       EXIT (write exit code)
+```
+
+Notes:
+- RAM size is configurable (default 1 MB, max 4 MB)
+- Screen and keyboard are at fixed addresses (`0x00400000`+)
+- MMIO registers are at the top of the 32-bit address space
+- Access outside defined regions triggers `MEM_FAULT`
+- Screen/keyboard addresses work regardless of RAM size
+
 ## 25. Object file format (A32O)
 
 Object files allow multi-file linking. Format is little-endian.

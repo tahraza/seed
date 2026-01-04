@@ -1,0 +1,23 @@
+-- AND gate built from NAND
+-- y = a AND b = NOT(NAND(a, b))
+
+entity And is
+  port(
+    a : in bit;
+    b : in bit;
+    y : out bit
+  );
+end entity;
+
+architecture rtl of And is
+  component Nand
+    port(a : in bit; b : in bit; y : out bit);
+  end component;
+  component Not
+    port(a : in bit; y : out bit);
+  end component;
+  signal t : bit;
+begin
+  u_nand: Nand port map (a => a, b => b, y => t);
+  u_not: Not port map (a => t, y => y);
+end architecture;

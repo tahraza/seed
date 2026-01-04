@@ -1,0 +1,25 @@
+-- 4-way demultiplexer
+-- Routes input to one of 4 outputs based on sel
+
+entity DMux4Way is
+  port(
+    i : in bit;
+    sel : in bits(1 downto 0);
+    a : out bit;
+    b : out bit;
+    c : out bit;
+    d : out bit
+  );
+end entity;
+
+architecture rtl of DMux4Way is
+  component DMux
+    port(i : in bit; sel : in bit; a : out bit; b : out bit);
+  end component;
+  signal t0 : bit;
+  signal t1 : bit;
+begin
+  u_top: DMux port map (i => i, sel => sel(1), a => t0, b => t1);
+  u_ab: DMux port map (i => t0, sel => sel(0), a => a, b => b);
+  u_cd: DMux port map (i => t1, sel => sel(0), a => c, b => d);
+end architecture;

@@ -1,0 +1,53 @@
+-- 32-bit Ripple Carry Adder
+-- y = a + b + cin
+-- cout = carry out from MSB
+
+entity Add32 is
+  port(
+    a : in bits(31 downto 0);
+    b : in bits(31 downto 0);
+    cin : in bit;
+    y : out bits(31 downto 0);
+    cout : out bit
+  );
+end entity;
+
+architecture rtl of Add32 is
+  component FullAdder
+    port(a : in bit; b : in bit; cin : in bit; sum : out bit; cout : out bit);
+  end component;
+  signal c : bits(31 downto 0);
+begin
+  fa0: FullAdder port map (a => a(0), b => b(0), cin => cin, sum => y(0), cout => c(0));
+  fa1: FullAdder port map (a => a(1), b => b(1), cin => c(0), sum => y(1), cout => c(1));
+  fa2: FullAdder port map (a => a(2), b => b(2), cin => c(1), sum => y(2), cout => c(2));
+  fa3: FullAdder port map (a => a(3), b => b(3), cin => c(2), sum => y(3), cout => c(3));
+  fa4: FullAdder port map (a => a(4), b => b(4), cin => c(3), sum => y(4), cout => c(4));
+  fa5: FullAdder port map (a => a(5), b => b(5), cin => c(4), sum => y(5), cout => c(5));
+  fa6: FullAdder port map (a => a(6), b => b(6), cin => c(5), sum => y(6), cout => c(6));
+  fa7: FullAdder port map (a => a(7), b => b(7), cin => c(6), sum => y(7), cout => c(7));
+  fa8: FullAdder port map (a => a(8), b => b(8), cin => c(7), sum => y(8), cout => c(8));
+  fa9: FullAdder port map (a => a(9), b => b(9), cin => c(8), sum => y(9), cout => c(9));
+  fa10: FullAdder port map (a => a(10), b => b(10), cin => c(9), sum => y(10), cout => c(10));
+  fa11: FullAdder port map (a => a(11), b => b(11), cin => c(10), sum => y(11), cout => c(11));
+  fa12: FullAdder port map (a => a(12), b => b(12), cin => c(11), sum => y(12), cout => c(12));
+  fa13: FullAdder port map (a => a(13), b => b(13), cin => c(12), sum => y(13), cout => c(13));
+  fa14: FullAdder port map (a => a(14), b => b(14), cin => c(13), sum => y(14), cout => c(14));
+  fa15: FullAdder port map (a => a(15), b => b(15), cin => c(14), sum => y(15), cout => c(15));
+  fa16: FullAdder port map (a => a(16), b => b(16), cin => c(15), sum => y(16), cout => c(16));
+  fa17: FullAdder port map (a => a(17), b => b(17), cin => c(16), sum => y(17), cout => c(17));
+  fa18: FullAdder port map (a => a(18), b => b(18), cin => c(17), sum => y(18), cout => c(18));
+  fa19: FullAdder port map (a => a(19), b => b(19), cin => c(18), sum => y(19), cout => c(19));
+  fa20: FullAdder port map (a => a(20), b => b(20), cin => c(19), sum => y(20), cout => c(20));
+  fa21: FullAdder port map (a => a(21), b => b(21), cin => c(20), sum => y(21), cout => c(21));
+  fa22: FullAdder port map (a => a(22), b => b(22), cin => c(21), sum => y(22), cout => c(22));
+  fa23: FullAdder port map (a => a(23), b => b(23), cin => c(22), sum => y(23), cout => c(23));
+  fa24: FullAdder port map (a => a(24), b => b(24), cin => c(23), sum => y(24), cout => c(24));
+  fa25: FullAdder port map (a => a(25), b => b(25), cin => c(24), sum => y(25), cout => c(25));
+  fa26: FullAdder port map (a => a(26), b => b(26), cin => c(25), sum => y(26), cout => c(26));
+  fa27: FullAdder port map (a => a(27), b => b(27), cin => c(26), sum => y(27), cout => c(27));
+  fa28: FullAdder port map (a => a(28), b => b(28), cin => c(27), sum => y(28), cout => c(28));
+  fa29: FullAdder port map (a => a(29), b => b(29), cin => c(28), sum => y(29), cout => c(29));
+  fa30: FullAdder port map (a => a(30), b => b(30), cin => c(29), sum => y(30), cout => c(30));
+  fa31: FullAdder port map (a => a(31), b => b(31), cin => c(30), sum => y(31), cout => cout);
+end architecture;

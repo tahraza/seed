@@ -1,0 +1,33 @@
+// Keyboard.hdl - Keyboard interface
+// Memory-mapped at 0x00402600 (single 32-bit register)
+//
+// When a key is pressed, the register contains its ASCII/scan code.
+// When no key is pressed, the register contains 0.
+//
+// Key codes:
+// - Printable ASCII: 32-126 (space to ~)
+// - Enter: 10 (newline)
+// - Backspace: 8
+// - Tab: 9
+// - Escape: 27
+// - Arrow keys: 128-131 (up, down, left, right)
+// - Function keys: F1-F12 = 132-143
+//
+// The keyboard is read-only from the CPU's perspective.
+// The external keyboard controller sets the key value.
+
+CHIP Keyboard {
+    IN  key[32];        // Current key from external controller
+    OUT out[32];        // Key code output (directly exposed to bus)
+
+    PARTS:
+    // The keyboard is simply a register that holds the current key
+    // In hardware, this would be connected to a keyboard controller
+    // that handles debouncing, key detection, etc.
+
+    // For HDL simulation, we just pass through the key input
+    // The external environment sets the key value
+
+    // Buffer the input (in real hardware, this provides signal integrity)
+    Or32(a=key, b=false, out=out);
+}

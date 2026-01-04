@@ -1,0 +1,66 @@
+-- Condition Checker for A32-Lite CPU
+-- Evaluates condition codes against flags
+-- Returns '1' if condition is satisfied
+
+entity CondCheck is
+  port(
+    cond : in bits(3 downto 0);   -- Condition code from instruction
+    n : in bit;                    -- Negative flag
+    z : in bit;                    -- Zero flag
+    c : in bit;                    -- Carry flag
+    v : in bit;                    -- Overflow flag
+    ok : out bit                   -- Condition satisfied
+  );
+end entity;
+
+architecture rtl of CondCheck is
+  signal eq : bit;   -- Z=1
+  signal ne : bit;   -- Z=0
+  signal cs : bit;   -- C=1
+  signal cc : bit;   -- C=0
+  signal mi : bit;   -- N=1
+  signal pl : bit;   -- N=0
+  signal vs : bit;   -- V=1
+  signal vc : bit;   -- V=0
+  signal hi : bit;   -- C=1 && Z=0
+  signal ls : bit;   -- C=0 || Z=1
+  signal ge : bit;   -- N=V
+  signal lt : bit;   -- N!=V
+  signal gt : bit;   -- Z=0 && N=V
+  signal le : bit;   -- Z=1 || N!=V
+  signal al : bit;   -- Always
+begin
+  eq <= z;
+  ne <= not z;
+  cs <= c;
+  cc <= not c;
+  mi <= n;
+  pl <= not n;
+  vs <= v;
+  vc <= not v;
+  hi <= c and (not z);
+  ls <= (not c) or z;
+  ge <= '1' when n = v else '0';
+  lt <= '1' when n /= v else '0';
+  gt <= (not z) and ge;
+  le <= z or lt;
+  al <= '1';
+
+  -- Select based on cond
+  ok <= eq when cond = b"0000" else
+        ne when cond = b"0001" else
+        cs when cond = b"0010" else
+        cc when cond = b"0011" else
+        mi when cond = b"0100" else
+        pl when cond = b"0101" else
+        vs when cond = b"0110" else
+        vc when cond = b"0111" else
+        hi when cond = b"1000" else
+        ls when cond = b"1001" else
+        ge when cond = b"1010" else
+        lt when cond = b"1011" else
+        gt when cond = b"1100" else
+        le when cond = b"1101" else
+        al when cond = b"1110" else
+        '0';  -- cond=1111 is NV (never)
+end architecture;

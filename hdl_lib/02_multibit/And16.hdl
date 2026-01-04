@@ -1,0 +1,33 @@
+-- 16-bit AND gate
+-- Applies AND to each pair of bits
+
+entity And16 is
+  port(
+    a : in bits(15 downto 0);
+    b : in bits(15 downto 0);
+    y : out bits(15 downto 0)
+  );
+end entity;
+
+architecture rtl of And16 is
+  component And
+    port(a : in bit; b : in bit; y : out bit);
+  end component;
+begin
+  g0: And port map (a => a(0), b => b(0), y => y(0));
+  g1: And port map (a => a(1), b => b(1), y => y(1));
+  g2: And port map (a => a(2), b => b(2), y => y(2));
+  g3: And port map (a => a(3), b => b(3), y => y(3));
+  g4: And port map (a => a(4), b => b(4), y => y(4));
+  g5: And port map (a => a(5), b => b(5), y => y(5));
+  g6: And port map (a => a(6), b => b(6), y => y(6));
+  g7: And port map (a => a(7), b => b(7), y => y(7));
+  g8: And port map (a => a(8), b => b(8), y => y(8));
+  g9: And port map (a => a(9), b => b(9), y => y(9));
+  g10: And port map (a => a(10), b => b(10), y => y(10));
+  g11: And port map (a => a(11), b => b(11), y => y(11));
+  g12: And port map (a => a(12), b => b(12), y => y(12));
+  g13: And port map (a => a(13), b => b(13), y => y(13));
+  g14: And port map (a => a(14), b => b(14), y => y(14));
+  g15: And port map (a => a(15), b => b(15), y => y(15));
+end architecture;

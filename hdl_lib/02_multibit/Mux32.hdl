@@ -1,0 +1,21 @@
+-- 32-bit 2-to-1 multiplexer
+-- y = sel ? b : a
+
+entity Mux32 is
+  port(
+    a : in bits(31 downto 0);
+    b : in bits(31 downto 0);
+    sel : in bit;
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Mux32 is
+  signal sel32 : bits(31 downto 0);
+  signal nsel32 : bits(31 downto 0);
+begin
+  -- Replicate sel to 32 bits
+  sel32 <= (others => sel);
+  nsel32 <= not sel32;
+  y <= (a and nsel32) or (b and sel32);
+end architecture;

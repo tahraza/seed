@@ -1,0 +1,50 @@
+-- Program Counter
+-- inc: increment PC by 4
+-- load: load new value
+-- reset: reset to 0
+-- Priority: reset > load > inc
+
+entity PC is
+  port(
+    clk : in bit;
+    d : in bits(31 downto 0);
+    inc : in bit;
+    load : in bit;
+    reset : in bit;
+    q : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of PC is
+  component Register
+    port(clk : in bit; d : in bits(31 downto 0); load : in bit; q : out bits(31 downto 0));
+  end component;
+  component Add32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); cin : in bit; y : out bits(31 downto 0); cout : out bit);
+  end component;
+  component Mux32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); sel : in bit; y : out bits(31 downto 0));
+  end component;
+
+  signal pc_out : bits(31 downto 0);
+  signal pc_plus4 : bits(31 downto 0);
+  signal pc_cout : bit;
+  signal m1 : bits(31 downto 0);
+  signal m2 : bits(31 downto 0);
+  signal m3 : bits(31 downto 0);
+  signal do_load : bit;
+begin
+  -- PC + 4
+  u_add: Add32 port map (a => pc_out, b => x"00000004", cin => '0', y => pc_plus4, cout => pc_cout);
+
+  -- Select between current, +4, load, reset
+  u_m1: Mux32 port map (a => pc_out, b => pc_plus4, sel => inc, y => m1);
+  u_m2: Mux32 port map (a => m1, b => d, sel => load, y => m2);
+  u_m3: Mux32 port map (a => m2, b => x"00000000", sel => reset, y => m3);
+
+  -- Load register if any change requested
+  do_load <= inc or load or reset;
+  u_reg: Register port map (clk => clk, d => m3, load => do_load, q => pc_out);
+
+  q <= pc_out;
+end architecture;

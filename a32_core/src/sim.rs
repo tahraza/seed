@@ -1,11 +1,30 @@
 use crate::cpu::Cpu;
 use crate::isa::{Cond, Flags, Reg};
 use crate::mem::Memory;
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 
 const MMIO_PUTC: u32 = 0xFFFF_0000;
 const MMIO_GETC: u32 = 0xFFFF_0004;
 const MMIO_EXIT: u32 = 0xFFFF_0010;
+
+// Screen: 320x240 pixels, 1 bit per pixel (black/white)
+// Memory-mapped framebuffer
+pub const SCREEN_WIDTH: u32 = 320;
+pub const SCREEN_HEIGHT: u32 = 240;
+pub const SCREEN_BASE: u32 = 0x0040_0000;
+pub const SCREEN_SIZE: u32 = (SCREEN_WIDTH * SCREEN_HEIGHT) / 8; // 9600 bytes
+
+// Keyboard: single register with ASCII code of pressed key (0 if none)
+pub const KEYBOARD_ADDR: u32 = 0x0040_2600;
+
+/// Execution trace entry
+#[derive(Clone, Debug)]
+pub struct TraceEntry {
+    pub pc: u32,
+    pub instr: u32,
+    pub regs: [u32; 16],
+    pub flags: Flags,
+}
 
 #[derive(Clone, Debug)]
 pub struct SimConfig {
@@ -70,6 +89,7 @@ pub enum StepOutcome {
 pub struct RunOutcome {
     pub exit: Option<Exit>,
     pub trap: Option<Trap>,
+    pub breakpoint_hit: Option<u32>,
     pub steps: u64,
 }
 
@@ -115,6 +135,15 @@ pub struct Machine {
     input: VecDeque<u8>,
     stop: Option<StopReason>,
     steps: u64,
+    // Debugger state
+    breakpoints: HashSet<u32>,
+    trace_enabled: bool,
+    trace_buffer: VecDeque<TraceEntry>,
+    trace_max_size: usize,
+    // Screen and keyboard
+    screen: Vec<u8>,
+    screen_dirty: bool,
+    keyboard: u32,
 }
 
 impl Machine {
@@ -133,6 +162,13 @@ impl Machine {
             input: VecDeque::new(),
             stop: None,
             steps: 0,
+            breakpoints: HashSet::new(),
+            trace_enabled: false,
+            trace_buffer: VecDeque::new(),
+            trace_max_size: 1024,
+            screen: vec![0u8; SCREEN_SIZE as usize],
+            screen_dirty: false,
+            keyboard: 0,
         }
     }
 
@@ -192,6 +228,10 @@ impl Machine {
         self.steps = 0;
         self.output.clear();
         self.input.clear();
+        // Reset screen and keyboard
+        self.screen.fill(0);
+        self.screen_dirty = false;
+        self.keyboard = 0;
         Ok(())
     }
 
@@ -215,6 +255,292 @@ impl Machine {
         self.input.extend(data.iter().copied());
     }
 
+    // ========== Screen ==========
+
+    /// Get the screen framebuffer (320x240, 1 bit per pixel, row-major)
+    /// Each byte contains 8 pixels, MSB is leftmost
+    pub fn screen(&self) -> &[u8] {
+        &self.screen
+    }
+
+    /// Check if screen has been modified since last clear_screen_dirty
+    pub fn screen_dirty(&self) -> bool {
+        self.screen_dirty
+    }
+
+    /// Clear the screen dirty flag
+    pub fn clear_screen_dirty(&mut self) {
+        self.screen_dirty = false;
+    }
+
+    /// Set a pixel on the screen (x: 0-319, y: 0-239)
+    pub fn set_pixel(&mut self, x: u32, y: u32, on: bool) {
+        if x >= SCREEN_WIDTH || y >= SCREEN_HEIGHT {
+            return;
+        }
+        let bit_index = y * SCREEN_WIDTH + x;
+        let byte_index = (bit_index / 8) as usize;
+        let bit_offset = 7 - (bit_index % 8); // MSB is leftmost
+        if on {
+            self.screen[byte_index] |= 1 << bit_offset;
+        } else {
+            self.screen[byte_index] &= !(1 << bit_offset);
+        }
+        self.screen_dirty = true;
+    }
+
+    /// Get a pixel from the screen
+    pub fn get_pixel(&self, x: u32, y: u32) -> bool {
+        if x >= SCREEN_WIDTH || y >= SCREEN_HEIGHT {
+            return false;
+        }
+        let bit_index = y * SCREEN_WIDTH + x;
+        let byte_index = (bit_index / 8) as usize;
+        let bit_offset = 7 - (bit_index % 8);
+        (self.screen[byte_index] >> bit_offset) & 1 != 0
+    }
+
+    /// Clear the screen
+    pub fn clear_screen(&mut self) {
+        self.screen.fill(0);
+        self.screen_dirty = true;
+    }
+
+    // ========== Keyboard ==========
+
+    /// Set the currently pressed key (0 = no key)
+    pub fn set_key(&mut self, key: u32) {
+        self.keyboard = key;
+    }
+
+    /// Get the currently pressed key
+    pub fn get_key(&self) -> u32 {
+        self.keyboard
+    }
+
+    // ========== Debugger: Breakpoints ==========
+
+    /// Add a breakpoint at the given address
+    pub fn add_breakpoint(&mut self, addr: u32) {
+        self.breakpoints.insert(addr & !3); // Align to 4 bytes
+    }
+
+    /// Remove a breakpoint at the given address
+    pub fn remove_breakpoint(&mut self, addr: u32) -> bool {
+        self.breakpoints.remove(&(addr & !3))
+    }
+
+    /// Clear all breakpoints
+    pub fn clear_breakpoints(&mut self) {
+        self.breakpoints.clear();
+    }
+
+    /// Check if there's a breakpoint at the given address
+    pub fn has_breakpoint(&self, addr: u32) -> bool {
+        self.breakpoints.contains(&(addr & !3))
+    }
+
+    /// Get all breakpoints
+    pub fn breakpoints(&self) -> impl Iterator<Item = &u32> {
+        self.breakpoints.iter()
+    }
+
+    // ========== Debugger: Trace ==========
+
+    /// Enable or disable execution tracing
+    pub fn set_trace_enabled(&mut self, enabled: bool) {
+        self.trace_enabled = enabled;
+    }
+
+    /// Check if tracing is enabled
+    pub fn trace_enabled(&self) -> bool {
+        self.trace_enabled
+    }
+
+    /// Set maximum trace buffer size
+    pub fn set_trace_max_size(&mut self, size: usize) {
+        self.trace_max_size = size;
+        while self.trace_buffer.len() > size {
+            self.trace_buffer.pop_front();
+        }
+    }
+
+    /// Get the trace buffer
+    pub fn trace(&self) -> &VecDeque<TraceEntry> {
+        &self.trace_buffer
+    }
+
+    /// Clear the trace buffer
+    pub fn clear_trace(&mut self) {
+        self.trace_buffer.clear();
+    }
+
+    /// Record current state to trace buffer
+    fn record_trace(&mut self, pc: u32, instr: u32) {
+        if !self.trace_enabled {
+            return;
+        }
+        let entry = TraceEntry {
+            pc,
+            instr,
+            regs: self.cpu.regs_array(),
+            flags: self.cpu.flags(),
+        };
+        if self.trace_buffer.len() >= self.trace_max_size {
+            self.trace_buffer.pop_front();
+        }
+        self.trace_buffer.push_back(entry);
+    }
+
+    // ========== Debugger: Memory Inspection ==========
+
+    /// Read a byte from memory (for inspection)
+    pub fn peek_u8(&self, addr: u32) -> Option<u8> {
+        self.mem.read8(addr)
+    }
+
+    /// Read a 32-bit word from memory (for inspection)
+    pub fn peek_u32(&self, addr: u32) -> Option<u32> {
+        self.mem.read32_le(addr)
+    }
+
+    /// Read a range of bytes from memory
+    pub fn peek_bytes(&self, addr: u32, len: usize) -> Vec<u8> {
+        let mut result = Vec::with_capacity(len);
+        for i in 0..len {
+            match self.mem.read8(addr.wrapping_add(i as u32)) {
+                Some(byte) => result.push(byte),
+                None => break,
+            }
+        }
+        result
+    }
+
+    /// Write a byte to memory (for debugging)
+    pub fn poke_u8(&mut self, addr: u32, value: u8) -> bool {
+        self.mem.write8(addr, value).is_some()
+    }
+
+    /// Write a 32-bit word to memory (for debugging)
+    pub fn poke_u32(&mut self, addr: u32, value: u32) -> bool {
+        self.mem.write32_le(addr, value).is_some()
+    }
+
+    /// Get register value by index
+    pub fn get_reg(&self, reg: Reg) -> u32 {
+        self.cpu.reg(reg)
+    }
+
+    /// Set register value
+    pub fn set_reg(&mut self, reg: Reg, value: u32) {
+        if reg == Reg::PC {
+            self.cpu.set_pc(value);
+        } else {
+            self.cpu.set_reg(reg, value);
+        }
+    }
+
+    /// Get the flags
+    pub fn flags(&self) -> Flags {
+        self.cpu.flags()
+    }
+
+    /// Get current PC
+    pub fn pc(&self) -> u32 {
+        self.cpu.pc()
+    }
+
+    /// Get step count
+    pub fn steps(&self) -> u64 {
+        self.steps
+    }
+
+    // ========== Debugger: Run Control ==========
+
+    /// Run until breakpoint, exit, trap, or max_steps
+    pub fn run_debug(&mut self, max_steps: u64) -> Result<RunOutcome, SimError> {
+        let limit = max_steps.min(self.config.max_steps);
+        for _ in 0..limit {
+            // Check for breakpoint before stepping
+            let pc = self.cpu.pc();
+            if self.breakpoints.contains(&pc) {
+                return Ok(RunOutcome {
+                    exit: None,
+                    trap: None,
+                    breakpoint_hit: Some(pc),
+                    steps: self.steps,
+                });
+            }
+
+            match self.step() {
+                StepOutcome::Continue => continue,
+                StepOutcome::Exit(exit) => {
+                    return Ok(RunOutcome {
+                        exit: Some(exit),
+                        trap: None,
+                        breakpoint_hit: None,
+                        steps: self.steps,
+                    });
+                }
+                StepOutcome::Trap(trap) => {
+                    return Ok(RunOutcome {
+                        exit: None,
+                        trap: Some(trap),
+                        breakpoint_hit: None,
+                        steps: self.steps,
+                    });
+                }
+            }
+        }
+        Err(SimError::new("E4005", "max steps exceeded"))
+    }
+
+    /// Step over a function call (run until return)
+    pub fn step_over(&mut self) -> Result<RunOutcome, SimError> {
+        let pc = self.cpu.pc();
+        let instr = self.mem.read32_le(pc).unwrap_or(0);
+
+        // Check if this is a BL instruction (branch with link)
+        let class = (instr >> 25) & 0x7;
+        let is_bl = class == 0b011 && ((instr >> 24) & 0x1) != 0;
+
+        if is_bl {
+            // It's a call - set temporary breakpoint at return address
+            let return_addr = pc.wrapping_add(4);
+            let had_bp = self.has_breakpoint(return_addr);
+            if !had_bp {
+                self.add_breakpoint(return_addr);
+            }
+            let result = self.run_debug(self.config.max_steps);
+            if !had_bp {
+                self.remove_breakpoint(return_addr);
+            }
+            result
+        } else {
+            // Not a call - just step once
+            match self.step() {
+                StepOutcome::Continue => Ok(RunOutcome {
+                    exit: None,
+                    trap: None,
+                    breakpoint_hit: None,
+                    steps: self.steps,
+                }),
+                StepOutcome::Exit(exit) => Ok(RunOutcome {
+                    exit: Some(exit),
+                    trap: None,
+                    breakpoint_hit: None,
+                    steps: self.steps,
+                }),
+                StepOutcome::Trap(trap) => Ok(RunOutcome {
+                    exit: None,
+                    trap: Some(trap),
+                    breakpoint_hit: None,
+                    steps: self.steps,
+                }),
+            }
+        }
+    }
+
     pub fn step(&mut self) -> StepOutcome {
         if let Some(stop) = self.stop.clone() {
             return match stop {
@@ -227,6 +553,9 @@ impl Machine {
             Ok(word) => word,
             Err(trap) => return self.halt_with_trap(trap),
         };
+
+        // Record trace before execution
+        self.record_trace(pc, instr);
         let cond = match Cond::from_u4((instr >> 28) as u8) {
             Some(c) => c,
             None => {
@@ -262,6 +591,7 @@ impl Machine {
                     return Ok(RunOutcome {
                         exit: Some(exit),
                         trap: None,
+                        breakpoint_hit: None,
                         steps: self.steps,
                     });
                 }
@@ -269,6 +599,7 @@ impl Machine {
                     return Ok(RunOutcome {
                         exit: None,
                         trap: Some(trap),
+                        breakpoint_hit: None,
                         steps: self.steps,
                     });
                 }
@@ -558,6 +889,7 @@ impl Machine {
     }
 
     fn read8(&mut self, addr: u32) -> Result<u8, Trap> {
+        // MMIO I/O
         if is_mmio_addr(addr) {
             let value = match addr {
                 MMIO_GETC => self.input.pop_front().map(u32::from).unwrap_or(0xFFFF_FFFF),
@@ -565,6 +897,17 @@ impl Machine {
             };
             return Ok((value & 0xFF) as u8);
         }
+        // Screen memory
+        if addr >= SCREEN_BASE && addr < SCREEN_BASE + SCREEN_SIZE {
+            let offset = (addr - SCREEN_BASE) as usize;
+            return Ok(self.screen[offset]);
+        }
+        // Keyboard register
+        if addr >= KEYBOARD_ADDR && addr < KEYBOARD_ADDR + 4 {
+            let byte_offset = (addr - KEYBOARD_ADDR) as usize;
+            return Ok(((self.keyboard >> (8 * byte_offset)) & 0xFF) as u8);
+        }
+        // RAM
         if !is_ram_addr(addr, self.config.ram_size) {
             return Err(Trap::mem_fault(addr));
         }
@@ -572,6 +915,7 @@ impl Machine {
     }
 
     fn read32(&mut self, addr: u32) -> Result<u32, Trap> {
+        // MMIO I/O
         if is_mmio_addr(addr) {
             let value = match addr {
                 MMIO_GETC => self.input.pop_front().map(u32::from).unwrap_or(0xFFFF_FFFF),
@@ -579,9 +923,26 @@ impl Machine {
             };
             return Ok(value);
         }
+        // Keyboard register (aligned read)
+        if addr == KEYBOARD_ADDR {
+            return Ok(self.keyboard);
+        }
+        // Screen memory (aligned read)
+        if addr >= SCREEN_BASE && addr + 4 <= SCREEN_BASE + SCREEN_SIZE && (addr & 0x3) == 0 {
+            let offset = (addr - SCREEN_BASE) as usize;
+            let value = u32::from_le_bytes([
+                self.screen[offset],
+                self.screen[offset + 1],
+                self.screen[offset + 2],
+                self.screen[offset + 3],
+            ]);
+            return Ok(value);
+        }
+        // Check alignment
         if (addr & 0x3) != 0 && self.config.strict_traps {
             return Err(Trap::misaligned(addr));
         }
+        // RAM
         if !is_ram_addr(addr, self.config.ram_size) {
             return Err(Trap::mem_fault(addr));
         }
@@ -604,6 +965,7 @@ impl Machine {
     }
 
     fn write8(&mut self, addr: u32, value: u8) -> Result<(), Trap> {
+        // MMIO I/O
         if is_mmio_addr(addr) {
             match addr {
                 MMIO_PUTC => {
@@ -613,6 +975,18 @@ impl Machine {
                 _ => return Err(Trap::mem_fault(addr)),
             }
         }
+        // Screen memory
+        if addr >= SCREEN_BASE && addr < SCREEN_BASE + SCREEN_SIZE {
+            let offset = (addr - SCREEN_BASE) as usize;
+            self.screen[offset] = value;
+            self.screen_dirty = true;
+            return Ok(());
+        }
+        // Keyboard is read-only from CPU perspective
+        if addr >= KEYBOARD_ADDR && addr < KEYBOARD_ADDR + 4 {
+            return Ok(()); // Silently ignore writes
+        }
+        // RAM
         if !is_ram_addr(addr, self.config.ram_size) {
             return Err(Trap::mem_fault(addr));
         }
@@ -622,6 +996,7 @@ impl Machine {
     }
 
     fn write32(&mut self, addr: u32, value: u32) -> Result<(), Trap> {
+        // MMIO I/O
         if is_mmio_addr(addr) {
             match addr {
                 MMIO_PUTC => {
@@ -631,9 +1006,23 @@ impl Machine {
                 _ => return Err(Trap::mem_fault(addr)),
             }
         }
+        // Screen memory (aligned write)
+        if addr >= SCREEN_BASE && addr + 4 <= SCREEN_BASE + SCREEN_SIZE && (addr & 0x3) == 0 {
+            let offset = (addr - SCREEN_BASE) as usize;
+            let bytes = value.to_le_bytes();
+            self.screen[offset..offset + 4].copy_from_slice(&bytes);
+            self.screen_dirty = true;
+            return Ok(());
+        }
+        // Keyboard is read-only
+        if addr == KEYBOARD_ADDR {
+            return Ok(()); // Silently ignore
+        }
+        // Check alignment
         if (addr & 0x3) != 0 && self.config.strict_traps {
             return Err(Trap::misaligned(addr));
         }
+        // RAM
         if !is_ram_addr(addr, self.config.ram_size) {
             return Err(Trap::mem_fault(addr));
         }

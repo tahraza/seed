@@ -1,0 +1,25 @@
+-- 4-way 1-bit multiplexer
+-- y = a if sel=00, b if sel=01, c if sel=10, d if sel=11
+
+entity Mux4Way is
+  port(
+    a : in bit;
+    b : in bit;
+    c : in bit;
+    d : in bit;
+    sel : in bits(1 downto 0);
+    y : out bit
+  );
+end entity;
+
+architecture rtl of Mux4Way is
+  component Mux
+    port(a : in bit; b : in bit; sel : in bit; y : out bit);
+  end component;
+  signal t0 : bit;
+  signal t1 : bit;
+begin
+  u_ab: Mux port map (a => a, b => b, sel => sel(0), y => t0);
+  u_cd: Mux port map (a => c, b => d, sel => sel(0), y => t1);
+  u_out: Mux port map (a => t0, b => t1, sel => sel(1), y => y);
+end architecture;

@@ -1,0 +1,41 @@
+// Screen.hdl - 320x240 pixel display (1 bit per pixel)
+// Memory-mapped at 0x00400000-0x004025FF (9600 bytes)
+//
+// The screen is organized as follows:
+// - 320 pixels wide x 240 pixels high = 76,800 pixels
+// - 1 bit per pixel (black/white): 76,800 / 8 = 9,600 bytes
+// - Each row is 320/8 = 40 bytes
+// - Row 0 starts at offset 0, row 1 at offset 40, etc.
+// - Within each byte, bit 7 (MSB) is the leftmost pixel
+//
+// Interface:
+// - address[13]: Word address within screen memory (0-2399)
+// - in[32]: Data to write (4 bytes = 32 pixels)
+// - load: Write enable
+// - out[32]: Data read from address
+//
+// Each 32-bit word contains 32 consecutive horizontal pixels.
+// Word 0 contains pixels (0,0) to (31,0)
+// Word 1 contains pixels (32,0) to (63,0)
+// etc.
+
+CHIP Screen {
+    IN  address[13],    // Word address (0-2399)
+        in[32],         // Data to write
+        load;           // Write enable
+    OUT out[32];        // Data at address
+
+    PARTS:
+    // Screen is implemented as RAM with 2400 32-bit words
+    // In hardware, this would be dual-ported for display refresh
+
+    // Use 4K RAM chips (we need 2400 words)
+    RAM4K(in=in, load=load, address[0..11]=address[0..11], out=ramOut);
+
+    // Mask output for addresses >= 2400 (though normally not accessed)
+    // For simplicity, just output RAM data
+    // Hardware would add bounds checking
+
+    // Output the RAM data
+    Mux32(a=ramOut, b=false, sel=false, out=out);
+}

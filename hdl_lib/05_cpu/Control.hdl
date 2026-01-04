@@ -1,0 +1,80 @@
+-- Control Unit for A32-Lite CPU
+-- Generates control signals based on instruction class and condition
+
+entity Control is
+  port(
+    class : in bits(2 downto 0);     -- Instruction class
+    op : in bits(3 downto 0);        -- Operation code
+    s_flag : in bit;                 -- S bit from instruction
+    cond_ok : in bit;                -- Condition satisfied
+    ls_load : in bit;                -- Load/Store: load flag
+    br_link : in bit;                -- Branch: link flag
+
+    -- Control outputs
+    reg_write : out bit;             -- Write to register file
+    mem_read : out bit;              -- Read from memory
+    mem_write : out bit;             -- Write to memory
+    alu_src : out bit;               -- 0=Rm, 1=immediate
+    mem_to_reg : out bit;            -- 0=ALU result, 1=memory
+    branch : out bit;                -- Branch instruction
+    update_flags : out bit;          -- Update NZCV flags
+    pc_write : out bit;              -- Write to PC
+    link : out bit;                  -- Save return address
+    halt : out bit                   -- Halt CPU
+  );
+end entity;
+
+architecture rtl of Control is
+  signal is_alu_reg : bit;
+  signal is_alu_imm : bit;
+  signal is_load_store : bit;
+  signal is_branch : bit;
+  signal is_system : bit;
+  signal is_nop : bit;
+  signal is_halt : bit;
+begin
+  -- Decode instruction class
+  is_alu_reg <= '1' when class = b"000" else '0';
+  is_alu_imm <= '1' when class = b"001" else '0';
+  is_load_store <= '1' when class = b"010" else '0';
+  is_branch <= '1' when class = b"011" else '0';
+  is_system <= '1' when class = b"100" else '0';
+
+  -- System ops
+  is_nop <= '1' when (is_system = '1' and op = b"0000") else '0';
+  is_halt <= '1' when (is_system = '1' and op = b"0001") else '0';
+
+  -- Control signals (only active if condition satisfied)
+  -- Register write: ALU ops (except CMP/TST), Load
+  reg_write <= cond_ok and (
+    ((is_alu_reg or is_alu_imm) and not (op = b"0111" or op = b"1000")) or  -- not CMP/TST
+    (is_load_store and ls_load) or                                           -- LDR
+    (is_branch and br_link)                                                  -- BL saves to LR
+  );
+
+  -- ALU source: immediate for ALU imm class
+  alu_src <= is_alu_imm;
+
+  -- Memory access
+  mem_read <= cond_ok and is_load_store and ls_load;
+  mem_write <= cond_ok and is_load_store and (not ls_load);
+
+  -- Memory to register (for loads)
+  mem_to_reg <= is_load_store and ls_load;
+
+  -- Branch
+  branch <= cond_ok and is_branch;
+
+  -- Update flags: S bit set, or CMP/TST
+  update_flags <= cond_ok and (is_alu_reg or is_alu_imm) and
+                  (s_flag or (op = b"0111") or (op = b"1000"));
+
+  -- PC write: branch or writing to R15
+  pc_write <= cond_ok and is_branch;
+
+  -- Link: BL instruction
+  link <= cond_ok and is_branch and br_link;
+
+  -- Halt
+  halt <= cond_ok and is_halt;
+end architecture;

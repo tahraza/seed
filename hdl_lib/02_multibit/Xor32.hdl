@@ -1,0 +1,14 @@
+-- 32-bit XOR gate
+
+entity Xor32 is
+  port(
+    a : in bits(31 downto 0);
+    b : in bits(31 downto 0);
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Xor32 is
+begin
+  y <= a xor b;
+end architecture;

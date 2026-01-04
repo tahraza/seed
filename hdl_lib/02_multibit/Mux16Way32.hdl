@@ -1,0 +1,42 @@
+-- 16-way 32-bit multiplexer
+-- For selecting from 16 registers (R0-R15)
+
+entity Mux16Way32 is
+  port(
+    r0 : in bits(31 downto 0);
+    r1 : in bits(31 downto 0);
+    r2 : in bits(31 downto 0);
+    r3 : in bits(31 downto 0);
+    r4 : in bits(31 downto 0);
+    r5 : in bits(31 downto 0);
+    r6 : in bits(31 downto 0);
+    r7 : in bits(31 downto 0);
+    r8 : in bits(31 downto 0);
+    r9 : in bits(31 downto 0);
+    r10 : in bits(31 downto 0);
+    r11 : in bits(31 downto 0);
+    r12 : in bits(31 downto 0);
+    r13 : in bits(31 downto 0);
+    r14 : in bits(31 downto 0);
+    r15 : in bits(31 downto 0);
+    sel : in bits(3 downto 0);
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Mux16Way32 is
+  component Mux32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); sel : in bit; y : out bits(31 downto 0));
+  end component;
+  component Mux8Way32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); c : in bits(31 downto 0); d : in bits(31 downto 0);
+         e : in bits(31 downto 0); f : in bits(31 downto 0); g : in bits(31 downto 0); h : in bits(31 downto 0);
+         sel : in bits(2 downto 0); y : out bits(31 downto 0));
+  end component;
+  signal t0 : bits(31 downto 0);
+  signal t1 : bits(31 downto 0);
+begin
+  u_lo: Mux8Way32 port map (a => r0, b => r1, c => r2, d => r3, e => r4, f => r5, g => r6, h => r7, sel => sel(2 downto 0), y => t0);
+  u_hi: Mux8Way32 port map (a => r8, b => r9, c => r10, d => r11, e => r12, f => r13, g => r14, h => r15, sel => sel(2 downto 0), y => t1);
+  u_out: Mux32 port map (a => t0, b => t1, sel => sel(3), y => y);
+end architecture;

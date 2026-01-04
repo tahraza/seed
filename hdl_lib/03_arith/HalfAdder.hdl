@@ -1,0 +1,24 @@
+-- Half Adder
+-- sum = a XOR b
+-- carry = a AND b
+
+entity HalfAdder is
+  port(
+    a : in bit;
+    b : in bit;
+    sum : out bit;
+    carry : out bit
+  );
+end entity;
+
+architecture rtl of HalfAdder is
+  component Xor
+    port(a : in bit; b : in bit; y : out bit);
+  end component;
+  component And
+    port(a : in bit; b : in bit; y : out bit);
+  end component;
+begin
+  u_sum: Xor port map (a => a, b => b, y => sum);
+  u_carry: And port map (a => a, b => b, y => carry);
+end architecture;

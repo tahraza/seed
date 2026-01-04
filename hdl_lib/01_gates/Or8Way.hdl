@@ -1,0 +1,29 @@
+-- 8-way OR gate
+-- y = a(0) OR a(1) OR ... OR a(7)
+
+entity Or8Way is
+  port(
+    a : in bits(7 downto 0);
+    y : out bit
+  );
+end entity;
+
+architecture rtl of Or8Way is
+  component Or
+    port(a : in bit; b : in bit; y : out bit);
+  end component;
+  signal t01 : bit;
+  signal t23 : bit;
+  signal t45 : bit;
+  signal t67 : bit;
+  signal t0123 : bit;
+  signal t4567 : bit;
+begin
+  u01: Or port map (a => a(0), b => a(1), y => t01);
+  u23: Or port map (a => a(2), b => a(3), y => t23);
+  u45: Or port map (a => a(4), b => a(5), y => t45);
+  u67: Or port map (a => a(6), b => a(7), y => t67);
+  u0123: Or port map (a => t01, b => t23, y => t0123);
+  u4567: Or port map (a => t45, b => t67, y => t4567);
+  uout: Or port map (a => t0123, b => t4567, y => y);
+end architecture;

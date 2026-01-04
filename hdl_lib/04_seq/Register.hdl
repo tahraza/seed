@@ -1,0 +1,51 @@
+-- 32-bit register with load enable
+-- When load=1, stores input d on clock edge
+-- When load=0, maintains current value
+
+entity Register is
+  port(
+    clk : in bit;
+    d : in bits(31 downto 0);
+    load : in bit;
+    q : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Register is
+  component Bit
+    port(clk : in bit; d : in bit; load : in bit; q : out bit);
+  end component;
+begin
+  b0: Bit port map (clk => clk, d => d(0), load => load, q => q(0));
+  b1: Bit port map (clk => clk, d => d(1), load => load, q => q(1));
+  b2: Bit port map (clk => clk, d => d(2), load => load, q => q(2));
+  b3: Bit port map (clk => clk, d => d(3), load => load, q => q(3));
+  b4: Bit port map (clk => clk, d => d(4), load => load, q => q(4));
+  b5: Bit port map (clk => clk, d => d(5), load => load, q => q(5));
+  b6: Bit port map (clk => clk, d => d(6), load => load, q => q(6));
+  b7: Bit port map (clk => clk, d => d(7), load => load, q => q(7));
+  b8: Bit port map (clk => clk, d => d(8), load => load, q => q(8));
+  b9: Bit port map (clk => clk, d => d(9), load => load, q => q(9));
+  b10: Bit port map (clk => clk, d => d(10), load => load, q => q(10));
+  b11: Bit port map (clk => clk, d => d(11), load => load, q => q(11));
+  b12: Bit port map (clk => clk, d => d(12), load => load, q => q(12));
+  b13: Bit port map (clk => clk, d => d(13), load => load, q => q(13));
+  b14: Bit port map (clk => clk, d => d(14), load => load, q => q(14));
+  b15: Bit port map (clk => clk, d => d(15), load => load, q => q(15));
+  b16: Bit port map (clk => clk, d => d(16), load => load, q => q(16));
+  b17: Bit port map (clk => clk, d => d(17), load => load, q => q(17));
+  b18: Bit port map (clk => clk, d => d(18), load => load, q => q(18));
+  b19: Bit port map (clk => clk, d => d(19), load => load, q => q(19));
+  b20: Bit port map (clk => clk, d => d(20), load => load, q => q(20));
+  b21: Bit port map (clk => clk, d => d(21), load => load, q => q(21));
+  b22: Bit port map (clk => clk, d => d(22), load => load, q => q(22));
+  b23: Bit port map (clk => clk, d => d(23), load => load, q => q(23));
+  b24: Bit port map (clk => clk, d => d(24), load => load, q => q(24));
+  b25: Bit port map (clk => clk, d => d(25), load => load, q => q(25));
+  b26: Bit port map (clk => clk, d => d(26), load => load, q => q(26));
+  b27: Bit port map (clk => clk, d => d(27), load => load, q => q(27));
+  b28: Bit port map (clk => clk, d => d(28), load => load, q => q(28));
+  b29: Bit port map (clk => clk, d => d(29), load => load, q => q(29));
+  b30: Bit port map (clk => clk, d => d(30), load => load, q => q(30));
+  b31: Bit port map (clk => clk, d => d(31), load => load, q => q(31));
+end architecture;

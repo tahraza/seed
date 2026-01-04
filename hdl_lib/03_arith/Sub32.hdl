@@ -1,0 +1,22 @@
+-- 32-bit Subtractor
+-- y = a - b = a + (~b) + 1
+-- Uses Add32 with b inverted and cin=1
+
+entity Sub32 is
+  port(
+    a : in bits(31 downto 0);
+    b : in bits(31 downto 0);
+    y : out bits(31 downto 0);
+    cout : out bit
+  );
+end entity;
+
+architecture rtl of Sub32 is
+  component Add32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); cin : in bit; y : out bits(31 downto 0); cout : out bit);
+  end component;
+  signal nb : bits(31 downto 0);
+begin
+  nb <= not b;
+  u_add: Add32 port map (a => a, b => nb, cin => '1', y => y, cout => cout);
+end architecture;

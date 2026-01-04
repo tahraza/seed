@@ -1,0 +1,17 @@
+-- NOT gate built from NAND
+-- y = NOT a = NAND(a, a)
+
+entity Not is
+  port(
+    a : in bit;
+    y : out bit
+  );
+end entity;
+
+architecture rtl of Not is
+  component Nand
+    port(a : in bit; b : in bit; y : out bit);
+  end component;
+begin
+  u0: Nand port map (a => a, b => a, y => y);
+end architecture;

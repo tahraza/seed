@@ -1,0 +1,32 @@
+-- 8-way demultiplexer
+-- Routes input to one of 8 outputs based on sel
+
+entity DMux8Way is
+  port(
+    i : in bit;
+    sel : in bits(2 downto 0);
+    a : out bit;
+    b : out bit;
+    c : out bit;
+    d : out bit;
+    e : out bit;
+    f : out bit;
+    g : out bit;
+    h : out bit
+  );
+end entity;
+
+architecture rtl of DMux8Way is
+  component DMux
+    port(i : in bit; sel : in bit; a : out bit; b : out bit);
+  end component;
+  component DMux4Way
+    port(i : in bit; sel : in bits(1 downto 0); a : out bit; b : out bit; c : out bit; d : out bit);
+  end component;
+  signal t0 : bit;
+  signal t1 : bit;
+begin
+  u_top: DMux port map (i => i, sel => sel(2), a => t0, b => t1);
+  u_lo: DMux4Way port map (i => t0, sel => sel(1 downto 0), a => a, b => b, c => c, d => d);
+  u_hi: DMux4Way port map (i => t1, sel => sel(1 downto 0), a => e, b => f, c => g, d => h);
+end architecture;

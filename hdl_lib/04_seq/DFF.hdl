@@ -1,0 +1,20 @@
+-- D Flip-Flop (primitive sequential element)
+-- Output q follows input d on rising clock edge
+
+entity DFF is
+  port(
+    clk : in bit;
+    d : in bit;
+    q : out bit
+  );
+end entity;
+
+architecture rtl of DFF is
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      q <= d;
+    end if;
+  end process;
+end architecture;

@@ -106,6 +106,93 @@
           </div>
           <div class="log" id="a32-log"></div>
         </section>
+
+        <section class="panel wide">
+          <h2>Screen (320x240)</h2>
+          <div class="screen-container">
+            <canvas id="a32-screen" width="640" height="480" tabindex="0"></canvas>
+            <div class="screen-info">
+              <span id="screen-key">Key: none</span>
+              <span id="screen-fps">FPS: 0</span>
+            </div>
+          </div>
+
+          <div class="virtual-keyboard" id="virtual-keyboard">
+            <div class="kb-row">
+              <button class="kb-key" data-key="27">Esc</button>
+              <button class="kb-key" data-key="49">1</button>
+              <button class="kb-key" data-key="50">2</button>
+              <button class="kb-key" data-key="51">3</button>
+              <button class="kb-key" data-key="52">4</button>
+              <button class="kb-key" data-key="53">5</button>
+              <button class="kb-key" data-key="54">6</button>
+              <button class="kb-key" data-key="55">7</button>
+              <button class="kb-key" data-key="56">8</button>
+              <button class="kb-key" data-key="57">9</button>
+              <button class="kb-key" data-key="48">0</button>
+              <button class="kb-key" data-key="45">-</button>
+              <button class="kb-key" data-key="61">=</button>
+              <button class="kb-key wide" data-key="8">Bksp</button>
+            </div>
+            <div class="kb-row">
+              <button class="kb-key" data-key="9">Tab</button>
+              <button class="kb-key" data-key="113">q</button>
+              <button class="kb-key" data-key="119">w</button>
+              <button class="kb-key" data-key="101">e</button>
+              <button class="kb-key" data-key="114">r</button>
+              <button class="kb-key" data-key="116">t</button>
+              <button class="kb-key" data-key="121">y</button>
+              <button class="kb-key" data-key="117">u</button>
+              <button class="kb-key" data-key="105">i</button>
+              <button class="kb-key" data-key="111">o</button>
+              <button class="kb-key" data-key="112">p</button>
+              <button class="kb-key" data-key="91">[</button>
+              <button class="kb-key" data-key="93">]</button>
+              <button class="kb-key" data-key="92">\</button>
+            </div>
+            <div class="kb-row">
+              <button class="kb-key wide" data-key="0">Caps</button>
+              <button class="kb-key" data-key="97">a</button>
+              <button class="kb-key" data-key="115">s</button>
+              <button class="kb-key" data-key="100">d</button>
+              <button class="kb-key" data-key="102">f</button>
+              <button class="kb-key" data-key="103">g</button>
+              <button class="kb-key" data-key="104">h</button>
+              <button class="kb-key" data-key="106">j</button>
+              <button class="kb-key" data-key="107">k</button>
+              <button class="kb-key" data-key="108">l</button>
+              <button class="kb-key" data-key="59">;</button>
+              <button class="kb-key" data-key="39">'</button>
+              <button class="kb-key wide" data-key="10">Enter</button>
+            </div>
+            <div class="kb-row">
+              <button class="kb-key extra-wide" data-key="0">Shift</button>
+              <button class="kb-key" data-key="122">z</button>
+              <button class="kb-key" data-key="120">x</button>
+              <button class="kb-key" data-key="99">c</button>
+              <button class="kb-key" data-key="118">v</button>
+              <button class="kb-key" data-key="98">b</button>
+              <button class="kb-key" data-key="110">n</button>
+              <button class="kb-key" data-key="109">m</button>
+              <button class="kb-key" data-key="44">,</button>
+              <button class="kb-key" data-key="46">.</button>
+              <button class="kb-key" data-key="47">/</button>
+              <button class="kb-key extra-wide" data-key="0">Shift</button>
+            </div>
+            <div class="kb-row">
+              <button class="kb-key" data-key="0">Ctrl</button>
+              <button class="kb-key" data-key="0">Alt</button>
+              <button class="kb-key space" data-key="32">Space</button>
+              <button class="kb-key" data-key="0">Alt</button>
+              <button class="kb-key" data-key="0">Ctrl</button>
+              <button class="kb-key" data-key="128">↑</button>
+              <button class="kb-key" data-key="129">↓</button>
+              <button class="kb-key" data-key="130">←</button>
+              <button class="kb-key" data-key="131">→</button>
+            </div>
+          </div>
+          <p class="hint">Click canvas or keyboard keys. Physical keyboard also works when canvas is focused.</p>
+        </section>
       </main>
     </div>
     <script type="module" src="./main.js"></script>
