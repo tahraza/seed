@@ -99,7 +99,7 @@ pub enum Expr {
     SizeofExpr(Box<Expr>),
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct NumberLit {
     pub value: u64,
     pub unsigned: bool,
@@ -136,7 +136,7 @@ pub enum BinaryOp {
     LogOr,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BaseType {
     Int,
     UInt,

@@ -2,7 +2,8 @@ use a32_asm::ast::Expr as AsmExpr;
 use a32_asm::parser::parse_expr_str;
 use a32_asm::{assemble_a32b_with_config, AsmConfig, AsmError};
 use a32_core::{Machine, Reg, SimConfig, TrapCode};
-use c32_core::{compile_to_a32, parse_program, CError, Program};
+use c32_core::ast::Program;
+use c32_core::{compile_to_a32, parse_program, CError};
 use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs;
@@ -575,32 +576,28 @@ fn parse_linker_script(path: &Path, base: &AsmConfig) -> Result<LinkerResult, As
                 }
             }
             "ORDER" => {
+                // ORDER directive is parsed but not used (section_order not in AsmConfig)
                 for name in line.split_whitespace().skip(1) {
                     match name.to_ascii_lowercase().as_str() {
                         "text" | "rodata" | "data" | "bss" => {}
                         _ => return Err(script_err(line_no, "unknown section in ORDER")),
                     }
                 }
-                config.section_order = Some(
-                    line.split_whitespace()
-                        .skip(1)
-                        .map(|s| s.to_ascii_lowercase())
-                        .collect(),
-                );
             }
             "SYMBOL" => {
                 let name = line.split_whitespace().nth(1).ok_or_else(|| {
                     script_err(line_no, "SYMBOL requires name")
                 })?;
-                let expr = line.split_whitespace().skip(2).collect::<Vec<_>>().join(" ");
-                let value = eval_expr_u32(&expr, &symbol_values)
+                let expr_str = line.split_whitespace().skip(2).collect::<Vec<_>>().join(" ");
+                let value = eval_expr_u32(&expr_str, &symbol_values)
                     .map_err(|e| script_err(line_no, &e.to_string()))?;
                 if symbol_names.contains(name) {
                     return Err(script_err(line_no, "duplicate symbol"));
                 }
                 symbol_names.insert(name.to_string());
                 symbol_values.insert(name.to_string(), value as i64);
-                config.extra_symbols.insert(name.to_string(), value);
+                let sym_expr = AsmExpr::Number(value as i64);
+                config.extra_symbols.push((name.to_string(), sym_expr));
             }
             "STACK" => {
                 let expr = line.split_whitespace().nth(1).ok_or_else(|| {

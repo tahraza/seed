@@ -50,8 +50,17 @@ impl Parser {
         if self.is_eof() || self.peek_is_newline() {
             return Ok(items);
         }
+        // Handle normal labels (ident:)
         if self.peek_is_ident() && self.peek_next_is_colon() {
             let label = self.parse_label()?;
+            items.push(Item::Label(label));
+            if self.peek_is_newline() || self.is_eof() {
+                return Ok(items);
+            }
+        }
+        // Handle local labels (.Lname:) - dot followed by ident followed by colon
+        if self.peek_is_dot() && self.is_local_label() {
+            let label = self.parse_local_label()?;
             items.push(Item::Label(label));
             if self.peek_is_newline() || self.is_eof() {
                 return Ok(items);
@@ -74,6 +83,26 @@ impl Parser {
         let name = match self.next().kind.clone() {
             TokenKind::Ident(name) => name,
             _ => return Err(self.error_at(self.peek(), "expected label")),
+        };
+        self.expect_punct(TokenKind::Colon, "expected ':' after label")?;
+        Ok(Label { name })
+    }
+
+    fn is_local_label(&self) -> bool {
+        // Check if pattern is: Dot Ident Colon
+        if self.pos + 2 >= self.tokens.len() {
+            return false;
+        }
+        matches!(self.tokens[self.pos].kind, TokenKind::Dot)
+            && matches!(self.tokens[self.pos + 1].kind, TokenKind::Ident(_))
+            && matches!(self.tokens[self.pos + 2].kind, TokenKind::Colon)
+    }
+
+    fn parse_local_label(&mut self) -> Result<Label, AsmError> {
+        self.expect_punct(TokenKind::Dot, "expected '.' for local label")?;
+        let name = match self.next().kind.clone() {
+            TokenKind::Ident(name) => format!(".{}", name),
+            _ => return Err(self.error_at(self.peek(), "expected label name")),
         };
         self.expect_punct(TokenKind::Colon, "expected ':' after label")?;
         Ok(Label { name })
@@ -353,6 +382,17 @@ impl Parser {
             TokenKind::Ident(name) => {
                 self.next();
                 Ok(Expr::Symbol(name))
+            }
+            TokenKind::Dot => {
+                // Local symbol reference like .Lname
+                self.next();
+                match self.peek().kind.clone() {
+                    TokenKind::Ident(name) => {
+                        self.next();
+                        Ok(Expr::Symbol(format!(".{}", name)))
+                    }
+                    _ => Err(self.error_at(self.peek(), "expected symbol name after '.'")),
+                }
             }
             TokenKind::LParen => {
                 self.next();

@@ -1,5 +1,5 @@
 use crate::ast::{
-    bool_type, char_type, int_type, uint_type, BaseType, BinaryOp, Expr, Func, Global, Item,
+    bool_type, char_type, int_type, uint_type, BaseType, BinaryOp, Expr, Func, Item,
     NumberLit, Program, Stmt, Type, UnaryOp,
 };
 use crate::error::CError;
@@ -113,7 +113,8 @@ impl Codegen {
 
     fn emit_program(&mut self, program: &Program) -> Result<String, CError> {
         let mut emitted = HashSet::new();
-        for name in &self.global_order {
+        let global_order = self.global_order.clone();
+        for name in &global_order {
             if emitted.contains(name) {
                 continue;
             }
@@ -179,7 +180,7 @@ impl Codegen {
             }
         }
 
-        if let Some(init_expr) = init {
+        if let Some(ref init_expr) = init {
             match (&ty, init_expr) {
                 (Type::Array(elem, len), Expr::String(value)) => {
                     if !matches!(elem.as_ref(), Type::Base(BaseType::Char)) {
@@ -436,7 +437,7 @@ impl<'a> FuncContext<'a> {
         align_up(size as u32, 4)
     }
 
-    fn alloc_local(&mut self, name: String, mut ty: Type) -> Result<VarInfo, CError> {
+    fn alloc_local(&mut self, name: String, ty: Type) -> Result<VarInfo, CError> {
         if let Type::Array(elem, len) = &ty {
             if *len == 0 {
                 return Err(CError::new("E2006", "array size must be constant"));
@@ -686,14 +687,14 @@ impl<'a> FuncContext<'a> {
             Expr::Binary { op, left, right } => self.emit_binary(*op, left, right, out),
             Expr::Assign { left, right } => self.emit_assign(left, right, out),
             Expr::Call { name, args } => self.emit_call(name, args, out),
-            Expr::Index { base, index } => {
+            Expr::Index { base: _, index: _ } => {
                 let lval = self.emit_lvalue_addr(expr, out)?;
                 self.emit_load_addr(out, "R0", &lval.ty)?;
                 Ok(lval.ty)
             }
             Expr::Cast { ty, expr } => {
                 let from_ty = self.emit_expr(expr, out)?;
-                self.convert_reg(out, &from_ty, ty)?;
+                self.convert_reg_explicit(out, &from_ty, ty)?;
                 Ok(ty.clone())
             }
             Expr::SizeofType(ty) => {
@@ -1132,7 +1133,7 @@ impl<'a> FuncContext<'a> {
 
     fn emit_addr_of_var(&mut self, out: &mut String, info: &VarInfo, dst: &str) -> Result<(), CError> {
         match &info.storage {
-            Storage::Local(offset) => self.emit_addr_of_local(out, info.storage.clone(), dst),
+            Storage::Local(_) => self.emit_addr_of_local(out, info.storage.clone(), dst),
             Storage::Global(name) => {
                 writeln!(out, "  LDR {}, ={}", dst, name).unwrap();
                 Ok(())
@@ -1185,9 +1186,12 @@ impl<'a> FuncContext<'a> {
             | (Type::Base(BaseType::UInt), Type::Base(BaseType::Int))
             | (Type::Pointer(_), Type::Pointer(_))
             | (Type::Pointer(_), Type::Base(BaseType::Int))
-            | (Type::Pointer(_), Type::Base(BaseType::UInt))
-            | (Type::Base(BaseType::Int), Type::Pointer(_))
-            | (Type::Base(BaseType::UInt), Type::Pointer(_)) => Ok(()),
+            | (Type::Pointer(_), Type::Base(BaseType::UInt)) => Ok(()),
+            // int/uint to pointer requires explicit cast
+            (Type::Base(BaseType::Int), Type::Pointer(_))
+            | (Type::Base(BaseType::UInt), Type::Pointer(_)) => {
+                Err(CError::new("E2002", "cannot implicitly convert integer to pointer"))
+            }
             (_, Type::Base(BaseType::Char)) => {
                 writeln!(out, "  AND R0, R0, #255").unwrap();
                 Ok(())
@@ -1199,6 +1203,19 @@ impl<'a> FuncContext<'a> {
                 Ok(())
             }
             _ => Err(CError::new("E2002", "invalid conversion")),
+        }
+    }
+
+    /// Like convert_reg but allows explicit int↔pointer conversions (for casts)
+    fn convert_reg_explicit(&self, out: &mut String, from: &Type, to: &Type) -> Result<(), CError> {
+        if from == to {
+            return Ok(());
+        }
+        // Allow int/uint to pointer for explicit casts
+        match (from, to) {
+            (Type::Base(BaseType::Int), Type::Pointer(_))
+            | (Type::Base(BaseType::UInt), Type::Pointer(_)) => Ok(()),
+            _ => self.convert_reg(out, from, to),
         }
     }
 

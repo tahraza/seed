@@ -1,5 +1,5 @@
 use crate::ast::{
-    bool_type, char_type, int_type, uint_type, void_type, BaseType, BinaryOp, Decl, Expr, Func,
+    bool_type, char_type, int_type, uint_type, void_type, BinaryOp, Decl, Expr, Func,
     Global, Item, NumberLit, Param, Program, Stmt, Type, UnaryOp,
 };
 use crate::error::CError;
