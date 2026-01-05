@@ -454,76 +454,593 @@ cargo run -p hdl_cli -- test hdl_lib/05_cpu/CPU.hdl
 
 ## Aller Plus Loin : Le CPU Pipeline
 
-Le CPU single-cycle que nous avons construit est simple et pédagogique, mais les vrais processeurs utilisent le **pipeline** pour exécuter plusieurs instructions simultanément.
+Le CPU single-cycle que nous avons construit est simple et pédagogique. Mais dans le monde réel, il serait **très lent**. Les vrais processeurs utilisent une technique appelée **pipeline** pour être beaucoup plus rapides.
 
-### Le Concept du Pipeline
+Cette section explique en détail ce qu'est un pipeline, pourquoi il est nécessaire, et comment le construire.
 
-Imaginez une chaîne de montage automobile :
+---
 
-```
-┌─────────┬─────────┬─────────┬─────────┬─────────┐
-│ Châssis │ Moteur  │ Carros. │ Peinture│ Finition│
-│  Voiture 1        │  Voiture 2        │ Voit. 3 │
-└─────────┴─────────┴─────────┴─────────┴─────────┘
-```
+### Pourquoi le CPU Single-Cycle est Lent
 
-Chaque étape travaille sur une voiture différente en parallèle !
+#### Le problème de la chaîne critique
 
-### Les 5 Étapes du Pipeline
+Dans notre CPU single-cycle, une instruction doit traverser **tous** les composants en un seul cycle :
 
 ```
-     Cycle 1   Cycle 2   Cycle 3   Cycle 4   Cycle 5
-     ─────────────────────────────────────────────────
-IF   │ Instr 1 │ Instr 2 │ Instr 3 │ Instr 4 │ Instr 5 │  Fetch
-ID   │         │ Instr 1 │ Instr 2 │ Instr 3 │ Instr 4 │  Decode
-EX   │         │         │ Instr 1 │ Instr 2 │ Instr 3 │  Execute
-MEM  │         │         │         │ Instr 1 │ Instr 2 │  Memory
-WB   │         │         │         │         │ Instr 1 │  Writeback
+┌──────────────────────────────────────────────────────────────────┐
+│  PC → Mémoire → Décodeur → Registres → ALU → Mémoire → Registres │
+│                                                                   │
+│  ←───────────────── UN SEUL CYCLE ─────────────────────────────→ │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-Après le remplissage initial (5 cycles), on complète **une instruction par cycle** !
+Le cycle d'horloge doit être assez **long** pour que le signal traverse tout ce chemin. Si chaque étape prend 1 nanoseconde, le cycle doit faire au minimum 6 ns.
 
-### Les Problèmes du Pipeline
+**Résultat** : Même si certaines instructions n'ont pas besoin de la mémoire de données (comme ADD), elles prennent quand même 6 ns.
 
-#### 1. Aléas de données (Data Hazards)
+#### Une analogie : La laverie
+
+Imaginez que vous avez 4 lessives à faire. Chaque lessive a 4 étapes :
+1. **Laver** (30 min)
+2. **Sécher** (30 min)
+3. **Plier** (30 min)
+4. **Ranger** (30 min)
+
+**Approche "single-cycle"** : Attendre qu'une lessive soit complètement terminée avant de commencer la suivante.
+
+```
+Lessive 1 : |──Laver──|──Sécher──|──Plier──|──Ranger──|
+Lessive 2 :                                            |──Laver──|──Sécher──|...
+```
+
+Temps total : 4 lessives × 2h = **8 heures**
+
+**Approche "pipeline"** : Dès que la machine à laver est libre, commencer la lessive suivante !
+
+```
+Lessive 1 : |──Laver──|──Sécher──|──Plier──|──Ranger──|
+Lessive 2 :           |──Laver──|──Sécher──|──Plier──|──Ranger──|
+Lessive 3 :                     |──Laver──|──Sécher──|──Plier──|──Ranger──|
+Lessive 4 :                               |──Laver──|──Sécher──|──Plier──|──Ranger──|
+```
+
+Temps total : 2h + 3 × 30min = **3h30**
+
+Le pipeline ne rend pas une lessive individuelle plus rapide, mais il permet de traiter **plus de lessives par heure** !
+
+---
+
+### Le Pipeline à 5 Étages
+
+Notre CPU pipeliné divise l'exécution en **5 étapes**, chacune prenant exactement 1 cycle d'horloge :
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                                                            │
+│  ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐                     │
+│  │  IF  │ → │  ID  │ → │  EX  │ → │ MEM  │ → │  WB  │                     │
+│  │Fetch │   │Decode│   │Execute   │Memory│   │Write │                     │
+│  └──────┘   └──────┘   └──────┘   └──────┘   └──────┘                     │
+│                                                                            │
+│  1 cycle    1 cycle    1 cycle    1 cycle    1 cycle                      │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Étape 1 : IF (Instruction Fetch)
+
+**But** : Aller chercher l'instruction en mémoire.
+
+```
+┌─────────────────────────────────────────────┐
+│  IF - Instruction Fetch                     │
+│                                             │
+│    PC ────► Mémoire ────► Instruction       │
+│    │        Instructions    (32 bits)       │
+│    │                                        │
+│    └───► PC + 4 (préparé pour la suite)     │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+**Ce qui se passe** :
+1. Le PC (Program Counter) envoie son adresse à la mémoire
+2. La mémoire renvoie l'instruction (32 bits)
+3. On calcule PC + 4 pour l'instruction suivante
+
+**Sortie** : L'instruction et PC+4 sont stockés dans le registre IF/ID.
+
+#### Étape 2 : ID (Instruction Decode)
+
+**But** : Comprendre l'instruction et lire les registres sources.
+
+```
+┌─────────────────────────────────────────────┐
+│  ID - Instruction Decode                    │
+│                                             │
+│    Instruction ─┬─► Décodeur ──► Signaux    │
+│                 │                de contrôle│
+│                 │                           │
+│                 └─► Registres ──► Valeurs   │
+│                      (Rn, Rm)     (A, B)    │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+**Ce qui se passe** :
+1. Le décodeur extrait les champs (Rd, Rn, Rm, opcode, etc.)
+2. L'unité de contrôle génère les signaux (reg_write, mem_read, etc.)
+3. On lit les valeurs des registres Rn et Rm
+4. On détecte les éventuels aléas (hazards)
+
+**Sortie** : Tout est stocké dans le registre ID/EX.
+
+#### Étape 3 : EX (Execute)
+
+**But** : Effectuer le calcul.
+
+```
+┌─────────────────────────────────────────────┐
+│  EX - Execute                               │
+│                                             │
+│    Valeur A ──────┐                         │
+│                   ├──► ALU ──► Résultat     │
+│    Valeur B ──┬───┘            + Flags      │
+│    ou Imm    MUX                            │
+│                                             │
+│    (Pour Branch: calcul de l'adresse cible) │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+**Ce qui se passe** :
+1. L'ALU effectue l'opération (ADD, SUB, AND, etc.)
+2. Les flags (N, Z, C, V) sont calculés
+3. Pour les branchements, on calcule l'adresse cible
+4. Le forwarding peut injecter des valeurs ici (on verra plus tard)
+
+**Sortie** : Le résultat ALU est stocké dans le registre EX/MEM.
+
+#### Étape 4 : MEM (Memory Access)
+
+**But** : Lire ou écrire en mémoire (pour LDR/STR seulement).
+
+```
+┌─────────────────────────────────────────────┐
+│  MEM - Memory Access                        │
+│                                             │
+│    Si LDR:  Adresse ──► Mémoire ──► Donnée  │
+│                         Données             │
+│                                             │
+│    Si STR:  Adresse, Donnée ──► Mémoire     │
+│                                             │
+│    Sinon:   (le résultat ALU passe juste)   │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+**Ce qui se passe** :
+1. Pour LDR : on lit la mémoire à l'adresse calculée
+2. Pour STR : on écrit la valeur en mémoire
+3. Pour les autres instructions : rien (le résultat ALU est juste transmis)
+
+**Sortie** : Le résultat (ALU ou mémoire) est stocké dans le registre MEM/WB.
+
+#### Étape 5 : WB (Write Back)
+
+**But** : Écrire le résultat dans le registre destination.
+
+```
+┌─────────────────────────────────────────────┐
+│  WB - Write Back                            │
+│                                             │
+│    Résultat ──► MUX ──► Banc de Registres   │
+│    (ALU ou MEM)          ↓                  │
+│                         Rd                  │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+**Ce qui se passe** :
+1. On choisit le résultat à écrire (ALU ou mémoire)
+2. Si `reg_write = 1`, on écrit dans le registre Rd
+
+---
+
+### Visualisation du Pipeline en Action
+
+Voici comment 5 instructions traversent le pipeline :
+
+```
+         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │ Cycle 6 │ Cycle 7 │
+─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+Instr 1  │   IF    │   ID    │   EX    │   MEM   │   WB    │         │         │
+Instr 2  │         │   IF    │   ID    │   EX    │   MEM   │   WB    │         │
+Instr 3  │         │         │   IF    │   ID    │   EX    │   MEM   │   WB    │
+Instr 4  │         │         │         │   IF    │   ID    │   EX    │   MEM   │...
+Instr 5  │         │         │         │         │   IF    │   ID    │   EX    │...
+─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
+```
+
+**Observation clé** : À partir du cycle 5, le pipeline est "rempli" et on termine **une instruction par cycle** !
+
+**Comparaison des performances** :
+
+| CPU | 100 instructions | Temps (si cycle = 1ns) |
+|:----|:-----------------|:-----------------------|
+| Single-cycle | 100 cycles | 100 ns |
+| Pipeline 5 étages | 104 cycles* | 104 ns |
+
+*Attendez... le pipeline n'est pas plus rapide ?
+
+C'est parce que le cycle du pipeline est **5× plus court** ! Chaque étage ne fait qu'une partie du travail.
+
+| CPU | Durée cycle | 100 instructions | Temps réel |
+|:----|:------------|:-----------------|:-----------|
+| Single-cycle | 5 ns | 100 cycles | **500 ns** |
+| Pipeline | 1 ns | 104 cycles | **104 ns** |
+
+Le pipeline est **~5× plus rapide** !
+
+---
+
+### Les Registres de Pipeline
+
+Pour que le pipeline fonctionne, il faut **stocker** les résultats intermédiaires entre chaque étage. C'est le rôle des **registres de pipeline**.
+
+```
+┌──────┐   ┌───────────┐   ┌──────┐   ┌───────────┐   ┌──────┐
+│  IF  │ → │  IF/ID    │ → │  ID  │ → │  ID/EX    │ → │  EX  │ → ...
+│      │   │  Register │   │      │   │  Register │   │      │
+└──────┘   └───────────┘   └──────┘   └───────────┘   └──────┘
+                │                           │
+          (instruction,              (valeurs registres,
+           PC+4)                      signaux contrôle,
+                                      Rd, Rn, Rm, imm)
+```
+
+#### Le registre IF/ID
+
+**Stocke** :
+- L'instruction (32 bits)
+- PC+4 (32 bits)
+
+**Signaux spéciaux** :
+- `stall` : Si 1, garder les mêmes valeurs (ne pas avancer)
+- `flush` : Si 1, mettre l'instruction à NOP (annuler)
+
+```
+┌─────────────────────────────────────────────┐
+│  IF/ID Register                             │
+│                                             │
+│  Entrées:                                   │
+│    if_instr ───────────┐                    │
+│    if_pc_plus4 ────────┤                    │
+│    stall ──────────────┤                    │
+│    flush ──────────────┘                    │
+│                                             │
+│  Comportement:                              │
+│    Si reset OU flush:                       │
+│      → instr = NOP, pc = 0                  │
+│    Sinon si stall:                          │
+│      → garder les valeurs actuelles         │
+│    Sinon:                                   │
+│      → capturer les nouvelles valeurs       │
+│                                             │
+│  Sorties:                                   │
+│    id_instr ←──────────┘                    │
+│    id_pc_plus4 ←───────                     │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+---
+
+### Les Aléas (Hazards)
+
+Le pipeline crée de nouveaux problèmes. Quand une instruction dépend du résultat d'une instruction précédente qui n'est pas encore terminée, on a un **aléa**.
+
+#### Aléa de Données (Data Hazard)
+
+**Exemple problématique** :
 
 ```assembly
-ADD R1, R2, R3    ; Écrit dans R1
-ADD R4, R1, R5    ; Lit R1 (pas encore écrit!)
+ADD R1, R2, R3    ; Instruction 1: R1 = R2 + R3
+SUB R4, R1, R5    ; Instruction 2: R4 = R1 - R5 (utilise R1!)
 ```
 
-**Solution : Forwarding** — Transférer le résultat directement de l'ALU au lieu d'attendre le writeback.
+Visualisons dans le pipeline :
 
-#### 2. Aléas de contrôle (Control Hazards)
+```
+         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │
+─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+ADD R1   │   IF    │   ID    │   EX    │   MEM   │   WB ←──── R1 écrit ici!
+SUB R4,R1│         │   IF    │   ID ←──── R1 lu ici!         │
+```
+
+**Le problème** : SUB lit R1 au cycle 3 (étage ID), mais ADD n'écrit R1 qu'au cycle 5 (étage WB). SUB va lire l'**ancienne** valeur de R1 !
+
+#### Solution 1 : Le Forwarding (Bypass)
+
+Au lieu d'attendre que R1 soit écrit dans le banc de registres, on peut **transférer** le résultat directement depuis l'étage EX ou MEM vers l'étage où on en a besoin.
+
+```
+         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │
+─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+ADD R1   │   IF    │   ID    │   EX ───┼── Résultat disponible!
+SUB R4,R1│         │   IF    │   ID    │   EX ←── Forward!
+                                            │
+                                      (on prend le résultat
+                                       directement de ADD)
+```
+
+**Le ForwardUnit** détecte ces situations et redirige les données :
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ForwardUnit                                                │
+│                                                             │
+│  Entrées:                                                   │
+│    ex_rn, ex_rm  : registres sources de l'instruction en EX │
+│    mem_rd        : registre destination en MEM              │
+│    mem_reg_write : MEM va écrire un registre?               │
+│    wb_rd         : registre destination en WB               │
+│    wb_reg_write  : WB va écrire un registre?                │
+│                                                             │
+│  Logique:                                                   │
+│    Si MEM.rd = EX.rn et MEM écrit → forward depuis MEM      │
+│    Sinon si WB.rd = EX.rn et WB écrit → forward depuis WB   │
+│    Sinon → pas de forwarding                                │
+│                                                             │
+│  Sorties (2 bits chacune):                                  │
+│    forward_a : 00=rien, 01=depuis MEM, 10=depuis WB         │
+│    forward_b : 00=rien, 01=depuis MEM, 10=depuis WB         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Solution 2 : Le Stall (pour Load-Use)
+
+Le forwarding ne résout pas tous les cas. Considérons :
 
 ```assembly
-BEQ label         ; Branchement conditionnel
-ADD R1, R2, R3    ; Exécutée même si on branche?
+LDR R1, [R2]      ; Charge R1 depuis la mémoire
+ADD R4, R1, R5    ; Utilise R1 immédiatement!
 ```
 
-**Solution : Flush** — Annuler les instructions dans le pipeline si le branchement est pris.
+```
+         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │
+─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+LDR R1   │   IF    │   ID    │   EX    │   MEM ←── R1 disponible ici
+ADD R4,R1│         │   IF    │   ID    │   EX ←── Besoin de R1 ici!
+```
 
-### Les Composants du Pipeline
+**Problème** : ADD a besoin de R1 dans son étage EX (cycle 4), mais LDR ne lit la mémoire qu'à l'étage MEM (aussi cycle 4). On ne peut pas faire de forwarding vers le passé !
 
-| Composant | Rôle |
-|:----------|:-----|
-| IF/ID Register | Latch entre Fetch et Decode |
-| ID/EX Register | Latch entre Decode et Execute |
-| EX/MEM Register | Latch entre Execute et Memory |
-| MEM/WB Register | Latch entre Memory et Writeback |
-| HazardDetect | Détecte les aléas load-use |
-| ForwardUnit | Gère le forwarding des données |
+**Solution** : Insérer une **bulle** (stall) pour retarder ADD d'un cycle.
 
-### Exercice Avancé : CPU Pipeline
+```
+         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │ Cycle 6 │
+─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+LDR R1   │   IF    │   ID    │   EX    │   MEM───┼──►Forward possible!
+ADD R4,R1│         │   IF    │   ID    │  STALL  │   EX ←── Forward OK!
+Instr 3  │         │         │   IF    │  STALL  │   ID    │   EX    │
+```
 
-Pour les plus motivés, nous proposons un **Projet 6** :
+**Le HazardDetect** détecte ces situations :
 
-1. **IF_ID_Reg** : Registre avec stall/flush
-2. **HazardDetect** : Détection des aléas
-3. **ForwardUnit** : Forwarding des données
-4. **CPU_Pipeline** : CPU complet 5 étages
+```
+┌─────────────────────────────────────────────────────────────┐
+│  HazardDetect                                               │
+│                                                             │
+│  Entrées:                                                   │
+│    id_rn, id_rm    : registres sources en ID                │
+│    id_rn_used      : Rn est utilisé par l'instruction?      │
+│    id_rm_used      : Rm est utilisé par l'instruction?      │
+│    ex_rd           : registre destination en EX             │
+│    ex_mem_read     : instruction en EX est un LDR?          │
+│                                                             │
+│  Logique:                                                   │
+│    Si EX est un load (ex_mem_read = 1)                      │
+│    ET ID utilise ce registre (id_rn = ex_rd ou id_rm = ex_rd)│
+│    → Déclencher un STALL                                    │
+│                                                             │
+│  Sortie:                                                    │
+│    stall : 1 = bloquer IF et ID, insérer NOP en EX          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
 
-Ces composants sont disponibles dans `hdl_lib/05_cpu/` et dans les exercices web du Projet 6.
+#### Aléa de Contrôle (Control Hazard)
+
+Les branchements posent un autre problème :
+
+```assembly
+BEQ label         ; Si égal, sauter à label
+ADD R1, R2, R3    ; Cette instruction est-elle exécutée?
+SUB R4, R5, R6    ; Et celle-ci?
+label:
+MOV R7, #42
+```
+
+```
+         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │
+─────────┼─────────┼─────────┼─────────┼─────────┤
+BEQ      │   IF    │   ID    │   EX ←── On sait si on branche
+ADD      │         │   IF    │   ID    │  ???    │
+SUB      │         │         │   IF    │  ???    │
+```
+
+**Problème** : Quand on exécute BEQ, on a déjà commencé à chercher les instructions suivantes ! Si le branchement est pris, ADD et SUB n'auraient jamais dû être exécutées.
+
+**Solution** : Le **Flush**
+
+Si le branchement est pris, on **annule** les instructions qui n'auraient pas dû être chargées :
+
+```
+         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │
+─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+BEQ      │   IF    │   ID    │   EX    │   MEM   │   WB    │
+ADD      │         │   IF    │   ID    │  FLUSH  │         │
+SUB      │         │         │   IF    │  FLUSH  │         │
+MOV R7   │         │         │         │   IF    │   ID    │...
+```
+
+Le signal `flush` met les registres de pipeline à NOP (instruction qui ne fait rien).
+
+---
+
+### Architecture Complète du CPU Pipeline
+
+```
+┌────────────────────────────────────────────────────────────────────────────────┐
+│                            CPU PIPELINE 5 ÉTAGES                               │
+│                                                                                │
+│  ┌───────┐     ┌───────┐     ┌───────┐     ┌───────┐     ┌───────┐           │
+│  │       │     │ IF/ID │     │       │     │ ID/EX │     │       │           │
+│  │  IF   │────►│  Reg  │────►│  ID   │────►│  Reg  │────►│  EX   │──...      │
+│  │       │     │       │     │       │     │       │     │       │           │
+│  └───┬───┘     └───────┘     └───┬───┘     └───────┘     └───┬───┘           │
+│      │                           │                           │               │
+│      │                           │                           │               │
+│      │                     ┌─────┴─────┐               ┌─────┴─────┐         │
+│      │                     │  Hazard   │               │  Forward  │         │
+│      │                     │  Detect   │               │   Unit    │         │
+│      │                     └─────┬─────┘               └───────────┘         │
+│      │                           │                                           │
+│      │◄──────────────────────────┘ (stall)                                   │
+│      │                                                                       │
+│      │◄──────────────────────────────────────────────────── (flush si branch)│
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Exercices Pratiques : Projet 6
+
+Le **Projet 6 : CPU Pipeline** vous permet de construire ces composants.
+
+#### Exercice 1 : IF_ID_Reg
+
+**Objectif** : Implémenter le registre de pipeline IF/ID.
+
+**Comportement** :
+1. Sur `reset='1'` OU `flush='1'` : mettre l'instruction à NOP (0xE0000000)
+2. Sur `stall='1'` : garder les valeurs actuelles
+3. Sinon : capturer les nouvelles valeurs
+
+**Squelette** :
+```vhdl
+architecture rtl of IF_ID_Reg is
+  signal instr_reg : bits(31 downto 0);
+  signal pc_plus4_reg : bits(31 downto 0);
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if (reset = '1') or (flush = '1') then
+        instr_reg <= x"E0000000";  -- NOP
+        pc_plus4_reg <= x"00000000";
+      elsif stall = '0' then
+        instr_reg <= if_instr;
+        pc_plus4_reg <= if_pc_plus4;
+      end if;
+      -- Si stall='1', on ne fait rien (garde les valeurs)
+    end if;
+  end process;
+
+  id_instr <= instr_reg;
+  id_pc_plus4 <= pc_plus4_reg;
+end architecture;
+```
+
+#### Exercice 2 : HazardDetect
+
+**Objectif** : Détecter les aléas load-use.
+
+**Logique** :
+```
+rn_hazard = ex_mem_read AND id_rn_used AND (id_rn = ex_rd)
+rm_hazard = ex_mem_read AND id_rm_used AND (id_rm = ex_rd)
+stall = rn_hazard OR rm_hazard
+```
+
+**En HDL** (attention : pas de `when...else`, utiliser la logique booléenne) :
+```vhdl
+architecture rtl of HazardDetect is
+  signal rn_hazard : bit;
+  signal rm_hazard : bit;
+begin
+  rn_hazard <= ex_mem_read and id_rn_used and (id_rn = ex_rd);
+  rm_hazard <= ex_mem_read and id_rm_used and (id_rm = ex_rd);
+  stall <= rn_hazard or rm_hazard;
+end architecture;
+```
+
+#### Exercice 3 : ForwardUnit
+
+**Objectif** : Générer les signaux de forwarding.
+
+**Encodage** :
+- `00` : Pas de forwarding
+- `01` : Forward depuis MEM
+- `10` : Forward depuis WB
+
+**Logique** :
+```
+mem_fwd_a = mem_reg_write AND (mem_rd = ex_rn)
+wb_fwd_a = wb_reg_write AND (wb_rd = ex_rn) AND (NOT mem_fwd_a)
+forward_a = wb_fwd_a & mem_fwd_a   (concaténation de bits)
+```
+
+**En HDL** :
+```vhdl
+architecture rtl of ForwardUnit is
+  signal mem_fwd_a, wb_fwd_a : bit;
+  signal mem_fwd_b, wb_fwd_b : bit;
+begin
+  mem_fwd_a <= mem_reg_write and (mem_rd = ex_rn);
+  wb_fwd_a <= wb_reg_write and (wb_rd = ex_rn) and (not mem_fwd_a);
+
+  mem_fwd_b <= mem_reg_write and (mem_rd = ex_rm);
+  wb_fwd_b <= wb_reg_write and (wb_rd = ex_rm) and (not mem_fwd_b);
+
+  forward_a <= wb_fwd_a & mem_fwd_a;
+  forward_b <= wb_fwd_b & mem_fwd_b;
+end architecture;
+```
+
+#### Exercice 4 : CPU_Pipeline (Projet Final)
+
+C'est le grand défi ! Assembler tous les composants en un CPU pipeliné complet.
+
+**Conseil** : L'implémentation de référence est dans `hdl_lib/05_cpu/CPU_Pipeline.hdl` (~450 lignes).
+
+---
+
+### Résumé : Pipeline vs Single-Cycle
+
+| Aspect | Single-Cycle | Pipeline |
+|:-------|:-------------|:---------|
+| **Instructions en parallèle** | 1 | Jusqu'à 5 |
+| **Throughput** | 1 instr / 5 unités de temps | 1 instr / 1 unité de temps |
+| **Complexité** | Simple | Plus complexe |
+| **Aléas** | Aucun | Data hazards, Control hazards |
+| **Composants supplémentaires** | Aucun | Registres pipeline, Hazard Detect, Forward Unit |
+
+---
+
+### Pour Aller Encore Plus Loin
+
+Les vrais processeurs modernes vont bien au-delà :
+
+- **Superscalaire** : Plusieurs pipelines en parallèle
+- **Exécution dans le désordre** : Réorganiser les instructions
+- **Prédiction de branchement** : Deviner si un branchement sera pris
+- **Cache** : Mémoire ultra-rapide proche du CPU
+
+Mais ces concepts dépassent le cadre de ce livre. Le pipeline à 5 étages reste la base sur laquelle tout le reste est construit !
 
 ---
 

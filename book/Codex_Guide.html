@@ -366,8 +366,10 @@ Détail</a></li>
 HDL</a></li>
 <li><a href="#exercices-pratiques-4" id="toc-exercices-pratiques-4"><span class="toc-section-number">7.7</span> Exercices Pratiques</a></li>
 <li><a href="#conseils-de-débogage" id="toc-conseils-de-débogage"><span class="toc-section-number">7.8</span> Conseils de Débogage</a></li>
-<li><a href="#le-lien-avec-la-suite-1" id="toc-le-lien-avec-la-suite-1"><span class="toc-section-number">7.9</span> Le Lien avec la Suite</a></li>
-<li><a href="#ce-quil-faut-retenir-4" id="toc-ce-quil-faut-retenir-4"><span class="toc-section-number">7.10</span> Ce qu’il faut retenir</a></li>
+<li><a href="#aller-plus-loin-le-cpu-pipeline" id="toc-aller-plus-loin-le-cpu-pipeline"><span class="toc-section-number">7.9</span> Aller Plus Loin : Le CPU
+Pipeline</a></li>
+<li><a href="#le-lien-avec-la-suite-1" id="toc-le-lien-avec-la-suite-1"><span class="toc-section-number">7.10</span> Le Lien avec la Suite</a></li>
+<li><a href="#ce-quil-faut-retenir-4" id="toc-ce-quil-faut-retenir-4"><span class="toc-section-number">7.11</span> Ce qu’il faut retenir</a></li>
 </ul></li>
 <li><a href="#lassembleur" id="toc-lassembleur"><span class="toc-section-number">8</span> L’Assembleur</a>
 <ul>
@@ -410,8 +412,10 @@ C32</a></li>
 <li><a href="#accès-au-matériel-mmio" id="toc-accès-au-matériel-mmio"><span class="toc-section-number">10.8</span> Accès au Matériel (MMIO)</a></li>
 <li><a href="#exemple-complet-1" id="toc-exemple-complet-1"><span class="toc-section-number">10.9</span> Exemple Complet</a></li>
 <li><a href="#exercices-pratiques-7" id="toc-exercices-pratiques-7"><span class="toc-section-number">10.10</span> Exercices Pratiques</a></li>
-<li><a href="#limitations-du-c32" id="toc-limitations-du-c32"><span class="toc-section-number">10.11</span> Limitations du C32</a></li>
-<li><a href="#ce-quil-faut-retenir-7" id="toc-ce-quil-faut-retenir-7"><span class="toc-section-number">10.12</span> Ce qu’il faut retenir</a></li>
+<li><a href="#les-structures-structs" id="toc-les-structures-structs"><span class="toc-section-number">10.11</span> Les Structures
+(Structs)</a></li>
+<li><a href="#limitations-du-c32" id="toc-limitations-du-c32"><span class="toc-section-number">10.12</span> Limitations du C32</a></li>
+<li><a href="#ce-quil-faut-retenir-7" id="toc-ce-quil-faut-retenir-7"><span class="toc-section-number">10.13</span> Ce qu’il faut retenir</a></li>
 </ul></li>
 <li><a href="#système-dexploitation" id="toc-système-dexploitation"><span class="toc-section-number">11</span> Système d’Exploitation</a>
 <ul>
@@ -4019,14 +4023,556 @@ registres ?</h3>
 <li>Attention à l’alignement (adresses multiples de 4)</li>
 </ul>
 <hr />
-<h2 data-number="7.9" id="le-lien-avec-la-suite-1"><span class="header-section-number">7.9</span> Le Lien avec la Suite</h2>
+<h2 data-number="7.9" id="aller-plus-loin-le-cpu-pipeline"><span class="header-section-number">7.9</span> Aller Plus Loin : Le CPU
+Pipeline</h2>
+<p>Le CPU single-cycle que nous avons construit est simple et
+pédagogique. Mais dans le monde réel, il serait <strong>très
+lent</strong>. Les vrais processeurs utilisent une technique appelée
+<strong>pipeline</strong> pour être beaucoup plus rapides.</p>
+<p>Cette section explique en détail ce qu’est un pipeline, pourquoi il
+est nécessaire, et comment le construire.</p>
+<hr />
+<h3 data-number="7.9.1" id="pourquoi-le-cpu-single-cycle-est-lent"><span class="header-section-number">7.9.1</span> Pourquoi le CPU Single-Cycle
+est Lent</h3>
+<h4 data-number="7.9.1.1" id="le-problème-de-la-chaîne-critique"><span class="header-section-number">7.9.1.1</span> Le problème de la chaîne
+critique</h4>
+<p>Dans notre CPU single-cycle, une instruction doit traverser
+<strong>tous</strong> les composants en un seul cycle :</p>
+<pre><code>┌──────────────────────────────────────────────────────────────────┐
+│  PC → Mémoire → Décodeur → Registres → ALU → Mémoire → Registres │
+│                                                                   │
+│  ←───────────────── UN SEUL CYCLE ─────────────────────────────→ │
+└──────────────────────────────────────────────────────────────────┘</code></pre>
+<p>Le cycle d’horloge doit être assez <strong>long</strong> pour que le
+signal traverse tout ce chemin. Si chaque étape prend 1 nanoseconde, le
+cycle doit faire au minimum 6 ns.</p>
+<p><strong>Résultat</strong> : Même si certaines instructions n’ont pas
+besoin de la mémoire de données (comme ADD), elles prennent quand même 6
+ns.</p>
+<h4 data-number="7.9.1.2" id="une-analogie-la-laverie"><span class="header-section-number">7.9.1.2</span> Une analogie : La
+laverie</h4>
+<p>Imaginez que vous avez 4 lessives à faire. Chaque lessive a 4 étapes
+: 1. <strong>Laver</strong> (30 min) 2. <strong>Sécher</strong> (30 min)
+3. <strong>Plier</strong> (30 min) 4. <strong>Ranger</strong> (30
+min)</p>
+<p><strong>Approche “single-cycle”</strong> : Attendre qu’une lessive
+soit complètement terminée avant de commencer la suivante.</p>
+<pre><code>Lessive 1 : |──Laver──|──Sécher──|──Plier──|──Ranger──|
+Lessive 2 :                                            |──Laver──|──Sécher──|...</code></pre>
+<p>Temps total : 4 lessives × 2h = <strong>8 heures</strong></p>
+<p><strong>Approche “pipeline”</strong> : Dès que la machine à laver est
+libre, commencer la lessive suivante !</p>
+<pre><code>Lessive 1 : |──Laver──|──Sécher──|──Plier──|──Ranger──|
+Lessive 2 :           |──Laver──|──Sécher──|──Plier──|──Ranger──|
+Lessive 3 :                     |──Laver──|──Sécher──|──Plier──|──Ranger──|
+Lessive 4 :                               |──Laver──|──Sécher──|──Plier──|──Ranger──|</code></pre>
+<p>Temps total : 2h + 3 × 30min = <strong>3h30</strong></p>
+<p>Le pipeline ne rend pas une lessive individuelle plus rapide, mais il
+permet de traiter <strong>plus de lessives par heure</strong> !</p>
+<hr />
+<h3 data-number="7.9.2" id="le-pipeline-à-5-étages"><span class="header-section-number">7.9.2</span> Le Pipeline à 5 Étages</h3>
+<p>Notre CPU pipeliné divise l’exécution en <strong>5 étapes</strong>,
+chacune prenant exactement 1 cycle d’horloge :</p>
+<pre><code>┌────────────────────────────────────────────────────────────────────────────┐
+│                                                                            │
+│  ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐                     │
+│  │  IF  │ → │  ID  │ → │  EX  │ → │ MEM  │ → │  WB  │                     │
+│  │Fetch │   │Decode│   │Execute   │Memory│   │Write │                     │
+│  └──────┘   └──────┘   └──────┘   └──────┘   └──────┘                     │
+│                                                                            │
+│  1 cycle    1 cycle    1 cycle    1 cycle    1 cycle                      │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘</code></pre>
+<h4 data-number="7.9.2.1" id="étape-1-if-instruction-fetch"><span class="header-section-number">7.9.2.1</span> Étape 1 : IF (Instruction
+Fetch)</h4>
+<p><strong>But</strong> : Aller chercher l’instruction en mémoire.</p>
+<pre><code>┌─────────────────────────────────────────────┐
+│  IF - Instruction Fetch                     │
+│                                             │
+│    PC ────► Mémoire ────► Instruction       │
+│    │        Instructions    (32 bits)       │
+│    │                                        │
+│    └───► PC + 4 (préparé pour la suite)     │
+│                                             │
+└─────────────────────────────────────────────┘</code></pre>
+<p><strong>Ce qui se passe</strong> : 1. Le PC (Program Counter) envoie
+son adresse à la mémoire 2. La mémoire renvoie l’instruction (32 bits)
+3. On calcule PC + 4 pour l’instruction suivante</p>
+<p><strong>Sortie</strong> : L’instruction et PC+4 sont stockés dans le
+registre IF/ID.</p>
+<h4 data-number="7.9.2.2" id="étape-2-id-instruction-decode"><span class="header-section-number">7.9.2.2</span> Étape 2 : ID (Instruction
+Decode)</h4>
+<p><strong>But</strong> : Comprendre l’instruction et lire les registres
+sources.</p>
+<pre><code>┌─────────────────────────────────────────────┐
+│  ID - Instruction Decode                    │
+│                                             │
+│    Instruction ─┬─► Décodeur ──► Signaux    │
+│                 │                de contrôle│
+│                 │                           │
+│                 └─► Registres ──► Valeurs   │
+│                      (Rn, Rm)     (A, B)    │
+│                                             │
+└─────────────────────────────────────────────┘</code></pre>
+<p><strong>Ce qui se passe</strong> : 1. Le décodeur extrait les champs
+(Rd, Rn, Rm, opcode, etc.) 2. L’unité de contrôle génère les signaux
+(reg_write, mem_read, etc.) 3. On lit les valeurs des registres Rn et Rm
+4. On détecte les éventuels aléas (hazards)</p>
+<p><strong>Sortie</strong> : Tout est stocké dans le registre ID/EX.</p>
+<h4 data-number="7.9.2.3" id="étape-3-ex-execute"><span class="header-section-number">7.9.2.3</span> Étape 3 : EX (Execute)</h4>
+<p><strong>But</strong> : Effectuer le calcul.</p>
+<pre><code>┌─────────────────────────────────────────────┐
+│  EX - Execute                               │
+│                                             │
+│    Valeur A ──────┐                         │
+│                   ├──► ALU ──► Résultat     │
+│    Valeur B ──┬───┘            + Flags      │
+│    ou Imm    MUX                            │
+│                                             │
+│    (Pour Branch: calcul de l&#39;adresse cible) │
+│                                             │
+└─────────────────────────────────────────────┘</code></pre>
+<p><strong>Ce qui se passe</strong> : 1. L’ALU effectue l’opération
+(ADD, SUB, AND, etc.) 2. Les flags (N, Z, C, V) sont calculés 3. Pour
+les branchements, on calcule l’adresse cible 4. Le forwarding peut
+injecter des valeurs ici (on verra plus tard)</p>
+<p><strong>Sortie</strong> : Le résultat ALU est stocké dans le registre
+EX/MEM.</p>
+<h4 data-number="7.9.2.4" id="étape-4-mem-memory-access"><span class="header-section-number">7.9.2.4</span> Étape 4 : MEM (Memory
+Access)</h4>
+<p><strong>But</strong> : Lire ou écrire en mémoire (pour LDR/STR
+seulement).</p>
+<pre><code>┌─────────────────────────────────────────────┐
+│  MEM - Memory Access                        │
+│                                             │
+│    Si LDR:  Adresse ──► Mémoire ──► Donnée  │
+│                         Données             │
+│                                             │
+│    Si STR:  Adresse, Donnée ──► Mémoire     │
+│                                             │
+│    Sinon:   (le résultat ALU passe juste)   │
+│                                             │
+└─────────────────────────────────────────────┘</code></pre>
+<p><strong>Ce qui se passe</strong> : 1. Pour LDR : on lit la mémoire à
+l’adresse calculée 2. Pour STR : on écrit la valeur en mémoire 3. Pour
+les autres instructions : rien (le résultat ALU est juste transmis)</p>
+<p><strong>Sortie</strong> : Le résultat (ALU ou mémoire) est stocké
+dans le registre MEM/WB.</p>
+<h4 data-number="7.9.2.5" id="étape-5-wb-write-back"><span class="header-section-number">7.9.2.5</span> Étape 5 : WB (Write
+Back)</h4>
+<p><strong>But</strong> : Écrire le résultat dans le registre
+destination.</p>
+<pre><code>┌─────────────────────────────────────────────┐
+│  WB - Write Back                            │
+│                                             │
+│    Résultat ──► MUX ──► Banc de Registres   │
+│    (ALU ou MEM)          ↓                  │
+│                         Rd                  │
+│                                             │
+└─────────────────────────────────────────────┘</code></pre>
+<p><strong>Ce qui se passe</strong> : 1. On choisit le résultat à écrire
+(ALU ou mémoire) 2. Si <code>reg_write = 1</code>, on écrit dans le
+registre Rd</p>
+<hr />
+<h3 data-number="7.9.3" id="visualisation-du-pipeline-en-action"><span class="header-section-number">7.9.3</span> Visualisation du Pipeline en
+Action</h3>
+<p>Voici comment 5 instructions traversent le pipeline :</p>
+<pre><code>         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │ Cycle 6 │ Cycle 7 │
+─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+Instr 1  │   IF    │   ID    │   EX    │   MEM   │   WB    │         │         │
+Instr 2  │         │   IF    │   ID    │   EX    │   MEM   │   WB    │         │
+Instr 3  │         │         │   IF    │   ID    │   EX    │   MEM   │   WB    │
+Instr 4  │         │         │         │   IF    │   ID    │   EX    │   MEM   │...
+Instr 5  │         │         │         │         │   IF    │   ID    │   EX    │...
+─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘</code></pre>
+<p><strong>Observation clé</strong> : À partir du cycle 5, le pipeline
+est “rempli” et on termine <strong>une instruction par cycle</strong>
+!</p>
+<p><strong>Comparaison des performances</strong> :</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">CPU</th>
+<th style="text-align: left;">100 instructions</th>
+<th style="text-align: left;">Temps (si cycle = 1ns)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Single-cycle</td>
+<td style="text-align: left;">100 cycles</td>
+<td style="text-align: left;">100 ns</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Pipeline 5 étages</td>
+<td style="text-align: left;">104 cycles*</td>
+<td style="text-align: left;">104 ns</td>
+</tr>
+</tbody>
+</table>
+<p>*Attendez… le pipeline n’est pas plus rapide ?</p>
+<p>C’est parce que le cycle du pipeline est <strong>5× plus
+court</strong> ! Chaque étage ne fait qu’une partie du travail.</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">CPU</th>
+<th style="text-align: left;">Durée cycle</th>
+<th style="text-align: left;">100 instructions</th>
+<th style="text-align: left;">Temps réel</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Single-cycle</td>
+<td style="text-align: left;">5 ns</td>
+<td style="text-align: left;">100 cycles</td>
+<td style="text-align: left;"><strong>500 ns</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Pipeline</td>
+<td style="text-align: left;">1 ns</td>
+<td style="text-align: left;">104 cycles</td>
+<td style="text-align: left;"><strong>104 ns</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Le pipeline est <strong>~5× plus rapide</strong> !</p>
+<hr />
+<h3 data-number="7.9.4" id="les-registres-de-pipeline"><span class="header-section-number">7.9.4</span> Les Registres de
+Pipeline</h3>
+<p>Pour que le pipeline fonctionne, il faut <strong>stocker</strong> les
+résultats intermédiaires entre chaque étage. C’est le rôle des
+<strong>registres de pipeline</strong>.</p>
+<pre><code>┌──────┐   ┌───────────┐   ┌──────┐   ┌───────────┐   ┌──────┐
+│  IF  │ → │  IF/ID    │ → │  ID  │ → │  ID/EX    │ → │  EX  │ → ...
+│      │   │  Register │   │      │   │  Register │   │      │
+└──────┘   └───────────┘   └──────┘   └───────────┘   └──────┘
+                │                           │
+          (instruction,              (valeurs registres,
+           PC+4)                      signaux contrôle,
+                                      Rd, Rn, Rm, imm)</code></pre>
+<h4 data-number="7.9.4.1" id="le-registre-ifid"><span class="header-section-number">7.9.4.1</span> Le registre IF/ID</h4>
+<p><strong>Stocke</strong> : - L’instruction (32 bits) - PC+4 (32
+bits)</p>
+<p><strong>Signaux spéciaux</strong> : - <code>stall</code> : Si 1,
+garder les mêmes valeurs (ne pas avancer) - <code>flush</code> : Si 1,
+mettre l’instruction à NOP (annuler)</p>
+<pre><code>┌─────────────────────────────────────────────┐
+│  IF/ID Register                             │
+│                                             │
+│  Entrées:                                   │
+│    if_instr ───────────┐                    │
+│    if_pc_plus4 ────────┤                    │
+│    stall ──────────────┤                    │
+│    flush ──────────────┘                    │
+│                                             │
+│  Comportement:                              │
+│    Si reset OU flush:                       │
+│      → instr = NOP, pc = 0                  │
+│    Sinon si stall:                          │
+│      → garder les valeurs actuelles         │
+│    Sinon:                                   │
+│      → capturer les nouvelles valeurs       │
+│                                             │
+│  Sorties:                                   │
+│    id_instr ←──────────┘                    │
+│    id_pc_plus4 ←───────                     │
+│                                             │
+└─────────────────────────────────────────────┘</code></pre>
+<hr />
+<h3 data-number="7.9.5" id="les-aléas-hazards"><span class="header-section-number">7.9.5</span> Les Aléas (Hazards)</h3>
+<p>Le pipeline crée de nouveaux problèmes. Quand une instruction dépend
+du résultat d’une instruction précédente qui n’est pas encore terminée,
+on a un <strong>aléa</strong>.</p>
+<h4 data-number="7.9.5.1" id="aléa-de-données-data-hazard"><span class="header-section-number">7.9.5.1</span> Aléa de Données (Data
+Hazard)</h4>
+<p><strong>Exemple problématique</strong> :</p>
+<pre class="assembly"><code>ADD R1, R2, R3    ; Instruction 1: R1 = R2 + R3
+SUB R4, R1, R5    ; Instruction 2: R4 = R1 - R5 (utilise R1!)</code></pre>
+<p>Visualisons dans le pipeline :</p>
+<pre><code>         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │
+─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+ADD R1   │   IF    │   ID    │   EX    │   MEM   │   WB ←──── R1 écrit ici!
+SUB R4,R1│         │   IF    │   ID ←──── R1 lu ici!         │</code></pre>
+<p><strong>Le problème</strong> : SUB lit R1 au cycle 3 (étage ID), mais
+ADD n’écrit R1 qu’au cycle 5 (étage WB). SUB va lire
+l’<strong>ancienne</strong> valeur de R1 !</p>
+<h4 data-number="7.9.5.2" id="solution-1-le-forwarding-bypass"><span class="header-section-number">7.9.5.2</span> Solution 1 : Le Forwarding
+(Bypass)</h4>
+<p>Au lieu d’attendre que R1 soit écrit dans le banc de registres, on
+peut <strong>transférer</strong> le résultat directement depuis l’étage
+EX ou MEM vers l’étage où on en a besoin.</p>
+<pre><code>         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │
+─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+ADD R1   │   IF    │   ID    │   EX ───┼── Résultat disponible!
+SUB R4,R1│         │   IF    │   ID    │   EX ←── Forward!
+                                            │
+                                      (on prend le résultat
+                                       directement de ADD)</code></pre>
+<p><strong>Le ForwardUnit</strong> détecte ces situations et redirige
+les données :</p>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│  ForwardUnit                                                │
+│                                                             │
+│  Entrées:                                                   │
+│    ex_rn, ex_rm  : registres sources de l&#39;instruction en EX │
+│    mem_rd        : registre destination en MEM              │
+│    mem_reg_write : MEM va écrire un registre?               │
+│    wb_rd         : registre destination en WB               │
+│    wb_reg_write  : WB va écrire un registre?                │
+│                                                             │
+│  Logique:                                                   │
+│    Si MEM.rd = EX.rn et MEM écrit → forward depuis MEM      │
+│    Sinon si WB.rd = EX.rn et WB écrit → forward depuis WB   │
+│    Sinon → pas de forwarding                                │
+│                                                             │
+│  Sorties (2 bits chacune):                                  │
+│    forward_a : 00=rien, 01=depuis MEM, 10=depuis WB         │
+│    forward_b : 00=rien, 01=depuis MEM, 10=depuis WB         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h4 data-number="7.9.5.3" id="solution-2-le-stall-pour-load-use"><span class="header-section-number">7.9.5.3</span> Solution 2 : Le Stall (pour
+Load-Use)</h4>
+<p>Le forwarding ne résout pas tous les cas. Considérons :</p>
+<pre class="assembly"><code>LDR R1, [R2]      ; Charge R1 depuis la mémoire
+ADD R4, R1, R5    ; Utilise R1 immédiatement!</code></pre>
+<pre><code>         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │
+─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+LDR R1   │   IF    │   ID    │   EX    │   MEM ←── R1 disponible ici
+ADD R4,R1│         │   IF    │   ID    │   EX ←── Besoin de R1 ici!</code></pre>
+<p><strong>Problème</strong> : ADD a besoin de R1 dans son étage EX
+(cycle 4), mais LDR ne lit la mémoire qu’à l’étage MEM (aussi cycle 4).
+On ne peut pas faire de forwarding vers le passé !</p>
+<p><strong>Solution</strong> : Insérer une <strong>bulle</strong>
+(stall) pour retarder ADD d’un cycle.</p>
+<pre><code>         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │ Cycle 6 │
+─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+LDR R1   │   IF    │   ID    │   EX    │   MEM───┼──►Forward possible!
+ADD R4,R1│         │   IF    │   ID    │  STALL  │   EX ←── Forward OK!
+Instr 3  │         │         │   IF    │  STALL  │   ID    │   EX    │</code></pre>
+<p><strong>Le HazardDetect</strong> détecte ces situations :</p>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│  HazardDetect                                               │
+│                                                             │
+│  Entrées:                                                   │
+│    id_rn, id_rm    : registres sources en ID                │
+│    id_rn_used      : Rn est utilisé par l&#39;instruction?      │
+│    id_rm_used      : Rm est utilisé par l&#39;instruction?      │
+│    ex_rd           : registre destination en EX             │
+│    ex_mem_read     : instruction en EX est un LDR?          │
+│                                                             │
+│  Logique:                                                   │
+│    Si EX est un load (ex_mem_read = 1)                      │
+│    ET ID utilise ce registre (id_rn = ex_rd ou id_rm = ex_rd)│
+│    → Déclencher un STALL                                    │
+│                                                             │
+│  Sortie:                                                    │
+│    stall : 1 = bloquer IF et ID, insérer NOP en EX          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+<h4 data-number="7.9.5.4" id="aléa-de-contrôle-control-hazard"><span class="header-section-number">7.9.5.4</span> Aléa de Contrôle (Control
+Hazard)</h4>
+<p>Les branchements posent un autre problème :</p>
+<pre class="assembly"><code>BEQ label         ; Si égal, sauter à label
+ADD R1, R2, R3    ; Cette instruction est-elle exécutée?
+SUB R4, R5, R6    ; Et celle-ci?
+label:
+MOV R7, #42</code></pre>
+<pre><code>         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │
+─────────┼─────────┼─────────┼─────────┼─────────┤
+BEQ      │   IF    │   ID    │   EX ←── On sait si on branche
+ADD      │         │   IF    │   ID    │  ???    │
+SUB      │         │         │   IF    │  ???    │</code></pre>
+<p><strong>Problème</strong> : Quand on exécute BEQ, on a déjà commencé
+à chercher les instructions suivantes ! Si le branchement est pris, ADD
+et SUB n’auraient jamais dû être exécutées.</p>
+<p><strong>Solution</strong> : Le <strong>Flush</strong></p>
+<p>Si le branchement est pris, on <strong>annule</strong> les
+instructions qui n’auraient pas dû être chargées :</p>
+<pre><code>         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │
+─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+BEQ      │   IF    │   ID    │   EX    │   MEM   │   WB    │
+ADD      │         │   IF    │   ID    │  FLUSH  │         │
+SUB      │         │         │   IF    │  FLUSH  │         │
+MOV R7   │         │         │         │   IF    │   ID    │...</code></pre>
+<p>Le signal <code>flush</code> met les registres de pipeline à NOP
+(instruction qui ne fait rien).</p>
+<hr />
+<h3 data-number="7.9.6" id="architecture-complète-du-cpu-pipeline"><span class="header-section-number">7.9.6</span> Architecture Complète du CPU
+Pipeline</h3>
+<pre><code>┌────────────────────────────────────────────────────────────────────────────────┐
+│                            CPU PIPELINE 5 ÉTAGES                               │
+│                                                                                │
+│  ┌───────┐     ┌───────┐     ┌───────┐     ┌───────┐     ┌───────┐           │
+│  │       │     │ IF/ID │     │       │     │ ID/EX │     │       │           │
+│  │  IF   │────►│  Reg  │────►│  ID   │────►│  Reg  │────►│  EX   │──...      │
+│  │       │     │       │     │       │     │       │     │       │           │
+│  └───┬───┘     └───────┘     └───┬───┘     └───────┘     └───┬───┘           │
+│      │                           │                           │               │
+│      │                           │                           │               │
+│      │                     ┌─────┴─────┐               ┌─────┴─────┐         │
+│      │                     │  Hazard   │               │  Forward  │         │
+│      │                     │  Detect   │               │   Unit    │         │
+│      │                     └─────┬─────┘               └───────────┘         │
+│      │                           │                                           │
+│      │◄──────────────────────────┘ (stall)                                   │
+│      │                                                                       │
+│      │◄──────────────────────────────────────────────────── (flush si branch)│
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘</code></pre>
+<hr />
+<h3 data-number="7.9.7" id="exercices-pratiques-projet-6"><span class="header-section-number">7.9.7</span> Exercices Pratiques : Projet
+6</h3>
+<p>Le <strong>Projet 6 : CPU Pipeline</strong> vous permet de construire
+ces composants.</p>
+<h4 data-number="7.9.7.1" id="exercice-1-if_id_reg"><span class="header-section-number">7.9.7.1</span> Exercice 1 : IF_ID_Reg</h4>
+<p><strong>Objectif</strong> : Implémenter le registre de pipeline
+IF/ID.</p>
+<p><strong>Comportement</strong> : 1. Sur <code>reset=&#39;1&#39;</code> OU
+<code>flush=&#39;1&#39;</code> : mettre l’instruction à NOP (0xE0000000) 2. Sur
+<code>stall=&#39;1&#39;</code> : garder les valeurs actuelles 3. Sinon :
+capturer les nouvelles valeurs</p>
+<p><strong>Squelette</strong> :</p>
+<div class="sourceCode" id="cb109"><pre class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="cf">architecture</span> <span class="dv">rtl</span> <span class="kw">of</span> <span class="fu">IF_ID_Reg</span> <span class="kw">is</span></span>
+<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> instr_reg <span class="ot">:</span> bits(<span class="dv">31</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
+<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> pc_plus4_reg <span class="ot">:</span> bits(<span class="dv">31</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
+<span id="cb109-4"><a href="#cb109-4" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
+<span id="cb109-5"><a href="#cb109-5" aria-hidden="true" tabindex="-1"></a>  <span class="sc">process</span>(clk)</span>
+<span id="cb109-6"><a href="#cb109-6" aria-hidden="true" tabindex="-1"></a>  <span class="sc">begin</span></span>
+<span id="cb109-7"><a href="#cb109-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">rising_edge</span>(clk) <span class="cf">then</span></span>
+<span id="cb109-8"><a href="#cb109-8" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> (reset <span class="ot">=</span> <span class="bn">&#39;1&#39;</span>) <span class="kw">or</span> (flush <span class="ot">=</span> <span class="bn">&#39;1&#39;</span>) <span class="cf">then</span></span>
+<span id="cb109-9"><a href="#cb109-9" aria-hidden="true" tabindex="-1"></a>        instr_reg <span class="ot">&lt;=</span> x<span class="st">&quot;E0000000&quot;</span>;  <span class="co">-- NOP</span></span>
+<span id="cb109-10"><a href="#cb109-10" aria-hidden="true" tabindex="-1"></a>        pc_plus4_reg <span class="ot">&lt;=</span> x<span class="st">&quot;00000000&quot;</span>;</span>
+<span id="cb109-11"><a href="#cb109-11" aria-hidden="true" tabindex="-1"></a>      <span class="cf">elsif</span> stall <span class="ot">=</span> <span class="bn">&#39;0&#39;</span> <span class="cf">then</span></span>
+<span id="cb109-12"><a href="#cb109-12" aria-hidden="true" tabindex="-1"></a>        instr_reg <span class="ot">&lt;=</span> if_instr;</span>
+<span id="cb109-13"><a href="#cb109-13" aria-hidden="true" tabindex="-1"></a>        pc_plus4_reg <span class="ot">&lt;=</span> if_pc_plus4;</span>
+<span id="cb109-14"><a href="#cb109-14" aria-hidden="true" tabindex="-1"></a>      <span class="cf">end if;</span></span>
+<span id="cb109-15"><a href="#cb109-15" aria-hidden="true" tabindex="-1"></a>      <span class="co">-- Si stall=&#39;1&#39;, on ne fait rien (garde les valeurs)</span></span>
+<span id="cb109-16"><a href="#cb109-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end if;</span></span>
+<span id="cb109-17"><a href="#cb109-17" aria-hidden="true" tabindex="-1"></a>  <span class="sc">end process;</span></span>
+<span id="cb109-18"><a href="#cb109-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb109-19"><a href="#cb109-19" aria-hidden="true" tabindex="-1"></a>  id_instr <span class="ot">&lt;=</span> instr_reg;</span>
+<span id="cb109-20"><a href="#cb109-20" aria-hidden="true" tabindex="-1"></a>  id_pc_plus4 <span class="ot">&lt;=</span> pc_plus4_reg;</span>
+<span id="cb109-21"><a href="#cb109-21" aria-hidden="true" tabindex="-1"></a><span class="cf">end architecture;</span></span></code></pre></div>
+<h4 data-number="7.9.7.2" id="exercice-2-hazarddetect"><span class="header-section-number">7.9.7.2</span> Exercice 2 :
+HazardDetect</h4>
+<p><strong>Objectif</strong> : Détecter les aléas load-use.</p>
+<p><strong>Logique</strong> :</p>
+<pre><code>rn_hazard = ex_mem_read AND id_rn_used AND (id_rn = ex_rd)
+rm_hazard = ex_mem_read AND id_rm_used AND (id_rm = ex_rd)
+stall = rn_hazard OR rm_hazard</code></pre>
+<p><strong>En HDL</strong> (attention : pas de <code>when...else</code>,
+utiliser la logique booléenne) :</p>
+<div class="sourceCode" id="cb111"><pre class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="cf">architecture</span> <span class="dv">rtl</span> <span class="kw">of</span> <span class="fu">HazardDetect</span> <span class="kw">is</span></span>
+<span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> rn_hazard <span class="ot">:</span> <span class="dt">bit</span>;</span>
+<span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> rm_hazard <span class="ot">:</span> <span class="dt">bit</span>;</span>
+<span id="cb111-4"><a href="#cb111-4" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
+<span id="cb111-5"><a href="#cb111-5" aria-hidden="true" tabindex="-1"></a>  rn_hazard <span class="ot">&lt;=</span> ex_mem_read <span class="kw">and</span> id_rn_used <span class="kw">and</span> (id_rn <span class="ot">=</span> ex_rd);</span>
+<span id="cb111-6"><a href="#cb111-6" aria-hidden="true" tabindex="-1"></a>  rm_hazard <span class="ot">&lt;=</span> ex_mem_read <span class="kw">and</span> id_rm_used <span class="kw">and</span> (id_rm <span class="ot">=</span> ex_rd);</span>
+<span id="cb111-7"><a href="#cb111-7" aria-hidden="true" tabindex="-1"></a>  stall <span class="ot">&lt;=</span> rn_hazard <span class="kw">or</span> rm_hazard;</span>
+<span id="cb111-8"><a href="#cb111-8" aria-hidden="true" tabindex="-1"></a><span class="cf">end architecture;</span></span></code></pre></div>
+<h4 data-number="7.9.7.3" id="exercice-3-forwardunit"><span class="header-section-number">7.9.7.3</span> Exercice 3 :
+ForwardUnit</h4>
+<p><strong>Objectif</strong> : Générer les signaux de forwarding.</p>
+<p><strong>Encodage</strong> : - <code>00</code> : Pas de forwarding -
+<code>01</code> : Forward depuis MEM - <code>10</code> : Forward depuis
+WB</p>
+<p><strong>Logique</strong> :</p>
+<pre><code>mem_fwd_a = mem_reg_write AND (mem_rd = ex_rn)
+wb_fwd_a = wb_reg_write AND (wb_rd = ex_rn) AND (NOT mem_fwd_a)
+forward_a = wb_fwd_a &amp; mem_fwd_a   (concaténation de bits)</code></pre>
+<p><strong>En HDL</strong> :</p>
+<div class="sourceCode" id="cb113"><pre class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="cf">architecture</span> <span class="dv">rtl</span> <span class="kw">of</span> <span class="fu">ForwardUnit</span> <span class="kw">is</span></span>
+<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> mem_fwd_a<span class="ot">,</span> wb_fwd_a <span class="ot">:</span> <span class="dt">bit</span>;</span>
+<span id="cb113-3"><a href="#cb113-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> mem_fwd_b<span class="ot">,</span> wb_fwd_b <span class="ot">:</span> <span class="dt">bit</span>;</span>
+<span id="cb113-4"><a href="#cb113-4" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
+<span id="cb113-5"><a href="#cb113-5" aria-hidden="true" tabindex="-1"></a>  mem_fwd_a <span class="ot">&lt;=</span> mem_reg_write <span class="kw">and</span> (mem_rd <span class="ot">=</span> ex_rn);</span>
+<span id="cb113-6"><a href="#cb113-6" aria-hidden="true" tabindex="-1"></a>  wb_fwd_a <span class="ot">&lt;=</span> wb_reg_write <span class="kw">and</span> (wb_rd <span class="ot">=</span> ex_rn) <span class="kw">and</span> (<span class="kw">not</span> mem_fwd_a);</span>
+<span id="cb113-7"><a href="#cb113-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb113-8"><a href="#cb113-8" aria-hidden="true" tabindex="-1"></a>  mem_fwd_b <span class="ot">&lt;=</span> mem_reg_write <span class="kw">and</span> (mem_rd <span class="ot">=</span> ex_rm);</span>
+<span id="cb113-9"><a href="#cb113-9" aria-hidden="true" tabindex="-1"></a>  wb_fwd_b <span class="ot">&lt;=</span> wb_reg_write <span class="kw">and</span> (wb_rd <span class="ot">=</span> ex_rm) <span class="kw">and</span> (<span class="kw">not</span> mem_fwd_b);</span>
+<span id="cb113-10"><a href="#cb113-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb113-11"><a href="#cb113-11" aria-hidden="true" tabindex="-1"></a>  forward_a <span class="ot">&lt;=</span> wb_fwd_a <span class="ot">&amp;</span> mem_fwd_a;</span>
+<span id="cb113-12"><a href="#cb113-12" aria-hidden="true" tabindex="-1"></a>  forward_b <span class="ot">&lt;=</span> wb_fwd_b <span class="ot">&amp;</span> mem_fwd_b;</span>
+<span id="cb113-13"><a href="#cb113-13" aria-hidden="true" tabindex="-1"></a><span class="cf">end architecture;</span></span></code></pre></div>
+<h4 data-number="7.9.7.4" id="exercice-4-cpu_pipeline-projet-final"><span class="header-section-number">7.9.7.4</span> Exercice 4 : CPU_Pipeline
+(Projet Final)</h4>
+<p>C’est le grand défi ! Assembler tous les composants en un CPU
+pipeliné complet.</p>
+<p><strong>Conseil</strong> : L’implémentation de référence est dans
+<code>hdl_lib/05_cpu/CPU_Pipeline.hdl</code> (~450 lignes).</p>
+<hr />
+<h3 data-number="7.9.8" id="résumé-pipeline-vs-single-cycle"><span class="header-section-number">7.9.8</span> Résumé : Pipeline vs
+Single-Cycle</h3>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 43%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Aspect</th>
+<th style="text-align: left;">Single-Cycle</th>
+<th style="text-align: left;">Pipeline</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Instructions en
+parallèle</strong></td>
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">Jusqu’à 5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Throughput</strong></td>
+<td style="text-align: left;">1 instr / 5 unités de temps</td>
+<td style="text-align: left;">1 instr / 1 unité de temps</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Complexité</strong></td>
+<td style="text-align: left;">Simple</td>
+<td style="text-align: left;">Plus complexe</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Aléas</strong></td>
+<td style="text-align: left;">Aucun</td>
+<td style="text-align: left;">Data hazards, Control hazards</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Composants
+supplémentaires</strong></td>
+<td style="text-align: left;">Aucun</td>
+<td style="text-align: left;">Registres pipeline, Hazard Detect, Forward
+Unit</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 data-number="7.9.9" id="pour-aller-encore-plus-loin"><span class="header-section-number">7.9.9</span> Pour Aller Encore Plus
+Loin</h3>
+<p>Les vrais processeurs modernes vont bien au-delà :</p>
+<ul>
+<li><strong>Superscalaire</strong> : Plusieurs pipelines en
+parallèle</li>
+<li><strong>Exécution dans le désordre</strong> : Réorganiser les
+instructions</li>
+<li><strong>Prédiction de branchement</strong> : Deviner si un
+branchement sera pris</li>
+<li><strong>Cache</strong> : Mémoire ultra-rapide proche du CPU</li>
+</ul>
+<p>Mais ces concepts dépassent le cadre de ce livre. Le pipeline à 5
+étages reste la base sur laquelle tout le reste est construit !</p>
+<hr />
+<h2 data-number="7.10" id="le-lien-avec-la-suite-1"><span class="header-section-number">7.10</span> Le Lien avec la Suite</h2>
 <p><strong>Félicitations !</strong> Vous venez de construire un
 ordinateur complet.</p>
 <p>Ce CPU que vous avez construit peut maintenant : - Exécuter des
 programmes écrits en assembleur (Chapitre 6) - Exécuter des programmes
 compilés depuis C32 (Chapitre 7-8) - Faire tourner un système
 d’exploitation minimal (Chapitre 9)</p>
-<h3 data-number="7.9.1" id="le-parcours-complet"><span class="header-section-number">7.9.1</span> Le parcours complet</h3>
+<h3 data-number="7.10.1" id="le-parcours-complet"><span class="header-section-number">7.10.1</span> Le parcours complet</h3>
 <pre><code>Chapitre 1-5 : MATÉRIEL
     NAND → Portes → ALU → Mémoire → CPU
                               ↓
@@ -4035,7 +4581,7 @@ Chapitre 6-9 : LOGICIEL
 <p>À partir de maintenant, nous passons du côté
 <strong>logiciel</strong>. Le matériel est terminé !</p>
 <hr />
-<h2 data-number="7.10" id="ce-quil-faut-retenir-4"><span class="header-section-number">7.10</span> Ce qu’il faut retenir</h2>
+<h2 data-number="7.11" id="ce-quil-faut-retenir-4"><span class="header-section-number">7.11</span> Ce qu’il faut retenir</h2>
 <ol type="1">
 <li><p><strong>Le CPU orchestre tout</strong> : Fetch → Decode → Execute
 → Memory → Writeback</p></li>
@@ -4117,10 +4663,10 @@ numériques.</p></li>
 Passes</h2>
 <h3 data-number="8.3.1" id="pourquoi-deux-passes"><span class="header-section-number">8.3.1</span> Pourquoi deux passes ?</h3>
 <p>Regardez ce code :</p>
-<div class="sourceCode" id="cb88"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>    B suite    <span class="co">; Où est &#39;suite&#39; ? On ne le sait pas encore !</span></span>
-<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
-<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a><span class="fu">suite:</span></span>
-<span id="cb88-4"><a href="#cb88-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span></code></pre></div>
+<div class="sourceCode" id="cb117"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a>    B suite    <span class="co">; Où est &#39;suite&#39; ? On ne le sait pas encore !</span></span>
+<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
+<span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a><span class="fu">suite:</span></span>
+<span id="cb117-4"><a href="#cb117-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span></code></pre></div>
 <p>À la ligne 1, l’assembleur ne sait pas encore où est
 <code>suite</code>. C’est le problème des <strong>références vers
 l’avant</strong>.</p>
@@ -4251,14 +4797,14 @@ Pool</h3>
 <li>L’instruction est remplacée par <code>LDR R0, [PC, #offset]</code>
 qui va chercher la valeur</li>
 </ol>
-<div class="sourceCode" id="cb92"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="co">; Code source</span></span>
-<span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a>    LDR R0<span class="op">,</span> <span class="op">=</span><span class="bn">0xDEADBEEF</span></span>
-<span id="cb92-3"><a href="#cb92-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb92-4"><a href="#cb92-4" aria-hidden="true" tabindex="-1"></a><span class="co">; Ce que l&#39;assembleur génère</span></span>
-<span id="cb92-5"><a href="#cb92-5" aria-hidden="true" tabindex="-1"></a>    LDR R0<span class="op">,</span> <span class="op">[</span>PC<span class="op">,</span> <span class="op">#</span><span class="dv">8</span><span class="op">]</span>    <span class="co">; Va chercher la valeur 8 octets plus loin</span></span>
-<span id="cb92-6"><a href="#cb92-6" aria-hidden="true" tabindex="-1"></a>    ...</span>
-<span id="cb92-7"><a href="#cb92-7" aria-hidden="true" tabindex="-1"></a><span class="fu">literal_pool:</span></span>
-<span id="cb92-8"><a href="#cb92-8" aria-hidden="true" tabindex="-1"></a>    .<span class="dt">word</span> <span class="bn">0xDEADBEEF</span>    <span class="co">; La valeur est stockée ici</span></span></code></pre></div>
+<div class="sourceCode" id="cb121"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="co">; Code source</span></span>
+<span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a>    LDR R0<span class="op">,</span> <span class="op">=</span><span class="bn">0xDEADBEEF</span></span>
+<span id="cb121-3"><a href="#cb121-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb121-4"><a href="#cb121-4" aria-hidden="true" tabindex="-1"></a><span class="co">; Ce que l&#39;assembleur génère</span></span>
+<span id="cb121-5"><a href="#cb121-5" aria-hidden="true" tabindex="-1"></a>    LDR R0<span class="op">,</span> <span class="op">[</span>PC<span class="op">,</span> <span class="op">#</span><span class="dv">8</span><span class="op">]</span>    <span class="co">; Va chercher la valeur 8 octets plus loin</span></span>
+<span id="cb121-6"><a href="#cb121-6" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb121-7"><a href="#cb121-7" aria-hidden="true" tabindex="-1"></a><span class="fu">literal_pool:</span></span>
+<span id="cb121-8"><a href="#cb121-8" aria-hidden="true" tabindex="-1"></a>    .<span class="dt">word</span> <span class="bn">0xDEADBEEF</span>    <span class="co">; La valeur est stockée ici</span></span></code></pre></div>
 <hr />
 <h2 data-number="8.7" id="exercices-pratiques-5"><span class="header-section-number">8.7</span> Exercices Pratiques</h2>
 <h3 data-number="8.7.1" id="exercices-sur-le-simulateur-web-5"><span class="header-section-number">8.7.1</span> Exercices sur le Simulateur
@@ -4309,23 +4855,23 @@ Encodage</h3>
 <h3 data-number="8.7.3" id="exercice-table-des-symboles"><span class="header-section-number">8.7.3</span> Exercice : Table des
 symboles</h3>
 <p>Calculez l’adresse de chaque label :</p>
-<div class="sourceCode" id="cb93"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a>.text</span>
-<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a><span class="fu">start:</span></span>
-<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">0</span></span>
-<span id="cb93-4"><a href="#cb93-4" aria-hidden="true" tabindex="-1"></a><span class="fu">loop:</span></span>
-<span id="cb93-5"><a href="#cb93-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">10</span></span>
-<span id="cb93-6"><a href="#cb93-6" aria-hidden="true" tabindex="-1"></a>    BEQ end</span>
-<span id="cb93-7"><a href="#cb93-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
-<span id="cb93-8"><a href="#cb93-8" aria-hidden="true" tabindex="-1"></a>    B loop</span>
-<span id="cb93-9"><a href="#cb93-9" aria-hidden="true" tabindex="-1"></a><span class="fu">end:</span></span>
-<span id="cb93-10"><a href="#cb93-10" aria-hidden="true" tabindex="-1"></a>    HALT</span></code></pre></div>
+<div class="sourceCode" id="cb122"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a>.text</span>
+<span id="cb122-2"><a href="#cb122-2" aria-hidden="true" tabindex="-1"></a><span class="fu">start:</span></span>
+<span id="cb122-3"><a href="#cb122-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">0</span></span>
+<span id="cb122-4"><a href="#cb122-4" aria-hidden="true" tabindex="-1"></a><span class="fu">loop:</span></span>
+<span id="cb122-5"><a href="#cb122-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">10</span></span>
+<span id="cb122-6"><a href="#cb122-6" aria-hidden="true" tabindex="-1"></a>    BEQ end</span>
+<span id="cb122-7"><a href="#cb122-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
+<span id="cb122-8"><a href="#cb122-8" aria-hidden="true" tabindex="-1"></a>    B loop</span>
+<span id="cb122-9"><a href="#cb122-9" aria-hidden="true" tabindex="-1"></a><span class="fu">end:</span></span>
+<span id="cb122-10"><a href="#cb122-10" aria-hidden="true" tabindex="-1"></a>    HALT</span></code></pre></div>
 <h3 data-number="8.7.4" id="utilisation-de-loutil-cli"><span class="header-section-number">8.7.4</span> Utilisation de l’outil
 CLI</h3>
-<div class="sourceCode" id="cb94"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Assembler un fichier</span></span>
-<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> a32_cli <span class="at">--</span> assemble mon_prog.s <span class="at">-o</span> mon_prog.bin</span>
-<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb94-4"><a href="#cb94-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Examiner le binaire généré</span></span>
-<span id="cb94-5"><a href="#cb94-5" aria-hidden="true" tabindex="-1"></a><span class="fu">hexdump</span> <span class="at">-C</span> mon_prog.bin</span></code></pre></div>
+<div class="sourceCode" id="cb123"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Assembler un fichier</span></span>
+<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> a32_cli <span class="at">--</span> assemble mon_prog.s <span class="at">-o</span> mon_prog.bin</span>
+<span id="cb123-3"><a href="#cb123-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-4"><a href="#cb123-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Examiner le binaire généré</span></span>
+<span id="cb123-5"><a href="#cb123-5" aria-hidden="true" tabindex="-1"></a><span class="fu">hexdump</span> <span class="at">-C</span> mon_prog.bin</span></code></pre></div>
 <hr />
 <h2 data-number="8.8" id="ce-quil-faut-retenir-5"><span class="header-section-number">8.8</span> Ce qu’il faut retenir</h2>
 <ol type="1">
@@ -4431,7 +4977,7 @@ portées, etc.</li>
 <h3 data-number="9.3.1" id="phase-1-lexer-analyse-lexicale"><span class="header-section-number">9.3.1</span> Phase 1 : Lexer (Analyse
 Lexicale)</h3>
 <p>Le lexer transforme le flux de caractères en tokens :</p>
-<div class="sourceCode" id="cb97"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> x <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb126"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> x <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span></code></pre></div>
 <p>Devient :</p>
 <pre><code>[INT] [ID:&quot;x&quot;] [EQUAL] [NUMBER:5] [SEMICOLON]</code></pre>
 <h3 data-number="9.3.2" id="phase-2-parser-analyse-syntaxique"><span class="header-section-number">9.3.2</span> Phase 2 : Parser (Analyse
@@ -4448,80 +4994,80 @@ Syntaxique)</h3>
 <h3 data-number="9.3.3" id="phase-3-génération-de-code"><span class="header-section-number">9.3.3</span> Phase 3 : Génération de
 Code</h3>
 <p>Le générateur parcourt l’AST et produit l’assembleur :</p>
-<div class="sourceCode" id="cb100"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="co">; int x = 5;</span></span>
-<span id="cb100-2"><a href="#cb100-2" aria-hidden="true" tabindex="-1"></a><span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">5</span></span>
-<span id="cb100-3"><a href="#cb100-3" aria-hidden="true" tabindex="-1"></a><span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#-</span><span class="dv">4</span><span class="op">]!</span>   <span class="co">; Push x sur la pile</span></span></code></pre></div>
+<div class="sourceCode" id="cb129"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a><span class="co">; int x = 5;</span></span>
+<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a><span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">5</span></span>
+<span id="cb129-3"><a href="#cb129-3" aria-hidden="true" tabindex="-1"></a><span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#-</span><span class="dv">4</span><span class="op">]!</span>   <span class="co">; Push x sur la pile</span></span></code></pre></div>
 <hr />
 <h2 data-number="9.4" id="compilation-des-structures-de-contrôle"><span class="header-section-number">9.4</span> Compilation des Structures de
 Contrôle</h2>
 <h3 data-number="9.4.1" id="variables-locales"><span class="header-section-number">9.4.1</span> Variables locales</h3>
 <p>Les variables locales vivent sur la <strong>pile</strong> :</p>
-<div class="sourceCode" id="cb101"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> a <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
-<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> b <span class="op">=</span> <span class="dv">20</span><span class="op">;</span></span></code></pre></div>
-<div class="sourceCode" id="cb102"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a><span class="co">; Prologue</span></span>
-<span id="cb102-2"><a href="#cb102-2" aria-hidden="true" tabindex="-1"></a><span class="bu">SUB</span> <span class="kw">SP</span><span class="op">,</span> <span class="kw">SP</span><span class="op">,</span> <span class="op">#</span><span class="dv">8</span>       <span class="co">; Réserve 8 octets pour a et b</span></span>
-<span id="cb102-3"><a href="#cb102-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb102-4"><a href="#cb102-4" aria-hidden="true" tabindex="-1"></a><span class="co">; a = 10</span></span>
-<span id="cb102-5"><a href="#cb102-5" aria-hidden="true" tabindex="-1"></a><span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">10</span></span>
-<span id="cb102-6"><a href="#cb102-6" aria-hidden="true" tabindex="-1"></a><span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span><span class="dv">4</span><span class="op">]</span>     <span class="co">; a est à SP+4</span></span>
-<span id="cb102-7"><a href="#cb102-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb102-8"><a href="#cb102-8" aria-hidden="true" tabindex="-1"></a><span class="co">; b = 20</span></span>
-<span id="cb102-9"><a href="#cb102-9" aria-hidden="true" tabindex="-1"></a><span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">20</span></span>
-<span id="cb102-10"><a href="#cb102-10" aria-hidden="true" tabindex="-1"></a><span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span><span class="dv">0</span><span class="op">]</span>     <span class="co">; b est à SP+0</span></span></code></pre></div>
+<div class="sourceCode" id="cb130"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> a <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
+<span id="cb130-2"><a href="#cb130-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> b <span class="op">=</span> <span class="dv">20</span><span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb131"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a><span class="co">; Prologue</span></span>
+<span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a><span class="bu">SUB</span> <span class="kw">SP</span><span class="op">,</span> <span class="kw">SP</span><span class="op">,</span> <span class="op">#</span><span class="dv">8</span>       <span class="co">; Réserve 8 octets pour a et b</span></span>
+<span id="cb131-3"><a href="#cb131-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb131-4"><a href="#cb131-4" aria-hidden="true" tabindex="-1"></a><span class="co">; a = 10</span></span>
+<span id="cb131-5"><a href="#cb131-5" aria-hidden="true" tabindex="-1"></a><span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">10</span></span>
+<span id="cb131-6"><a href="#cb131-6" aria-hidden="true" tabindex="-1"></a><span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span><span class="dv">4</span><span class="op">]</span>     <span class="co">; a est à SP+4</span></span>
+<span id="cb131-7"><a href="#cb131-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb131-8"><a href="#cb131-8" aria-hidden="true" tabindex="-1"></a><span class="co">; b = 20</span></span>
+<span id="cb131-9"><a href="#cb131-9" aria-hidden="true" tabindex="-1"></a><span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">20</span></span>
+<span id="cb131-10"><a href="#cb131-10" aria-hidden="true" tabindex="-1"></a><span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span><span class="dv">0</span><span class="op">]</span>     <span class="co">; b est à SP+0</span></span></code></pre></div>
 <h3 data-number="9.4.2" id="expressions"><span class="header-section-number">9.4.2</span> Expressions</h3>
 <p>Pour <code>a + b * 2</code> :</p>
-<div class="sourceCode" id="cb103"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="co">; Évaluation de b * 2</span></span>
-<span id="cb103-2"><a href="#cb103-2" aria-hidden="true" tabindex="-1"></a>LDR R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span><span class="dv">0</span><span class="op">]</span>     <span class="co">; R0 = b</span></span>
-<span id="cb103-3"><a href="#cb103-3" aria-hidden="true" tabindex="-1"></a><span class="bu">MOV</span> R1<span class="op">,</span> <span class="op">#</span><span class="dv">2</span></span>
-<span id="cb103-4"><a href="#cb103-4" aria-hidden="true" tabindex="-1"></a><span class="bu">MUL</span> R0<span class="op">,</span> R0<span class="op">,</span> R1       <span class="co">; R0 = b * 2</span></span>
-<span id="cb103-5"><a href="#cb103-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb103-6"><a href="#cb103-6" aria-hidden="true" tabindex="-1"></a><span class="co">; Évaluation de a + (b * 2)</span></span>
-<span id="cb103-7"><a href="#cb103-7" aria-hidden="true" tabindex="-1"></a>LDR R1<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span><span class="dv">4</span><span class="op">]</span>     <span class="co">; R1 = a</span></span>
-<span id="cb103-8"><a href="#cb103-8" aria-hidden="true" tabindex="-1"></a><span class="bu">ADD</span> R0<span class="op">,</span> R1<span class="op">,</span> R0       <span class="co">; R0 = a + b*2</span></span></code></pre></div>
+<div class="sourceCode" id="cb132"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="co">; Évaluation de b * 2</span></span>
+<span id="cb132-2"><a href="#cb132-2" aria-hidden="true" tabindex="-1"></a>LDR R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span><span class="dv">0</span><span class="op">]</span>     <span class="co">; R0 = b</span></span>
+<span id="cb132-3"><a href="#cb132-3" aria-hidden="true" tabindex="-1"></a><span class="bu">MOV</span> R1<span class="op">,</span> <span class="op">#</span><span class="dv">2</span></span>
+<span id="cb132-4"><a href="#cb132-4" aria-hidden="true" tabindex="-1"></a><span class="bu">MUL</span> R0<span class="op">,</span> R0<span class="op">,</span> R1       <span class="co">; R0 = b * 2</span></span>
+<span id="cb132-5"><a href="#cb132-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb132-6"><a href="#cb132-6" aria-hidden="true" tabindex="-1"></a><span class="co">; Évaluation de a + (b * 2)</span></span>
+<span id="cb132-7"><a href="#cb132-7" aria-hidden="true" tabindex="-1"></a>LDR R1<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span><span class="dv">4</span><span class="op">]</span>     <span class="co">; R1 = a</span></span>
+<span id="cb132-8"><a href="#cb132-8" aria-hidden="true" tabindex="-1"></a><span class="bu">ADD</span> R0<span class="op">,</span> R1<span class="op">,</span> R0       <span class="co">; R0 = a + b*2</span></span></code></pre></div>
 <h3 data-number="9.4.3" id="if-else"><span class="header-section-number">9.4.3</span> If / Else</h3>
-<div class="sourceCode" id="cb104"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>x <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb104-2"><a href="#cb104-2" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb104-3"><a href="#cb104-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb104-4"><a href="#cb104-4" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb104-5"><a href="#cb104-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb105"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb105-1"><a href="#cb105-1" aria-hidden="true" tabindex="-1"></a>    LDR R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span>x_offset<span class="op">]</span></span>
-<span id="cb105-2"><a href="#cb105-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">0</span></span>
-<span id="cb105-3"><a href="#cb105-3" aria-hidden="true" tabindex="-1"></a>    BLE else_label</span>
-<span id="cb105-4"><a href="#cb105-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-5"><a href="#cb105-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Then branch</span></span>
-<span id="cb105-6"><a href="#cb105-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
-<span id="cb105-7"><a href="#cb105-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span>y_offset<span class="op">]</span></span>
-<span id="cb105-8"><a href="#cb105-8" aria-hidden="true" tabindex="-1"></a>    B endif_label</span>
-<span id="cb105-9"><a href="#cb105-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-10"><a href="#cb105-10" aria-hidden="true" tabindex="-1"></a><span class="fu">else_label:</span></span>
-<span id="cb105-11"><a href="#cb105-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Else branch</span></span>
-<span id="cb105-12"><a href="#cb105-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">0</span></span>
-<span id="cb105-13"><a href="#cb105-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span>y_offset<span class="op">]</span></span>
-<span id="cb105-14"><a href="#cb105-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb105-15"><a href="#cb105-15" aria-hidden="true" tabindex="-1"></a><span class="fu">endif_label:</span></span></code></pre></div>
+<div class="sourceCode" id="cb133"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>x <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb133-2"><a href="#cb133-2" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb133-3"><a href="#cb133-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb133-4"><a href="#cb133-4" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb133-5"><a href="#cb133-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb134"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb134-1"><a href="#cb134-1" aria-hidden="true" tabindex="-1"></a>    LDR R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span>x_offset<span class="op">]</span></span>
+<span id="cb134-2"><a href="#cb134-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">0</span></span>
+<span id="cb134-3"><a href="#cb134-3" aria-hidden="true" tabindex="-1"></a>    BLE else_label</span>
+<span id="cb134-4"><a href="#cb134-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb134-5"><a href="#cb134-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Then branch</span></span>
+<span id="cb134-6"><a href="#cb134-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
+<span id="cb134-7"><a href="#cb134-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span>y_offset<span class="op">]</span></span>
+<span id="cb134-8"><a href="#cb134-8" aria-hidden="true" tabindex="-1"></a>    B endif_label</span>
+<span id="cb134-9"><a href="#cb134-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb134-10"><a href="#cb134-10" aria-hidden="true" tabindex="-1"></a><span class="fu">else_label:</span></span>
+<span id="cb134-11"><a href="#cb134-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Else branch</span></span>
+<span id="cb134-12"><a href="#cb134-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">0</span></span>
+<span id="cb134-13"><a href="#cb134-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span>y_offset<span class="op">]</span></span>
+<span id="cb134-14"><a href="#cb134-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb134-15"><a href="#cb134-15" aria-hidden="true" tabindex="-1"></a><span class="fu">endif_label:</span></span></code></pre></div>
 <h3 data-number="9.4.4" id="boucle-while"><span class="header-section-number">9.4.4</span> Boucle While</h3>
-<div class="sourceCode" id="cb106"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(</span>i <span class="op">&lt;</span> <span class="dv">10</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb106-2"><a href="#cb106-2" aria-hidden="true" tabindex="-1"></a>    i <span class="op">=</span> i <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb106-3"><a href="#cb106-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb107"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="fu">while_start:</span></span>
-<span id="cb107-2"><a href="#cb107-2" aria-hidden="true" tabindex="-1"></a>    LDR R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span>i_offset<span class="op">]</span></span>
-<span id="cb107-3"><a href="#cb107-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">10</span></span>
-<span id="cb107-4"><a href="#cb107-4" aria-hidden="true" tabindex="-1"></a>    BGE while_end</span>
-<span id="cb107-5"><a href="#cb107-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb107-6"><a href="#cb107-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Corps de la boucle</span></span>
-<span id="cb107-7"><a href="#cb107-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
-<span id="cb107-8"><a href="#cb107-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span>i_offset<span class="op">]</span></span>
-<span id="cb107-9"><a href="#cb107-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb107-10"><a href="#cb107-10" aria-hidden="true" tabindex="-1"></a>    B while_start</span>
-<span id="cb107-11"><a href="#cb107-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb107-12"><a href="#cb107-12" aria-hidden="true" tabindex="-1"></a><span class="fu">while_end:</span></span></code></pre></div>
+<div class="sourceCode" id="cb135"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb135-1"><a href="#cb135-1" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(</span>i <span class="op">&lt;</span> <span class="dv">10</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb135-2"><a href="#cb135-2" aria-hidden="true" tabindex="-1"></a>    i <span class="op">=</span> i <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb135-3"><a href="#cb135-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb136"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb136-1"><a href="#cb136-1" aria-hidden="true" tabindex="-1"></a><span class="fu">while_start:</span></span>
+<span id="cb136-2"><a href="#cb136-2" aria-hidden="true" tabindex="-1"></a>    LDR R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span>i_offset<span class="op">]</span></span>
+<span id="cb136-3"><a href="#cb136-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">10</span></span>
+<span id="cb136-4"><a href="#cb136-4" aria-hidden="true" tabindex="-1"></a>    BGE while_end</span>
+<span id="cb136-5"><a href="#cb136-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb136-6"><a href="#cb136-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Corps de la boucle</span></span>
+<span id="cb136-7"><a href="#cb136-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
+<span id="cb136-8"><a href="#cb136-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span>i_offset<span class="op">]</span></span>
+<span id="cb136-9"><a href="#cb136-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb136-10"><a href="#cb136-10" aria-hidden="true" tabindex="-1"></a>    B while_start</span>
+<span id="cb136-11"><a href="#cb136-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb136-12"><a href="#cb136-12" aria-hidden="true" tabindex="-1"></a><span class="fu">while_end:</span></span></code></pre></div>
 <h3 data-number="9.4.5" id="boucle-for"><span class="header-section-number">9.4.5</span> Boucle For</h3>
 <p><code>for (init; cond; incr) { body }</code> est équivalent à :</p>
-<div class="sourceCode" id="cb108"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a>init<span class="op">;</span></span>
-<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(</span>cond<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb108-3"><a href="#cb108-3" aria-hidden="true" tabindex="-1"></a>    body<span class="op">;</span></span>
-<span id="cb108-4"><a href="#cb108-4" aria-hidden="true" tabindex="-1"></a>    incr<span class="op">;</span></span>
-<span id="cb108-5"><a href="#cb108-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb137"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a>init<span class="op">;</span></span>
+<span id="cb137-2"><a href="#cb137-2" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(</span>cond<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb137-3"><a href="#cb137-3" aria-hidden="true" tabindex="-1"></a>    body<span class="op">;</span></span>
+<span id="cb137-4"><a href="#cb137-4" aria-hidden="true" tabindex="-1"></a>    incr<span class="op">;</span></span>
+<span id="cb137-5"><a href="#cb137-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <hr />
 <h2 data-number="9.5" id="compilation-des-fonctions"><span class="header-section-number">9.5</span> Compilation des Fonctions</h2>
 <h3 data-number="9.5.1" id="convention-dappel"><span class="header-section-number">9.5.1</span> Convention d’appel</h3>
@@ -4555,47 +5101,47 @@ Contrôle</h2>
 </tbody>
 </table>
 <h3 data-number="9.5.2" id="prologue-et-épilogue"><span class="header-section-number">9.5.2</span> Prologue et Épilogue</h3>
-<div class="sourceCode" id="cb109"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> add<span class="op">(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a <span class="op">+</span> b<span class="op">;</span></span>
-<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb110"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="fu">add:</span></span>
-<span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Prologue</span></span>
-<span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">SUB</span> <span class="kw">SP</span><span class="op">,</span> <span class="kw">SP</span><span class="op">,</span> <span class="op">#</span><span class="dv">4</span>       <span class="co">; Place pour LR</span></span>
-<span id="cb110-4"><a href="#cb110-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">STR</span> LR<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">]</span>         <span class="co">; Sauvegarde LR</span></span>
-<span id="cb110-5"><a href="#cb110-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb110-6"><a href="#cb110-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Corps : a est dans R0, b dans R1</span></span>
-<span id="cb110-7"><a href="#cb110-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> R1       <span class="co">; Résultat dans R0</span></span>
-<span id="cb110-8"><a href="#cb110-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb110-9"><a href="#cb110-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Épilogue</span></span>
-<span id="cb110-10"><a href="#cb110-10" aria-hidden="true" tabindex="-1"></a>    LDR LR<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">]</span>         <span class="co">; Restaure LR</span></span>
-<span id="cb110-11"><a href="#cb110-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> <span class="kw">SP</span><span class="op">,</span> <span class="kw">SP</span><span class="op">,</span> <span class="op">#</span><span class="dv">4</span></span>
-<span id="cb110-12"><a href="#cb110-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> PC<span class="op">,</span> LR           <span class="co">; Retour</span></span></code></pre></div>
+<div class="sourceCode" id="cb138"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb138-1"><a href="#cb138-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> add<span class="op">(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb138-2"><a href="#cb138-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a <span class="op">+</span> b<span class="op">;</span></span>
+<span id="cb138-3"><a href="#cb138-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb139"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb139-1"><a href="#cb139-1" aria-hidden="true" tabindex="-1"></a><span class="fu">add:</span></span>
+<span id="cb139-2"><a href="#cb139-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Prologue</span></span>
+<span id="cb139-3"><a href="#cb139-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">SUB</span> <span class="kw">SP</span><span class="op">,</span> <span class="kw">SP</span><span class="op">,</span> <span class="op">#</span><span class="dv">4</span>       <span class="co">; Place pour LR</span></span>
+<span id="cb139-4"><a href="#cb139-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">STR</span> LR<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">]</span>         <span class="co">; Sauvegarde LR</span></span>
+<span id="cb139-5"><a href="#cb139-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb139-6"><a href="#cb139-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Corps : a est dans R0, b dans R1</span></span>
+<span id="cb139-7"><a href="#cb139-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> R1       <span class="co">; Résultat dans R0</span></span>
+<span id="cb139-8"><a href="#cb139-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb139-9"><a href="#cb139-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Épilogue</span></span>
+<span id="cb139-10"><a href="#cb139-10" aria-hidden="true" tabindex="-1"></a>    LDR LR<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">]</span>         <span class="co">; Restaure LR</span></span>
+<span id="cb139-11"><a href="#cb139-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> <span class="kw">SP</span><span class="op">,</span> <span class="kw">SP</span><span class="op">,</span> <span class="op">#</span><span class="dv">4</span></span>
+<span id="cb139-12"><a href="#cb139-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> PC<span class="op">,</span> LR           <span class="co">; Retour</span></span></code></pre></div>
 <h3 data-number="9.5.3" id="appel-de-fonction"><span class="header-section-number">9.5.3</span> Appel de fonction</h3>
-<div class="sourceCode" id="cb111"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> add<span class="op">(</span><span class="dv">5</span><span class="op">,</span> <span class="dv">3</span><span class="op">);</span></span></code></pre></div>
-<div class="sourceCode" id="cb112"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">5</span>           <span class="co">; Premier argument</span></span>
-<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R1<span class="op">,</span> <span class="op">#</span><span class="dv">3</span>           <span class="co">; Deuxième argument</span></span>
-<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a>    BL add               <span class="co">; Appel (sauve PC+4 dans LR)</span></span>
-<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span>result_offset<span class="op">]</span>  <span class="co">; Sauve le résultat</span></span></code></pre></div>
+<div class="sourceCode" id="cb140"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb140-1"><a href="#cb140-1" aria-hidden="true" tabindex="-1"></a>result <span class="op">=</span> add<span class="op">(</span><span class="dv">5</span><span class="op">,</span> <span class="dv">3</span><span class="op">);</span></span></code></pre></div>
+<div class="sourceCode" id="cb141"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb141-1"><a href="#cb141-1" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">5</span>           <span class="co">; Premier argument</span></span>
+<span id="cb141-2"><a href="#cb141-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R1<span class="op">,</span> <span class="op">#</span><span class="dv">3</span>           <span class="co">; Deuxième argument</span></span>
+<span id="cb141-3"><a href="#cb141-3" aria-hidden="true" tabindex="-1"></a>    BL add               <span class="co">; Appel (sauve PC+4 dans LR)</span></span>
+<span id="cb141-4"><a href="#cb141-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span>result_offset<span class="op">]</span>  <span class="co">; Sauve le résultat</span></span></code></pre></div>
 <hr />
 <h2 data-number="9.6" id="le-compilateur-c32"><span class="header-section-number">9.6</span> Le Compilateur C32</h2>
 <p>Le compilateur C32 du projet Codex (<code>c32_cli</code>) implémente
 toutes ces transformations.</p>
 <h3 data-number="9.6.1" id="utilisation"><span class="header-section-number">9.6.1</span> Utilisation</h3>
-<div class="sourceCode" id="cb113"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb113-1"><a href="#cb113-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compiler un fichier C32 en assembleur</span></span>
-<span id="cb113-2"><a href="#cb113-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> c32_cli <span class="at">--</span> mon_fichier.c <span class="at">-o</span> mon_fichier.s</span>
-<span id="cb113-3"><a href="#cb113-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb113-4"><a href="#cb113-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Compiler directement en binaire</span></span>
-<span id="cb113-5"><a href="#cb113-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> c32_cli <span class="at">--</span> mon_fichier.c <span class="at">-o</span> mon_fichier.bin</span></code></pre></div>
+<div class="sourceCode" id="cb142"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb142-1"><a href="#cb142-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compiler un fichier C32 en assembleur</span></span>
+<span id="cb142-2"><a href="#cb142-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> c32_cli <span class="at">--</span> mon_fichier.c <span class="at">-o</span> mon_fichier.s</span>
+<span id="cb142-3"><a href="#cb142-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb142-4"><a href="#cb142-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Compiler directement en binaire</span></span>
+<span id="cb142-5"><a href="#cb142-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> c32_cli <span class="at">--</span> mon_fichier.c <span class="at">-o</span> mon_fichier.bin</span></code></pre></div>
 <h3 data-number="9.6.2" id="exemple-complet"><span class="header-section-number">9.6.2</span> Exemple complet</h3>
-<div class="sourceCode" id="cb114"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a><span class="co">// fibonacci.c</span></span>
-<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> fib<span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb114-3"><a href="#cb114-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>n <span class="op">&lt;=</span> <span class="dv">1</span><span class="op">)</span> <span class="cf">return</span> n<span class="op">;</span></span>
-<span id="cb114-4"><a href="#cb114-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fib<span class="op">(</span>n<span class="op">-</span><span class="dv">1</span><span class="op">)</span> <span class="op">+</span> fib<span class="op">(</span>n<span class="op">-</span><span class="dv">2</span><span class="op">);</span></span>
-<span id="cb114-5"><a href="#cb114-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb114-6"><a href="#cb114-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb114-7"><a href="#cb114-7" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb114-8"><a href="#cb114-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fib<span class="op">(</span><span class="dv">10</span><span class="op">);</span></span>
-<span id="cb114-9"><a href="#cb114-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb143"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb143-1"><a href="#cb143-1" aria-hidden="true" tabindex="-1"></a><span class="co">// fibonacci.c</span></span>
+<span id="cb143-2"><a href="#cb143-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> fib<span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb143-3"><a href="#cb143-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>n <span class="op">&lt;=</span> <span class="dv">1</span><span class="op">)</span> <span class="cf">return</span> n<span class="op">;</span></span>
+<span id="cb143-4"><a href="#cb143-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fib<span class="op">(</span>n<span class="op">-</span><span class="dv">1</span><span class="op">)</span> <span class="op">+</span> fib<span class="op">(</span>n<span class="op">-</span><span class="dv">2</span><span class="op">);</span></span>
+<span id="cb143-5"><a href="#cb143-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb143-6"><a href="#cb143-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb143-7"><a href="#cb143-7" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb143-8"><a href="#cb143-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fib<span class="op">(</span><span class="dv">10</span><span class="op">);</span></span>
+<span id="cb143-9"><a href="#cb143-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>Produit de l’assembleur avec : - Gestion automatique de la pile -
 Appels récursifs - Sauvegarde/restauration des registres</p>
 <hr />
@@ -4852,10 +5398,10 @@ pointeurs</td>
 <h3 data-number="9.8.2" id="exercice-traduire-manuellement"><span class="header-section-number">9.8.2</span> Exercice : Traduire
 manuellement</h3>
 <p>Traduisez ce code C32 en assembleur à la main :</p>
-<div class="sourceCode" id="cb115"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> sum <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb115-2"><a href="#cb115-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">1</span><span class="op">;</span> i <span class="op">&lt;=</span> <span class="dv">10</span><span class="op">;</span> i <span class="op">=</span> i <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb115-3"><a href="#cb115-3" aria-hidden="true" tabindex="-1"></a>    sum <span class="op">=</span> sum <span class="op">+</span> i<span class="op">;</span></span>
-<span id="cb115-4"><a href="#cb115-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb144"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> sum <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb144-2"><a href="#cb144-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">1</span><span class="op">;</span> i <span class="op">&lt;=</span> <span class="dv">10</span><span class="op">;</span> i <span class="op">=</span> i <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb144-3"><a href="#cb144-3" aria-hidden="true" tabindex="-1"></a>    sum <span class="op">=</span> sum <span class="op">+</span> i<span class="op">;</span></span>
+<span id="cb144-4"><a href="#cb144-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>Comparez avec la sortie du compilateur !</p>
 <hr />
 <h2 data-number="9.9" id="ce-quil-faut-retenir-6"><span class="header-section-number">9.9</span> Ce qu’il faut retenir</h2>
@@ -4981,9 +5527,9 @@ C32</h2>
 </tbody>
 </table>
 <h3 data-number="10.3.2" id="variables"><span class="header-section-number">10.3.2</span> Variables</h3>
-<div class="sourceCode" id="cb119"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> x <span class="op">=</span> <span class="dv">42</span><span class="op">;</span>           <span class="co">// Variable globale ou locale</span></span>
-<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> tab<span class="op">[</span><span class="dv">10</span><span class="op">];</span>          <span class="co">// Tableau de 10 entiers</span></span>
-<span id="cb119-3"><a href="#cb119-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span><span class="op">*</span> p <span class="op">=</span> <span class="op">&amp;</span>x<span class="op">;</span>          <span class="co">// Pointeur vers x</span></span></code></pre></div>
+<div class="sourceCode" id="cb148"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb148-1"><a href="#cb148-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> x <span class="op">=</span> <span class="dv">42</span><span class="op">;</span>           <span class="co">// Variable globale ou locale</span></span>
+<span id="cb148-2"><a href="#cb148-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> tab<span class="op">[</span><span class="dv">10</span><span class="op">];</span>          <span class="co">// Tableau de 10 entiers</span></span>
+<span id="cb148-3"><a href="#cb148-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span><span class="op">*</span> p <span class="op">=</span> <span class="op">&amp;</span>x<span class="op">;</span>          <span class="co">// Pointeur vers x</span></span></code></pre></div>
 <h3 data-number="10.3.3" id="portée-des-variables"><span class="header-section-number">10.3.3</span> Portée des variables</h3>
 <ul>
 <li><strong>Globales</strong> : Déclarées hors des fonctions,
@@ -5120,125 +5666,125 @@ la pile</li>
 <hr />
 <h2 data-number="10.5" id="structures-de-contrôle"><span class="header-section-number">10.5</span> Structures de Contrôle</h2>
 <h3 data-number="10.5.1" id="if-else-1"><span class="header-section-number">10.5.1</span> If / Else</h3>
-<div class="sourceCode" id="cb120"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb120-1"><a href="#cb120-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>score <span class="op">&gt;</span> <span class="dv">100</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb120-2"><a href="#cb120-2" aria-hidden="true" tabindex="-1"></a>    win<span class="op">();</span></span>
-<span id="cb120-3"><a href="#cb120-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>score <span class="op">&gt;</span> <span class="dv">50</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb120-4"><a href="#cb120-4" aria-hidden="true" tabindex="-1"></a>    try_again<span class="op">();</span></span>
-<span id="cb120-5"><a href="#cb120-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb120-6"><a href="#cb120-6" aria-hidden="true" tabindex="-1"></a>    game_over<span class="op">();</span></span>
-<span id="cb120-7"><a href="#cb120-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb149"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb149-1"><a href="#cb149-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>score <span class="op">&gt;</span> <span class="dv">100</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb149-2"><a href="#cb149-2" aria-hidden="true" tabindex="-1"></a>    win<span class="op">();</span></span>
+<span id="cb149-3"><a href="#cb149-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>score <span class="op">&gt;</span> <span class="dv">50</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb149-4"><a href="#cb149-4" aria-hidden="true" tabindex="-1"></a>    try_again<span class="op">();</span></span>
+<span id="cb149-5"><a href="#cb149-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb149-6"><a href="#cb149-6" aria-hidden="true" tabindex="-1"></a>    game_over<span class="op">();</span></span>
+<span id="cb149-7"><a href="#cb149-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <h3 data-number="10.5.2" id="while"><span class="header-section-number">10.5.2</span> While</h3>
-<div class="sourceCode" id="cb121"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(</span>x <span class="op">&lt;</span> <span class="dv">10</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> x <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb121-3"><a href="#cb121-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb150"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb150-1"><a href="#cb150-1" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(</span>x <span class="op">&lt;</span> <span class="dv">10</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb150-2"><a href="#cb150-2" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> x <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb150-3"><a href="#cb150-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <h3 data-number="10.5.3" id="for"><span class="header-section-number">10.5.3</span> For</h3>
-<div class="sourceCode" id="cb122"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">10</span><span class="op">;</span> i <span class="op">=</span> i <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb122-2"><a href="#cb122-2" aria-hidden="true" tabindex="-1"></a>    sum <span class="op">=</span> sum <span class="op">+</span> i<span class="op">;</span></span>
-<span id="cb122-3"><a href="#cb122-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb151"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb151-1"><a href="#cb151-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">10</span><span class="op">;</span> i <span class="op">=</span> i <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb151-2"><a href="#cb151-2" aria-hidden="true" tabindex="-1"></a>    sum <span class="op">=</span> sum <span class="op">+</span> i<span class="op">;</span></span>
+<span id="cb151-3"><a href="#cb151-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <h3 data-number="10.5.4" id="do-while"><span class="header-section-number">10.5.4</span> Do-While</h3>
-<div class="sourceCode" id="cb123"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span> <span class="op">{</span></span>
-<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> x <span class="op">-</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb123-3"><a href="#cb123-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">while</span> <span class="op">(</span>x <span class="op">&gt;</span> <span class="dv">0</span><span class="op">);</span></span></code></pre></div>
+<div class="sourceCode" id="cb152"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb152-1"><a href="#cb152-1" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span> <span class="op">{</span></span>
+<span id="cb152-2"><a href="#cb152-2" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> x <span class="op">-</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb152-3"><a href="#cb152-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">while</span> <span class="op">(</span>x <span class="op">&gt;</span> <span class="dv">0</span><span class="op">);</span></span></code></pre></div>
 <hr />
 <h2 data-number="10.6" id="fonctions"><span class="header-section-number">10.6</span> Fonctions</h2>
 <h3 data-number="10.6.1" id="définition"><span class="header-section-number">10.6.1</span> Définition</h3>
-<div class="sourceCode" id="cb124"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> add<span class="op">(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb124-2"><a href="#cb124-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a <span class="op">+</span> b<span class="op">;</span></span>
-<span id="cb124-3"><a href="#cb124-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb124-4"><a href="#cb124-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb124-5"><a href="#cb124-5" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> greet<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb124-6"><a href="#cb124-6" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;H&#39;</span><span class="op">);</span></span>
-<span id="cb124-7"><a href="#cb124-7" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;i&#39;</span><span class="op">);</span></span>
-<span id="cb124-8"><a href="#cb124-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb153"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb153-1"><a href="#cb153-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> add<span class="op">(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb153-2"><a href="#cb153-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a <span class="op">+</span> b<span class="op">;</span></span>
+<span id="cb153-3"><a href="#cb153-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb153-4"><a href="#cb153-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb153-5"><a href="#cb153-5" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> greet<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb153-6"><a href="#cb153-6" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;H&#39;</span><span class="op">);</span></span>
+<span id="cb153-7"><a href="#cb153-7" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;i&#39;</span><span class="op">);</span></span>
+<span id="cb153-8"><a href="#cb153-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <h3 data-number="10.6.2" id="appel"><span class="header-section-number">10.6.2</span> Appel</h3>
-<div class="sourceCode" id="cb125"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> result <span class="op">=</span> add<span class="op">(</span><span class="dv">5</span><span class="op">,</span> <span class="dv">3</span><span class="op">);</span></span>
-<span id="cb125-2"><a href="#cb125-2" aria-hidden="true" tabindex="-1"></a>greet<span class="op">();</span></span></code></pre></div>
+<div class="sourceCode" id="cb154"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb154-1"><a href="#cb154-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> result <span class="op">=</span> add<span class="op">(</span><span class="dv">5</span><span class="op">,</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb154-2"><a href="#cb154-2" aria-hidden="true" tabindex="-1"></a>greet<span class="op">();</span></span></code></pre></div>
 <h3 data-number="10.6.3" id="récursion"><span class="header-section-number">10.6.3</span> Récursion</h3>
-<div class="sourceCode" id="cb126"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> factorial<span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb126-2"><a href="#cb126-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>n <span class="op">&lt;=</span> <span class="dv">1</span><span class="op">)</span> <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb126-3"><a href="#cb126-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> n <span class="op">*</span> factorial<span class="op">(</span>n <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb126-4"><a href="#cb126-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb155"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb155-1"><a href="#cb155-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> factorial<span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb155-2"><a href="#cb155-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>n <span class="op">&lt;=</span> <span class="dv">1</span><span class="op">)</span> <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb155-3"><a href="#cb155-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> n <span class="op">*</span> factorial<span class="op">(</span>n <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb155-4"><a href="#cb155-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <hr />
 <h2 data-number="10.7" id="pointeurs-et-tableaux"><span class="header-section-number">10.7</span> Pointeurs et Tableaux</h2>
 <h3 data-number="10.7.1" id="pointeurs"><span class="header-section-number">10.7.1</span> Pointeurs</h3>
 <p>Un pointeur contient une <strong>adresse mémoire</strong> :</p>
-<div class="sourceCode" id="cb127"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb127-1"><a href="#cb127-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> x <span class="op">=</span> <span class="dv">42</span><span class="op">;</span></span>
-<span id="cb127-2"><a href="#cb127-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span><span class="op">*</span> p <span class="op">=</span> <span class="op">&amp;</span>x<span class="op">;</span>    <span class="co">// p contient l&#39;adresse de x</span></span>
-<span id="cb127-3"><a href="#cb127-3" aria-hidden="true" tabindex="-1"></a><span class="op">*</span>p <span class="op">=</span> <span class="dv">100</span><span class="op">;</span>       <span class="co">// x vaut maintenant 100</span></span></code></pre></div>
+<div class="sourceCode" id="cb156"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb156-1"><a href="#cb156-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> x <span class="op">=</span> <span class="dv">42</span><span class="op">;</span></span>
+<span id="cb156-2"><a href="#cb156-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span><span class="op">*</span> p <span class="op">=</span> <span class="op">&amp;</span>x<span class="op">;</span>    <span class="co">// p contient l&#39;adresse de x</span></span>
+<span id="cb156-3"><a href="#cb156-3" aria-hidden="true" tabindex="-1"></a><span class="op">*</span>p <span class="op">=</span> <span class="dv">100</span><span class="op">;</span>       <span class="co">// x vaut maintenant 100</span></span></code></pre></div>
 <h3 data-number="10.7.2" id="tableaux"><span class="header-section-number">10.7.2</span> Tableaux</h3>
 <p>Un tableau est une suite de valeurs consécutives en mémoire :</p>
-<div class="sourceCode" id="cb128"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> scores<span class="op">[</span><span class="dv">5</span><span class="op">];</span></span>
-<span id="cb128-2"><a href="#cb128-2" aria-hidden="true" tabindex="-1"></a>scores<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
-<span id="cb128-3"><a href="#cb128-3" aria-hidden="true" tabindex="-1"></a>scores<span class="op">[</span><span class="dv">4</span><span class="op">]</span> <span class="op">=</span> <span class="dv">50</span><span class="op">;</span></span></code></pre></div>
+<div class="sourceCode" id="cb157"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb157-1"><a href="#cb157-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> scores<span class="op">[</span><span class="dv">5</span><span class="op">];</span></span>
+<span id="cb157-2"><a href="#cb157-2" aria-hidden="true" tabindex="-1"></a>scores<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span>
+<span id="cb157-3"><a href="#cb157-3" aria-hidden="true" tabindex="-1"></a>scores<span class="op">[</span><span class="dv">4</span><span class="op">]</span> <span class="op">=</span> <span class="dv">50</span><span class="op">;</span></span></code></pre></div>
 <h3 data-number="10.7.3" id="lien-entre-pointeurs-et-tableaux"><span class="header-section-number">10.7.3</span> Lien entre pointeurs et
 tableaux</h3>
-<div class="sourceCode" id="cb129"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> tab<span class="op">[</span><span class="dv">10</span><span class="op">];</span></span>
-<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span><span class="op">*</span> p <span class="op">=</span> tab<span class="op">;</span>      <span class="co">// Équivalent à &amp;tab[0]</span></span>
-<span id="cb129-3"><a href="#cb129-3" aria-hidden="true" tabindex="-1"></a>p<span class="op">[</span><span class="dv">3</span><span class="op">]</span> <span class="op">=</span> <span class="dv">42</span><span class="op">;</span>         <span class="co">// Équivalent à tab[3] = 42</span></span>
-<span id="cb129-4"><a href="#cb129-4" aria-hidden="true" tabindex="-1"></a><span class="op">*(</span>p <span class="op">+</span> <span class="dv">3</span><span class="op">)</span> <span class="op">=</span> <span class="dv">42</span><span class="op">;</span>     <span class="co">// Même chose !</span></span></code></pre></div>
+<div class="sourceCode" id="cb158"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb158-1"><a href="#cb158-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> tab<span class="op">[</span><span class="dv">10</span><span class="op">];</span></span>
+<span id="cb158-2"><a href="#cb158-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span><span class="op">*</span> p <span class="op">=</span> tab<span class="op">;</span>      <span class="co">// Équivalent à &amp;tab[0]</span></span>
+<span id="cb158-3"><a href="#cb158-3" aria-hidden="true" tabindex="-1"></a>p<span class="op">[</span><span class="dv">3</span><span class="op">]</span> <span class="op">=</span> <span class="dv">42</span><span class="op">;</span>         <span class="co">// Équivalent à tab[3] = 42</span></span>
+<span id="cb158-4"><a href="#cb158-4" aria-hidden="true" tabindex="-1"></a><span class="op">*(</span>p <span class="op">+</span> <span class="dv">3</span><span class="op">)</span> <span class="op">=</span> <span class="dv">42</span><span class="op">;</span>     <span class="co">// Même chose !</span></span></code></pre></div>
 <hr />
 <h2 data-number="10.8" id="accès-au-matériel-mmio"><span class="header-section-number">10.8</span> Accès au Matériel (MMIO)</h2>
 <h3 data-number="10.8.1" id="lécran"><span class="header-section-number">10.8.1</span> L’écran</h3>
-<div class="sourceCode" id="cb130"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a><span class="co">// L&#39;écran commence à 0x00400000</span></span>
-<span id="cb130-2"><a href="#cb130-2" aria-hidden="true" tabindex="-1"></a><span class="co">// 320×240 pixels, 1 bit par pixel</span></span>
-<span id="cb130-3"><a href="#cb130-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb130-4"><a href="#cb130-4" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> set_pixel<span class="op">(</span><span class="dt">int</span> x<span class="op">,</span> <span class="dt">int</span> y<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb130-5"><a href="#cb130-5" aria-hidden="true" tabindex="-1"></a>    uint<span class="op">*</span> screen <span class="op">=</span> <span class="op">(</span>uint<span class="op">*)</span><span class="bn">0x00400000</span><span class="op">;</span></span>
-<span id="cb130-6"><a href="#cb130-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> offset <span class="op">=</span> y <span class="op">*</span> <span class="dv">10</span> <span class="op">+</span> <span class="op">(</span>x <span class="op">/</span> <span class="dv">32</span><span class="op">);</span></span>
-<span id="cb130-7"><a href="#cb130-7" aria-hidden="true" tabindex="-1"></a>    uint mask <span class="op">=</span> <span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">31</span> <span class="op">-</span> <span class="op">(</span>x <span class="op">%</span> <span class="dv">32</span><span class="op">));</span></span>
-<span id="cb130-8"><a href="#cb130-8" aria-hidden="true" tabindex="-1"></a>    screen<span class="op">[</span>offset<span class="op">]</span> <span class="op">=</span> screen<span class="op">[</span>offset<span class="op">]</span> <span class="op">|</span> mask<span class="op">;</span></span>
-<span id="cb130-9"><a href="#cb130-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb130-10"><a href="#cb130-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb130-11"><a href="#cb130-11" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clear_screen<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb130-12"><a href="#cb130-12" aria-hidden="true" tabindex="-1"></a>    uint<span class="op">*</span> screen <span class="op">=</span> <span class="op">(</span>uint<span class="op">*)</span><span class="bn">0x00400000</span><span class="op">;</span></span>
-<span id="cb130-13"><a href="#cb130-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">2400</span><span class="op">;</span> i <span class="op">=</span> i <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb130-14"><a href="#cb130-14" aria-hidden="true" tabindex="-1"></a>        screen<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb130-15"><a href="#cb130-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb130-16"><a href="#cb130-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb159"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb159-1"><a href="#cb159-1" aria-hidden="true" tabindex="-1"></a><span class="co">// L&#39;écran commence à 0x00400000</span></span>
+<span id="cb159-2"><a href="#cb159-2" aria-hidden="true" tabindex="-1"></a><span class="co">// 320×240 pixels, 1 bit par pixel</span></span>
+<span id="cb159-3"><a href="#cb159-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb159-4"><a href="#cb159-4" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> set_pixel<span class="op">(</span><span class="dt">int</span> x<span class="op">,</span> <span class="dt">int</span> y<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb159-5"><a href="#cb159-5" aria-hidden="true" tabindex="-1"></a>    uint<span class="op">*</span> screen <span class="op">=</span> <span class="op">(</span>uint<span class="op">*)</span><span class="bn">0x00400000</span><span class="op">;</span></span>
+<span id="cb159-6"><a href="#cb159-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> offset <span class="op">=</span> y <span class="op">*</span> <span class="dv">10</span> <span class="op">+</span> <span class="op">(</span>x <span class="op">/</span> <span class="dv">32</span><span class="op">);</span></span>
+<span id="cb159-7"><a href="#cb159-7" aria-hidden="true" tabindex="-1"></a>    uint mask <span class="op">=</span> <span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">31</span> <span class="op">-</span> <span class="op">(</span>x <span class="op">%</span> <span class="dv">32</span><span class="op">));</span></span>
+<span id="cb159-8"><a href="#cb159-8" aria-hidden="true" tabindex="-1"></a>    screen<span class="op">[</span>offset<span class="op">]</span> <span class="op">=</span> screen<span class="op">[</span>offset<span class="op">]</span> <span class="op">|</span> mask<span class="op">;</span></span>
+<span id="cb159-9"><a href="#cb159-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb159-10"><a href="#cb159-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb159-11"><a href="#cb159-11" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clear_screen<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb159-12"><a href="#cb159-12" aria-hidden="true" tabindex="-1"></a>    uint<span class="op">*</span> screen <span class="op">=</span> <span class="op">(</span>uint<span class="op">*)</span><span class="bn">0x00400000</span><span class="op">;</span></span>
+<span id="cb159-13"><a href="#cb159-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">2400</span><span class="op">;</span> i <span class="op">=</span> i <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb159-14"><a href="#cb159-14" aria-hidden="true" tabindex="-1"></a>        screen<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb159-15"><a href="#cb159-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb159-16"><a href="#cb159-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <h3 data-number="10.8.2" id="le-clavier"><span class="header-section-number">10.8.2</span> Le clavier</h3>
-<div class="sourceCode" id="cb131"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Le clavier est à 0x00402600</span></span>
-<span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb131-3"><a href="#cb131-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> get_key<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb131-4"><a href="#cb131-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span><span class="op">*</span> keyboard <span class="op">=</span> <span class="op">(</span><span class="dt">int</span><span class="op">*)</span><span class="bn">0x00402600</span><span class="op">;</span></span>
-<span id="cb131-5"><a href="#cb131-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">*</span>keyboard<span class="op">;</span></span>
-<span id="cb131-6"><a href="#cb131-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb131-7"><a href="#cb131-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb131-8"><a href="#cb131-8" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> wait_key<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb131-9"><a href="#cb131-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>get_key<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb131-10"><a href="#cb131-10" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Attendre</span></span>
-<span id="cb131-11"><a href="#cb131-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb131-12"><a href="#cb131-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb160"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb160-1"><a href="#cb160-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Le clavier est à 0x00402600</span></span>
+<span id="cb160-2"><a href="#cb160-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb160-3"><a href="#cb160-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> get_key<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb160-4"><a href="#cb160-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span><span class="op">*</span> keyboard <span class="op">=</span> <span class="op">(</span><span class="dt">int</span><span class="op">*)</span><span class="bn">0x00402600</span><span class="op">;</span></span>
+<span id="cb160-5"><a href="#cb160-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">*</span>keyboard<span class="op">;</span></span>
+<span id="cb160-6"><a href="#cb160-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb160-7"><a href="#cb160-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb160-8"><a href="#cb160-8" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> wait_key<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb160-9"><a href="#cb160-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>get_key<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb160-10"><a href="#cb160-10" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Attendre</span></span>
+<span id="cb160-11"><a href="#cb160-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb160-12"><a href="#cb160-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <hr />
 <h2 data-number="10.9" id="exemple-complet-1"><span class="header-section-number">10.9</span> Exemple Complet</h2>
-<div class="sourceCode" id="cb132"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Programme qui dessine un rectangle et attend une touche</span></span>
-<span id="cb132-2"><a href="#cb132-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb132-3"><a href="#cb132-3" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> <span class="dt">void</span> putchar<span class="op">(</span><span class="dt">char</span> c<span class="op">);</span></span>
-<span id="cb132-4"><a href="#cb132-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb132-5"><a href="#cb132-5" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb132-6"><a href="#cb132-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Dessiner un rectangle 10×5 à la position (20, 30)</span></span>
-<span id="cb132-7"><a href="#cb132-7" aria-hidden="true" tabindex="-1"></a>    uint<span class="op">*</span> screen <span class="op">=</span> <span class="op">(</span>uint<span class="op">*)</span><span class="bn">0x00400000</span><span class="op">;</span></span>
-<span id="cb132-8"><a href="#cb132-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb132-9"><a href="#cb132-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> y <span class="op">=</span> <span class="dv">30</span><span class="op">;</span> y <span class="op">&lt;</span> <span class="dv">35</span><span class="op">;</span> y <span class="op">=</span> y <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb132-10"><a href="#cb132-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> x <span class="op">=</span> <span class="dv">20</span><span class="op">;</span> x <span class="op">&lt;</span> <span class="dv">30</span><span class="op">;</span> x <span class="op">=</span> x <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb132-11"><a href="#cb132-11" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int</span> offset <span class="op">=</span> y <span class="op">*</span> <span class="dv">10</span> <span class="op">+</span> <span class="op">(</span>x <span class="op">/</span> <span class="dv">32</span><span class="op">);</span></span>
-<span id="cb132-12"><a href="#cb132-12" aria-hidden="true" tabindex="-1"></a>            uint mask <span class="op">=</span> <span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">31</span> <span class="op">-</span> <span class="op">(</span>x <span class="op">%</span> <span class="dv">32</span><span class="op">));</span></span>
-<span id="cb132-13"><a href="#cb132-13" aria-hidden="true" tabindex="-1"></a>            screen<span class="op">[</span>offset<span class="op">]</span> <span class="op">=</span> screen<span class="op">[</span>offset<span class="op">]</span> <span class="op">|</span> mask<span class="op">;</span></span>
-<span id="cb132-14"><a href="#cb132-14" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb132-15"><a href="#cb132-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb132-16"><a href="#cb132-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb132-17"><a href="#cb132-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Afficher un message</span></span>
-<span id="cb132-18"><a href="#cb132-18" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;D&#39;</span><span class="op">);</span></span>
-<span id="cb132-19"><a href="#cb132-19" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;o&#39;</span><span class="op">);</span></span>
-<span id="cb132-20"><a href="#cb132-20" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;n&#39;</span><span class="op">);</span></span>
-<span id="cb132-21"><a href="#cb132-21" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;e&#39;</span><span class="op">);</span></span>
-<span id="cb132-22"><a href="#cb132-22" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;!&#39;</span><span class="op">);</span></span>
-<span id="cb132-23"><a href="#cb132-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb132-24"><a href="#cb132-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Attendre une touche</span></span>
-<span id="cb132-25"><a href="#cb132-25" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span><span class="op">*</span> kbd <span class="op">=</span> <span class="op">(</span><span class="dt">int</span><span class="op">*)</span><span class="bn">0x00402600</span><span class="op">;</span></span>
-<span id="cb132-26"><a href="#cb132-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(*</span>kbd <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{}</span></span>
-<span id="cb132-27"><a href="#cb132-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb132-28"><a href="#cb132-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb132-29"><a href="#cb132-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb161"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb161-1"><a href="#cb161-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Programme qui dessine un rectangle et attend une touche</span></span>
+<span id="cb161-2"><a href="#cb161-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb161-3"><a href="#cb161-3" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> <span class="dt">void</span> putchar<span class="op">(</span><span class="dt">char</span> c<span class="op">);</span></span>
+<span id="cb161-4"><a href="#cb161-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb161-5"><a href="#cb161-5" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb161-6"><a href="#cb161-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Dessiner un rectangle 10×5 à la position (20, 30)</span></span>
+<span id="cb161-7"><a href="#cb161-7" aria-hidden="true" tabindex="-1"></a>    uint<span class="op">*</span> screen <span class="op">=</span> <span class="op">(</span>uint<span class="op">*)</span><span class="bn">0x00400000</span><span class="op">;</span></span>
+<span id="cb161-8"><a href="#cb161-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb161-9"><a href="#cb161-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> y <span class="op">=</span> <span class="dv">30</span><span class="op">;</span> y <span class="op">&lt;</span> <span class="dv">35</span><span class="op">;</span> y <span class="op">=</span> y <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb161-10"><a href="#cb161-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> x <span class="op">=</span> <span class="dv">20</span><span class="op">;</span> x <span class="op">&lt;</span> <span class="dv">30</span><span class="op">;</span> x <span class="op">=</span> x <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb161-11"><a href="#cb161-11" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int</span> offset <span class="op">=</span> y <span class="op">*</span> <span class="dv">10</span> <span class="op">+</span> <span class="op">(</span>x <span class="op">/</span> <span class="dv">32</span><span class="op">);</span></span>
+<span id="cb161-12"><a href="#cb161-12" aria-hidden="true" tabindex="-1"></a>            uint mask <span class="op">=</span> <span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="op">(</span><span class="dv">31</span> <span class="op">-</span> <span class="op">(</span>x <span class="op">%</span> <span class="dv">32</span><span class="op">));</span></span>
+<span id="cb161-13"><a href="#cb161-13" aria-hidden="true" tabindex="-1"></a>            screen<span class="op">[</span>offset<span class="op">]</span> <span class="op">=</span> screen<span class="op">[</span>offset<span class="op">]</span> <span class="op">|</span> mask<span class="op">;</span></span>
+<span id="cb161-14"><a href="#cb161-14" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb161-15"><a href="#cb161-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb161-16"><a href="#cb161-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb161-17"><a href="#cb161-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Afficher un message</span></span>
+<span id="cb161-18"><a href="#cb161-18" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;D&#39;</span><span class="op">);</span></span>
+<span id="cb161-19"><a href="#cb161-19" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;o&#39;</span><span class="op">);</span></span>
+<span id="cb161-20"><a href="#cb161-20" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;n&#39;</span><span class="op">);</span></span>
+<span id="cb161-21"><a href="#cb161-21" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;e&#39;</span><span class="op">);</span></span>
+<span id="cb161-22"><a href="#cb161-22" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;!&#39;</span><span class="op">);</span></span>
+<span id="cb161-23"><a href="#cb161-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb161-24"><a href="#cb161-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Attendre une touche</span></span>
+<span id="cb161-25"><a href="#cb161-25" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span><span class="op">*</span> kbd <span class="op">=</span> <span class="op">(</span><span class="dt">int</span><span class="op">*)</span><span class="bn">0x00402600</span><span class="op">;</span></span>
+<span id="cb161-26"><a href="#cb161-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(*</span>kbd <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{}</span></span>
+<span id="cb161-27"><a href="#cb161-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb161-28"><a href="#cb161-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb161-29"><a href="#cb161-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <hr />
 <h2 data-number="10.10" id="exercices-pratiques-7"><span class="header-section-number">10.10</span> Exercices Pratiques</h2>
 <h3 data-number="10.10.1" id="exercices-sur-le-simulateur-web-7"><span class="header-section-number">10.10.1</span> Exercices sur le Simulateur
@@ -5302,7 +5848,55 @@ nombre, l’utilisateur devine</p></li>
 leur somme</p></li>
 </ol>
 <hr />
-<h2 data-number="10.11" id="limitations-du-c32"><span class="header-section-number">10.11</span> Limitations du C32</h2>
+<h2 data-number="10.11" id="les-structures-structs"><span class="header-section-number">10.11</span> Les Structures (Structs)</h2>
+<p>Le C32 supporte les structures (structs) pour regrouper plusieurs
+variables :</p>
+<h3 data-number="10.11.1" id="définition-dune-structure"><span class="header-section-number">10.11.1</span> Définition d’une
+structure</h3>
+<div class="sourceCode" id="cb162"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb162-1"><a href="#cb162-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point <span class="op">{</span></span>
+<span id="cb162-2"><a href="#cb162-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> x<span class="op">;</span></span>
+<span id="cb162-3"><a href="#cb162-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> y<span class="op">;</span></span>
+<span id="cb162-4"><a href="#cb162-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div>
+<h3 data-number="10.11.2" id="utilisation-1"><span class="header-section-number">10.11.2</span> Utilisation</h3>
+<div class="sourceCode" id="cb163"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb163-1"><a href="#cb163-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point p<span class="op">;</span>     <span class="co">// Déclarer une variable de type struct</span></span>
+<span id="cb163-2"><a href="#cb163-2" aria-hidden="true" tabindex="-1"></a>p<span class="op">.</span>x <span class="op">=</span> <span class="dv">10</span><span class="op">;</span>           <span class="co">// Accéder aux champs avec .</span></span>
+<span id="cb163-3"><a href="#cb163-3" aria-hidden="true" tabindex="-1"></a>p<span class="op">.</span>y <span class="op">=</span> <span class="dv">20</span><span class="op">;</span></span></code></pre></div>
+<h3 data-number="10.11.3" id="pointeur-vers-structure"><span class="header-section-number">10.11.3</span> Pointeur vers
+structure</h3>
+<div class="sourceCode" id="cb164"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb164-1"><a href="#cb164-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point <span class="op">*</span>ptr <span class="op">=</span> <span class="op">&amp;</span>p<span class="op">;</span></span>
+<span id="cb164-2"><a href="#cb164-2" aria-hidden="true" tabindex="-1"></a>ptr<span class="op">-&gt;</span>x <span class="op">=</span> <span class="dv">30</span><span class="op">;</span>        <span class="co">// Accéder via pointeur avec -&gt;</span></span>
+<span id="cb164-3"><a href="#cb164-3" aria-hidden="true" tabindex="-1"></a>ptr<span class="op">-&gt;</span>y <span class="op">=</span> <span class="dv">40</span><span class="op">;</span></span></code></pre></div>
+<h3 data-number="10.11.4" id="exemple-complet-2"><span class="header-section-number">10.11.4</span> Exemple complet</h3>
+<div class="sourceCode" id="cb165"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb165-1"><a href="#cb165-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point <span class="op">{</span> <span class="dt">int</span> x<span class="op">;</span> <span class="dt">int</span> y<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb165-2"><a href="#cb165-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb165-3"><a href="#cb165-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> distance_sq<span class="op">(</span><span class="kw">struct</span> Point <span class="op">*</span>p<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb165-4"><a href="#cb165-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> p<span class="op">-&gt;</span>x <span class="op">*</span> p<span class="op">-&gt;</span>x <span class="op">+</span> p<span class="op">-&gt;</span>y <span class="op">*</span> p<span class="op">-&gt;</span>y<span class="op">;</span></span>
+<span id="cb165-5"><a href="#cb165-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb165-6"><a href="#cb165-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb165-7"><a href="#cb165-7" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb165-8"><a href="#cb165-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> Point p<span class="op">;</span></span>
+<span id="cb165-9"><a href="#cb165-9" aria-hidden="true" tabindex="-1"></a>    p<span class="op">.</span>x <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb165-10"><a href="#cb165-10" aria-hidden="true" tabindex="-1"></a>    p<span class="op">.</span>y <span class="op">=</span> <span class="dv">4</span><span class="op">;</span></span>
+<span id="cb165-11"><a href="#cb165-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> distance_sq<span class="op">(&amp;</span>p<span class="op">);</span>  <span class="co">// Retourne 25</span></span>
+<span id="cb165-12"><a href="#cb165-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h3 data-number="10.11.5" id="structures-imbriquées"><span class="header-section-number">10.11.5</span> Structures imbriquées</h3>
+<div class="sourceCode" id="cb166"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb166-1"><a href="#cb166-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Point <span class="op">{</span> <span class="dt">int</span> x<span class="op">;</span> <span class="dt">int</span> y<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb166-2"><a href="#cb166-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Rectangle <span class="op">{</span></span>
+<span id="cb166-3"><a href="#cb166-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> Point corner<span class="op">;</span></span>
+<span id="cb166-4"><a href="#cb166-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> width<span class="op">;</span></span>
+<span id="cb166-5"><a href="#cb166-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> height<span class="op">;</span></span>
+<span id="cb166-6"><a href="#cb166-6" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb166-7"><a href="#cb166-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb166-8"><a href="#cb166-8" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb166-9"><a href="#cb166-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> Rectangle r<span class="op">;</span></span>
+<span id="cb166-10"><a href="#cb166-10" aria-hidden="true" tabindex="-1"></a>    r<span class="op">.</span>corner<span class="op">.</span>x <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb166-11"><a href="#cb166-11" aria-hidden="true" tabindex="-1"></a>    r<span class="op">.</span>corner<span class="op">.</span>y <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb166-12"><a href="#cb166-12" aria-hidden="true" tabindex="-1"></a>    r<span class="op">.</span>width <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
+<span id="cb166-13"><a href="#cb166-13" aria-hidden="true" tabindex="-1"></a>    r<span class="op">.</span>height <span class="op">=</span> <span class="dv">50</span><span class="op">;</span></span>
+<span id="cb166-14"><a href="#cb166-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> r<span class="op">.</span>width <span class="op">*</span> r<span class="op">.</span>height<span class="op">;</span>  <span class="co">// Retourne 5000</span></span>
+<span id="cb166-15"><a href="#cb166-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 data-number="10.12" id="limitations-du-c32"><span class="header-section-number">10.12</span> Limitations du C32</h2>
 <p>Pour rester simple et pédagogique, le C32 a quelques limites :</p>
 <table>
 <thead>
@@ -5314,7 +5908,7 @@ leur somme</p></li>
 <tbody>
 <tr class="odd">
 <td style="text-align: left;"><code>struct</code></td>
-<td style="text-align: left;">Non supporté</td>
+<td style="text-align: left;">Supporté</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;"><code>float</code>,
@@ -5336,7 +5930,7 @@ leur somme</p></li>
 </tbody>
 </table>
 <hr />
-<h2 data-number="10.12" id="ce-quil-faut-retenir-7"><span class="header-section-number">10.12</span> Ce qu’il faut retenir</h2>
+<h2 data-number="10.13" id="ce-quil-faut-retenir-7"><span class="header-section-number">10.13</span> Ce qu’il faut retenir</h2>
 <ol type="1">
 <li><p><strong>C32 simplifie la programmation</strong> : Variables
 nommées, structures de contrôle</p></li>
@@ -5453,17 +6047,17 @@ l’avance</strong> ?</p>
 (Simple)</h3>
 <p>L’allocateur le plus simple : un pointeur qui avance à chaque
 allocation.</p>
-<div class="sourceCode" id="cb135"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb135-1"><a href="#cb135-1" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span><span class="op">*</span> heap_ptr <span class="op">=</span> <span class="op">(</span><span class="dt">char</span><span class="op">*)</span>HEAP_START<span class="op">;</span></span>
-<span id="cb135-2"><a href="#cb135-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb135-3"><a href="#cb135-3" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span><span class="op">*</span> malloc<span class="op">(</span><span class="dt">int</span> size<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb135-4"><a href="#cb135-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">char</span><span class="op">*</span> result <span class="op">=</span> heap_ptr<span class="op">;</span></span>
-<span id="cb135-5"><a href="#cb135-5" aria-hidden="true" tabindex="-1"></a>    heap_ptr <span class="op">=</span> heap_ptr <span class="op">+</span> size<span class="op">;</span></span>
-<span id="cb135-6"><a href="#cb135-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
-<span id="cb135-7"><a href="#cb135-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb135-8"><a href="#cb135-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb135-9"><a href="#cb135-9" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> free<span class="op">(</span><span class="dt">char</span><span class="op">*</span> ptr<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb135-10"><a href="#cb135-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ne fait rien ! La mémoire n&#39;est jamais récupérée.</span></span>
-<span id="cb135-11"><a href="#cb135-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb169"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb169-1"><a href="#cb169-1" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span><span class="op">*</span> heap_ptr <span class="op">=</span> <span class="op">(</span><span class="dt">char</span><span class="op">*)</span>HEAP_START<span class="op">;</span></span>
+<span id="cb169-2"><a href="#cb169-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb169-3"><a href="#cb169-3" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span><span class="op">*</span> malloc<span class="op">(</span><span class="dt">int</span> size<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb169-4"><a href="#cb169-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">char</span><span class="op">*</span> result <span class="op">=</span> heap_ptr<span class="op">;</span></span>
+<span id="cb169-5"><a href="#cb169-5" aria-hidden="true" tabindex="-1"></a>    heap_ptr <span class="op">=</span> heap_ptr <span class="op">+</span> size<span class="op">;</span></span>
+<span id="cb169-6"><a href="#cb169-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb169-7"><a href="#cb169-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb169-8"><a href="#cb169-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb169-9"><a href="#cb169-9" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> free<span class="op">(</span><span class="dt">char</span><span class="op">*</span> ptr<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb169-10"><a href="#cb169-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ne fait rien ! La mémoire n&#39;est jamais récupérée.</span></span>
+<span id="cb169-11"><a href="#cb169-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p><strong>Avantage</strong> : Très simple, très rapide.
 <strong>Inconvénient</strong> : On ne peut pas réutiliser la mémoire
 libérée.</p>
@@ -5485,80 +6079,80 @@ pour éteindre)</p>
 <p>C’est fastidieux et source d’erreurs.</p>
 <h3 data-number="11.4.2" id="les-fonctions-graphiques"><span class="header-section-number">11.4.2</span> Les fonctions
 graphiques</h3>
-<div class="sourceCode" id="cb137"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_init<span class="op">();</span></span>
-<span id="cb137-2"><a href="#cb137-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_clear<span class="op">();</span></span>
-<span id="cb137-3"><a href="#cb137-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_set_color<span class="op">(</span><span class="dt">int</span> color<span class="op">);</span></span>
-<span id="cb137-4"><a href="#cb137-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb137-5"><a href="#cb137-5" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_draw_pixel<span class="op">(</span><span class="dt">int</span> x<span class="op">,</span> <span class="dt">int</span> y<span class="op">);</span></span>
-<span id="cb137-6"><a href="#cb137-6" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_draw_line<span class="op">(</span><span class="dt">int</span> x1<span class="op">,</span> <span class="dt">int</span> y1<span class="op">,</span> <span class="dt">int</span> x2<span class="op">,</span> <span class="dt">int</span> y2<span class="op">);</span></span>
-<span id="cb137-7"><a href="#cb137-7" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_draw_rect<span class="op">(</span><span class="dt">int</span> x<span class="op">,</span> <span class="dt">int</span> y<span class="op">,</span> <span class="dt">int</span> w<span class="op">,</span> <span class="dt">int</span> h<span class="op">);</span></span>
-<span id="cb137-8"><a href="#cb137-8" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_draw_circle<span class="op">(</span><span class="dt">int</span> cx<span class="op">,</span> <span class="dt">int</span> cy<span class="op">,</span> <span class="dt">int</span> r<span class="op">);</span></span>
-<span id="cb137-9"><a href="#cb137-9" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_print<span class="op">(</span><span class="dt">char</span><span class="op">*</span> text<span class="op">,</span> <span class="dt">int</span> x<span class="op">,</span> <span class="dt">int</span> y<span class="op">);</span></span></code></pre></div>
+<div class="sourceCode" id="cb171"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb171-1"><a href="#cb171-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_init<span class="op">();</span></span>
+<span id="cb171-2"><a href="#cb171-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_clear<span class="op">();</span></span>
+<span id="cb171-3"><a href="#cb171-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_set_color<span class="op">(</span><span class="dt">int</span> color<span class="op">);</span></span>
+<span id="cb171-4"><a href="#cb171-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb171-5"><a href="#cb171-5" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_draw_pixel<span class="op">(</span><span class="dt">int</span> x<span class="op">,</span> <span class="dt">int</span> y<span class="op">);</span></span>
+<span id="cb171-6"><a href="#cb171-6" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_draw_line<span class="op">(</span><span class="dt">int</span> x1<span class="op">,</span> <span class="dt">int</span> y1<span class="op">,</span> <span class="dt">int</span> x2<span class="op">,</span> <span class="dt">int</span> y2<span class="op">);</span></span>
+<span id="cb171-7"><a href="#cb171-7" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_draw_rect<span class="op">(</span><span class="dt">int</span> x<span class="op">,</span> <span class="dt">int</span> y<span class="op">,</span> <span class="dt">int</span> w<span class="op">,</span> <span class="dt">int</span> h<span class="op">);</span></span>
+<span id="cb171-8"><a href="#cb171-8" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_draw_circle<span class="op">(</span><span class="dt">int</span> cx<span class="op">,</span> <span class="dt">int</span> cy<span class="op">,</span> <span class="dt">int</span> r<span class="op">);</span></span>
+<span id="cb171-9"><a href="#cb171-9" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_print<span class="op">(</span><span class="dt">char</span><span class="op">*</span> text<span class="op">,</span> <span class="dt">int</span> x<span class="op">,</span> <span class="dt">int</span> y<span class="op">);</span></span></code></pre></div>
 <h3 data-number="11.4.3" id="lalgorithme-de-bresenham"><span class="header-section-number">11.4.3</span> L’algorithme de
 Bresenham</h3>
 <p>Pour dessiner des lignes droites avec uniquement des additions et des
 comparaisons :</p>
-<div class="sourceCode" id="cb138"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb138-1"><a href="#cb138-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_draw_line<span class="op">(</span><span class="dt">int</span> x1<span class="op">,</span> <span class="dt">int</span> y1<span class="op">,</span> <span class="dt">int</span> x2<span class="op">,</span> <span class="dt">int</span> y2<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb138-2"><a href="#cb138-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> dx <span class="op">=</span> abs<span class="op">(</span>x2 <span class="op">-</span> x1<span class="op">);</span></span>
-<span id="cb138-3"><a href="#cb138-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> dy <span class="op">=</span> abs<span class="op">(</span>y2 <span class="op">-</span> y1<span class="op">);</span></span>
-<span id="cb138-4"><a href="#cb138-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> sx <span class="op">=</span> x1 <span class="op">&lt;</span> x2 <span class="op">?</span> <span class="dv">1</span> <span class="op">:</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
-<span id="cb138-5"><a href="#cb138-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> sy <span class="op">=</span> y1 <span class="op">&lt;</span> y2 <span class="op">?</span> <span class="dv">1</span> <span class="op">:</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
-<span id="cb138-6"><a href="#cb138-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> err <span class="op">=</span> dx <span class="op">-</span> dy<span class="op">;</span></span>
-<span id="cb138-7"><a href="#cb138-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb138-8"><a href="#cb138-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span><span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb138-9"><a href="#cb138-9" aria-hidden="true" tabindex="-1"></a>        screen_draw_pixel<span class="op">(</span>x1<span class="op">,</span> y1<span class="op">);</span></span>
-<span id="cb138-10"><a href="#cb138-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>x1 <span class="op">==</span> x2 <span class="op">&amp;&amp;</span> y1 <span class="op">==</span> y2<span class="op">)</span> <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb138-11"><a href="#cb138-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> e2 <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> err<span class="op">;</span></span>
-<span id="cb138-12"><a href="#cb138-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>e2 <span class="op">&gt;</span> <span class="op">-</span>dy<span class="op">)</span> <span class="op">{</span> err <span class="op">=</span> err <span class="op">-</span> dy<span class="op">;</span> x1 <span class="op">=</span> x1 <span class="op">+</span> sx<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb138-13"><a href="#cb138-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>e2 <span class="op">&lt;</span> dx<span class="op">)</span>  <span class="op">{</span> err <span class="op">=</span> err <span class="op">+</span> dx<span class="op">;</span> y1 <span class="op">=</span> y1 <span class="op">+</span> sy<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb138-14"><a href="#cb138-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb138-15"><a href="#cb138-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb172"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb172-1"><a href="#cb172-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_draw_line<span class="op">(</span><span class="dt">int</span> x1<span class="op">,</span> <span class="dt">int</span> y1<span class="op">,</span> <span class="dt">int</span> x2<span class="op">,</span> <span class="dt">int</span> y2<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb172-2"><a href="#cb172-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> dx <span class="op">=</span> abs<span class="op">(</span>x2 <span class="op">-</span> x1<span class="op">);</span></span>
+<span id="cb172-3"><a href="#cb172-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> dy <span class="op">=</span> abs<span class="op">(</span>y2 <span class="op">-</span> y1<span class="op">);</span></span>
+<span id="cb172-4"><a href="#cb172-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> sx <span class="op">=</span> x1 <span class="op">&lt;</span> x2 <span class="op">?</span> <span class="dv">1</span> <span class="op">:</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb172-5"><a href="#cb172-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> sy <span class="op">=</span> y1 <span class="op">&lt;</span> y2 <span class="op">?</span> <span class="dv">1</span> <span class="op">:</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
+<span id="cb172-6"><a href="#cb172-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> err <span class="op">=</span> dx <span class="op">-</span> dy<span class="op">;</span></span>
+<span id="cb172-7"><a href="#cb172-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb172-8"><a href="#cb172-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span><span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb172-9"><a href="#cb172-9" aria-hidden="true" tabindex="-1"></a>        screen_draw_pixel<span class="op">(</span>x1<span class="op">,</span> y1<span class="op">);</span></span>
+<span id="cb172-10"><a href="#cb172-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>x1 <span class="op">==</span> x2 <span class="op">&amp;&amp;</span> y1 <span class="op">==</span> y2<span class="op">)</span> <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb172-11"><a href="#cb172-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> e2 <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> err<span class="op">;</span></span>
+<span id="cb172-12"><a href="#cb172-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>e2 <span class="op">&gt;</span> <span class="op">-</span>dy<span class="op">)</span> <span class="op">{</span> err <span class="op">=</span> err <span class="op">-</span> dy<span class="op">;</span> x1 <span class="op">=</span> x1 <span class="op">+</span> sx<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb172-13"><a href="#cb172-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>e2 <span class="op">&lt;</span> dx<span class="op">)</span>  <span class="op">{</span> err <span class="op">=</span> err <span class="op">+</span> dx<span class="op">;</span> y1 <span class="op">=</span> y1 <span class="op">+</span> sy<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb172-14"><a href="#cb172-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb172-15"><a href="#cb172-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <p>Pas de multiplication, pas de division — uniquement des opérations
 que notre CPU fait rapidement !</p>
 <hr />
 <h2 data-number="11.5" id="entrées-sorties"><span class="header-section-number">11.5</span> Entrées / Sorties</h2>
 <h3 data-number="11.5.1" id="printf-simplifié"><span class="header-section-number">11.5.1</span> Printf simplifié</h3>
-<div class="sourceCode" id="cb139"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb139-1"><a href="#cb139-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> putchar<span class="op">(</span><span class="dt">char</span> c<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb139-2"><a href="#cb139-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Appel système SVC pour afficher un caractère</span></span>
-<span id="cb139-3"><a href="#cb139-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb139-4"><a href="#cb139-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb139-5"><a href="#cb139-5" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> puts<span class="op">(</span><span class="dt">char</span><span class="op">*</span> s<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb139-6"><a href="#cb139-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(*</span>s <span class="op">!=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb139-7"><a href="#cb139-7" aria-hidden="true" tabindex="-1"></a>        putchar<span class="op">(*</span>s<span class="op">);</span></span>
-<span id="cb139-8"><a href="#cb139-8" aria-hidden="true" tabindex="-1"></a>        s <span class="op">=</span> s <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb139-9"><a href="#cb139-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb139-10"><a href="#cb139-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb139-11"><a href="#cb139-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb139-12"><a href="#cb139-12" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> print_int<span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb139-13"><a href="#cb139-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>n <span class="op">&lt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb139-14"><a href="#cb139-14" aria-hidden="true" tabindex="-1"></a>        putchar<span class="op">(</span><span class="ch">&#39;-&#39;</span><span class="op">);</span></span>
-<span id="cb139-15"><a href="#cb139-15" aria-hidden="true" tabindex="-1"></a>        n <span class="op">=</span> <span class="op">-</span>n<span class="op">;</span></span>
-<span id="cb139-16"><a href="#cb139-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb139-17"><a href="#cb139-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>n <span class="op">&gt;=</span> <span class="dv">10</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb139-18"><a href="#cb139-18" aria-hidden="true" tabindex="-1"></a>        print_int<span class="op">(</span>n <span class="op">/</span> <span class="dv">10</span><span class="op">);</span></span>
-<span id="cb139-19"><a href="#cb139-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb139-20"><a href="#cb139-20" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;0&#39;</span> <span class="op">+</span> <span class="op">(</span>n <span class="op">%</span> <span class="dv">10</span><span class="op">));</span></span>
-<span id="cb139-21"><a href="#cb139-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb173"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb173-1"><a href="#cb173-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> putchar<span class="op">(</span><span class="dt">char</span> c<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb173-2"><a href="#cb173-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Appel système SVC pour afficher un caractère</span></span>
+<span id="cb173-3"><a href="#cb173-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb173-4"><a href="#cb173-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb173-5"><a href="#cb173-5" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> puts<span class="op">(</span><span class="dt">char</span><span class="op">*</span> s<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb173-6"><a href="#cb173-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(*</span>s <span class="op">!=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb173-7"><a href="#cb173-7" aria-hidden="true" tabindex="-1"></a>        putchar<span class="op">(*</span>s<span class="op">);</span></span>
+<span id="cb173-8"><a href="#cb173-8" aria-hidden="true" tabindex="-1"></a>        s <span class="op">=</span> s <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb173-9"><a href="#cb173-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb173-10"><a href="#cb173-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb173-11"><a href="#cb173-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb173-12"><a href="#cb173-12" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> print_int<span class="op">(</span><span class="dt">int</span> n<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb173-13"><a href="#cb173-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>n <span class="op">&lt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb173-14"><a href="#cb173-14" aria-hidden="true" tabindex="-1"></a>        putchar<span class="op">(</span><span class="ch">&#39;-&#39;</span><span class="op">);</span></span>
+<span id="cb173-15"><a href="#cb173-15" aria-hidden="true" tabindex="-1"></a>        n <span class="op">=</span> <span class="op">-</span>n<span class="op">;</span></span>
+<span id="cb173-16"><a href="#cb173-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb173-17"><a href="#cb173-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>n <span class="op">&gt;=</span> <span class="dv">10</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb173-18"><a href="#cb173-18" aria-hidden="true" tabindex="-1"></a>        print_int<span class="op">(</span>n <span class="op">/</span> <span class="dv">10</span><span class="op">);</span></span>
+<span id="cb173-19"><a href="#cb173-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb173-20"><a href="#cb173-20" aria-hidden="true" tabindex="-1"></a>    putchar<span class="op">(</span><span class="ch">&#39;0&#39;</span> <span class="op">+</span> <span class="op">(</span>n <span class="op">%</span> <span class="dv">10</span><span class="op">));</span></span>
+<span id="cb173-21"><a href="#cb173-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <h3 data-number="11.5.2" id="lecture-du-clavier"><span class="header-section-number">11.5.2</span> Lecture du clavier</h3>
-<div class="sourceCode" id="cb140"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb140-1"><a href="#cb140-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> keyboard_read<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb140-2"><a href="#cb140-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span><span class="op">*</span> kbd <span class="op">=</span> <span class="op">(</span><span class="dt">int</span><span class="op">*)</span><span class="bn">0x00402600</span><span class="op">;</span></span>
-<span id="cb140-3"><a href="#cb140-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">*</span>kbd<span class="op">;</span></span>
-<span id="cb140-4"><a href="#cb140-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb140-5"><a href="#cb140-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb140-6"><a href="#cb140-6" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> keyboard_wait<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb140-7"><a href="#cb140-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> key<span class="op">;</span></span>
-<span id="cb140-8"><a href="#cb140-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">((</span>key <span class="op">=</span> keyboard_read<span class="op">())</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb140-9"><a href="#cb140-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Attendre</span></span>
-<span id="cb140-10"><a href="#cb140-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb140-11"><a href="#cb140-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> key<span class="op">;</span></span>
-<span id="cb140-12"><a href="#cb140-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb174"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb174-1"><a href="#cb174-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> keyboard_read<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb174-2"><a href="#cb174-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span><span class="op">*</span> kbd <span class="op">=</span> <span class="op">(</span><span class="dt">int</span><span class="op">*)</span><span class="bn">0x00402600</span><span class="op">;</span></span>
+<span id="cb174-3"><a href="#cb174-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">*</span>kbd<span class="op">;</span></span>
+<span id="cb174-4"><a href="#cb174-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb174-5"><a href="#cb174-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb174-6"><a href="#cb174-6" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> keyboard_wait<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb174-7"><a href="#cb174-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> key<span class="op">;</span></span>
+<span id="cb174-8"><a href="#cb174-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">((</span>key <span class="op">=</span> keyboard_read<span class="op">())</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb174-9"><a href="#cb174-9" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Attendre</span></span>
+<span id="cb174-10"><a href="#cb174-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb174-11"><a href="#cb174-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> key<span class="op">;</span></span>
+<span id="cb174-12"><a href="#cb174-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 <hr />
 <h2 data-number="11.6" id="interruptions-et-timer-concepts"><span class="header-section-number">11.6</span> Interruptions et Timer
 (Concepts)</h2>
 <h3 data-number="11.6.1" id="le-problème-du-polling"><span class="header-section-number">11.6.1</span> Le problème du polling</h3>
 <p>Dans notre approche actuelle, le CPU vérifie constamment le clavier
 :</p>
-<div class="sourceCode" id="cb141"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb141-1"><a href="#cb141-1" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(</span>keyboard_read<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{}</span>  <span class="co">// CPU occupe à ne rien faire !</span></span></code></pre></div>
+<div class="sourceCode" id="cb175"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb175-1"><a href="#cb175-1" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(</span>keyboard_read<span class="op">()</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{}</span>  <span class="co">// CPU occupe à ne rien faire !</span></span></code></pre></div>
 <h3 data-number="11.6.2" id="les-interruptions"><span class="header-section-number">11.6.2</span> Les interruptions</h3>
 <p>Avec les interruptions, le matériel <strong>signale</strong> au CPU
 qu’un événement s’est produit :</p>
@@ -5608,11 +6202,11 @@ d’interruption</strong></li>
 </table>
 <h3 data-number="11.7.1" id="compiler-et-exécuter-une-démo"><span class="header-section-number">11.7.1</span> Compiler et exécuter une
 démo</h3>
-<div class="sourceCode" id="cb142"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb142-1"><a href="#cb142-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compiler</span></span>
-<span id="cb142-2"><a href="#cb142-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> c32_cli <span class="at">--</span> demos/04_snake/main.c <span class="at">-o</span> snake.bin</span>
-<span id="cb142-3"><a href="#cb142-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb142-4"><a href="#cb142-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Exécuter</span></span>
-<span id="cb142-5"><a href="#cb142-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> a32_runner <span class="at">--</span> snake.bin</span></code></pre></div>
+<div class="sourceCode" id="cb176"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb176-1"><a href="#cb176-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compiler</span></span>
+<span id="cb176-2"><a href="#cb176-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> c32_cli <span class="at">--</span> demos/04_snake/main.c <span class="at">-o</span> snake.bin</span>
+<span id="cb176-3"><a href="#cb176-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb176-4"><a href="#cb176-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Exécuter</span></span>
+<span id="cb176-5"><a href="#cb176-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> a32_runner <span class="at">--</span> snake.bin</span></code></pre></div>
 <p>Ou utilisez le <strong>Simulateur Web</strong> pour une expérience
 visuelle !</p>
 <hr />
