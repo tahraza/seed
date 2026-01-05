@@ -1139,9 +1139,24 @@ impl<'a> FuncContext<'a> {
                     _ => return Err(CError::new("E2002", "invalid index base")),
                 };
                 let scale = elem.size().unwrap_or(1) as i32;
-                if scale == 4 {
+                if scale == 1 {
+                    // Byte array: no multiplication needed
+                    writeln!(out, "  ADD R0, R1, R0").unwrap();
+                } else if scale == 4 {
+                    // Int/pointer array: multiply by 4 using shift
                     writeln!(out, "  ADD R0, R1, R0, LSL #2").unwrap();
+                } else if scale == 8 {
+                    // Struct of size 8: multiply by 8 using shift
+                    writeln!(out, "  ADD R0, R1, R0, LSL #3").unwrap();
+                } else if scale == 2 {
+                    // Short array: multiply by 2 using shift
+                    writeln!(out, "  ADD R0, R1, R0, LSL #1").unwrap();
                 } else {
+                    // General case: multiply index by scale
+                    self.emit_push(out, "R1");
+                    writeln!(out, "  MOV R1, #{}", scale).unwrap();
+                    writeln!(out, "  BL __mul_i32").unwrap();
+                    self.emit_pop(out, "R1");
                     writeln!(out, "  ADD R0, R1, R0").unwrap();
                 }
                 Ok(LValue {
