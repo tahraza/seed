@@ -80,6 +80,18 @@ Ces exercices enseignent la programmation en assembleur A32.
 | Maximum Tableau | Max de {12, 45, 7, 89, 23} | R0 = 89 |
 | Memoire | Store puis Load | R0 = 30 |
 
+### Structures
+
+Ces exercices preparent aux structs en C en montrant comment les donnees structurees sont organisees en memoire.
+
+| Exercice | Objectif | Resultat |
+|:---------|:---------|:---------|
+| Structure Simple | Lire champs d'un Point (x+y) | R0 = 42 |
+| Initialiser Structure | Ecrire dans les champs d'un Point | R0 = 42 |
+| Structure Rectangle | Structure avec 4 champs, calcul aire | R0 = 42 |
+| Tableau de Structures | Parcourir tableau de Points, somme des x | R0 = 33 |
+| Somme x+y Structures | Acceder aux deux champs de chaque Point | R0 = 42 |
+
 ### Fonctions
 
 | Exercice | Objectif | Resultat |

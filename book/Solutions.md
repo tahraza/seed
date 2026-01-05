@@ -1570,6 +1570,201 @@ _start:
 
 ---
 
+### Structure Simple
+
+```asm
+; Structure Simple - Solution
+
+.data
+; Structure Point { int x; int y; }
+point:
+    .word 10    ; x = 10 (offset 0)
+    .word 32    ; y = 32 (offset 4)
+
+.text
+.global _start
+_start:
+    ; Charger l'adresse de la structure
+    LDR R1, =point
+
+    ; Charger p.x (offset 0)
+    LDR R2, [R1]        ; R2 = p.x = 10
+
+    ; Charger p.y (offset 4)
+    LDR R3, [R1, #4]    ; R3 = p.y = 32
+
+    ; Calculer la somme
+    ADD R0, R2, R3      ; R0 = 10 + 32 = 42
+
+    HALT
+```
+
+---
+
+### Initialiser Structure
+
+```asm
+; Initialiser Structure - Solution
+
+.data
+; Structure Point (non initialisée)
+point:
+    .word 0     ; x (offset 0)
+    .word 0     ; y (offset 4)
+
+.text
+.global _start
+_start:
+    LDR R4, =point  ; adresse de la structure
+
+    ; Initialiser p.x = 20
+    MOV R1, #20
+    STR R1, [R4]        ; p.x = 20
+
+    ; Initialiser p.y = 22
+    MOV R2, #22
+    STR R2, [R4, #4]    ; p.y = 22
+
+    ; Relire et additionner
+    LDR R1, [R4]        ; R1 = p.x
+    LDR R2, [R4, #4]    ; R2 = p.y
+    ADD R0, R1, R2      ; R0 = 42
+
+    HALT
+```
+
+---
+
+### Structure Rectangle
+
+```asm
+; Structure Rectangle - Solution
+
+.data
+; Structure Rectangle
+rect:
+    .word 5     ; x (offset 0)
+    .word 10    ; y (offset 4)
+    .word 6     ; width (offset 8)
+    .word 7     ; height (offset 12)
+
+.text
+.global _start
+_start:
+    LDR R4, =rect
+
+    ; Charger width et height
+    LDR R1, [R4, #8]    ; R1 = width = 6
+    LDR R2, [R4, #12]   ; R2 = height = 7
+
+    ; Multiplier par additions: 6 * 7
+    MOV R0, #0          ; résultat = 0
+.mult:
+    CMP R2, #0
+    B.EQ .done
+    ADD R0, R0, R1      ; résultat += width
+    SUB R2, R2, #1      ; height--
+    B .mult
+
+.done:
+    HALT
+```
+
+---
+
+### Tableau de Structures
+
+```asm
+; Tableau de Structures - Solution
+
+.data
+; Tableau de 3 Points (8 octets chacun)
+points:
+    ; points[0]: x=10, y=2
+    .word 10
+    .word 2
+    ; points[1]: x=15, y=5
+    .word 15
+    .word 5
+    ; points[2]: x=8, y=7
+    .word 8
+    .word 7
+
+.text
+.global _start
+_start:
+    LDR R1, =points     ; adresse du tableau
+    MOV R0, #0          ; somme = 0
+    MOV R2, #3          ; compteur = 3
+
+.loop:
+    CMP R2, #0
+    B.EQ .done
+
+    ; Charger x du Point courant
+    LDR R3, [R1]        ; R3 = points[i].x
+    ADD R0, R0, R3      ; somme += x
+
+    ; Passer au Point suivant (8 octets)
+    ADD R1, R1, #8
+
+    ; Décrémenter compteur
+    SUB R2, R2, #1
+    B .loop
+
+.done:
+    HALT
+```
+
+---
+
+### Somme x+y Structures
+
+```asm
+; Somme x+y de Structures - Solution
+
+.data
+points:
+    ; points[0]: x=5, y=3
+    .word 5
+    .word 3
+    ; points[1]: x=10, y=4
+    .word 10
+    .word 4
+    ; points[2]: x=12, y=8
+    .word 12
+    .word 8
+
+.text
+.global _start
+_start:
+    LDR R1, =points     ; adresse du tableau
+    MOV R0, #0          ; somme totale = 0
+    MOV R4, #3          ; compteur = 3
+
+.loop:
+    CMP R4, #0
+    B.EQ .done
+
+    ; Charger x et y du Point courant
+    LDR R2, [R1]        ; R2 = x
+    LDR R3, [R1, #4]    ; R3 = y
+
+    ; Ajouter x+y à la somme
+    ADD R0, R0, R2      ; somme += x
+    ADD R0, R0, R3      ; somme += y
+
+    ; Point suivant (8 octets)
+    ADD R1, R1, #8
+    SUB R4, R4, #1
+    B .loop
+
+.done:
+    HALT
+```
+
+---
+
 ### Fonctions
 
 ```asm
