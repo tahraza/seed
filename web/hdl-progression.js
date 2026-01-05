@@ -2576,9 +2576,23 @@ tick
         name: 'IF_ID_Reg',
         description: 'IF/ID Pipeline Register',
         dependencies: ['CPU'],
-        template: `-- IF/ID Pipeline Register
--- Latches instruction and PC+4 from Fetch to Decode stage
--- Supports stall (hold values) and flush (clear to NOP)
+        template: `-- ============================================
+-- Exercice: IF/ID Pipeline Register
+-- ============================================
+-- Objectif: Implémenter un registre de pipeline entre IF et ID
+--
+-- Ce registre fait partie d'un CPU pipeliné 5 étapes.
+-- Il capture l'instruction et PC+4 de l'étape Fetch
+-- pour les transmettre à l'étape Decode.
+--
+-- Comportement attendu:
+-- 1. Sur reset='1' OU flush='1': mettre instr_reg à NOP (0xE0000000)
+--    et pc_plus4_reg à 0
+-- 2. Sur stall='1': garder les valeurs actuelles (ne rien faire)
+-- 3. Sinon: capturer if_instr et if_pc_plus4
+--
+-- Note: Utilisez (reset = '1') or (flush = '1') avec parenthèses
+-- ============================================
 
 entity IF_ID_Reg is
   port(
@@ -2603,7 +2617,7 @@ begin
   begin
     if rising_edge(clk) then
       -- YOUR CODE HERE
-      -- Handle reset, flush, stall, and normal operation
+      -- Gérer reset/flush, stall, et opération normale
     end if;
   end process;
 
@@ -2633,7 +2647,7 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
-      if reset = '1' or flush = '1' then
+      if (reset = '1') or (flush = '1') then
         instr_reg <= x"E0000000";  -- NOP
         pc_plus4_reg <= x"00000000";
       elsif stall = '0' then
@@ -2675,12 +2689,23 @@ expect id_instr 0xE0000000
         name: 'HazardDetect',
         description: 'Hazard Detection Unit',
         dependencies: ['IF_ID_Reg'],
-        template: `-- Hazard Detection Unit
--- Detects load-use hazards and generates stall signal
+        template: `-- ============================================
+-- Exercice: Hazard Detection Unit
+-- ============================================
+-- Objectif: Détecter les aléas load-use et générer un stall
 --
--- A load-use hazard occurs when:
--- - The instruction in EX stage is a load (mem_read = 1)
--- - The instruction in ID stage uses the loaded value
+-- Un aléa load-use se produit quand:
+-- - L'instruction en EX est un load (ex_mem_read = '1')
+-- - L'instruction en ID utilise le registre chargé
+--
+-- Étapes:
+-- 1. Créer un signal rn_hazard pour détecter si Rn est en conflit:
+--    rn_hazard = ex_mem_read='1' AND id_rn_used='1' AND id_rn=ex_rd
+-- 2. Créer un signal rm_hazard similaire pour Rm
+-- 3. stall = rn_hazard OR rm_hazard
+--
+-- Syntaxe: utilisez "when (...) else '0'" pour les signaux
+-- ============================================
 
 entity HazardDetect is
   port(
@@ -2698,9 +2723,10 @@ entity HazardDetect is
 end entity;
 
 architecture rtl of HazardDetect is
+  -- Déclarez vos signaux intermédiaires ici
 begin
   -- YOUR CODE HERE
-  -- Detect if ID stage instruction depends on EX stage load
+  -- Détecter si l'instruction en ID dépend du load en EX
   stall <= '0';
 end architecture;
 `,
@@ -2751,13 +2777,27 @@ expect stall 0
         name: 'ForwardUnit',
         description: 'Data Forwarding Unit',
         dependencies: ['HazardDetect'],
-        template: `-- Forwarding Unit
--- Handles data hazards by forwarding results from later stages
+        template: `-- ============================================
+-- Exercice: Forwarding Unit
+-- ============================================
+-- Objectif: Implémenter le bypass de données
 --
--- Forward encoding:
--- 00 = No forwarding (use register file value)
--- 01 = Forward from EX/MEM (ALU result)
--- 10 = Forward from MEM/WB (final result)
+-- Le forwarding évite les stalls en acheminant les résultats
+-- directement des étages MEM et WB vers EX.
+--
+-- Encodage des signaux forward_a et forward_b:
+--   b"00" = Pas de forwarding (utiliser valeur du banc de registres)
+--   b"01" = Forward depuis MEM (résultat ALU)
+--   b"10" = Forward depuis WB (résultat final)
+--
+-- Logique:
+-- 1. Si mem_reg_write='1' ET mem_rd=ex_rn → forward_a = b"01"
+-- 2. Sinon si wb_reg_write='1' ET wb_rd=ex_rn → forward_a = b"10"
+-- 3. Sinon → forward_a = b"00"
+-- (Même logique pour forward_b avec ex_rm)
+--
+-- Syntaxe: forward_a <= b"01" when (...) else b"10" when (...) else b"00";
+-- ============================================
 
 entity ForwardUnit is
   port(
@@ -2830,9 +2870,29 @@ expect forward_a 0b00
         name: 'CPU_Pipeline',
         description: '5-Stage Pipelined CPU',
         dependencies: ['ForwardUnit'],
-        template: `-- A32-Lite CPU (5-Stage Pipeline)
--- Stages: IF -> ID -> EX -> MEM -> WB
--- Features: Data forwarding, hazard detection
+        template: `-- ============================================
+-- Exercice: CPU Pipeline 5 étages (Projet Final)
+-- ============================================
+-- Objectif: Construire un CPU pipeliné complet
+--
+-- C'est un exercice avancé qui combine tous les composants!
+--
+-- Les 5 étages du pipeline:
+-- 1. IF  - Fetch instruction depuis la mémoire
+-- 2. ID  - Decode, lecture des registres, détection hazards
+-- 3. EX  - ALU, calcul d'adresses, forwarding
+-- 4. MEM - Accès mémoire données (load/store)
+-- 5. WB  - Écriture résultat dans le banc de registres
+--
+-- Composants à utiliser:
+-- - IF_ID_Reg: Registre pipeline IF→ID
+-- - HazardDetect: Détection aléas load-use
+-- - ForwardUnit: Bypass de données
+-- - Registres EX_MEM et MEM_WB (similaires à IF_ID_Reg)
+--
+-- Référez-vous à hdl_lib/05_cpu/CPU_Pipeline.hdl pour
+-- l'implémentation complète de référence.
+-- ============================================
 
 entity CPU_Pipeline is
   port(
@@ -2850,22 +2910,12 @@ entity CPU_Pipeline is
 end entity;
 
 architecture rtl of CPU_Pipeline is
-  -- This is a complex exercise!
-  -- Combine all pipeline components:
-  -- 1. IF stage: PC, instruction fetch
-  -- 2. IF/ID register with stall/flush
-  -- 3. ID stage: Decode, register read, hazard detect
-  -- 4. ID/EX register
-  -- 5. EX stage: ALU, forwarding muxes
-  -- 6. EX/MEM register
-  -- 7. MEM stage: Data memory access
-  -- 8. MEM/WB register
-  -- 9. WB stage: Register writeback
-
-  -- Refer to CPU.hdl and add pipeline registers between stages
+  -- Déclarez les signaux pour chaque étage
+  -- Utilisez les composants IF_ID_Reg, HazardDetect, ForwardUnit
 begin
   -- YOUR CODE HERE
-  -- This is a capstone exercise - build the full pipeline!
+  -- Projet final: construire le pipeline complet!
+  -- Commencez par l'étage IF, puis ajoutez ID, EX, MEM, WB
   halted <= '0';
 end architecture;
 `,

@@ -466,7 +466,7 @@ begin
         flag_c <= alu_c;
         flag_v <= alu_v;
       end if;
-      if id_halt = '1' and id_cond_ok = '1' then
+      if (id_halt = '1') and (id_cond_ok = '1') then
         halt_reg <= '1';
       end if;
     end if;
