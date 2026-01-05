@@ -14,6 +14,10 @@ impl Memory {
         self.data.len()
     }
 
+    pub fn as_slice(&self) -> &[u8] {
+        &self.data
+    }
+
     pub fn read8(&self, addr: u32) -> Option<u8> {
         self.data.get(addr as usize).copied()
     }

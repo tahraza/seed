@@ -57,6 +57,17 @@ Ces exercices construisent un CPU pipeline 5 etages avec gestion des aleas.
 | ForwardUnit | Bypass des donnees (forwarding) |
 | CPU_Pipeline | CPU pipeline 5 etages complet |
 
+### Projet 7 : Cache L1
+
+Ces exercices implementent un cache memoire direct-mapped.
+
+| Exercice | Description |
+|:---------|:------------|
+| CacheLine | Ligne de cache (valid, dirty, tag, data) |
+| TagCompare | Comparateur de tags pour detecter hit/miss |
+| WordSelect | Selecteur de mot dans une ligne de 128 bits |
+| CacheController | Machine a etats (IDLE, FETCH, WRITEBACK) |
+
 ---
 
 ## B. Exercices Assembleur A32
@@ -236,6 +247,17 @@ Les structures permettent de regrouper plusieurs variables liees.
 | Structs Imbriquees | Rectangle avec Point | 42 |
 | Tableau de Structs | Point[3], somme des x | 33 |
 | Sizeof Struct | Taille des structures | 16 |
+
+### Cache (Patterns d'Acces Memoire)
+
+Ces exercices illustrent l'impact de la localite sur les performances cache.
+
+| Exercice | Objectif | Resultat |
+|:---------|:---------|:---------|
+| Parcours en Ligne | Parcours row-major (cache-friendly) | 120 |
+| Parcours en Colonne | Parcours column-major (moins efficace) | 120 |
+| Traitement par Blocs | Technique de blocking | 120 |
+| Localite Temporelle | Reutiliser les donnees en cache | 30 |
 
 ### Entrees/Sorties
 

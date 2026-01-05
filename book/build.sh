@@ -27,6 +27,7 @@ pandoc metadata.yaml \
     08_langage.md \
     09_os.md \
     10_exercices.md \
+    11_cache.md \
     -o "$OUTPUT" \
     --toc \
     --toc-depth=2 \
@@ -53,6 +54,7 @@ if [ $? -eq 0 ]; then
         08_langage.md \
         09_os.md \
         10_exercices.md \
+        11_cache.md \
         -s --embed-resources \
         -o "$HTML_OUTPUT" \
         --toc \
@@ -80,6 +82,7 @@ else
         08_langage.md \
         09_os.md \
         10_exercices.md \
+        11_cache.md \
         -s --embed-resources \
         -o "$HTML_OUTPUT" \
         --toc \

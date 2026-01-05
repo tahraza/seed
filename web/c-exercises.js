@@ -2452,6 +2452,310 @@ int main() {
 }
 `,
         expectedReturn: 16
+    },
+
+    // ========================================
+    // CACHE - Memory Access Patterns
+    // ========================================
+    'c-cache-row': {
+        id: 'c-cache-row',
+        name: 'Parcours en Ligne',
+        description: 'Parcours cache-friendly d\'un tableau 2D',
+        template: `// ============================================
+// Exercice: Parcours en Ligne
+// ============================================
+// Objectif: Comprendre l'importance de la localité spatiale
+//
+// En mémoire, un tableau 2D arr[N][M] est stocké ligne par ligne:
+//   arr[0][0], arr[0][1], ..., arr[0][M-1],
+//   arr[1][0], arr[1][1], ..., arr[1][M-1],
+//   ...
+//
+// Un parcours "en ligne" (row-major) est cache-friendly car
+// les éléments consécutifs sont proches en mémoire.
+//
+// Complétez le code pour:
+// 1. Initialiser arr[i][j] = i * 4 + j
+// 2. Calculer la somme de tous les éléments
+//
+// Résultat attendu: 0+1+2+3 + 4+5+6+7 + 8+9+10+11 + 12+13+14+15 = 120
+// ============================================
+
+int arr[4][4];
+
+int main() {
+    // 1. Initialiser (parcours en ligne: cache-friendly)
+    for (int i = 0; i < 4; i = i + 1) {
+        for (int j = 0; j < 4; j = j + 1) {
+            // Votre code ici:
+
+        }
+    }
+
+    // 2. Calculer la somme (parcours en ligne)
+    int sum = 0;
+    for (int i = 0; i < 4; i = i + 1) {
+        for (int j = 0; j < 4; j = j + 1) {
+            // Votre code ici:
+
+        }
+    }
+
+    return sum;
+}
+`,
+        solution: `// Parcours en Ligne - Solution
+
+int arr[4][4];
+
+int main() {
+    // Initialiser (parcours en ligne: cache-friendly)
+    for (int i = 0; i < 4; i = i + 1) {
+        for (int j = 0; j < 4; j = j + 1) {
+            arr[i][j] = i * 4 + j;
+        }
+    }
+
+    // Calculer la somme
+    int sum = 0;
+    for (int i = 0; i < 4; i = i + 1) {
+        for (int j = 0; j < 4; j = j + 1) {
+            sum = sum + arr[i][j];
+        }
+    }
+
+    return sum;
+}
+`,
+        expectedReturn: 120
+    },
+
+    'c-cache-col': {
+        id: 'c-cache-col',
+        name: 'Parcours en Colonne',
+        description: 'Comparer avec un parcours cache-unfriendly',
+        template: `// ============================================
+// Exercice: Parcours en Colonne
+// ============================================
+// Objectif: Comprendre pourquoi le parcours en colonne
+// est moins efficace pour le cache
+//
+// Un parcours "en colonne" (column-major) accède aux éléments
+// avec des sauts de mémoire importants:
+//   arr[0][0], arr[1][0], arr[2][0], arr[3][0],
+//   arr[0][1], arr[1][1], ...
+//
+// Cela cause plus de cache misses car chaque accès
+// peut nécessiter le chargement d'une nouvelle ligne de cache.
+//
+// Malgré cela, le résultat final est le même!
+// Calculez la somme avec un parcours en colonne.
+//
+// Résultat attendu: 120 (même résultat, mais moins efficace)
+// ============================================
+
+int arr[4][4];
+
+int main() {
+    // Initialiser
+    for (int i = 0; i < 4; i = i + 1) {
+        for (int j = 0; j < 4; j = j + 1) {
+            arr[i][j] = i * 4 + j;
+        }
+    }
+
+    // Somme en colonne (j en premier, puis i)
+    int sum = 0;
+    for (int j = 0; j < 4; j = j + 1) {
+        for (int i = 0; i < 4; i = i + 1) {
+            // Votre code ici:
+
+        }
+    }
+
+    return sum;
+}
+`,
+        solution: `// Parcours en Colonne - Solution
+
+int arr[4][4];
+
+int main() {
+    // Initialiser
+    for (int i = 0; i < 4; i = i + 1) {
+        for (int j = 0; j < 4; j = j + 1) {
+            arr[i][j] = i * 4 + j;
+        }
+    }
+
+    // Somme en colonne (cache-unfriendly mais correct)
+    int sum = 0;
+    for (int j = 0; j < 4; j = j + 1) {
+        for (int i = 0; i < 4; i = i + 1) {
+            sum = sum + arr[i][j];
+        }
+    }
+
+    return sum;
+}
+`,
+        expectedReturn: 120
+    },
+
+    'c-cache-block': {
+        id: 'c-cache-block',
+        name: 'Traitement par Blocs',
+        description: 'Technique de blocking pour optimiser le cache',
+        template: `// ============================================
+// Exercice: Traitement par Blocs (Blocking)
+// ============================================
+// Objectif: Comprendre la technique de blocking
+//
+// Pour de grands tableaux, on peut diviser le travail
+// en "blocs" qui tiennent dans le cache.
+//
+// Au lieu de parcourir tout le tableau d'un coup,
+// on traite des blocs de 2x2 éléments.
+//
+// Tableau 4x4, blocs de 2x2:
+// +----+----+
+// | B0 | B1 |
+// +----+----+
+// | B2 | B3 |
+// +----+----+
+//
+// Calculez la somme en utilisant des blocs 2x2.
+//
+// Résultat attendu: 120
+// ============================================
+
+int arr[4][4];
+
+int main() {
+    // Initialiser
+    for (int i = 0; i < 4; i = i + 1) {
+        for (int j = 0; j < 4; j = j + 1) {
+            arr[i][j] = i * 4 + j;
+        }
+    }
+
+    int sum = 0;
+    int block_size = 2;
+
+    // Parcours par blocs
+    for (int bi = 0; bi < 4; bi = bi + block_size) {
+        for (int bj = 0; bj < 4; bj = bj + block_size) {
+            // Traiter le bloc [bi..bi+1][bj..bj+1]
+            for (int i = bi; i < bi + block_size; i = i + 1) {
+                for (int j = bj; j < bj + block_size; j = j + 1) {
+                    // Votre code ici:
+
+                }
+            }
+        }
+    }
+
+    return sum;
+}
+`,
+        solution: `// Traitement par Blocs - Solution
+
+int arr[4][4];
+
+int main() {
+    // Initialiser
+    for (int i = 0; i < 4; i = i + 1) {
+        for (int j = 0; j < 4; j = j + 1) {
+            arr[i][j] = i * 4 + j;
+        }
+    }
+
+    int sum = 0;
+    int block_size = 2;
+
+    // Parcours par blocs (cache-friendly)
+    for (int bi = 0; bi < 4; bi = bi + block_size) {
+        for (int bj = 0; bj < 4; bj = bj + block_size) {
+            for (int i = bi; i < bi + block_size; i = i + 1) {
+                for (int j = bj; j < bj + block_size; j = j + 1) {
+                    sum = sum + arr[i][j];
+                }
+            }
+        }
+    }
+
+    return sum;
+}
+`,
+        expectedReturn: 120
+    },
+
+    'c-cache-temporal': {
+        id: 'c-cache-temporal',
+        name: 'Localité Temporelle',
+        description: 'Réutiliser les données en cache',
+        template: `// ============================================
+// Exercice: Localité Temporelle
+// ============================================
+// Objectif: Comprendre la localité temporelle
+//
+// La localité temporelle signifie réutiliser rapidement
+// les données récemment accédées (encore dans le cache).
+//
+// Mauvais: Parcourir le tableau N fois
+//   for k: for i: sum += arr[i]  (arr rechargé N fois!)
+//
+// Bon: Accumuler tout en un seul parcours
+//   for i: sum += arr[i] * N     (arr chargé 1 fois)
+//
+// Calculer: sum = arr[0]*3 + arr[1]*3 + arr[2]*3 + arr[3]*3
+// où arr = {1, 2, 3, 4}
+//
+// Résultat attendu: (1+2+3+4) * 3 = 30
+// ============================================
+
+int arr[4];
+
+int main() {
+    arr[0] = 1;
+    arr[1] = 2;
+    arr[2] = 3;
+    arr[3] = 4;
+
+    int sum = 0;
+    int factor = 3;
+
+    // Méthode cache-friendly: un seul parcours
+    for (int i = 0; i < 4; i = i + 1) {
+        // Votre code ici:
+
+    }
+
+    return sum;
+}
+`,
+        solution: `// Localité Temporelle - Solution
+
+int arr[4];
+
+int main() {
+    arr[0] = 1;
+    arr[1] = 2;
+    arr[2] = 3;
+    arr[3] = 4;
+
+    int sum = 0;
+    int factor = 3;
+
+    // Un seul parcours: bonne localité temporelle
+    for (int i = 0; i < 4; i = i + 1) {
+        sum = sum + arr[i] * factor;
+    }
+
+    return sum;
+}
+`,
+        expectedReturn: 30
     }
 };
 

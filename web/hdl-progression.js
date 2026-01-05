@@ -2964,6 +2964,475 @@ set reset 0
 tick
 `,
     },
+
+    // =========================================================================
+    // Project 7: Cache Memory
+    // =========================================================================
+
+    'CacheLine': {
+        project: 7,
+        name: 'CacheLine',
+        description: 'Cache Line Register (valid, dirty, tag, data)',
+        dependencies: ['Register16'],
+        template: `-- Cache Line
+-- Une ligne de cache contient:
+-- - valid: 1 bit indiquant si la ligne contient des données valides
+-- - dirty: 1 bit indiquant si les données ont été modifiées (write-back)
+-- - tag: identifiant de l'adresse mémoire (20 bits)
+-- - data: 16 octets de données (4 mots de 32 bits = 128 bits)
+
+entity CacheLine is
+  port(
+    clk : in bit;
+    -- Contrôle
+    write_enable : in bit;          -- Écrire la ligne complète
+    write_tag : in bits(19 downto 0);  -- Tag à écrire
+    write_data : in bits(127 downto 0); -- 16 bytes de données
+    write_word : in bits(31 downto 0);  -- Mot à écrire (écriture partielle)
+    write_word_sel : in bits(1 downto 0); -- Sélection du mot (0-3)
+    write_word_en : in bit;         -- Écrire un seul mot
+    set_dirty : in bit;             -- Marquer comme dirty
+    clear_dirty : in bit;           -- Effacer dirty (après write-back)
+    invalidate : in bit;            -- Invalider la ligne
+    -- Sorties
+    valid : out bit;
+    dirty : out bit;
+    tag : out bits(19 downto 0);
+    data : out bits(127 downto 0)
+  );
+end entity;
+
+architecture rtl of CacheLine is
+  signal valid_reg : bit;
+  signal dirty_reg : bit;
+  signal tag_reg : bits(19 downto 0);
+  signal data_reg : bits(127 downto 0);
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      -- YOUR CODE HERE
+      -- Gérer: invalidate, write_enable, write_word_en
+      -- Gérer: set_dirty, clear_dirty
+    end if;
+  end process;
+
+  valid <= valid_reg;
+  dirty <= dirty_reg;
+  tag <= tag_reg;
+  data <= data_reg;
+end architecture;
+`,
+        solution: `-- Cache Line
+-- Une ligne de cache contient:
+-- - valid: 1 bit indiquant si la ligne contient des données valides
+-- - dirty: 1 bit indiquant si les données ont été modifiées (write-back)
+-- - tag: identifiant de l'adresse mémoire (20 bits)
+-- - data: 16 octets de données (4 mots de 32 bits = 128 bits)
+
+entity CacheLine is
+  port(
+    clk : in bit;
+    write_enable : in bit;
+    write_tag : in bits(19 downto 0);
+    write_data : in bits(127 downto 0);
+    write_word : in bits(31 downto 0);
+    write_word_sel : in bits(1 downto 0);
+    write_word_en : in bit;
+    set_dirty : in bit;
+    clear_dirty : in bit;
+    invalidate : in bit;
+    valid : out bit;
+    dirty : out bit;
+    tag : out bits(19 downto 0);
+    data : out bits(127 downto 0)
+  );
+end entity;
+
+architecture rtl of CacheLine is
+  signal valid_reg : bit;
+  signal dirty_reg : bit;
+  signal tag_reg : bits(19 downto 0);
+  signal data_reg : bits(127 downto 0);
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if invalidate = '1' then
+        valid_reg <= '0';
+        dirty_reg <= '0';
+      elsif write_enable = '1' then
+        valid_reg <= '1';
+        tag_reg <= write_tag;
+        data_reg <= write_data;
+        dirty_reg <= '0';
+      elsif write_word_en = '1' then
+        if write_word_sel = b"00" then
+          data_reg(31 downto 0) <= write_word;
+        elsif write_word_sel = b"01" then
+          data_reg(63 downto 32) <= write_word;
+        elsif write_word_sel = b"10" then
+          data_reg(95 downto 64) <= write_word;
+        else
+          data_reg(127 downto 96) <= write_word;
+        end if;
+      end if;
+
+      if set_dirty = '1' then
+        dirty_reg <= '1';
+      elsif clear_dirty = '1' then
+        dirty_reg <= '0';
+      end if;
+    end if;
+  end process;
+
+  valid <= valid_reg;
+  dirty <= dirty_reg;
+  tag <= tag_reg;
+  data <= data_reg;
+end architecture;
+`,
+        test: `load CacheLine
+-- Test invalidation
+set invalidate 1
+tick
+expect valid 0
+expect dirty 0
+
+-- Test write full line
+set invalidate 0
+set write_enable 1
+set write_tag x"ABCDE"
+set write_data x"11111111222222223333333344444444"
+tick
+expect valid 1
+expect dirty 0
+expect tag x"ABCDE"
+
+-- Test write single word
+set write_enable 0
+set write_word_en 1
+set write_word_sel b"01"
+set write_word x"DEADBEEF"
+tick
+expect data(63 downto 32) x"DEADBEEF"
+
+-- Test set dirty
+set write_word_en 0
+set set_dirty 1
+tick
+expect dirty 1
+
+-- Test clear dirty
+set set_dirty 0
+set clear_dirty 1
+tick
+expect dirty 0
+`,
+    },
+
+    'TagCompare': {
+        project: 7,
+        name: 'TagCompare',
+        description: 'Tag Comparator for cache lookup',
+        dependencies: ['And2'],
+        template: `-- Tag Comparator
+-- Compare the address tag with the stored tag
+-- Output hit = 1 if valid AND tags match
+
+entity TagCompare is
+  port(
+    valid : in bit;
+    addr_tag : in bits(19 downto 0);
+    stored_tag : in bits(19 downto 0);
+    hit : out bit
+  );
+end entity;
+
+architecture rtl of TagCompare is
+  signal tags_equal : bit;
+begin
+  -- YOUR CODE HERE
+  -- Compare addr_tag with stored_tag (all 20 bits)
+  -- hit = valid AND tags_equal
+  hit <= '0';
+end architecture;
+`,
+        solution: `-- Tag Comparator
+-- Compare the address tag with the stored tag
+
+entity TagCompare is
+  port(
+    valid : in bit;
+    addr_tag : in bits(19 downto 0);
+    stored_tag : in bits(19 downto 0);
+    hit : out bit
+  );
+end entity;
+
+architecture rtl of TagCompare is
+  signal tags_equal : bit;
+begin
+  process(addr_tag, stored_tag)
+  begin
+    if addr_tag = stored_tag then
+      tags_equal <= '1';
+    else
+      tags_equal <= '0';
+    end if;
+  end process;
+
+  hit <= valid and tags_equal;
+end architecture;
+`,
+        test: `load TagCompare
+-- No hit when invalid
+set valid 0
+set addr_tag x"12345"
+set stored_tag x"12345"
+eval
+expect hit 0
+
+-- Hit when valid and tags match
+set valid 1
+set addr_tag x"12345"
+set stored_tag x"12345"
+eval
+expect hit 1
+
+-- No hit when tags differ
+set valid 1
+set addr_tag x"12345"
+set stored_tag x"ABCDE"
+eval
+expect hit 0
+`,
+    },
+
+    'WordSelect': {
+        project: 7,
+        name: 'WordSelect',
+        description: 'Word Selector (4-way mux for 32-bit words)',
+        dependencies: ['Mux4Way16'],
+        template: `-- Word Selector
+-- Select one 32-bit word from a 128-bit cache line
+
+entity WordSelect is
+  port(
+    line_data : in bits(127 downto 0);  -- 4 words (128 bits)
+    word_sel : in bits(1 downto 0);     -- Which word (0-3)
+    word_out : out bits(31 downto 0)    -- Selected word
+  );
+end entity;
+
+architecture rtl of WordSelect is
+begin
+  -- YOUR CODE HERE
+  -- word_sel = 00 -> line_data(31 downto 0)
+  -- word_sel = 01 -> line_data(63 downto 32)
+  -- word_sel = 10 -> line_data(95 downto 64)
+  -- word_sel = 11 -> line_data(127 downto 96)
+  word_out <= x"00000000";
+end architecture;
+`,
+        solution: `-- Word Selector
+-- Select one 32-bit word from a 128-bit cache line
+
+entity WordSelect is
+  port(
+    line_data : in bits(127 downto 0);
+    word_sel : in bits(1 downto 0);
+    word_out : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of WordSelect is
+begin
+  process(line_data, word_sel)
+  begin
+    if word_sel = b"00" then
+      word_out <= line_data(31 downto 0);
+    elsif word_sel = b"01" then
+      word_out <= line_data(63 downto 32);
+    elsif word_sel = b"10" then
+      word_out <= line_data(95 downto 64);
+    else
+      word_out <= line_data(127 downto 96);
+    end if;
+  end process;
+end architecture;
+`,
+        test: `load WordSelect
+set line_data x"DDDDDDDDCCCCCCCCBBBBBBBBAAAAAAAA"
+-- Word 0
+set word_sel b"00"
+eval
+expect word_out x"AAAAAAAA"
+-- Word 1
+set word_sel b"01"
+eval
+expect word_out x"BBBBBBBB"
+-- Word 2
+set word_sel b"10"
+eval
+expect word_out x"CCCCCCCC"
+-- Word 3
+set word_sel b"11"
+eval
+expect word_out x"DDDDDDDD"
+`,
+    },
+
+    'CacheController': {
+        project: 7,
+        name: 'CacheController',
+        description: 'Cache Controller FSM (IDLE, FETCH, WRITE_BACK)',
+        dependencies: ['CacheLine', 'TagCompare', 'WordSelect'],
+        template: `-- Cache Controller
+-- State machine: IDLE, FETCH, WRITE_BACK
+-- Implements write-through policy
+
+entity CacheController is
+  port(
+    clk : in bit;
+    reset : in bit;
+    -- CPU interface
+    cpu_read : in bit;
+    cpu_write : in bit;
+    cache_hit : in bit;
+    -- Memory interface
+    mem_ready : in bit;
+    -- Control outputs
+    state : out bits(1 downto 0);     -- 00=IDLE, 01=FETCH, 10=WRITEBACK
+    cpu_ready : out bit;               -- Operation complete
+    mem_read : out bit;
+    mem_write : out bit;
+    fill_line : out bit               -- Fill cache line from memory
+  );
+end entity;
+
+architecture rtl of CacheController is
+  signal state_reg : bits(1 downto 0);
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        state_reg <= b"00";
+      else
+        -- YOUR CODE HERE
+        -- Implement state transitions:
+        -- IDLE (00): if read/write AND miss -> FETCH
+        --            if write AND hit -> WRITEBACK
+        -- FETCH (01): if mem_ready -> IDLE (or WRITEBACK if write)
+        -- WRITEBACK (10): if mem_ready -> IDLE
+      end if;
+    end if;
+  end process;
+
+  state <= state_reg;
+  -- YOUR CODE HERE: Generate outputs based on state
+  cpu_ready <= '0';
+  mem_read <= '0';
+  mem_write <= '0';
+  fill_line <= '0';
+end architecture;
+`,
+        solution: `-- Cache Controller
+-- State machine: IDLE, FETCH, WRITE_BACK
+
+entity CacheController is
+  port(
+    clk : in bit;
+    reset : in bit;
+    cpu_read : in bit;
+    cpu_write : in bit;
+    cache_hit : in bit;
+    mem_ready : in bit;
+    state : out bits(1 downto 0);
+    cpu_ready : out bit;
+    mem_read : out bit;
+    mem_write : out bit;
+    fill_line : out bit
+  );
+end entity;
+
+architecture rtl of CacheController is
+  signal state_reg : bits(1 downto 0);
+  signal pending_write : bit;
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        state_reg <= b"00";
+        pending_write <= '0';
+      else
+        if state_reg = b"00" then
+          -- IDLE
+          if (cpu_read = '1' or cpu_write = '1') and cache_hit = '0' then
+            state_reg <= b"01";  -- FETCH
+            pending_write <= cpu_write;
+          elsif cpu_write = '1' and cache_hit = '1' then
+            state_reg <= b"10";  -- WRITEBACK
+          end if;
+        elsif state_reg = b"01" then
+          -- FETCH
+          if mem_ready = '1' then
+            if pending_write = '1' then
+              state_reg <= b"10";  -- WRITEBACK
+            else
+              state_reg <= b"00";  -- IDLE
+            end if;
+          end if;
+        elsif state_reg = b"10" then
+          -- WRITEBACK
+          if mem_ready = '1' then
+            state_reg <= b"00";  -- IDLE
+            pending_write <= '0';
+          end if;
+        end if;
+      end if;
+    end if;
+  end process;
+
+  state <= state_reg;
+  cpu_ready <= '1' when (state_reg = b"00" and cache_hit = '1') or
+                        (state_reg = b"01" and mem_ready = '1' and pending_write = '0') or
+                        (state_reg = b"10" and mem_ready = '1') else '0';
+  mem_read <= '1' when state_reg = b"01" else '0';
+  mem_write <= '1' when state_reg = b"10" else '0';
+  fill_line <= '1' when state_reg = b"01" and mem_ready = '1' else '0';
+end architecture;
+`,
+        test: `load CacheController
+-- Reset
+set reset 1
+tick
+expect state b"00"
+set reset 0
+
+-- Read hit: stays in IDLE, cpu_ready
+set cpu_read 1
+set cpu_write 0
+set cache_hit 1
+tick
+expect state b"00"
+expect cpu_ready 1
+
+-- Read miss: goes to FETCH
+set cache_hit 0
+tick
+expect state b"01"
+expect mem_read 1
+
+-- Memory ready: back to IDLE
+set mem_ready 1
+tick
+expect state b"00"
+expect fill_line 1
+`,
+    },
 };
 
 // Project order for display
@@ -2974,6 +3443,7 @@ export const PROJECTS = [
     { id: 4, name: 'Sequentiel', chips: ['DFF1', 'BitReg', 'Register16', 'PC', 'RAM8', 'RAM64', 'RegFile'] },
     { id: 5, name: 'CPU', chips: ['Decoder', 'CondCheck', 'Control', 'CPU'] },
     { id: 6, name: 'CPU Pipeline', chips: ['IF_ID_Reg', 'HazardDetect', 'ForwardUnit', 'CPU_Pipeline'] },
+    { id: 7, name: 'Cache L1', chips: ['CacheLine', 'TagCompare', 'WordSelect', 'CacheController'] },
 ];
 
 // Get chip info

@@ -1,3 +1,4 @@
+use crate::cache::Cache;
 use crate::cpu::Cpu;
 use crate::isa::{Cond, Flags, Reg};
 use crate::mem::Memory;
@@ -167,6 +168,8 @@ pub struct Machine {
     int_handler: u32,     // Handler address
     int_saved_pc: u32,    // Saved PC
     int_in_handler: bool, // Currently in interrupt handler
+    // Cache L1
+    cache: Cache,
 }
 
 impl Machine {
@@ -203,6 +206,8 @@ impl Machine {
             int_handler: 0,
             int_saved_pc: 0,
             int_in_handler: false,
+            // Cache L1
+            cache: Cache::new(),
         }
     }
 
@@ -276,6 +281,9 @@ impl Machine {
         self.int_handler = 0;
         self.int_saved_pc = 0;
         self.int_in_handler = false;
+        // Reset cache
+        self.cache.flush();
+        self.cache.reset_stats();
         Ok(())
     }
 
@@ -462,6 +470,43 @@ impl Machine {
     /// Acknowledge interrupt (clear pending bit)
     pub fn ack_interrupt(&mut self, bit: u32) {
         self.int_pending &= !(1 << bit);
+    }
+
+    // ========== Cache L1 ==========
+
+    /// Get reference to the cache
+    pub fn cache(&self) -> &Cache {
+        &self.cache
+    }
+
+    /// Get mutable reference to the cache
+    pub fn cache_mut(&mut self) -> &mut Cache {
+        &mut self.cache
+    }
+
+    /// Enable or disable the cache
+    pub fn set_cache_enabled(&mut self, enabled: bool) {
+        self.cache.enabled = enabled;
+    }
+
+    /// Check if cache is enabled
+    pub fn cache_enabled(&self) -> bool {
+        self.cache.enabled
+    }
+
+    /// Flush the cache (invalidate all lines)
+    pub fn flush_cache(&mut self) {
+        self.cache.flush();
+    }
+
+    /// Get cache statistics
+    pub fn cache_stats(&self) -> &crate::cache::CacheStats {
+        &self.cache.stats
+    }
+
+    /// Reset cache statistics
+    pub fn reset_cache_stats(&mut self) {
+        self.cache.reset_stats();
     }
 
     // ========== Debugger: Breakpoints ==========
@@ -1120,7 +1165,14 @@ impl Machine {
             return Err(Trap::mem_fault(addr));
         }
         if (addr & 0x3) == 0 {
-            return self.mem.read32_le(addr).ok_or_else(|| Trap::mem_fault(addr));
+            // Try cache first
+            if let Some(value) = self.cache.read32(addr) {
+                return Ok(value);
+            }
+            // Cache miss - read from memory and fill cache
+            let value = self.mem.read32_le(addr).ok_or_else(|| Trap::mem_fault(addr))?;
+            self.cache.fill_line_from_mem(addr, self.mem.as_slice());
+            return Ok(value);
         }
         if !self.config.strict_traps {
             let mut value = 0u32;
@@ -1236,6 +1288,8 @@ impl Machine {
             return Err(Trap::mem_fault(addr));
         }
         if (addr & 0x3) == 0 {
+            // Write-through: write to both cache and memory
+            self.cache.write32(addr, value);
             return self
                 .mem
                 .write32_le(addr, value)

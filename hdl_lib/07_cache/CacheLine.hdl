@@ -1,0 +1,71 @@
+-- Cache Line
+-- Une ligne de cache contient:
+-- - valid: 1 bit indiquant si la ligne contient des données valides
+-- - dirty: 1 bit indiquant si les données ont été modifiées (write-back)
+-- - tag: identifiant de l'adresse mémoire
+-- - data: 16 octets de données (4 mots de 32 bits)
+
+entity CacheLine is
+  port(
+    clk : in bit;
+    -- Contrôle
+    write_enable : in bit;          -- Écrire dans la ligne
+    write_tag : in bits(19 downto 0);  -- Tag à écrire
+    write_data : in bits(127 downto 0); -- 16 bytes de données
+    write_word : in bits(31 downto 0);  -- Mot à écrire (écriture partielle)
+    write_word_sel : in bits(1 downto 0); -- Sélection du mot (0-3)
+    write_word_en : in bit;         -- Écrire un seul mot
+    set_dirty : in bit;             -- Marquer comme dirty
+    clear_dirty : in bit;           -- Effacer dirty (après write-back)
+    invalidate : in bit;            -- Invalider la ligne
+    -- Sorties
+    valid : out bit;
+    dirty : out bit;
+    tag : out bits(19 downto 0);
+    data : out bits(127 downto 0)
+  );
+end entity;
+
+architecture rtl of CacheLine is
+  signal valid_reg : bit;
+  signal dirty_reg : bit;
+  signal tag_reg : bits(19 downto 0);
+  signal data_reg : bits(127 downto 0);
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if invalidate = '1' then
+        valid_reg <= '0';
+        dirty_reg <= '0';
+      elsif write_enable = '1' then
+        valid_reg <= '1';
+        tag_reg <= write_tag;
+        data_reg <= write_data;
+        dirty_reg <= '0';  -- Données fraîches de la RAM
+      elsif write_word_en = '1' then
+        -- Écriture partielle d'un mot
+        if write_word_sel = b"00" then
+          data_reg(31 downto 0) <= write_word;
+        elsif write_word_sel = b"01" then
+          data_reg(63 downto 32) <= write_word;
+        elsif write_word_sel = b"10" then
+          data_reg(95 downto 64) <= write_word;
+        else
+          data_reg(127 downto 96) <= write_word;
+        end if;
+      end if;
+
+      if set_dirty = '1' then
+        dirty_reg <= '1';
+      elsif clear_dirty = '1' then
+        dirty_reg <= '0';
+      end if;
+    end if;
+  end process;
+
+  valid <= valid_reg;
+  dirty <= dirty_reg;
+  tag <= tag_reg;
+  data <= data_reg;
+end architecture;

@@ -448,6 +448,18 @@ d’Exploitation</a></li>
 <li><a href="#conseils-pour-les-exercices" id="toc-conseils-pour-les-exercices"><span class="toc-section-number">12.6</span> Conseils pour les
 Exercices</a></li>
 </ul></li>
+<li><a href="#cache-l1-memoire-rapide" id="toc-cache-l1-memoire-rapide"><span class="toc-section-number">13</span> Cache L1 : Memoire Rapide</a>
+<ul>
+<li><a href="#pourquoi-le-cache" id="toc-pourquoi-le-cache"><span class="toc-section-number">13.1</span> Pourquoi le Cache ?</a></li>
+<li><a href="#structure-du-cache" id="toc-structure-du-cache"><span class="toc-section-number">13.2</span> Structure du Cache</a></li>
+<li><a href="#fonctionnement-1" id="toc-fonctionnement-1"><span class="toc-section-number">13.3</span> Fonctionnement</a></li>
+<li><a href="#implementation-hdl" id="toc-implementation-hdl"><span class="toc-section-number">13.4</span> Implementation HDL</a></li>
+<li><a href="#optimisation-des-programmes" id="toc-optimisation-des-programmes"><span class="toc-section-number">13.5</span> Optimisation des
+Programmes</a></li>
+<li><a href="#statistiques-du-cache" id="toc-statistiques-du-cache"><span class="toc-section-number">13.6</span> Statistiques du Cache</a></li>
+<li><a href="#exercices" id="toc-exercices"><span class="toc-section-number">13.7</span> Exercices</a></li>
+<li><a href="#resume" id="toc-resume"><span class="toc-section-number">13.8</span> Resume</a></li>
+</ul></li>
 </ul>
 </nav>
 <h1 data-number="1" id="larchitecture-codex-guide-de-létudiant"><span class="header-section-number">1</span> L’Architecture Codex : Guide de
@@ -6480,6 +6492,38 @@ flush</td>
 </tr>
 </tbody>
 </table>
+<h3 data-number="12.1.6" id="projet-7-cache-l1"><span class="header-section-number">12.1.6</span> Projet 7 : Cache L1</h3>
+<p>Ces exercices implementent un cache memoire direct-mapped.</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Exercice</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">CacheLine</td>
+<td style="text-align: left;">Ligne de cache (valid, dirty, tag,
+data)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">TagCompare</td>
+<td style="text-align: left;">Comparateur de tags pour detecter
+hit/miss</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">WordSelect</td>
+<td style="text-align: left;">Selecteur de mot dans une ligne de 128
+bits</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CacheController</td>
+<td style="text-align: left;">Machine a etats (IDLE, FETCH,
+WRITEBACK)</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h2 data-number="12.2" id="b.-exercices-assembleur-a32"><span class="header-section-number">12.2</span> B. Exercices Assembleur
 A32</h2>
@@ -7078,7 +7122,43 @@ bit/pixel)</h3>
 </tr>
 </tbody>
 </table>
-<h3 data-number="12.3.11" id="entreessorties-1"><span class="header-section-number">12.3.11</span> Entrees/Sorties</h3>
+<h3 data-number="12.3.11" id="cache-patterns-dacces-memoire"><span class="header-section-number">12.3.11</span> Cache (Patterns d’Acces
+Memoire)</h3>
+<p>Ces exercices illustrent l’impact de la localite sur les performances
+cache.</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Exercice</th>
+<th style="text-align: left;">Objectif</th>
+<th style="text-align: left;">Resultat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Parcours en Ligne</td>
+<td style="text-align: left;">Parcours row-major (cache-friendly)</td>
+<td style="text-align: left;">120</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Parcours en Colonne</td>
+<td style="text-align: left;">Parcours column-major (moins
+efficace)</td>
+<td style="text-align: left;">120</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Traitement par Blocs</td>
+<td style="text-align: left;">Technique de blocking</td>
+<td style="text-align: left;">120</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Localite Temporelle</td>
+<td style="text-align: left;">Reutiliser les donnees en cache</td>
+<td style="text-align: left;">30</td>
+</tr>
+</tbody>
+</table>
+<h3 data-number="12.3.12" id="entreessorties-1"><span class="header-section-number">12.3.12</span> Entrees/Sorties</h3>
 <table>
 <thead>
 <tr class="header">
@@ -7120,7 +7200,7 @@ bit/pixel)</h3>
 </tr>
 </tbody>
 </table>
-<h3 data-number="12.3.12" id="projets-avances"><span class="header-section-number">12.3.12</span> Projets Avances</h3>
+<h3 data-number="12.3.13" id="projets-avances"><span class="header-section-number">12.3.13</span> Projets Avances</h3>
 <table>
 <thead>
 <tr class="header">
@@ -7492,5 +7572,249 @@ suivant</li>
 </ol>
 <hr />
 <p><strong>Bon courage !</strong></p>
+<h1 data-number="13" id="cache-l1-memoire-rapide"><span class="header-section-number">13</span> Cache L1 : Memoire Rapide</h1>
+<p>Le cache est une memoire ultra-rapide placee entre le processeur et
+la memoire principale. Son role est d’exploiter la <em>localite</em> des
+acces memoire pour reduire la latence.</p>
+<hr />
+<h2 data-number="13.1" id="pourquoi-le-cache"><span class="header-section-number">13.1</span> Pourquoi le Cache ?</h2>
+<p>La memoire RAM est lente comparee au processeur : - Un cycle CPU :
+~0.3 ns (3 GHz) - Un acces RAM : ~100 ns</p>
+<p>Sans cache, le processeur passerait 99% de son temps a attendre la
+memoire !</p>
+<h3 data-number="13.1.1" id="localite-des-acces-memoire"><span class="header-section-number">13.1.1</span> Localite des Acces
+Memoire</h3>
+<p>Les programmes exhibent deux types de localite :</p>
+<p><strong>Localite temporelle</strong> : Une donnee recemment accedee
+sera probablement reutilisee bientot.</p>
+<div class="sourceCode" id="cb178"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb178-1"><a href="#cb178-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">1000</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb178-2"><a href="#cb178-2" aria-hidden="true" tabindex="-1"></a>    sum <span class="op">+=</span> arr<span class="op">[</span>i<span class="op">];</span>  <span class="co">// &#39;sum&#39; est accedee 1000 fois</span></span>
+<span id="cb178-3"><a href="#cb178-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Localite spatiale</strong> : Les donnees proches en memoire
+sont souvent accedees ensemble.</p>
+<div class="sourceCode" id="cb179"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb179-1"><a href="#cb179-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">100</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb179-2"><a href="#cb179-2" aria-hidden="true" tabindex="-1"></a>    process<span class="op">(</span>arr<span class="op">[</span>i<span class="op">]);</span>  <span class="co">// arr[0], arr[1], arr[2]... sont contigus</span></span>
+<span id="cb179-3"><a href="#cb179-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 data-number="13.2" id="structure-du-cache"><span class="header-section-number">13.2</span> Structure du Cache</h2>
+<h3 data-number="13.2.1" id="ligne-de-cache"><span class="header-section-number">13.2.1</span> Ligne de Cache</h3>
+<p>Le cache ne stocke pas des octets individuels, mais des
+<strong>lignes de cache</strong> (typiquement 16-64 octets).</p>
+<pre><code>+-------+-------+------------------------+
+| Valid | Tag   | Data (16 bytes)        |
++-------+-------+------------------------+
+|   1   | 0x123 | 0x11 0x22 0x33 ... 0xFF|
++-------+-------+------------------------+</code></pre>
+<ul>
+<li><strong>Valid</strong> : La ligne contient-elle des donnees valides
+?</li>
+<li><strong>Tag</strong> : Identifiant de l’adresse memoire</li>
+<li><strong>Data</strong> : Les donnees elles-memes (plusieurs
+mots)</li>
+</ul>
+<h3 data-number="13.2.2" id="decomposition-dadresse"><span class="header-section-number">13.2.2</span> Decomposition d’Adresse</h3>
+<p>Une adresse 32 bits est decomposee en trois parties :</p>
+<pre><code>|&lt;------ Tag ------&gt;|&lt;-- Index --&gt;|&lt;- Offset -&gt;|
+|    22 bits        |   6 bits    |   4 bits   |</code></pre>
+<ul>
+<li><strong>Tag</strong> (22 bits) : Identifie la region memoire</li>
+<li><strong>Index</strong> (6 bits) : Selectionne une ligne parmi
+64</li>
+<li><strong>Offset</strong> (4 bits) : Position dans la ligne (16
+octets)</li>
+</ul>
+<h3 data-number="13.2.3" id="cache-direct-mapped"><span class="header-section-number">13.2.3</span> Cache Direct-Mapped</h3>
+<p>Notre implementation utilise un cache <strong>direct-mapped</strong>
+: chaque adresse ne peut aller que dans une seule ligne.</p>
+<pre><code>Adresse 0x1234 -&gt; Index = (0x1234 &gt;&gt; 4) &amp; 0x3F = ligne 3
+Adresse 0x5678 -&gt; Index = (0x5678 &gt;&gt; 4) &amp; 0x3F = ligne 7</code></pre>
+<p>Avantages : - Simple a implementer - Lookup rapide (une seule
+comparaison)</p>
+<p>Inconvenients : - Conflits : deux adresses peuvent “se battre” pour
+la meme ligne</p>
+<hr />
+<h2 data-number="13.3" id="fonctionnement-1"><span class="header-section-number">13.3</span> Fonctionnement</h2>
+<h3 data-number="13.3.1" id="lecture-read"><span class="header-section-number">13.3.1</span> Lecture (Read)</h3>
+<ol type="1">
+<li>Calculer l’index et le tag de l’adresse</li>
+<li>Verifier si la ligne est valide et si le tag correspond</li>
+<li><strong>Hit</strong> : Retourner la donnee depuis le cache</li>
+<li><strong>Miss</strong> : Charger la ligne depuis la RAM, puis
+retourner la donnee</li>
+</ol>
+<pre><code>   CPU                    Cache                    RAM
+    |                       |                        |
+    |-- read(0x1234) ------&gt;|                        |
+    |                       |-- lookup index 3 -----&gt;|
+    |                       |   tag match? valid?    |
+    |                       |                        |
+    |&lt;-- data (if hit) -----|                        |
+    |                       |                        |
+    |         (if miss)     |&lt;-- load line ---------|
+    |&lt;-- data --------------|                        |</code></pre>
+<h3 data-number="13.3.2" id="ecriture-write"><span class="header-section-number">13.3.2</span> Ecriture (Write)</h3>
+<p>Notre cache utilise une politique <strong>write-through</strong> : -
+Les ecritures vont directement en memoire ET dans le cache - Simple mais
+plus de trafic memoire</p>
+<p>Alternative : <strong>write-back</strong> - Ecriture seulement dans
+le cache - Ecriture en memoire seulement quand la ligne est evincee -
+Plus complexe (bit “dirty” necessaire)</p>
+<hr />
+<h2 data-number="13.4" id="implementation-hdl"><span class="header-section-number">13.4</span> Implementation HDL</h2>
+<h3 data-number="13.4.1" id="cacheline"><span class="header-section-number">13.4.1</span> CacheLine</h3>
+<p>Une ligne de cache avec tous ses champs :</p>
+<div class="sourceCode" id="cb184"><pre class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb184-1"><a href="#cb184-1" aria-hidden="true" tabindex="-1"></a><span class="cf">entity</span> <span class="dv">CacheLine</span> <span class="kw">is</span></span>
+<span id="cb184-2"><a href="#cb184-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">port</span>(</span>
+<span id="cb184-3"><a href="#cb184-3" aria-hidden="true" tabindex="-1"></a>    clk <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
+<span id="cb184-4"><a href="#cb184-4" aria-hidden="true" tabindex="-1"></a>    write_enable <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
+<span id="cb184-5"><a href="#cb184-5" aria-hidden="true" tabindex="-1"></a>    write_tag <span class="ot">:</span> <span class="kw">in</span> bits(<span class="dv">19</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
+<span id="cb184-6"><a href="#cb184-6" aria-hidden="true" tabindex="-1"></a>    write_data <span class="ot">:</span> <span class="kw">in</span> bits(<span class="dv">127</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
+<span id="cb184-7"><a href="#cb184-7" aria-hidden="true" tabindex="-1"></a>    invalidate <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
+<span id="cb184-8"><a href="#cb184-8" aria-hidden="true" tabindex="-1"></a>    valid <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span>;</span>
+<span id="cb184-9"><a href="#cb184-9" aria-hidden="true" tabindex="-1"></a>    tag <span class="ot">:</span> <span class="kw">out</span> bits(<span class="dv">19</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
+<span id="cb184-10"><a href="#cb184-10" aria-hidden="true" tabindex="-1"></a>    data <span class="ot">:</span> <span class="kw">out</span> bits(<span class="dv">127</span> <span class="ot">downto</span> <span class="dv">0</span>)</span>
+<span id="cb184-11"><a href="#cb184-11" aria-hidden="true" tabindex="-1"></a>  );</span>
+<span id="cb184-12"><a href="#cb184-12" aria-hidden="true" tabindex="-1"></a><span class="cf">end entity;</span></span></code></pre></div>
+<h3 data-number="13.4.2" id="tagcompare"><span class="header-section-number">13.4.2</span> TagCompare</h3>
+<p>Comparateur pour detecter un hit :</p>
+<div class="sourceCode" id="cb185"><pre class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb185-1"><a href="#cb185-1" aria-hidden="true" tabindex="-1"></a><span class="cf">entity</span> <span class="dv">TagCompare</span> <span class="kw">is</span></span>
+<span id="cb185-2"><a href="#cb185-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">port</span>(</span>
+<span id="cb185-3"><a href="#cb185-3" aria-hidden="true" tabindex="-1"></a>    valid <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
+<span id="cb185-4"><a href="#cb185-4" aria-hidden="true" tabindex="-1"></a>    addr_tag <span class="ot">:</span> <span class="kw">in</span> bits(<span class="dv">19</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
+<span id="cb185-5"><a href="#cb185-5" aria-hidden="true" tabindex="-1"></a>    stored_tag <span class="ot">:</span> <span class="kw">in</span> bits(<span class="dv">19</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
+<span id="cb185-6"><a href="#cb185-6" aria-hidden="true" tabindex="-1"></a>    hit <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span></span>
+<span id="cb185-7"><a href="#cb185-7" aria-hidden="true" tabindex="-1"></a>  );</span>
+<span id="cb185-8"><a href="#cb185-8" aria-hidden="true" tabindex="-1"></a><span class="cf">end entity;</span></span></code></pre></div>
+<h3 data-number="13.4.3" id="cachecontroller"><span class="header-section-number">13.4.3</span> CacheController</h3>
+<p>Machine a etats pour gerer les acces :</p>
+<pre><code>        +-------+
+  reset |       |
+        v       |
+     +------+   |
+     | IDLE |---+ read/write hit
+     +------+
+        |
+        | read/write miss
+        v
+     +-------+
+     | FETCH |-----&gt; load line from RAM
+     +-------+
+        |
+        | mem_ready (and write pending)
+        v
+     +----------+
+     | WRITEBACK |----&gt; write to RAM
+     +----------+
+        |
+        | mem_ready
+        v
+     (back to IDLE)</code></pre>
+<hr />
+<h2 data-number="13.5" id="optimisation-des-programmes"><span class="header-section-number">13.5</span> Optimisation des
+Programmes</h2>
+<h3 data-number="13.5.1" id="parcours-row-major-vs-column-major"><span class="header-section-number">13.5.1</span> Parcours Row-Major vs
+Column-Major</h3>
+<p>Un tableau 2D <code>arr[4][4]</code> est stocke ligne par ligne :</p>
+<pre><code>Memoire: [0,0] [0,1] [0,2] [0,3] [1,0] [1,1] ...</code></pre>
+<p><strong>Parcours row-major</strong> (cache-friendly) :</p>
+<div class="sourceCode" id="cb188"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb188-1"><a href="#cb188-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span>i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> i<span class="op">++)</span></span>
+<span id="cb188-2"><a href="#cb188-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span>j <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> j <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> j<span class="op">++)</span></span>
+<span id="cb188-3"><a href="#cb188-3" aria-hidden="true" tabindex="-1"></a>        sum <span class="op">+=</span> arr<span class="op">[</span>i<span class="op">][</span>j<span class="op">];</span>  <span class="co">// Acces sequentiel</span></span></code></pre></div>
+<p><strong>Parcours column-major</strong> (cache-unfriendly) :</p>
+<div class="sourceCode" id="cb189"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb189-1"><a href="#cb189-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span>j <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> j <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> j<span class="op">++)</span></span>
+<span id="cb189-2"><a href="#cb189-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span>i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> i<span class="op">++)</span></span>
+<span id="cb189-3"><a href="#cb189-3" aria-hidden="true" tabindex="-1"></a>        sum <span class="op">+=</span> arr<span class="op">[</span>i<span class="op">][</span>j<span class="op">];</span>  <span class="co">// Sauts en memoire!</span></span></code></pre></div>
+<h3 data-number="13.5.2" id="blocking-loop-tiling"><span class="header-section-number">13.5.2</span> Blocking (Loop Tiling)</h3>
+<p>Pour de grands tableaux, traiter par blocs qui tiennent dans le cache
+:</p>
+<div class="sourceCode" id="cb190"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb190-1"><a href="#cb190-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span>bi <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> bi <span class="op">&lt;</span> N<span class="op">;</span> bi <span class="op">+=</span> BLOCK<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb190-2"><a href="#cb190-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span>bj <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> bj <span class="op">&lt;</span> N<span class="op">;</span> bj <span class="op">+=</span> BLOCK<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb190-3"><a href="#cb190-3" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Traiter le bloc [bi..bi+BLOCK][bj..bj+BLOCK]</span></span>
+<span id="cb190-4"><a href="#cb190-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span>i <span class="op">=</span> bi<span class="op">;</span> i <span class="op">&lt;</span> bi<span class="op">+</span>BLOCK<span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb190-5"><a href="#cb190-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span>j <span class="op">=</span> bj<span class="op">;</span> j <span class="op">&lt;</span> bj<span class="op">+</span>BLOCK<span class="op">;</span> j<span class="op">++)</span> <span class="op">{</span></span>
+<span id="cb190-6"><a href="#cb190-6" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Bloc en cache!</span></span>
+<span id="cb190-7"><a href="#cb190-7" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb190-8"><a href="#cb190-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb190-9"><a href="#cb190-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb190-10"><a href="#cb190-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<hr />
+<h2 data-number="13.6" id="statistiques-du-cache"><span class="header-section-number">13.6</span> Statistiques du Cache</h2>
+<p>Notre simulateur collecte des statistiques :</p>
+<ul>
+<li><strong>Hits</strong> : Nombre d’acces trouves dans le cache</li>
+<li><strong>Misses</strong> : Nombre d’acces necessitant un chargement
+RAM</li>
+<li><strong>Hit Rate</strong> :
+<code>hits / (hits + misses) * 100%</code></li>
+</ul>
+<p>Un programme bien optimise atteint typiquement 90-99% de hit
+rate.</p>
+<hr />
+<h2 data-number="13.7" id="exercices"><span class="header-section-number">13.7</span> Exercices</h2>
+<h3 data-number="13.7.1" id="hdl"><span class="header-section-number">13.7.1</span> HDL</h3>
+<ol type="1">
+<li><strong>CacheLine</strong> : Implementer une ligne de cache</li>
+<li><strong>TagCompare</strong> : Comparateur de tags</li>
+<li><strong>WordSelect</strong> : Selecteur de mot dans une ligne</li>
+<li><strong>CacheController</strong> : Machine a etats</li>
+</ol>
+<h3 data-number="13.7.2" id="c-patterns-dacces"><span class="header-section-number">13.7.2</span> C (Patterns d’acces)</h3>
+<ol type="1">
+<li><strong>Parcours en Ligne</strong> : Acces sequentiel
+(cache-friendly)</li>
+<li><strong>Parcours en Colonne</strong> : Acces avec sauts
+(cache-unfriendly)</li>
+<li><strong>Blocking</strong> : Traitement par blocs</li>
+<li><strong>Localite Temporelle</strong> : Reutilisation des
+donnees</li>
+</ol>
+<hr />
+<h2 data-number="13.8" id="resume"><span class="header-section-number">13.8</span> Resume</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Concept</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Ligne de cache</td>
+<td style="text-align: left;">Unite de stockage (16 bytes)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Tag</td>
+<td style="text-align: left;">Identifiant d’adresse</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Index</td>
+<td style="text-align: left;">Selection de ligne</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Offset</td>
+<td style="text-align: left;">Position dans la ligne</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Hit</td>
+<td style="text-align: left;">Donnee trouvee dans le cache</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Miss</td>
+<td style="text-align: left;">Donnee absente, chargement requis</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Write-through</td>
+<td style="text-align: left;">Ecriture immediate en RAM</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Localite spatiale</td>
+<td style="text-align: left;">Donnees proches accedees ensemble</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Localite temporelle</td>
+<td style="text-align: left;">Donnees reutilisees rapidement</td>
+</tr>
+</tbody>
+</table>
 </body>
 </html>

@@ -1,0 +1,201 @@
+-- Direct-Mapped Cache
+-- Cache à correspondance directe avec 16 lignes de 16 octets chacune
+-- Taille totale: 256 octets de données
+--
+-- Décomposition d'adresse 32 bits:
+--   [31:12] Tag (20 bits)
+--   [11:4]  Index (8 bits) - mais on utilise 4 bits pour 16 lignes
+--   [3:2]   Word offset (2 bits) - sélection du mot 32 bits
+--   [1:0]   Byte offset (2 bits) - ignoré, accès alignés sur 32 bits
+--
+-- Politique: Write-through (simplicité)
+
+entity CacheDirectMapped is
+  port(
+    clk : in bit;
+    reset : in bit;
+    -- Interface CPU
+    cpu_addr : in bits(31 downto 0);
+    cpu_wdata : in bits(31 downto 0);
+    cpu_read : in bit;
+    cpu_write : in bit;
+    cpu_rdata : out bits(31 downto 0);
+    cpu_ready : out bit;
+    -- Interface Mémoire
+    mem_addr : out bits(31 downto 0);
+    mem_wdata : out bits(127 downto 0);  -- Ligne complète
+    mem_rdata : in bits(127 downto 0);
+    mem_read : out bit;
+    mem_write : out bit;
+    mem_ready : in bit;
+    -- Statistiques
+    hit_count : out bits(31 downto 0);
+    miss_count : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of CacheDirectMapped is
+  -- Extraction des champs d'adresse
+  signal addr_tag : bits(19 downto 0);
+  signal addr_index : bits(3 downto 0);
+  signal addr_word : bits(1 downto 0);
+
+  -- État des 16 lignes de cache
+  type valid_array is array(0 to 15) of bit;
+  type tag_array is array(0 to 15) of bits(19 downto 0);
+  type data_array is array(0 to 15) of bits(127 downto 0);
+
+  signal valid : valid_array;
+  signal tags : tag_array;
+  signal data : data_array;
+
+  -- Signaux de comparaison
+  signal tag_match : bit;
+  signal cache_hit : bit;
+  signal selected_data : bits(127 downto 0);
+  signal selected_word : bits(31 downto 0);
+
+  -- Compteurs de statistiques
+  signal hits : bits(31 downto 0);
+  signal misses : bits(31 downto 0);
+
+  -- Machine à états
+  signal state : bits(1 downto 0);
+  -- 00 = IDLE
+  -- 01 = FETCH (lecture depuis mémoire)
+  -- 10 = WRITE_BACK (écriture vers mémoire)
+
+begin
+  -- Extraction des champs d'adresse
+  addr_tag <= cpu_addr(31 downto 12);
+  addr_index <= cpu_addr(7 downto 4);
+  addr_word <= cpu_addr(3 downto 2);
+
+  -- Comparaison du tag (lookup combinatoire)
+  process(addr_index, addr_tag, valid, tags)
+    variable idx : integer;
+  begin
+    idx := to_integer(addr_index);
+    if valid(idx) = '1' and tags(idx) = addr_tag then
+      tag_match <= '1';
+    else
+      tag_match <= '0';
+    end if;
+  end process;
+
+  cache_hit <= tag_match and (cpu_read or cpu_write);
+
+  -- Sélection des données de la ligne
+  process(addr_index, data)
+    variable idx : integer;
+  begin
+    idx := to_integer(addr_index);
+    selected_data <= data(idx);
+  end process;
+
+  -- Sélection du mot dans la ligne
+  process(selected_data, addr_word)
+  begin
+    if addr_word = b"00" then
+      selected_word <= selected_data(31 downto 0);
+    elsif addr_word = b"01" then
+      selected_word <= selected_data(63 downto 32);
+    elsif addr_word = b"10" then
+      selected_word <= selected_data(95 downto 64);
+    else
+      selected_word <= selected_data(127 downto 96);
+    end if;
+  end process;
+
+  -- Machine à états principale
+  process(clk)
+    variable idx : integer;
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        state <= b"00";
+        hits <= x"00000000";
+        misses <= x"00000000";
+        for i in 0 to 15 loop
+          valid(i) <= '0';
+        end loop;
+      else
+        idx := to_integer(addr_index);
+
+        case state is
+          when b"00" =>  -- IDLE
+            if (cpu_read = '1' or cpu_write = '1') then
+              if cache_hit = '1' then
+                -- HIT
+                hits <= hits + 1;
+                if cpu_write = '1' then
+                  -- Write-through: écrire dans cache ET mémoire
+                  if addr_word = b"00" then
+                    data(idx)(31 downto 0) <= cpu_wdata;
+                  elsif addr_word = b"01" then
+                    data(idx)(63 downto 32) <= cpu_wdata;
+                  elsif addr_word = b"10" then
+                    data(idx)(95 downto 64) <= cpu_wdata;
+                  else
+                    data(idx)(127 downto 96) <= cpu_wdata;
+                  end if;
+                  state <= b"10";  -- WRITE_BACK
+                end if;
+              else
+                -- MISS
+                misses <= misses + 1;
+                state <= b"01";  -- FETCH
+              end if;
+            end if;
+
+          when b"01" =>  -- FETCH
+            if mem_ready = '1' then
+              -- Charger la ligne depuis la mémoire
+              data(idx) <= mem_rdata;
+              tags(idx) <= addr_tag;
+              valid(idx) <= '1';
+              if cpu_write = '1' then
+                -- Si c'était une écriture, mettre à jour et write-through
+                if addr_word = b"00" then
+                  data(idx)(31 downto 0) <= cpu_wdata;
+                elsif addr_word = b"01" then
+                  data(idx)(63 downto 32) <= cpu_wdata;
+                elsif addr_word = b"10" then
+                  data(idx)(95 downto 64) <= cpu_wdata;
+                else
+                  data(idx)(127 downto 96) <= cpu_wdata;
+                end if;
+                state <= b"10";  -- WRITE_BACK
+              else
+                state <= b"00";  -- Retour IDLE
+              end if;
+            end if;
+
+          when b"10" =>  -- WRITE_BACK
+            if mem_ready = '1' then
+              state <= b"00";  -- Retour IDLE
+            end if;
+
+          when others =>
+            state <= b"00";
+        end case;
+      end if;
+    end if;
+  end process;
+
+  -- Sorties
+  cpu_rdata <= selected_word;
+  cpu_ready <= '1' when (state = b"00" and cache_hit = '1') or
+                        (state = b"01" and mem_ready = '1' and cpu_read = '1') else '0';
+
+  -- Interface mémoire
+  mem_addr <= cpu_addr(31 downto 4) & b"0000";  -- Aligné sur 16 octets
+  mem_wdata <= selected_data;
+  mem_read <= '1' when state = b"01" else '0';
+  mem_write <= '1' when state = b"10" else '0';
+
+  -- Statistiques
+  hit_count <= hits;
+  miss_count <= misses;
+
+end architecture;

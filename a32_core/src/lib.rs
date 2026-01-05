@@ -1,8 +1,10 @@
+pub mod cache;
 pub mod cpu;
 pub mod isa;
 pub mod mem;
 pub mod sim;
 
+pub use cache::{Cache, CacheStats};
 pub use cpu::Cpu;
 pub use isa::{Cond, Flags, Reg, REG_COUNT};
 pub use mem::Memory;

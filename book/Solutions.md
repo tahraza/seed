@@ -1407,6 +1407,214 @@ end architecture;
 
 ---
 
+### Projet 7 : Cache L1
+
+### CacheLine
+
+```vhdl
+-- Cache Line
+
+entity CacheLine is
+  port(
+    clk : in bit;
+    write_enable : in bit;
+    write_tag : in bits(19 downto 0);
+    write_data : in bits(127 downto 0);
+    write_word : in bits(31 downto 0);
+    write_word_sel : in bits(1 downto 0);
+    write_word_en : in bit;
+    set_dirty : in bit;
+    clear_dirty : in bit;
+    invalidate : in bit;
+    valid : out bit;
+    dirty : out bit;
+    tag : out bits(19 downto 0);
+    data : out bits(127 downto 0)
+  );
+end entity;
+
+architecture rtl of CacheLine is
+  signal valid_reg : bit;
+  signal dirty_reg : bit;
+  signal tag_reg : bits(19 downto 0);
+  signal data_reg : bits(127 downto 0);
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if invalidate = '1' then
+        valid_reg <= '0';
+        dirty_reg <= '0';
+      elsif write_enable = '1' then
+        valid_reg <= '1';
+        tag_reg <= write_tag;
+        data_reg <= write_data;
+        dirty_reg <= '0';
+      elsif write_word_en = '1' then
+        if write_word_sel = b"00" then
+          data_reg(31 downto 0) <= write_word;
+        elsif write_word_sel = b"01" then
+          data_reg(63 downto 32) <= write_word;
+        elsif write_word_sel = b"10" then
+          data_reg(95 downto 64) <= write_word;
+        else
+          data_reg(127 downto 96) <= write_word;
+        end if;
+      end if;
+
+      if set_dirty = '1' then
+        dirty_reg <= '1';
+      elsif clear_dirty = '1' then
+        dirty_reg <= '0';
+      end if;
+    end if;
+  end process;
+
+  valid <= valid_reg;
+  dirty <= dirty_reg;
+  tag <= tag_reg;
+  data <= data_reg;
+end architecture;
+```
+
+---
+
+### TagCompare
+
+```vhdl
+-- Tag Comparator
+
+entity TagCompare is
+  port(
+    valid : in bit;
+    addr_tag : in bits(19 downto 0);
+    stored_tag : in bits(19 downto 0);
+    hit : out bit
+  );
+end entity;
+
+architecture rtl of TagCompare is
+  signal tags_equal : bit;
+begin
+  process(addr_tag, stored_tag)
+  begin
+    if addr_tag = stored_tag then
+      tags_equal <= '1';
+    else
+      tags_equal <= '0';
+    end if;
+  end process;
+
+  hit <= valid and tags_equal;
+end architecture;
+```
+
+---
+
+### WordSelect
+
+```vhdl
+-- Word Selector
+
+entity WordSelect is
+  port(
+    line_data : in bits(127 downto 0);
+    word_sel : in bits(1 downto 0);
+    word_out : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of WordSelect is
+begin
+  process(line_data, word_sel)
+  begin
+    if word_sel = b"00" then
+      word_out <= line_data(31 downto 0);
+    elsif word_sel = b"01" then
+      word_out <= line_data(63 downto 32);
+    elsif word_sel = b"10" then
+      word_out <= line_data(95 downto 64);
+    else
+      word_out <= line_data(127 downto 96);
+    end if;
+  end process;
+end architecture;
+```
+
+---
+
+### CacheController
+
+```vhdl
+-- Cache Controller FSM
+
+entity CacheController is
+  port(
+    clk : in bit;
+    reset : in bit;
+    cpu_read : in bit;
+    cpu_write : in bit;
+    cache_hit : in bit;
+    mem_ready : in bit;
+    state : out bits(1 downto 0);
+    cpu_ready : out bit;
+    mem_read : out bit;
+    mem_write : out bit;
+    fill_line : out bit
+  );
+end entity;
+
+architecture rtl of CacheController is
+  signal state_reg : bits(1 downto 0);
+  signal pending_write : bit;
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        state_reg <= b"00";
+        pending_write <= '0';
+      else
+        if state_reg = b"00" then
+          -- IDLE
+          if (cpu_read = '1' or cpu_write = '1') and cache_hit = '0' then
+            state_reg <= b"01";  -- FETCH
+            pending_write <= cpu_write;
+          elsif cpu_write = '1' and cache_hit = '1' then
+            state_reg <= b"10";  -- WRITEBACK
+          end if;
+        elsif state_reg = b"01" then
+          -- FETCH
+          if mem_ready = '1' then
+            if pending_write = '1' then
+              state_reg <= b"10";  -- WRITEBACK
+            else
+              state_reg <= b"00";  -- IDLE
+            end if;
+          end if;
+        elsif state_reg = b"10" then
+          -- WRITEBACK
+          if mem_ready = '1' then
+            state_reg <= b"00";  -- IDLE
+            pending_write <= '0';
+          end if;
+        end if;
+      end if;
+    end if;
+  end process;
+
+  state <= state_reg;
+  cpu_ready <= '1' when (state_reg = b"00" and cache_hit = '1') or
+                        (state_reg = b"01" and mem_ready = '1' and pending_write = '0') or
+                        (state_reg = b"10" and mem_ready = '1') else '0';
+  mem_read <= '1' when state_reg = b"01" else '0';
+  mem_write <= '1' when state_reg = b"10" else '0';
+  fill_line <= '1' when state_reg = b"01" and mem_ready = '1' else '0';
+end architecture;
+```
+
+---
+
 ## B. Solutions Assembleur A32
 
 ### Hello World
@@ -3295,6 +3503,126 @@ struct S2 { int x; int y; char c; };
 
 int main() {
     return sizeof(struct S1) + sizeof(struct S2);
+}
+```
+
+---
+
+### Parcours en Ligne
+
+```c
+// Parcours en Ligne - Solution
+
+int arr[4][4];
+
+int main() {
+    // Initialiser (parcours en ligne: cache-friendly)
+    for (int i = 0; i < 4; i = i + 1) {
+        for (int j = 0; j < 4; j = j + 1) {
+            arr[i][j] = i * 4 + j;
+        }
+    }
+
+    // Calculer la somme
+    int sum = 0;
+    for (int i = 0; i < 4; i = i + 1) {
+        for (int j = 0; j < 4; j = j + 1) {
+            sum = sum + arr[i][j];
+        }
+    }
+
+    return sum;
+}
+```
+
+---
+
+### Parcours en Colonne
+
+```c
+// Parcours en Colonne - Solution
+
+int arr[4][4];
+
+int main() {
+    // Initialiser
+    for (int i = 0; i < 4; i = i + 1) {
+        for (int j = 0; j < 4; j = j + 1) {
+            arr[i][j] = i * 4 + j;
+        }
+    }
+
+    // Somme en colonne (cache-unfriendly mais correct)
+    int sum = 0;
+    for (int j = 0; j < 4; j = j + 1) {
+        for (int i = 0; i < 4; i = i + 1) {
+            sum = sum + arr[i][j];
+        }
+    }
+
+    return sum;
+}
+```
+
+---
+
+### Traitement par Blocs
+
+```c
+// Traitement par Blocs - Solution
+
+int arr[4][4];
+
+int main() {
+    // Initialiser
+    for (int i = 0; i < 4; i = i + 1) {
+        for (int j = 0; j < 4; j = j + 1) {
+            arr[i][j] = i * 4 + j;
+        }
+    }
+
+    int sum = 0;
+    int block_size = 2;
+
+    // Parcours par blocs (cache-friendly)
+    for (int bi = 0; bi < 4; bi = bi + block_size) {
+        for (int bj = 0; bj < 4; bj = bj + block_size) {
+            for (int i = bi; i < bi + block_size; i = i + 1) {
+                for (int j = bj; j < bj + block_size; j = j + 1) {
+                    sum = sum + arr[i][j];
+                }
+            }
+        }
+    }
+
+    return sum;
+}
+```
+
+---
+
+### Localité Temporelle
+
+```c
+// Localité Temporelle - Solution
+
+int arr[4];
+
+int main() {
+    arr[0] = 1;
+    arr[1] = 2;
+    arr[2] = 3;
+    arr[3] = 4;
+
+    int sum = 0;
+    int factor = 3;
+
+    // Un seul parcours: bonne localité temporelle
+    for (int i = 0; i < 4; i = i + 1) {
+        sum = sum + arr[i] * factor;
+    }
+
+    return sum;
 }
 ```
 
