@@ -715,6 +715,471 @@ _start:
         }
     },
 
+    // ==================== STRUCTURES ====================
+    // Ces exercices préparent aux structs en C en montrant
+    // comment les données structurées sont organisées en mémoire
+
+    'asm-struct': {
+        id: 'asm-struct',
+        name: 'Structure Simple',
+        description: 'Comprendre la disposition mémoire d\'une structure',
+        template: `; ============================================
+; Exercice: Structure Simple
+; ============================================
+; Objectif: Comprendre comment une structure est
+; stockée en mémoire
+;
+; Une structure "Point" contient deux champs:
+;   - x: entier 32 bits (4 octets) à l'offset 0
+;   - y: entier 32 bits (4 octets) à l'offset 4
+;
+; En mémoire, le Point ressemble à:
+;   Adresse+0: x (4 octets)
+;   Adresse+4: y (4 octets)
+;   Taille totale: 8 octets
+;
+; Le point 'p' est défini avec x=10, y=32
+; Calculer R0 = p.x + p.y = 42
+;
+; Instructions utiles:
+;   LDR Rd, =label  - Charge l'adresse du label
+;   LDR Rd, [Rn]    - Charge depuis [Rn+0]
+;   LDR Rd, [Rn, #4] - Charge depuis [Rn+4]
+;   HALT            - Termine le programme
+;
+; Résultat attendu: R0 = 42 (10 + 32)
+; ============================================
+
+.data
+; Structure Point { int x; int y; }
+point:
+    .word 10    ; x = 10 (offset 0)
+    .word 32    ; y = 32 (offset 4)
+
+.text
+.global _start
+_start:
+    ; Charger l'adresse de la structure
+    LDR R1, =point
+
+    ; Votre code ici:
+    ; 1. Charger p.x (offset 0) dans R2
+    ; 2. Charger p.y (offset 4) dans R3
+    ; 3. Calculer R0 = R2 + R3
+
+
+    HALT
+`,
+        solution: `; Structure Simple - Solution
+
+.data
+; Structure Point { int x; int y; }
+point:
+    .word 10    ; x = 10 (offset 0)
+    .word 32    ; y = 32 (offset 4)
+
+.text
+.global _start
+_start:
+    ; Charger l'adresse de la structure
+    LDR R1, =point
+
+    ; Charger p.x (offset 0)
+    LDR R2, [R1]        ; R2 = p.x = 10
+
+    ; Charger p.y (offset 4)
+    LDR R3, [R1, #4]    ; R3 = p.y = 32
+
+    ; Calculer la somme
+    ADD R0, R2, R3      ; R0 = 10 + 32 = 42
+
+    HALT
+`,
+        test: {
+            setup: '',
+            expect: { R0: 42 }
+        }
+    },
+
+    'asm-struct-init': {
+        id: 'asm-struct-init',
+        name: 'Initialiser Structure',
+        description: 'Écrire des valeurs dans les champs d\'une structure',
+        template: `; ============================================
+; Exercice: Initialiser Structure
+; ============================================
+; Objectif: Initialiser les champs d'une structure
+;
+; Structure Point { int x; int y; }
+; - x à l'offset 0
+; - y à l'offset 4
+;
+; 1. Initialiser p.x = 20
+; 2. Initialiser p.y = 22
+; 3. Calculer R0 = p.x + p.y
+;
+; Instructions utiles:
+;   STR Rn, [Rd]     - Écrit Rn à [Rd+0]
+;   STR Rn, [Rd, #4] - Écrit Rn à [Rd+4]
+;   LDR Rd, [Rn, #off] - Charge depuis [Rn+off]
+;   HALT             - Termine le programme
+;
+; Résultat attendu: R0 = 42 (20 + 22)
+; ============================================
+
+.data
+; Structure Point (non initialisée)
+point:
+    .word 0     ; x (offset 0)
+    .word 0     ; y (offset 4)
+
+.text
+.global _start
+_start:
+    LDR R4, =point  ; adresse de la structure
+
+    ; Votre code ici:
+    ; 1. Mettre 20 dans R1, puis l'écrire à p.x
+    ; 2. Mettre 22 dans R2, puis l'écrire à p.y
+    ; 3. Relire p.x et p.y, calculer la somme dans R0
+
+
+    HALT
+`,
+        solution: `; Initialiser Structure - Solution
+
+.data
+; Structure Point (non initialisée)
+point:
+    .word 0     ; x (offset 0)
+    .word 0     ; y (offset 4)
+
+.text
+.global _start
+_start:
+    LDR R4, =point  ; adresse de la structure
+
+    ; Initialiser p.x = 20
+    MOV R1, #20
+    STR R1, [R4]        ; p.x = 20
+
+    ; Initialiser p.y = 22
+    MOV R2, #22
+    STR R2, [R4, #4]    ; p.y = 22
+
+    ; Relire et additionner
+    LDR R1, [R4]        ; R1 = p.x
+    LDR R2, [R4, #4]    ; R2 = p.y
+    ADD R0, R1, R2      ; R0 = 42
+
+    HALT
+`,
+        test: {
+            setup: '',
+            expect: { R0: 42 }
+        }
+    },
+
+    'asm-struct-rect': {
+        id: 'asm-struct-rect',
+        name: 'Structure Rectangle',
+        description: 'Structure avec 4 champs',
+        template: `; ============================================
+; Exercice: Structure Rectangle
+; ============================================
+; Objectif: Manipuler une structure plus complexe
+;
+; Structure Rectangle {
+;   int x;      // offset 0
+;   int y;      // offset 4
+;   int width;  // offset 8
+;   int height; // offset 12
+; }
+; Taille totale: 16 octets
+;
+; Calculer l'aire: R0 = width * height
+; (utiliser multiplication par additions)
+;
+; Le rectangle: x=5, y=10, width=6, height=7
+; Aire = 6 * 7 = 42
+;
+; Instructions utiles:
+;   LDR Rd, [Rn, #off] - Charge depuis [Rn+offset]
+;   HALT               - Termine le programme
+;
+; Résultat attendu: R0 = 42 (6 * 7)
+; ============================================
+
+.data
+; Structure Rectangle
+rect:
+    .word 5     ; x (offset 0)
+    .word 10    ; y (offset 4)
+    .word 6     ; width (offset 8)
+    .word 7     ; height (offset 12)
+
+.text
+.global _start
+_start:
+    LDR R4, =rect
+
+    ; Votre code ici:
+    ; 1. Charger width (offset 8) dans R1
+    ; 2. Charger height (offset 12) dans R2
+    ; 3. Multiplier R1 * R2 par additions dans R0
+
+
+    HALT
+`,
+        solution: `; Structure Rectangle - Solution
+
+.data
+; Structure Rectangle
+rect:
+    .word 5     ; x (offset 0)
+    .word 10    ; y (offset 4)
+    .word 6     ; width (offset 8)
+    .word 7     ; height (offset 12)
+
+.text
+.global _start
+_start:
+    LDR R4, =rect
+
+    ; Charger width et height
+    LDR R1, [R4, #8]    ; R1 = width = 6
+    LDR R2, [R4, #12]   ; R2 = height = 7
+
+    ; Multiplier par additions: 6 * 7
+    MOV R0, #0          ; résultat = 0
+.mult:
+    CMP R2, #0
+    B.EQ .done
+    ADD R0, R0, R1      ; résultat += width
+    SUB R2, R2, #1      ; height--
+    B .mult
+
+.done:
+    HALT
+`,
+        test: {
+            setup: '',
+            expect: { R0: 42 }
+        }
+    },
+
+    'asm-struct-array': {
+        id: 'asm-struct-array',
+        name: 'Tableau de Structures',
+        description: 'Parcourir un tableau de structures',
+        template: `; ============================================
+; Exercice: Tableau de Structures
+; ============================================
+; Objectif: Parcourir un tableau de Points
+;
+; Structure Point { int x; int y; }
+; Taille d'un Point: 8 octets
+;
+; Le tableau contient 3 Points:
+;   points[0] = {10, 2}
+;   points[1] = {15, 5}
+;   points[2] = {8, 7}
+;
+; Calculer la somme de tous les x:
+; R0 = 10 + 15 + 8 = 33
+;
+; Pour passer au Point suivant: ajouter 8 à l'adresse
+; (car chaque Point fait 8 octets)
+;
+; Instructions utiles:
+;   LDR Rd, [Rn]    - Charge x (offset 0)
+;   ADD Rn, Rn, #8  - Passer au Point suivant
+;   HALT            - Termine le programme
+;
+; Résultat attendu: R0 = 33 (10 + 15 + 8)
+; ============================================
+
+.data
+; Tableau de 3 Points (8 octets chacun)
+points:
+    ; points[0]: x=10, y=2
+    .word 10
+    .word 2
+    ; points[1]: x=15, y=5
+    .word 15
+    .word 5
+    ; points[2]: x=8, y=7
+    .word 8
+    .word 7
+
+.text
+.global _start
+_start:
+    LDR R1, =points     ; adresse du tableau
+    MOV R0, #0          ; somme = 0
+    MOV R2, #3          ; compteur = 3
+
+    ; Votre code ici:
+    ; Boucle: pour chaque Point
+    ;   1. Charger x (offset 0)
+    ;   2. Ajouter à la somme
+    ;   3. Avancer de 8 octets (taille d'un Point)
+    ;   4. Décrémenter compteur
+
+
+    HALT
+`,
+        solution: `; Tableau de Structures - Solution
+
+.data
+; Tableau de 3 Points (8 octets chacun)
+points:
+    ; points[0]: x=10, y=2
+    .word 10
+    .word 2
+    ; points[1]: x=15, y=5
+    .word 15
+    .word 5
+    ; points[2]: x=8, y=7
+    .word 8
+    .word 7
+
+.text
+.global _start
+_start:
+    LDR R1, =points     ; adresse du tableau
+    MOV R0, #0          ; somme = 0
+    MOV R2, #3          ; compteur = 3
+
+.loop:
+    CMP R2, #0
+    B.EQ .done
+
+    ; Charger x du Point courant
+    LDR R3, [R1]        ; R3 = points[i].x
+    ADD R0, R0, R3      ; somme += x
+
+    ; Passer au Point suivant (8 octets)
+    ADD R1, R1, #8
+
+    ; Décrémenter compteur
+    SUB R2, R2, #1
+    B .loop
+
+.done:
+    HALT
+`,
+        test: {
+            setup: '',
+            expect: { R0: 33 }
+        }
+    },
+
+    'asm-struct-sum-xy': {
+        id: 'asm-struct-sum-xy',
+        name: 'Somme x+y de Structures',
+        description: 'Accéder aux deux champs d\'un tableau de structures',
+        template: `; ============================================
+; Exercice: Somme x+y de Structures
+; ============================================
+; Objectif: Additionner x et y de chaque Point
+;
+; Structure Point { int x; int y; }
+;   - x à l'offset 0
+;   - y à l'offset 4
+;
+; Le tableau contient 3 Points:
+;   points[0] = {5, 3}   → 5+3 = 8
+;   points[1] = {10, 4}  → 10+4 = 14
+;   points[2] = {12, 8}  → 12+8 = 20
+;
+; Calculer R0 = somme de (x+y) pour chaque point
+; R0 = 8 + 14 + 20 = 42
+;
+; Instructions utiles:
+;   LDR Rd, [Rn]     - Charge x (offset 0)
+;   LDR Rd, [Rn, #4] - Charge y (offset 4)
+;   ADD Rn, Rn, #8   - Point suivant
+;   HALT             - Termine le programme
+;
+; Résultat attendu: R0 = 42
+; ============================================
+
+.data
+points:
+    ; points[0]: x=5, y=3
+    .word 5
+    .word 3
+    ; points[1]: x=10, y=4
+    .word 10
+    .word 4
+    ; points[2]: x=12, y=8
+    .word 12
+    .word 8
+
+.text
+.global _start
+_start:
+    LDR R1, =points     ; adresse du tableau
+    MOV R0, #0          ; somme totale = 0
+    MOV R4, #3          ; compteur = 3
+
+    ; Votre code ici:
+    ; Pour chaque Point:
+    ;   1. Charger x et y
+    ;   2. Ajouter x+y à la somme totale
+    ;   3. Passer au Point suivant
+
+
+    HALT
+`,
+        solution: `; Somme x+y de Structures - Solution
+
+.data
+points:
+    ; points[0]: x=5, y=3
+    .word 5
+    .word 3
+    ; points[1]: x=10, y=4
+    .word 10
+    .word 4
+    ; points[2]: x=12, y=8
+    .word 12
+    .word 8
+
+.text
+.global _start
+_start:
+    LDR R1, =points     ; adresse du tableau
+    MOV R0, #0          ; somme totale = 0
+    MOV R4, #3          ; compteur = 3
+
+.loop:
+    CMP R4, #0
+    B.EQ .done
+
+    ; Charger x et y du Point courant
+    LDR R2, [R1]        ; R2 = x
+    LDR R3, [R1, #4]    ; R3 = y
+
+    ; Ajouter x+y à la somme
+    ADD R0, R0, R2      ; somme += x
+    ADD R0, R0, R3      ; somme += y
+
+    ; Point suivant (8 octets)
+    ADD R1, R1, #8
+    SUB R4, R4, #1
+    B .loop
+
+.done:
+    HALT
+`,
+        test: {
+            setup: '',
+            expect: { R0: 42 }
+        }
+    },
+
     // ==================== FUNCTIONS ====================
     'asm-func': {
         id: 'asm-func',
