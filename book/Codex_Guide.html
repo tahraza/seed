@@ -448,17 +448,27 @@ d’Exploitation</a></li>
 <li><a href="#conseils-pour-les-exercices" id="toc-conseils-pour-les-exercices"><span class="toc-section-number">12.6</span> Conseils pour les
 Exercices</a></li>
 </ul></li>
-<li><a href="#cache-l1-memoire-rapide" id="toc-cache-l1-memoire-rapide"><span class="toc-section-number">13</span> Cache L1 : Memoire Rapide</a>
+<li><a href="#le-cache-pourquoi-votre-ordinateur-semble-rapide" id="toc-le-cache-pourquoi-votre-ordinateur-semble-rapide"><span class="toc-section-number">13</span> Le Cache : Pourquoi Votre
+Ordinateur Semble Rapide</a>
 <ul>
-<li><a href="#pourquoi-le-cache" id="toc-pourquoi-le-cache"><span class="toc-section-number">13.1</span> Pourquoi le Cache ?</a></li>
-<li><a href="#structure-du-cache" id="toc-structure-du-cache"><span class="toc-section-number">13.2</span> Structure du Cache</a></li>
-<li><a href="#fonctionnement-1" id="toc-fonctionnement-1"><span class="toc-section-number">13.3</span> Fonctionnement</a></li>
-<li><a href="#implementation-hdl" id="toc-implementation-hdl"><span class="toc-section-number">13.4</span> Implementation HDL</a></li>
-<li><a href="#optimisation-des-programmes" id="toc-optimisation-des-programmes"><span class="toc-section-number">13.5</span> Optimisation des
+<li><a href="#le-problème-la-ram-est-lente" id="toc-le-problème-la-ram-est-lente"><span class="toc-section-number">13.1</span> Le Problème : La RAM est Lente
+!</a></li>
+<li><a href="#la-solution-le-principe-de-localité" id="toc-la-solution-le-principe-de-localité"><span class="toc-section-number">13.2</span> La Solution : Le Principe de
+Localité</a></li>
+<li><a href="#comment-fonctionne-le-cache" id="toc-comment-fonctionne-le-cache"><span class="toc-section-number">13.3</span> Comment Fonctionne le Cache
+?</a></li>
+<li><a href="#hit-ou-miss-que-se-passe-t-il" id="toc-hit-ou-miss-que-se-passe-t-il"><span class="toc-section-number">13.4</span> Hit ou Miss : Que se passe-t-il
+?</a></li>
+<li><a href="#politiques-décriture" id="toc-politiques-décriture"><span class="toc-section-number">13.5</span> Politiques d’Écriture</a></li>
+<li><a href="#impact-sur-vos-programmes" id="toc-impact-sur-vos-programmes"><span class="toc-section-number">13.6</span> Impact sur vos
 Programmes</a></li>
-<li><a href="#statistiques-du-cache" id="toc-statistiques-du-cache"><span class="toc-section-number">13.6</span> Statistiques du Cache</a></li>
-<li><a href="#exercices" id="toc-exercices"><span class="toc-section-number">13.7</span> Exercices</a></li>
-<li><a href="#resume" id="toc-resume"><span class="toc-section-number">13.8</span> Resume</a></li>
+<li><a href="#implémentation-hdl-du-cache" id="toc-implémentation-hdl-du-cache"><span class="toc-section-number">13.7</span> Implémentation HDL du
+Cache</a></li>
+<li><a href="#statistiques-et-performance" id="toc-statistiques-et-performance"><span class="toc-section-number">13.8</span> Statistiques et
+Performance</a></li>
+<li><a href="#exercices" id="toc-exercices"><span class="toc-section-number">13.9</span> Exercices</a></li>
+<li><a href="#résumé-visuel" id="toc-résumé-visuel"><span class="toc-section-number">13.10</span> Résumé Visuel</a></li>
+<li><a href="#points-clés-à-retenir" id="toc-points-clés-à-retenir"><span class="toc-section-number">13.11</span> Points Clés à Retenir</a></li>
 </ul></li>
 </ul>
 </nav>
@@ -6793,6 +6803,44 @@ bit/pixel)</h3>
 </tr>
 </tbody>
 </table>
+<h3 data-number="12.2.9" id="cache-patterns-dacces-memoire"><span class="header-section-number">12.2.9</span> Cache (Patterns d’Acces
+Memoire)</h3>
+<p>Ces exercices illustrent l’impact des patterns d’acces memoire sur
+les performances cache.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Exercice</th>
+<th style="text-align: left;">Objectif</th>
+<th style="text-align: left;">Resultat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Acces Sequentiel</td>
+<td style="text-align: left;">Parcours cache-friendly (adresses
+consecutives)</td>
+<td style="text-align: left;">R0 = 100</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Acces avec Stride</td>
+<td style="text-align: left;">Parcours avec sauts de 16 bytes (moins
+efficace)</td>
+<td style="text-align: left;">R0 = 28</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Reutilisation Registre</td>
+<td style="text-align: left;">Charger une fois, reutiliser plusieurs
+fois</td>
+<td style="text-align: left;">R0 = 91</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h2 data-number="12.3" id="c.-exercices-c32"><span class="header-section-number">12.3</span> C. Exercices C32</h2>
 <p>Ces exercices enseignent la programmation en C32.</p>
@@ -7122,7 +7170,7 @@ bit/pixel)</h3>
 </tr>
 </tbody>
 </table>
-<h3 data-number="12.3.11" id="cache-patterns-dacces-memoire"><span class="header-section-number">12.3.11</span> Cache (Patterns d’Acces
+<h3 data-number="12.3.11" id="cache-patterns-dacces-memoire-1"><span class="header-section-number">12.3.11</span> Cache (Patterns d’Acces
 Memoire)</h3>
 <p>Ces exercices illustrent l’impact de la localite sur les performances
 cache.</p>
@@ -7572,249 +7620,822 @@ suivant</li>
 </ol>
 <hr />
 <p><strong>Bon courage !</strong></p>
-<h1 data-number="13" id="cache-l1-memoire-rapide"><span class="header-section-number">13</span> Cache L1 : Memoire Rapide</h1>
-<p>Le cache est une memoire ultra-rapide placee entre le processeur et
-la memoire principale. Son role est d’exploiter la <em>localite</em> des
-acces memoire pour reduire la latence.</p>
+<h1 data-number="13" id="le-cache-pourquoi-votre-ordinateur-semble-rapide"><span class="header-section-number">13</span> Le Cache : Pourquoi Votre
+Ordinateur Semble Rapide</h1>
+<p>Imaginez que vous travaillez dans un bureau et que vous avez besoin
+de consulter des documents. Vous avez deux options : - <strong>Votre
+bureau</strong> : les documents sont juste devant vous, vous pouvez les
+lire instantanément - <strong>Les archives au sous-sol</strong> : il
+faut descendre 5 étages, chercher le bon dossier, remonter… cela prend
+plusieurs minutes</p>
+<p>Le <strong>cache</strong> est exactement comme votre bureau : une
+petite zone de stockage très rapide où l’on garde les documents
+(données) les plus utilisés, pour éviter d’aller constamment aux
+archives (la mémoire RAM).</p>
 <hr />
-<h2 data-number="13.1" id="pourquoi-le-cache"><span class="header-section-number">13.1</span> Pourquoi le Cache ?</h2>
-<p>La memoire RAM est lente comparee au processeur : - Un cycle CPU :
-~0.3 ns (3 GHz) - Un acces RAM : ~100 ns</p>
-<p>Sans cache, le processeur passerait 99% de son temps a attendre la
-memoire !</p>
-<h3 data-number="13.1.1" id="localite-des-acces-memoire"><span class="header-section-number">13.1.1</span> Localite des Acces
-Memoire</h3>
-<p>Les programmes exhibent deux types de localite :</p>
-<p><strong>Localite temporelle</strong> : Une donnee recemment accedee
-sera probablement reutilisee bientot.</p>
-<div class="sourceCode" id="cb178"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb178-1"><a href="#cb178-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">1000</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
-<span id="cb178-2"><a href="#cb178-2" aria-hidden="true" tabindex="-1"></a>    sum <span class="op">+=</span> arr<span class="op">[</span>i<span class="op">];</span>  <span class="co">// &#39;sum&#39; est accedee 1000 fois</span></span>
-<span id="cb178-3"><a href="#cb178-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
-<p><strong>Localite spatiale</strong> : Les donnees proches en memoire
-sont souvent accedees ensemble.</p>
-<div class="sourceCode" id="cb179"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb179-1"><a href="#cb179-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">100</span><span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
-<span id="cb179-2"><a href="#cb179-2" aria-hidden="true" tabindex="-1"></a>    process<span class="op">(</span>arr<span class="op">[</span>i<span class="op">]);</span>  <span class="co">// arr[0], arr[1], arr[2]... sont contigus</span></span>
-<span id="cb179-3"><a href="#cb179-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 data-number="13.1" id="le-problème-la-ram-est-lente"><span class="header-section-number">13.1</span> Le Problème : La RAM est Lente
+!</h2>
+<h3 data-number="13.1.1" id="la-hiérarchie-mémoire"><span class="header-section-number">13.1.1</span> La Hiérarchie Mémoire</h3>
+<p>Voici comment est organisée la mémoire dans un ordinateur, du plus
+rapide au plus lent :</p>
+<pre><code>                    ┌─────────────┐
+                    │  Registres  │  ◄── Très rapide, très petit
+                    │   (32 x 32) │      ~0.3 ns, 128 octets
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │  Cache L1   │  ◄── Rapide, petit
+                    │   (32 KB)   │      ~1 ns, 32 Ko
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │  Cache L2   │  ◄── Moyen
+                    │   (256 KB)  │      ~4 ns, 256 Ko
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │     RAM     │  ◄── Lent, grand
+                    │   (8 GB)    │      ~100 ns, 8 Go
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │  Disque SSD │  ◄── Très lent, très grand
+                    │   (512 GB)  │      ~100,000 ns, 512 Go
+                    └─────────────┘</code></pre>
+<h3 data-number="13.1.2" id="lécart-de-vitesse-visualisé"><span class="header-section-number">13.1.2</span> L’écart de vitesse
+visualisé</h3>
+<p>Si on convertissait ces temps en échelle humaine :</p>
+<pre><code>┌────────────────────────────────────────────────────────────────────┐
+│                    ÉCHELLE HUMAINE DES TEMPS D&#39;ACCÈS               │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│  Registres (0.3 ns)  →  Cligner des yeux (0.3 seconde)            │
+│                              │                                     │
+│  Cache L1 (1 ns)     →  │    Une seconde                          │
+│                              │                                     │
+│  Cache L2 (4 ns)     →  │    4 secondes                           │
+│                              │                                     │
+│  RAM (100 ns)        →  ████████████████████  1 minute 40 sec     │
+│                              │                                     │
+│  SSD (100,000 ns)    →  ████████████████████████  27 heures !     │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘</code></pre>
+<p>Sans cache, le processeur passerait <strong>99% de son temps à
+attendre</strong> !</p>
 <hr />
-<h2 data-number="13.2" id="structure-du-cache"><span class="header-section-number">13.2</span> Structure du Cache</h2>
-<h3 data-number="13.2.1" id="ligne-de-cache"><span class="header-section-number">13.2.1</span> Ligne de Cache</h3>
-<p>Le cache ne stocke pas des octets individuels, mais des
-<strong>lignes de cache</strong> (typiquement 16-64 octets).</p>
-<pre><code>+-------+-------+------------------------+
-| Valid | Tag   | Data (16 bytes)        |
-+-------+-------+------------------------+
-|   1   | 0x123 | 0x11 0x22 0x33 ... 0xFF|
-+-------+-------+------------------------+</code></pre>
-<ul>
-<li><strong>Valid</strong> : La ligne contient-elle des donnees valides
-?</li>
-<li><strong>Tag</strong> : Identifiant de l’adresse memoire</li>
-<li><strong>Data</strong> : Les donnees elles-memes (plusieurs
-mots)</li>
-</ul>
-<h3 data-number="13.2.2" id="decomposition-dadresse"><span class="header-section-number">13.2.2</span> Decomposition d’Adresse</h3>
-<p>Une adresse 32 bits est decomposee en trois parties :</p>
-<pre><code>|&lt;------ Tag ------&gt;|&lt;-- Index --&gt;|&lt;- Offset -&gt;|
-|    22 bits        |   6 bits    |   4 bits   |</code></pre>
-<ul>
-<li><strong>Tag</strong> (22 bits) : Identifie la region memoire</li>
-<li><strong>Index</strong> (6 bits) : Selectionne une ligne parmi
-64</li>
-<li><strong>Offset</strong> (4 bits) : Position dans la ligne (16
-octets)</li>
-</ul>
-<h3 data-number="13.2.3" id="cache-direct-mapped"><span class="header-section-number">13.2.3</span> Cache Direct-Mapped</h3>
-<p>Notre implementation utilise un cache <strong>direct-mapped</strong>
-: chaque adresse ne peut aller que dans une seule ligne.</p>
-<pre><code>Adresse 0x1234 -&gt; Index = (0x1234 &gt;&gt; 4) &amp; 0x3F = ligne 3
-Adresse 0x5678 -&gt; Index = (0x5678 &gt;&gt; 4) &amp; 0x3F = ligne 7</code></pre>
-<p>Avantages : - Simple a implementer - Lookup rapide (une seule
-comparaison)</p>
-<p>Inconvenients : - Conflits : deux adresses peuvent “se battre” pour
-la meme ligne</p>
+<h2 data-number="13.2" id="la-solution-le-principe-de-localité"><span class="header-section-number">13.2</span> La Solution : Le Principe de
+Localité</h2>
+<p>Les programmes ne lisent pas la mémoire au hasard. Ils suivent des
+<strong>patterns</strong> prévisibles.</p>
+<h3 data-number="13.2.1" id="localité-temporelle"><span class="header-section-number">13.2.1</span> Localité Temporelle</h3>
+<p><strong>“Si j’utilise une donnée maintenant, je vais probablement la
+réutiliser bientôt”</strong></p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    LOCALITÉ TEMPORELLE                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Code:   for (i = 0; i &lt; 1000; i++)                           │
+│               somme = somme + arr[i];                          │
+│                 ▲                                               │
+│                 │                                               │
+│                 └── &#39;somme&#39; est accédée 1000 fois !            │
+│                                                                 │
+│   Temps ──────────────────────────────────────────────────►    │
+│                                                                 │
+│   somme:  ●  ●  ●  ●  ●  ●  ●  ●  ●  ●  ●  ●  ●  ●  ●  ...   │
+│           │  │  │  │  │  │  │  │  │  │  │  │  │  │  │         │
+│           └──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴──┴─────►   │
+│                     Accès répétés à la même variable           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 data-number="13.2.2" id="localité-spatiale"><span class="header-section-number">13.2.2</span> Localité Spatiale</h3>
+<p><strong>“Si j’utilise une donnée, je vais probablement utiliser ses
+voisines”</strong></p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    LOCALITÉ SPATIALE                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Code:   for (i = 0; i &lt; 100; i++)                            │
+│               traiter(arr[i]);                                  │
+│                                                                 │
+│   Mémoire:                                                      │
+│   ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐     │
+│   │arr[0]│arr[1]│arr[2]│arr[3]│arr[4]│arr[5]│arr[6]│arr[7]│...│     │
+│   └──┬──┴──┬──┴──┬──┴──┬──┴──┬──┴──┬──┴──┬──┴──┬──┴─────┘     │
+│      │     │     │     │     │     │     │                      │
+│      1er   2ème  3ème  4ème  5ème  6ème  7ème                   │
+│      ▼     ▼     ▼     ▼     ▼     ▼     ▼                      │
+│                                                                 │
+│   Les éléments consécutifs sont côte à côte en mémoire         │
+│   → On peut les charger ensemble dans le cache !               │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘</code></pre>
 <hr />
-<h2 data-number="13.3" id="fonctionnement-1"><span class="header-section-number">13.3</span> Fonctionnement</h2>
-<h3 data-number="13.3.1" id="lecture-read"><span class="header-section-number">13.3.1</span> Lecture (Read)</h3>
-<ol type="1">
-<li>Calculer l’index et le tag de l’adresse</li>
-<li>Verifier si la ligne est valide et si le tag correspond</li>
-<li><strong>Hit</strong> : Retourner la donnee depuis le cache</li>
-<li><strong>Miss</strong> : Charger la ligne depuis la RAM, puis
-retourner la donnee</li>
-</ol>
-<pre><code>   CPU                    Cache                    RAM
-    |                       |                        |
-    |-- read(0x1234) ------&gt;|                        |
-    |                       |-- lookup index 3 -----&gt;|
-    |                       |   tag match? valid?    |
-    |                       |                        |
-    |&lt;-- data (if hit) -----|                        |
-    |                       |                        |
-    |         (if miss)     |&lt;-- load line ---------|
-    |&lt;-- data --------------|                        |</code></pre>
-<h3 data-number="13.3.2" id="ecriture-write"><span class="header-section-number">13.3.2</span> Ecriture (Write)</h3>
-<p>Notre cache utilise une politique <strong>write-through</strong> : -
-Les ecritures vont directement en memoire ET dans le cache - Simple mais
-plus de trafic memoire</p>
-<p>Alternative : <strong>write-back</strong> - Ecriture seulement dans
-le cache - Ecriture en memoire seulement quand la ligne est evincee -
-Plus complexe (bit “dirty” necessaire)</p>
+<h2 data-number="13.3" id="comment-fonctionne-le-cache"><span class="header-section-number">13.3</span> Comment Fonctionne le Cache
+?</h2>
+<h3 data-number="13.3.1" id="les-lignes-de-cache"><span class="header-section-number">13.3.1</span> Les Lignes de Cache</h3>
+<p>Le cache stocke des <strong>blocs</strong> de données appelés
+<strong>lignes de cache</strong>, pas des octets individuels.</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    LIGNE DE CACHE (16 octets)                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Quand vous demandez l&#39;adresse 100, le cache charge :         │
+│                                                                 │
+│   Adresses:  100  101  102  103  104  105  ... 115             │
+│              ┌────┬────┬────┬────┬────┬────┬───┬────┐          │
+│   Données:   │ AA │ BB │ CC │ DD │ EE │ FF │...│ ZZ │          │
+│              └────┴────┴────┴────┴────┴────┴───┴────┘          │
+│              │◄──────── 16 octets ensemble ────────►│          │
+│                                                                 │
+│   Ensuite, si vous demandez 101, 102, 103... c&#39;est gratuit !   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 data-number="13.3.2" id="structure-dune-ligne-de-cache"><span class="header-section-number">13.3.2</span> Structure d’une Ligne de
+Cache</h3>
+<pre><code>┌───────────────────────────────────────────────────────────────────────┐
+│                         STRUCTURE D&#39;UNE LIGNE                          │
+├───────────────────────────────────────────────────────────────────────┤
+│                                                                        │
+│  ┌───────┬─────────────────┬──────────────────────────────────────┐  │
+│  │ Valid │       Tag       │              Données                  │  │
+│  │ (1b)  │    (20 bits)    │           (128 bits = 16 octets)     │  │
+│  └───────┴─────────────────┴──────────────────────────────────────┘  │
+│                                                                        │
+│  Valid = 1 : Cette ligne contient des données valides                 │
+│  Valid = 0 : Cette ligne est vide ou invalide                         │
+│                                                                        │
+│  Tag : &quot;D&#39;où viennent ces données ?&quot;                                  │
+│        Identifie la zone mémoire stockée dans cette ligne             │
+│                                                                        │
+│  Données : Les 16 octets de données eux-mêmes                         │
+│            Contient 4 mots de 32 bits (4 × 4 = 16 octets)            │
+│                                                                        │
+└───────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 data-number="13.3.3" id="découpage-dune-adresse"><span class="header-section-number">13.3.3</span> Découpage d’une Adresse</h3>
+<p>Quand le CPU demande l’adresse <code>0x00001234</code>, comment le
+cache la trouve-t-il ?</p>
+<pre><code>┌───────────────────────────────────────────────────────────────────────┐
+│                    DÉCOMPOSITION D&#39;UNE ADRESSE                        │
+├───────────────────────────────────────────────────────────────────────┤
+│                                                                        │
+│   Adresse 32 bits: 0x00001234                                         │
+│                                                                        │
+│   En binaire:                                                          │
+│   0000 0000 0000 0000 0001 0010 0011 0100                             │
+│   │◄────────── Tag ──────────►│◄─Index─►│◄Off►│                       │
+│              22 bits            6 bits   4 bits                        │
+│                                                                        │
+│   ┌──────────────────────────────────────────────────────────────┐   │
+│   │                                                               │   │
+│   │  Tag (22 bits) : Identifie quelle zone de la RAM             │   │
+│   │                                                               │   │
+│   │  Index (6 bits) : Quelle ligne du cache ?                    │   │
+│   │                   6 bits = 64 lignes possibles (0 à 63)      │   │
+│   │                                                               │   │
+│   │  Offset (4 bits) : Quel octet dans la ligne ?                │   │
+│   │                    4 bits = 16 positions (0 à 15)            │   │
+│   │                                                               │   │
+│   └──────────────────────────────────────────────────────────────┘   │
+│                                                                        │
+└───────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 data-number="13.3.4" id="structure-complète-du-cache"><span class="header-section-number">13.3.4</span> Structure Complète du
+Cache</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                        CACHE DIRECT-MAPPED (64 lignes)                  │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Index    Valid    Tag           Données (128 bits)                     │
+│  ────────────────────────────────────────────────────────────────────   │
+│    0    │  1   │ 0x00012  │ [Mot0][Mot1][Mot2][Mot3]                    │
+│    1    │  0   │ ------   │ -------------------------                    │
+│    2    │  1   │ 0x00045  │ [Mot0][Mot1][Mot2][Mot3]                    │
+│    3    │  1   │ 0x00123  │ [Mot0][Mot1][Mot2][Mot3]  ◄── Ligne active  │
+│    4    │  0   │ ------   │ -------------------------                    │
+│    5    │  1   │ 0x00067  │ [Mot0][Mot1][Mot2][Mot3]                    │
+│   ...   │ ...  │  ...     │           ...                                │
+│   63    │  1   │ 0x00ABC  │ [Mot0][Mot1][Mot2][Mot3]                    │
+│                                                                          │
+│  Chaque ligne = 1 bit Valid + 20 bits Tag + 128 bits Data              │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
 <hr />
-<h2 data-number="13.4" id="implementation-hdl"><span class="header-section-number">13.4</span> Implementation HDL</h2>
-<h3 data-number="13.4.1" id="cacheline"><span class="header-section-number">13.4.1</span> CacheLine</h3>
-<p>Une ligne de cache avec tous ses champs :</p>
-<div class="sourceCode" id="cb184"><pre class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb184-1"><a href="#cb184-1" aria-hidden="true" tabindex="-1"></a><span class="cf">entity</span> <span class="dv">CacheLine</span> <span class="kw">is</span></span>
-<span id="cb184-2"><a href="#cb184-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">port</span>(</span>
-<span id="cb184-3"><a href="#cb184-3" aria-hidden="true" tabindex="-1"></a>    clk <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
-<span id="cb184-4"><a href="#cb184-4" aria-hidden="true" tabindex="-1"></a>    write_enable <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
-<span id="cb184-5"><a href="#cb184-5" aria-hidden="true" tabindex="-1"></a>    write_tag <span class="ot">:</span> <span class="kw">in</span> bits(<span class="dv">19</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
-<span id="cb184-6"><a href="#cb184-6" aria-hidden="true" tabindex="-1"></a>    write_data <span class="ot">:</span> <span class="kw">in</span> bits(<span class="dv">127</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
-<span id="cb184-7"><a href="#cb184-7" aria-hidden="true" tabindex="-1"></a>    invalidate <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
-<span id="cb184-8"><a href="#cb184-8" aria-hidden="true" tabindex="-1"></a>    valid <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span>;</span>
-<span id="cb184-9"><a href="#cb184-9" aria-hidden="true" tabindex="-1"></a>    tag <span class="ot">:</span> <span class="kw">out</span> bits(<span class="dv">19</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
-<span id="cb184-10"><a href="#cb184-10" aria-hidden="true" tabindex="-1"></a>    data <span class="ot">:</span> <span class="kw">out</span> bits(<span class="dv">127</span> <span class="ot">downto</span> <span class="dv">0</span>)</span>
-<span id="cb184-11"><a href="#cb184-11" aria-hidden="true" tabindex="-1"></a>  );</span>
-<span id="cb184-12"><a href="#cb184-12" aria-hidden="true" tabindex="-1"></a><span class="cf">end entity;</span></span></code></pre></div>
-<h3 data-number="13.4.2" id="tagcompare"><span class="header-section-number">13.4.2</span> TagCompare</h3>
-<p>Comparateur pour detecter un hit :</p>
-<div class="sourceCode" id="cb185"><pre class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb185-1"><a href="#cb185-1" aria-hidden="true" tabindex="-1"></a><span class="cf">entity</span> <span class="dv">TagCompare</span> <span class="kw">is</span></span>
-<span id="cb185-2"><a href="#cb185-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">port</span>(</span>
-<span id="cb185-3"><a href="#cb185-3" aria-hidden="true" tabindex="-1"></a>    valid <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
-<span id="cb185-4"><a href="#cb185-4" aria-hidden="true" tabindex="-1"></a>    addr_tag <span class="ot">:</span> <span class="kw">in</span> bits(<span class="dv">19</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
-<span id="cb185-5"><a href="#cb185-5" aria-hidden="true" tabindex="-1"></a>    stored_tag <span class="ot">:</span> <span class="kw">in</span> bits(<span class="dv">19</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
-<span id="cb185-6"><a href="#cb185-6" aria-hidden="true" tabindex="-1"></a>    hit <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span></span>
-<span id="cb185-7"><a href="#cb185-7" aria-hidden="true" tabindex="-1"></a>  );</span>
-<span id="cb185-8"><a href="#cb185-8" aria-hidden="true" tabindex="-1"></a><span class="cf">end entity;</span></span></code></pre></div>
-<h3 data-number="13.4.3" id="cachecontroller"><span class="header-section-number">13.4.3</span> CacheController</h3>
-<p>Machine a etats pour gerer les acces :</p>
-<pre><code>        +-------+
-  reset |       |
-        v       |
-     +------+   |
-     | IDLE |---+ read/write hit
-     +------+
-        |
-        | read/write miss
-        v
-     +-------+
-     | FETCH |-----&gt; load line from RAM
-     +-------+
-        |
-        | mem_ready (and write pending)
-        v
-     +----------+
-     | WRITEBACK |----&gt; write to RAM
-     +----------+
-        |
-        | mem_ready
-        v
-     (back to IDLE)</code></pre>
+<h2 data-number="13.4" id="hit-ou-miss-que-se-passe-t-il"><span class="header-section-number">13.4</span> Hit ou Miss : Que se
+passe-t-il ?</h2>
+<h3 data-number="13.4.1" id="scénario-1-cache-hit-succès"><span class="header-section-number">13.4.1</span> Scénario 1 : Cache HIT
+(Succès)</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                           CACHE HIT                                      │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   CPU demande: &quot;Je veux lire l&#39;adresse 0x00001234&quot;                      │
+│                                                                          │
+│   Étape 1: Extraire les champs                                          │
+│   ┌────────────────────────────────────────────────────┐                │
+│   │ Tag = 0x00001  │  Index = 0x23  │  Offset = 0x4   │                │
+│   └────────────────────────────────────────────────────┘                │
+│                            │                                             │
+│   Étape 2: Aller à la      │                                             │
+│            ligne 0x23      ▼                                             │
+│                    ┌───────────────────────────────────┐                │
+│   Cache ligne 35:  │ Valid=1 │ Tag=0x00001 │ Données   │                │
+│                    └───────────────────────────────────┘                │
+│                         │          │                                     │
+│   Étape 3: Vérifier     │          │                                     │
+│            Valid = 1? ──┘          │                                     │
+│            Tag match? ─────────────┘                                     │
+│                                                                          │
+│   Étape 4: OUI ! C&#39;est un HIT !                                         │
+│            ┌──────────────────────────────────────┐                     │
+│            │  Retourner Données[Offset=4]         │                     │
+│            │  Temps: ~1 ns                        │                     │
+│            └──────────────────────────────────────┘                     │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 data-number="13.4.2" id="scénario-2-cache-miss-échec"><span class="header-section-number">13.4.2</span> Scénario 2 : Cache MISS
+(Échec)</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                           CACHE MISS                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   CPU demande: &quot;Je veux lire l&#39;adresse 0x00005678&quot;                      │
+│                                                                          │
+│   Étape 1: Extraire les champs                                          │
+│   ┌────────────────────────────────────────────────────┐                │
+│   │ Tag = 0x00005  │  Index = 0x67  │  Offset = 0x8   │                │
+│   └────────────────────────────────────────────────────┘                │
+│                            │                                             │
+│   Étape 2: Aller à la      │                                             │
+│            ligne 0x67      ▼                                             │
+│                    ┌───────────────────────────────────┐                │
+│   Cache ligne 103: │ Valid=1 │ Tag=0x00099 │ Données   │                │
+│                    └───────────────────────────────────┘                │
+│                         │          │                                     │
+│   Étape 3: Vérifier     │          │                                     │
+│            Valid = 1? ──┘          │                                     │
+│            Tag match? ─────────────┘  → 0x00005 ≠ 0x00099               │
+│                                                                          │
+│   Étape 4: NON ! C&#39;est un MISS !                                        │
+│            ┌──────────────────────────────────────────────┐             │
+│            │  1. Aller chercher en RAM (lent: ~100 ns)    │             │
+│            │  2. Charger la nouvelle ligne dans le cache  │             │
+│            │  3. Retourner la donnée au CPU               │             │
+│            └──────────────────────────────────────────────┘             │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 data-number="13.4.3" id="diagramme-de-flux-complet"><span class="header-section-number">13.4.3</span> Diagramme de Flux
+Complet</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                    ALGORITHME DE LECTURE CACHE                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│                         ┌─────────────┐                                 │
+│                         │ CPU demande │                                 │
+│                         │  adresse A  │                                 │
+│                         └──────┬──────┘                                 │
+│                                │                                         │
+│                                ▼                                         │
+│                     ┌──────────────────────┐                            │
+│                     │ Extraire Tag, Index, │                            │
+│                     │      Offset de A     │                            │
+│                     └──────────┬───────────┘                            │
+│                                │                                         │
+│                                ▼                                         │
+│                     ┌──────────────────────┐                            │
+│                     │ Lire ligne[Index]    │                            │
+│                     └──────────┬───────────┘                            │
+│                                │                                         │
+│                                ▼                                         │
+│                     ┌──────────────────────┐                            │
+│              NON    │   Valid = 1 ?        │    OUI                     │
+│           ┌─────────│                      │──────────┐                 │
+│           │         └──────────────────────┘          │                 │
+│           │                                           ▼                 │
+│           │                              ┌──────────────────────┐       │
+│           │                       NON    │   Tag correspond ?   │ OUI   │
+│           │                    ┌─────────│                      │───┐   │
+│           │                    │         └──────────────────────┘   │   │
+│           ▼                    ▼                                    ▼   │
+│    ┌─────────────┐      ┌─────────────┐                    ┌───────────┐│
+│    │    MISS     │      │    MISS     │                    │    HIT    ││
+│    │ Ligne vide  │      │ Mauvais tag │                    │  Succès ! ││
+│    └──────┬──────┘      └──────┬──────┘                    └─────┬─────┘│
+│           │                    │                                 │      │
+│           └────────┬───────────┘                                 │      │
+│                    │                                             │      │
+│                    ▼                                             ▼      │
+│         ┌────────────────────┐                    ┌────────────────────┐│
+│         │ Charger depuis RAM │                    │ Retourner donnée   ││
+│         │ Stocker dans cache │                    │ depuis le cache    ││
+│         │ (~100 ns)          │                    │ (~1 ns)            ││
+│         └────────────────────┘                    └────────────────────┘│
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
 <hr />
-<h2 data-number="13.5" id="optimisation-des-programmes"><span class="header-section-number">13.5</span> Optimisation des
-Programmes</h2>
-<h3 data-number="13.5.1" id="parcours-row-major-vs-column-major"><span class="header-section-number">13.5.1</span> Parcours Row-Major vs
-Column-Major</h3>
-<p>Un tableau 2D <code>arr[4][4]</code> est stocke ligne par ligne :</p>
-<pre><code>Memoire: [0,0] [0,1] [0,2] [0,3] [1,0] [1,1] ...</code></pre>
-<p><strong>Parcours row-major</strong> (cache-friendly) :</p>
-<div class="sourceCode" id="cb188"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb188-1"><a href="#cb188-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span>i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> i<span class="op">++)</span></span>
-<span id="cb188-2"><a href="#cb188-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span>j <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> j <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> j<span class="op">++)</span></span>
-<span id="cb188-3"><a href="#cb188-3" aria-hidden="true" tabindex="-1"></a>        sum <span class="op">+=</span> arr<span class="op">[</span>i<span class="op">][</span>j<span class="op">];</span>  <span class="co">// Acces sequentiel</span></span></code></pre></div>
-<p><strong>Parcours column-major</strong> (cache-unfriendly) :</p>
-<div class="sourceCode" id="cb189"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb189-1"><a href="#cb189-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span>j <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> j <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> j<span class="op">++)</span></span>
-<span id="cb189-2"><a href="#cb189-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span>i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">4</span><span class="op">;</span> i<span class="op">++)</span></span>
-<span id="cb189-3"><a href="#cb189-3" aria-hidden="true" tabindex="-1"></a>        sum <span class="op">+=</span> arr<span class="op">[</span>i<span class="op">][</span>j<span class="op">];</span>  <span class="co">// Sauts en memoire!</span></span></code></pre></div>
-<h3 data-number="13.5.2" id="blocking-loop-tiling"><span class="header-section-number">13.5.2</span> Blocking (Loop Tiling)</h3>
-<p>Pour de grands tableaux, traiter par blocs qui tiennent dans le cache
-:</p>
-<div class="sourceCode" id="cb190"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb190-1"><a href="#cb190-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span>bi <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> bi <span class="op">&lt;</span> N<span class="op">;</span> bi <span class="op">+=</span> BLOCK<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb190-2"><a href="#cb190-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span>bj <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> bj <span class="op">&lt;</span> N<span class="op">;</span> bj <span class="op">+=</span> BLOCK<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb190-3"><a href="#cb190-3" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Traiter le bloc [bi..bi+BLOCK][bj..bj+BLOCK]</span></span>
-<span id="cb190-4"><a href="#cb190-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span>i <span class="op">=</span> bi<span class="op">;</span> i <span class="op">&lt;</span> bi<span class="op">+</span>BLOCK<span class="op">;</span> i<span class="op">++)</span> <span class="op">{</span></span>
-<span id="cb190-5"><a href="#cb190-5" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span>j <span class="op">=</span> bj<span class="op">;</span> j <span class="op">&lt;</span> bj<span class="op">+</span>BLOCK<span class="op">;</span> j<span class="op">++)</span> <span class="op">{</span></span>
-<span id="cb190-6"><a href="#cb190-6" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Bloc en cache!</span></span>
-<span id="cb190-7"><a href="#cb190-7" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb190-8"><a href="#cb190-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb190-9"><a href="#cb190-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb190-10"><a href="#cb190-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 data-number="13.5" id="politiques-décriture"><span class="header-section-number">13.5</span> Politiques d’Écriture</h2>
+<h3 data-number="13.5.1" id="write-through-écriture-directe"><span class="header-section-number">13.5.1</span> Write-Through (Écriture
+Directe)</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                         WRITE-THROUGH                                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   CPU veut écrire la valeur 42 à l&#39;adresse 0x1000                       │
+│                                                                          │
+│        ┌─────┐                                                          │
+│        │ CPU │                                                          │
+│        │     │── write(42, 0x1000) ──┬──────────────────────┐          │
+│        └─────┘                       │                      │          │
+│                                      ▼                      ▼          │
+│                              ┌───────────┐          ┌───────────┐      │
+│                              │   Cache   │          │    RAM    │      │
+│                              │  (rapide) │          │  (lent)   │      │
+│                              │   42 ✓    │          │   42 ✓    │      │
+│                              └───────────┘          └───────────┘      │
+│                                                                          │
+│   ✓ Cache et RAM sont TOUJOURS synchronisés                             │
+│   ✗ Chaque écriture attend la RAM (lent)                                │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 data-number="13.5.2" id="write-back-écriture-différée"><span class="header-section-number">13.5.2</span> Write-Back (Écriture
+Différée)</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                          WRITE-BACK                                      │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   Étape 1: CPU écrit 42                                                 │
+│        ┌─────┐                                                          │
+│        │ CPU │── write(42, 0x1000) ──►┌───────────┐                    │
+│        └─────┘                        │   Cache   │                    │
+│                                       │   42 ✓    │                    │
+│                                       │  dirty=1  │  ← Marqué &quot;modifié&quot;│
+│                                       └───────────┘                    │
+│                                                                          │
+│   Étape 2: Plus tard, quand la ligne doit être remplacée               │
+│                                                                          │
+│                              ┌───────────┐          ┌───────────┐      │
+│                              │   Cache   │──────────│    RAM    │      │
+│                              │  dirty=1  │  ────►   │   42 ✓    │      │
+│                              │  → dirty=0│ écriture │           │      │
+│                              └───────────┘          └───────────┘      │
+│                                                                          │
+│   ✓ Écritures rapides (seulement dans le cache)                         │
+│   ✗ Plus complexe (bit dirty nécessaire)                                │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
 <hr />
-<h2 data-number="13.6" id="statistiques-du-cache"><span class="header-section-number">13.6</span> Statistiques du Cache</h2>
-<p>Notre simulateur collecte des statistiques :</p>
-<ul>
-<li><strong>Hits</strong> : Nombre d’acces trouves dans le cache</li>
-<li><strong>Misses</strong> : Nombre d’acces necessitant un chargement
-RAM</li>
-<li><strong>Hit Rate</strong> :
-<code>hits / (hits + misses) * 100%</code></li>
-</ul>
-<p>Un programme bien optimise atteint typiquement 90-99% de hit
-rate.</p>
+<h2 data-number="13.6" id="impact-sur-vos-programmes"><span class="header-section-number">13.6</span> Impact sur vos Programmes</h2>
+<h3 data-number="13.6.1" id="parcours-de-tableaux-2d-lordre-compte"><span class="header-section-number">13.6.1</span> Parcours de Tableaux 2D :
+L’Ordre Compte !</h3>
+<p>Une matrice 4x4 est stockée <strong>ligne par ligne</strong> en
+mémoire (row-major) :</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                    STOCKAGE MÉMOIRE D&#39;UNE MATRICE 4x4                   │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   Matrice logique:              Stockage en mémoire (linéaire):         │
+│                                                                          │
+│   ┌────┬────┬────┬────┐        Adresse: 0   4   8  12  16  20  24 ...  │
+│   │ 0  │ 1  │ 2  │ 3  │ ─────►         ┌───┬───┬───┬───┬───┬───┬───┐   │
+│   ├────┼────┼────┼────┤                │ 0 │ 1 │ 2 │ 3 │ 4 │ 5 │ 6 │...│
+│   │ 4  │ 5  │ 6  │ 7  │ ─────►         └───┴───┴───┴───┴───┴───┴───┘   │
+│   ├────┼────┼────┼────┤                │←─ Ligne 0 ─→│←─ Ligne 1 ─→│   │
+│   │ 8  │ 9  │ 10 │ 11 │ ─────►                                          │
+│   ├────┼────┼────┼────┤                                                  │
+│   │ 12 │ 13 │ 14 │ 15 │ ─────►         Une ligne de cache (16 octets)   │
+│   └────┴────┴────┴────┘                peut contenir 4 éléments         │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 data-number="13.6.2" id="parcours-row-major-en-ligne---efficace"><span class="header-section-number">13.6.2</span> Parcours Row-Major (En
+Ligne) - EFFICACE</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                    PARCOURS ROW-MAJOR (EFFICACE)                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   Code:  for (i = 0..3)                                                 │
+│            for (j = 0..3)                                               │
+│              accès arr[i][j]                                            │
+│                                                                          │
+│   Ordre d&#39;accès:                                                        │
+│   ┌────┬────┬────┬────┐                                                 │
+│   │ 1  │ 2  │ 3  │ 4  │  ← D&#39;abord toute la ligne 0                    │
+│   ├────┼────┼────┼────┤                                                 │
+│   │ 5  │ 6  │ 7  │ 8  │  ← Puis toute la ligne 1                       │
+│   ├────┼────┼────┼────┤                                                 │
+│   │ 9  │ 10 │ 11 │ 12 │  ← Puis toute la ligne 2                       │
+│   ├────┼────┼────┼────┤                                                 │
+│   │ 13 │ 14 │ 15 │ 16 │  ← Puis toute la ligne 3                       │
+│   └────┴────┴────┴────┘                                                 │
+│                                                                          │
+│   Mémoire:  [0][1][2][3][4][5][6][7][8][9][10][11][12][13][14][15]     │
+│   Accès:     1  2  3  4  5  6  7  8  9  10  11  12  13  14  15  16     │
+│              ─────────────────────────────────────────────────────►     │
+│              Accès SÉQUENTIEL = Excellent pour le cache !              │
+│                                                                          │
+│   Hit Rate: ~95%                                                        │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 data-number="13.6.3" id="parcours-column-major-en-colonne---inefficace"><span class="header-section-number">13.6.3</span> Parcours Column-Major (En
+Colonne) - INEFFICACE</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                   PARCOURS COLUMN-MAJOR (INEFFICACE)                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   Code:  for (j = 0..3)                                                 │
+│            for (i = 0..3)                                               │
+│              accès arr[i][j]                                            │
+│                                                                          │
+│   Ordre d&#39;accès:                                                        │
+│   ┌────┬────┬────┬────┐                                                 │
+│   │ 1  │ 5  │ 9  │ 13 │                                                 │
+│   ├────┼────┼────┼────┤     Ordre: 1→5→9→13 puis 2→6→10→14 ...         │
+│   │ 2  │ 6  │ 10 │ 14 │            │  │  │  │                           │
+│   ├────┼────┼────┼────┤            ▼  ▼  ▼  ▼                           │
+│   │ 3  │ 7  │ 11 │ 15 │     On descend d&#39;abord les colonnes            │
+│   ├────┼────┼────┼────┤                                                 │
+│   │ 4  │ 8  │ 12 │ 16 │                                                 │
+│   └────┴────┴────┴────┘                                                 │
+│                                                                          │
+│   Mémoire:  [0][1][2][3][4][5][6][7][8][9][10][11][12][13][14][15]     │
+│   Accès:     1        5        9        13   2        6       10 ...   │
+│              ────┘    │        │         │   │        │        │       │
+│                  └────┘    └───┘     └───┘   └────────┘    └───┘       │
+│              SAUTS de 4 positions = Mauvais pour le cache !            │
+│                                                                          │
+│   Hit Rate: ~25%                                                        │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 data-number="13.6.4" id="comparaison-visuelle"><span class="header-section-number">13.6.4</span> Comparaison Visuelle</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                    COMPARAISON ROW-MAJOR vs COLUMN-MAJOR                │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   ROW-MAJOR (bon):                   COLUMN-MAJOR (mauvais):            │
+│                                                                          │
+│   Cache Line 1: [0][1][2][3]         Cache Line 1: [0][1][2][3]         │
+│                  ▲  ▲  ▲  ▲                         ▲        ▲          │
+│                  │  │  │  │                         │        │          │
+│                  1  2  3  4                         1 ─ ─ ─ ─5          │
+│                  Tout utilisé!                      Gaspillé!           │
+│                                                                          │
+│   Cache Line 2: [4][5][6][7]         Cache Line 2: [4][5][6][7]         │
+│                  ▲  ▲  ▲  ▲                         ▲        ▲          │
+│                  │  │  │  │                         │        │          │
+│                  5  6  7  8                         2 ─ ─ ─ ─6          │
+│                  Tout utilisé!                      Gaspillé!           │
+│                                                                          │
+│   Résultat:                          Résultat:                          │
+│   4 accès mémoire pour               16 accès mémoire pour              │
+│   16 éléments                        16 éléments                        │
+│                                                                          │
+│   ████████████████ 95% hits          ████░░░░░░░░░░░░ 25% hits          │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 data-number="13.6.5" id="technique-du-blocking"><span class="header-section-number">13.6.5</span> Technique du Blocking</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                       TECHNIQUE DE BLOCKING                             │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   Au lieu de parcourir toute la matrice, on traite par BLOCS           │
+│   qui tiennent dans le cache.                                           │
+│                                                                          │
+│   Matrice 4x4 divisée en blocs 2x2:                                     │
+│                                                                          │
+│   ┌─────────┬─────────┐                                                 │
+│   │ ┌───┬───┐│ ┌───┬───┐│      Bloc 0 (indices 0,1,4,5)                 │
+│   │ │ 0 │ 1 ││ │ 2 │ 3 ││      traité entièrement,                      │
+│   │ ├───┼───┤│ ├───┼───┤│      puis Bloc 1, puis Bloc 2, puis Bloc 3   │
+│   │ │ 4 │ 5 ││ │ 6 │ 7 ││                                               │
+│   │ └───┴───┘│ └───┴───┘│                                               │
+│   ├─────────┼─────────┤                                                 │
+│   │ ┌───┬───┐│ ┌───┬───┐│                                               │
+│   │ │ 8 │ 9 ││ │10 │11 ││                                               │
+│   │ ├───┼───┤│ ├───┼───┤│                                               │
+│   │ │12 │13 ││ │14 │15 ││                                               │
+│   │ └───┴───┘│ └───┴───┘│                                               │
+│   └─────────┴─────────┘                                                 │
+│                                                                          │
+│   Ordre de traitement:                                                   │
+│   ┌───┐     ┌───┐     ┌───┐     ┌───┐                                   │
+│   │ 1 │ ──► │ 2 │ ──► │ 3 │ ──► │ 4 │                                   │
+│   └───┘     └───┘     └───┘     └───┘                                   │
+│   Bloc 0    Bloc 1    Bloc 2    Bloc 3                                  │
+│                                                                          │
+│   Chaque bloc tient dans le cache → Excellente localité !               │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
 <hr />
-<h2 data-number="13.7" id="exercices"><span class="header-section-number">13.7</span> Exercices</h2>
-<h3 data-number="13.7.1" id="hdl"><span class="header-section-number">13.7.1</span> HDL</h3>
-<ol type="1">
-<li><strong>CacheLine</strong> : Implementer une ligne de cache</li>
-<li><strong>TagCompare</strong> : Comparateur de tags</li>
-<li><strong>WordSelect</strong> : Selecteur de mot dans une ligne</li>
-<li><strong>CacheController</strong> : Machine a etats</li>
-</ol>
-<h3 data-number="13.7.2" id="c-patterns-dacces"><span class="header-section-number">13.7.2</span> C (Patterns d’acces)</h3>
-<ol type="1">
-<li><strong>Parcours en Ligne</strong> : Acces sequentiel
-(cache-friendly)</li>
-<li><strong>Parcours en Colonne</strong> : Acces avec sauts
-(cache-unfriendly)</li>
-<li><strong>Blocking</strong> : Traitement par blocs</li>
-<li><strong>Localite Temporelle</strong> : Reutilisation des
-donnees</li>
-</ol>
+<h2 data-number="13.7" id="implémentation-hdl-du-cache"><span class="header-section-number">13.7</span> Implémentation HDL du
+Cache</h2>
+<h3 data-number="13.7.1" id="architecture-globale"><span class="header-section-number">13.7.1</span> Architecture Globale</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                      ARCHITECTURE DU CACHE                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   ┌──────────────────────────────────────────────────────────────────┐  │
+│   │                         CACHE MODULE                              │  │
+│   │                                                                   │  │
+│   │  Adresse ──┬──► ┌────────────┐                                   │  │
+│   │            │    │  Décodeur  │──► Index (6 bits)                 │  │
+│   │            │    │  d&#39;adresse │──► Tag (22 bits)                  │  │
+│   │            │    │            │──► Offset (4 bits)                │  │
+│   │            │    └────────────┘                                   │  │
+│   │            │           │                                          │  │
+│   │            │           ▼                                          │  │
+│   │            │    ┌────────────────────────────────────┐           │  │
+│   │            │    │         Cache Lines (x64)          │           │  │
+│   │            │    │  ┌──────┬──────┬────────────────┐  │           │  │
+│   │            │    │  │Valid │ Tag  │     Data       │  │           │  │
+│   │            │    │  │ (1)  │ (22) │    (128)       │  │           │  │
+│   │            │    │  └──────┴──────┴────────────────┘  │           │  │
+│   │            │    └────────────────────────────────────┘           │  │
+│   │            │           │          │                               │  │
+│   │            ▼           ▼          ▼                               │  │
+│   │    ┌────────────┐ ┌────────────┐ ┌────────────┐                  │  │
+│   │    │ TagCompare │ │ WordSelect │ │  Mux Data  │                  │  │
+│   │    │            │ │            │ │            │                  │  │
+│   │    │ hit/miss   │ │  4:1 mux   │ │  out data  │                  │  │
+│   │    └──────┬─────┘ └──────┬─────┘ └──────┬─────┘                  │  │
+│   │           │              │              │                         │  │
+│   │           └──────┬───────┴──────────────┘                         │  │
+│   │                  │                                                │  │
+│   │                  ▼                                                │  │
+│   │    ┌─────────────────────────────────────────┐                   │  │
+│   │    │          CacheController                 │                   │  │
+│   │    │                                          │                   │  │
+│   │    │  ┌──────┐    ┌───────┐    ┌──────────┐ │                   │  │
+│   │    │  │ IDLE │───►│ FETCH │───►│WRITEBACK │ │                   │  │
+│   │    │  └──────┘    └───────┘    └──────────┘ │                   │  │
+│   │    │                                          │                   │  │
+│   │    └─────────────────────────────────────────┘                   │  │
+│   │                                                                   │  │
+│   └──────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 data-number="13.7.2" id="machine-à-états-du-contrôleur"><span class="header-section-number">13.7.2</span> Machine à États du
+Contrôleur</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                    MACHINE À ÉTATS - CacheController                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│                           ┌─────────────────┐                           │
+│                 reset ───►│                 │                           │
+│                           │      IDLE       │◄─────────────┐            │
+│                           │      (00)       │              │            │
+│                           │                 │              │            │
+│              ┌────────────┤  Attente de     │──────────────┤            │
+│              │            │   requête       │  hit=1       │            │
+│              │            └────────┬────────┘  (réponse    │            │
+│              │                     │           immédiate)  │            │
+│              │        req=1 AND    │                       │            │
+│              │        miss=1       │                       │            │
+│              │                     ▼                       │            │
+│              │            ┌─────────────────┐              │            │
+│              │            │                 │              │            │
+│              │            │     FETCH       │              │            │
+│              │            │      (01)       │              │            │
+│              │            │                 │              │            │
+│              │            │  Charger ligne  │              │            │
+│              │            │  depuis RAM     │              │            │
+│              │            └────────┬────────┘              │            │
+│              │                     │                       │            │
+│              │            mem_ready=1                      │            │
+│              │                     │                       │            │
+│              │                     ▼                       │            │
+│              │            ┌─────────────────┐              │            │
+│              │            │                 │              │            │
+│              │            │   WRITEBACK     │──────────────┘            │
+│              │            │      (10)       │  mem_ready=1              │
+│              │            │                 │                           │
+│              │            │  Écrire dans    │                           │
+│              │            │  le cache       │                           │
+│              │            └─────────────────┘                           │
+│              │                                                          │
+│              └──────────────────────────────────────────────────────────┘
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
+<h3 data-number="13.7.3" id="wordselect-sélection-du-mot"><span class="header-section-number">13.7.3</span> WordSelect : Sélection du
+Mot</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                          WORDSELECT (Mux 4:1)                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   Ligne de cache (128 bits):                                            │
+│   ┌─────────────┬─────────────┬─────────────┬─────────────┐            │
+│   │   Mot 3     │   Mot 2     │   Mot 1     │   Mot 0     │            │
+│   │ bits 127-96 │ bits 95-64  │ bits 63-32  │ bits 31-0   │            │
+│   └──────┬──────┴──────┬──────┴──────┬──────┴──────┬──────┘            │
+│          │             │             │             │                    │
+│          └─────────────┴──────┬──────┴─────────────┘                    │
+│                               │                                         │
+│                               ▼                                         │
+│                    ┌────────────────────┐                               │
+│   word_sel ──────► │     Mux 4:1        │                               │
+│   (2 bits)         │                    │                               │
+│                    └──────────┬─────────┘                               │
+│                               │                                         │
+│                               ▼                                         │
+│                    ┌────────────────────┐                               │
+│                    │    word_out        │                               │
+│                    │    (32 bits)       │                               │
+│                    └────────────────────┘                               │
+│                                                                          │
+│   word_sel = 00 → Mot 0 (bits 31-0)                                     │
+│   word_sel = 01 → Mot 1 (bits 63-32)                                    │
+│   word_sel = 10 → Mot 2 (bits 95-64)                                    │
+│   word_sel = 11 → Mot 3 (bits 127-96)                                   │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
 <hr />
-<h2 data-number="13.8" id="resume"><span class="header-section-number">13.8</span> Resume</h2>
+<h2 data-number="13.8" id="statistiques-et-performance"><span class="header-section-number">13.8</span> Statistiques et
+Performance</h2>
+<h3 data-number="13.8.1" id="calcul-du-hit-rate"><span class="header-section-number">13.8.1</span> Calcul du Hit Rate</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                        CALCUL DU HIT RATE                               │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│                        Nombre de Hits                                   │
+│   Hit Rate = ───────────────────────────────── × 100%                   │
+│               Nombre de Hits + Nombre de Misses                         │
+│                                                                          │
+│   ═══════════════════════════════════════════════════════════════════   │
+│                                                                          │
+│   Exemple: 1 million d&#39;accès mémoire                                    │
+│   ─────────────────────────────────                                     │
+│   • 950,000 hits  (trouvés dans le cache)                               │
+│   •  50,000 misses (chargés depuis la RAM)                              │
+│                                                                          │
+│              950,000                                                     │
+│   Hit Rate = ─────────── × 100% = 95%                                   │
+│              1,000,000                                                   │
+│                                                                          │
+│   ═══════════════════════════════════════════════════════════════════   │
+│                                                                          │
+│   Temps moyen par accès:                                                │
+│                                                                          │
+│   = (950,000 × 1ns) + (50,000 × 100ns)                                  │
+│     ────────────────────────────────────                                │
+│              1,000,000                                                   │
+│                                                                          │
+│   = 950,000 + 5,000,000  = 5,950,000 ns                                 │
+│     ─────────────────────  ───────────── = 5.95 ns/accès                │
+│        1,000,000            1,000,000                                    │
+│                                                                          │
+│   Sans cache: 100 ns/accès                                              │
+│   Avec cache: 5.95 ns/accès                                             │
+│                                                                          │
+│   Gain: 100 / 5.95 ≈ 17× plus rapide !                                  │
+│                                                                          │
+│   ████████████████████████████████████████████████████████ 95%         │
+│   ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  5%          │
+│   │                                                         │           │
+│   └─────── Hits (rapides) ──────────────────────────────────┘           │
+│                                               └── Misses (lents)        │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
+<hr />
+<h2 data-number="13.9" id="exercices"><span class="header-section-number">13.9</span> Exercices</h2>
+<h3 data-number="13.9.1" id="exercices-hdl"><span class="header-section-number">13.9.1</span> Exercices HDL</h3>
 <table>
 <thead>
 <tr class="header">
-<th style="text-align: left;">Concept</th>
+<th style="text-align: left;">Exercice</th>
 <th style="text-align: left;">Description</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">Ligne de cache</td>
-<td style="text-align: left;">Unite de stockage (16 bytes)</td>
+<td style="text-align: left;"><strong>CacheLine</strong></td>
+<td style="text-align: left;">Implémenter une ligne de cache avec valid,
+tag, data</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Tag</td>
-<td style="text-align: left;">Identifiant d’adresse</td>
+<td style="text-align: left;"><strong>TagCompare</strong></td>
+<td style="text-align: left;">Comparateur de tags pour détecter
+hit/miss</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">Index</td>
-<td style="text-align: left;">Selection de ligne</td>
+<td style="text-align: left;"><strong>WordSelect</strong></td>
+<td style="text-align: left;">Sélecteur de mot (4:1) dans une ligne 128
+bits</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">Offset</td>
-<td style="text-align: left;">Position dans la ligne</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Hit</td>
-<td style="text-align: left;">Donnee trouvee dans le cache</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Miss</td>
-<td style="text-align: left;">Donnee absente, chargement requis</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Write-through</td>
-<td style="text-align: left;">Ecriture immediate en RAM</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Localite spatiale</td>
-<td style="text-align: left;">Donnees proches accedees ensemble</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Localite temporelle</td>
-<td style="text-align: left;">Donnees reutilisees rapidement</td>
+<td style="text-align: left;"><strong>CacheController</strong></td>
+<td style="text-align: left;">Machine à états (IDLE, FETCH,
+WRITEBACK)</td>
 </tr>
 </tbody>
 </table>
+<h3 data-number="13.9.2" id="exercices-assembleur-a32"><span class="header-section-number">13.9.2</span> Exercices Assembleur
+A32</h3>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 39%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Exercice</th>
+<th style="text-align: left;">Description</th>
+<th style="text-align: left;">Résultat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Accès Séquentiel</strong></td>
+<td style="text-align: left;">Parcours cache-friendly d’un tableau</td>
+<td style="text-align: left;">R0 = 100</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Accès avec Stride</strong></td>
+<td style="text-align: left;">Parcours avec sauts (moins efficace)</td>
+<td style="text-align: left;">R0 = 28</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Réutilisation
+Registre</strong></td>
+<td style="text-align: left;">Garder les données en registre</td>
+<td style="text-align: left;">R0 = 91</td>
+</tr>
+</tbody>
+</table>
+<h3 data-number="13.9.3" id="exercices-c32"><span class="header-section-number">13.9.3</span> Exercices C32</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Exercice</th>
+<th style="text-align: left;">Description</th>
+<th style="text-align: left;">Résultat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Parcours en Ligne</strong></td>
+<td style="text-align: left;">Accès row-major (cache-friendly)</td>
+<td style="text-align: left;">120</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Parcours en Colonne</strong></td>
+<td style="text-align: left;">Accès column-major (moins efficace)</td>
+<td style="text-align: left;">120</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Traitement par Blocs</strong></td>
+<td style="text-align: left;">Technique de blocking</td>
+<td style="text-align: left;">120</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Localité Temporelle</strong></td>
+<td style="text-align: left;">Réutiliser les données</td>
+<td style="text-align: left;">30</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 data-number="13.10" id="résumé-visuel"><span class="header-section-number">13.10</span> Résumé Visuel</h2>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                         RÉSUMÉ DU CACHE                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   POURQUOI ?                                                            │
+│   ──────────                                                            │
+│   RAM (~100ns) est 100× plus lente que le CPU (~1ns)                   │
+│   → Le cache comble cet écart                                           │
+│                                                                          │
+│   COMMENT ?                                                             │
+│   ─────────                                                             │
+│   Exploite la LOCALITÉ:                                                 │
+│   • Temporelle: réutilisation des données récentes                      │
+│   • Spatiale: données voisines accédées ensemble                        │
+│                                                                          │
+│   STRUCTURE:                                                            │
+│   ──────────                                                            │
+│   Adresse → [Tag | Index | Offset]                                      │
+│   Ligne de cache → [Valid | Tag | Données (16 octets)]                 │
+│                                                                          │
+│   OPTIMISATION:                                                         │
+│   ─────────────                                                         │
+│   ✓ Parcours row-major (accès séquentiels)                             │
+│   ✓ Blocking (traitement par blocs)                                     │
+│   ✓ Réutilisation des registres                                         │
+│   ✗ Parcours column-major (sauts en mémoire)                           │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘</code></pre>
+<hr />
+<h2 data-number="13.11" id="points-clés-à-retenir"><span class="header-section-number">13.11</span> Points Clés à Retenir</h2>
+<ol type="1">
+<li><strong>La RAM est lente</strong> : ~100x plus lente que le
+cache</li>
+<li><strong>Le cache exploite la localité</strong> : temporelle et
+spatiale</li>
+<li><strong>L’ordre d’accès compte</strong> : row-major &gt;&gt;
+column-major</li>
+<li><strong>Réutilisez les données</strong> : gardez-les en registre ou
+en cache</li>
+<li><strong>Pensez en blocs</strong> : traitez des données qui tiennent
+dans le cache</li>
+</ol>
+<p>Ces principes s’appliquent à tous les niveaux de programmation, du
+code assembleur aux applications modernes !</p>
 </body>
 </html>

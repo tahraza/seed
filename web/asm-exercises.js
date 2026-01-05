@@ -2268,6 +2268,277 @@ _start:
             setup: '',
             expect: { R0: 7 }
         }
+    },
+
+    // ========================================
+    // CACHE - Memory Access Patterns
+    // ========================================
+
+    'asm-cache-seq': {
+        id: 'asm-cache-seq',
+        name: 'Accès Séquentiel',
+        description: 'Parcours séquentiel cache-friendly',
+        template: `; ============================================
+; Exercice: Accès Séquentiel (Cache-friendly)
+; ============================================
+; Objectif: Calculer la somme d'un tableau
+;
+; L'accès séquentiel est optimal pour le cache car
+; il exploite la localité spatiale: les données
+; proches en mémoire sont chargées ensemble.
+;
+; Tableau: [10, 20, 30, 40]
+; Calculer: 10 + 20 + 30 + 40 = 100
+;
+; Registres:
+; - R0: somme (résultat)
+; - R1: adresse courante
+; - R2: compteur
+;
+; Résultat attendu: R0 = 100
+; ============================================
+
+.data
+arr:
+    .word 10
+    .word 20
+    .word 30
+    .word 40
+
+.text
+.global _start
+_start:
+    ; Votre code ici:
+    ; 1. Initialiser R0 = 0 (somme)
+    ; 2. R1 = adresse du tableau (utiliser LDR R1, =arr)
+    ; 3. R2 = 4 (nombre d'éléments)
+    ; 4. Boucle: charger, additionner, incrémenter adresse
+
+
+    HALT
+`,
+        solution: `; Accès Séquentiel - Solution
+
+.data
+arr:
+    .word 10
+    .word 20
+    .word 30
+    .word 40
+
+.text
+.global _start
+_start:
+    MOV R0, #0          ; somme = 0
+    LDR R1, =arr        ; adresse du tableau
+    MOV R2, #4          ; compteur
+
+.loop:
+    CMP R2, #0
+    B.EQ .done
+
+    LDR R3, [R1]        ; charger arr[i]
+    ADD R0, R0, R3      ; somme += arr[i]
+    ADD R1, R1, #4      ; adresse += 4 (accès séquentiel!)
+    SUB R2, R2, #1      ; compteur--
+    B .loop
+
+.done:
+    HALT
+`,
+        test: {
+            setup: '',
+            expect: { R0: 100 }
+        }
+    },
+
+    'asm-cache-stride': {
+        id: 'asm-cache-stride',
+        name: 'Accès avec Stride',
+        description: 'Parcours avec pas (stride) - moins efficace',
+        template: `; ============================================
+; Exercice: Accès avec Stride
+; ============================================
+; Objectif: Comprendre l'impact du stride sur le cache
+;
+; Un "stride" est le pas entre deux accès mémoire.
+; Stride = 4 bytes: accès consécutifs (optimal)
+; Stride > ligne de cache: chaque accès = cache miss!
+;
+; Matrice 4x4 stockée en row-major:
+; [1,2,3,4], [5,6,7,8], [9,10,11,12], [13,14,15,16]
+;
+; Calculer la somme de la première COLONNE: 1+5+9+13 = 28
+; Stride = 16 bytes (4 éléments * 4 bytes)
+;
+; Résultat attendu: R0 = 28
+; ============================================
+
+.data
+matrix:
+    ; Ligne 0
+    .word 1
+    .word 2
+    .word 3
+    .word 4
+    ; Ligne 1
+    .word 5
+    .word 6
+    .word 7
+    .word 8
+    ; Ligne 2
+    .word 9
+    .word 10
+    .word 11
+    .word 12
+    ; Ligne 3
+    .word 13
+    .word 14
+    .word 15
+    .word 16
+
+.text
+.global _start
+_start:
+    ; Votre code ici:
+    ; 1. R0 = 0 (somme)
+    ; 2. R1 = adresse de matrix (colonne 0)
+    ; 3. R2 = 4 (nombre de lignes)
+    ; 4. Boucle avec stride de 16 bytes (4 mots)
+
+
+    HALT
+`,
+        solution: `; Accès avec Stride - Solution
+
+.data
+matrix:
+    ; Ligne 0
+    .word 1
+    .word 2
+    .word 3
+    .word 4
+    ; Ligne 1
+    .word 5
+    .word 6
+    .word 7
+    .word 8
+    ; Ligne 2
+    .word 9
+    .word 10
+    .word 11
+    .word 12
+    ; Ligne 3
+    .word 13
+    .word 14
+    .word 15
+    .word 16
+
+.text
+.global _start
+_start:
+    MOV R0, #0          ; somme = 0
+    LDR R1, =matrix     ; adresse colonne 0
+    MOV R2, #4          ; compteur lignes
+
+.loop:
+    CMP R2, #0
+    B.EQ .done
+
+    LDR R3, [R1]        ; charger matrix[i][0]
+    ADD R0, R0, R3      ; somme += valeur
+    ADD R1, R1, #16     ; stride = 16 bytes (saute une ligne)
+    SUB R2, R2, #1
+    B .loop
+
+.done:
+    HALT
+`,
+        test: {
+            setup: '',
+            expect: { R0: 28 }
+        }
+    },
+
+    'asm-cache-reuse': {
+        id: 'asm-cache-reuse',
+        name: 'Réutilisation Registre',
+        description: 'Garder les données en registre pour éviter les accès mémoire',
+        template: `; ============================================
+; Exercice: Réutilisation des Registres
+; ============================================
+; Objectif: Minimiser les accès mémoire
+;
+; Les registres sont BEAUCOUP plus rapides que la mémoire.
+; Garder les données fréquemment utilisées en registre
+; évite les accès cache/mémoire coûteux.
+;
+; Calculer: (a + b) * (a - b) où a=10, b=3
+; = (10+3) * (10-3) = 13 * 7 = 91
+;
+; Chargez a et b UNE SEULE FOIS, puis calculez.
+;
+; Résultat attendu: R0 = 91
+; ============================================
+
+.data
+a:
+    .word 10
+b:
+    .word 3
+
+.text
+.global _start
+_start:
+    ; Votre code ici:
+    ; 1. Charger a dans R1 (une seule fois!)
+    ; 2. Charger b dans R2 (une seule fois!)
+    ; 3. Calculer sum = R1 + R2
+    ; 4. Calculer diff = R1 - R2
+    ; 5. Multiplier sum * diff (par additions répétées)
+
+
+    HALT
+`,
+        solution: `; Réutilisation des Registres - Solution
+
+.data
+a:
+    .word 10
+b:
+    .word 3
+
+.text
+.global _start
+_start:
+    ; Charger une seule fois
+    LDR R6, =a
+    LDR R1, [R6]        ; R1 = a = 10
+    LDR R6, =b
+    LDR R2, [R6]        ; R2 = b = 3
+
+    ; Calculer avec les registres (pas d'accès mémoire!)
+    ADD R3, R1, R2      ; sum = a + b = 13
+    SUB R4, R1, R2      ; diff = a - b = 7
+
+    ; Multiplier sum * diff par additions
+    MOV R0, #0          ; résultat
+    MOV R5, R4          ; compteur = diff = 7
+
+.mult:
+    CMP R5, #0
+    B.EQ .done
+    ADD R0, R0, R3      ; résultat += sum
+    SUB R5, R5, #1
+    B .mult
+
+.done:
+    HALT
+`,
+        test: {
+            setup: '',
+            expect: { R0: 91 }
+        }
     }
 };
 

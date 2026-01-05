@@ -2821,8 +2821,8 @@ architecture rtl of ForwardUnit is
 begin
   -- YOUR CODE HERE
   -- Priority: MEM stage has precedence over WB stage
-  forward_a <= b"00";
-  forward_b <= b"00";
+  forward_a <= 0b00;
+  forward_b <= 0b00;
 end architecture;
 `,
         solution: `-- Forwarding Unit
@@ -2974,12 +2974,34 @@ tick
         name: 'CacheLine',
         description: 'Cache Line Register (valid, dirty, tag, data)',
         dependencies: ['Register16'],
-        template: `-- Cache Line
+        template: `-- ============================================
+-- Exercice: Cache Line (Ligne de Cache)
+-- ============================================
+-- Objectif: Implémenter un registre de ligne de cache
+--
 -- Une ligne de cache contient:
 -- - valid: 1 bit indiquant si la ligne contient des données valides
--- - dirty: 1 bit indiquant si les données ont été modifiées (write-back)
+-- - dirty: 1 bit indiquant si les données ont été modifiées
 -- - tag: identifiant de l'adresse mémoire (20 bits)
 -- - data: 16 octets de données (4 mots de 32 bits = 128 bits)
+--
+-- Étapes à implémenter dans le process:
+-- 1. Si invalidate='1': mettre valid_reg et dirty_reg à '0'
+-- 2. Sinon si write_enable='1': charger une ligne complète
+--    - valid_reg <= '1'
+--    - tag_reg <= write_tag
+--    - data_reg <= write_data
+--    - dirty_reg <= '0'
+-- 3. Sinon si write_word_en='1': écrire un seul mot (32 bits)
+--    - Utiliser write_word_sel pour choisir le mot (0-3)
+--    - 0b00: data_reg(31 downto 0)
+--    - 0b01: data_reg(63 downto 32)
+--    - 0b10: data_reg(95 downto 64)
+--    - 0b11: data_reg(127 downto 96)
+-- 4. Gérer set_dirty et clear_dirty séparément
+--
+-- Note: Utilisez if/elsif pour les priorités
+-- ============================================
 
 entity CacheLine is
   port(
@@ -3012,8 +3034,10 @@ begin
   begin
     if rising_edge(clk) then
       -- YOUR CODE HERE
-      -- Gérer: invalidate, write_enable, write_word_en
-      -- Gérer: set_dirty, clear_dirty
+      -- Étape 1: Gérer invalidate
+      -- Étape 2: Sinon gérer write_enable (ligne complète)
+      -- Étape 3: Sinon gérer write_word_en (mot partiel)
+      -- Étape 4: Gérer set_dirty / clear_dirty
     end if;
   end process;
 
@@ -3067,11 +3091,11 @@ begin
         data_reg <= write_data;
         dirty_reg <= '0';
       elsif write_word_en = '1' then
-        if write_word_sel = b"00" then
+        if write_word_sel = 0b00 then
           data_reg(31 downto 0) <= write_word;
-        elsif write_word_sel = b"01" then
+        elsif write_word_sel = 0b01 then
           data_reg(63 downto 32) <= write_word;
-        elsif write_word_sel = b"10" then
+        elsif write_word_sel = 0b10 then
           data_reg(95 downto 64) <= write_word;
         else
           data_reg(127 downto 96) <= write_word;
@@ -3127,9 +3151,28 @@ expect dirty 0
         name: 'TagCompare',
         description: 'Tag Comparator for cache lookup',
         dependencies: ['And2'],
-        template: `-- Tag Comparator
--- Compare the address tag with the stored tag
--- Output hit = 1 if valid AND tags match
+        template: `-- ============================================
+-- Exercice: Tag Comparator (Comparateur de Tag)
+-- ============================================
+-- Objectif: Détecter si une adresse est présente dans le cache
+--
+-- Le cache utilise un tag pour identifier quelle région mémoire
+-- est stockée dans chaque ligne. Pour un cache hit:
+-- 1. La ligne doit être valide (valid = '1')
+-- 2. Le tag stocké doit correspondre au tag de l'adresse
+--
+-- Implémentation:
+-- - Comparer addr_tag avec stored_tag (20 bits chacun)
+-- - La comparaison (a = b) retourne '1' si égaux, '0' sinon
+-- - hit = valid AND (tags sont égaux)
+--
+-- Syntaxe: hit <= valid and (addr_tag = stored_tag);
+--
+-- Cas de test:
+-- - valid=0, tags égaux -> hit=0 (ligne invalide)
+-- - valid=1, tags égaux -> hit=1 (cache hit!)
+-- - valid=1, tags différents -> hit=0 (cache miss)
+-- ============================================
 
 entity TagCompare is
   port(
@@ -3141,11 +3184,10 @@ entity TagCompare is
 end entity;
 
 architecture rtl of TagCompare is
-  signal tags_equal : bit;
 begin
   -- YOUR CODE HERE
-  -- Compare addr_tag with stored_tag (all 20 bits)
-  -- hit = valid AND tags_equal
+  -- Une seule ligne suffit!
+  -- hit <= valid and (condition de comparaison);
   hit <= '0';
 end architecture;
 `,
@@ -3162,18 +3204,10 @@ entity TagCompare is
 end entity;
 
 architecture rtl of TagCompare is
-  signal tags_equal : bit;
 begin
-  process(addr_tag, stored_tag)
-  begin
-    if addr_tag = stored_tag then
-      tags_equal <= '1';
-    else
-      tags_equal <= '0';
-    end if;
-  end process;
-
-  hit <= valid and tags_equal;
+  -- Hit when valid AND all 20 tag bits match
+  -- Comparison (=) on multi-bit signals returns bit
+  hit <= valid and (addr_tag = stored_tag);
 end architecture;
 `,
         test: `load TagCompare
@@ -3205,8 +3239,35 @@ expect hit 0
         name: 'WordSelect',
         description: 'Word Selector (4-way mux for 32-bit words)',
         dependencies: ['Mux4Way16'],
-        template: `-- Word Selector
--- Select one 32-bit word from a 128-bit cache line
+        template: `-- ============================================
+-- Exercice: Word Selector (Sélecteur de Mot)
+-- ============================================
+-- Objectif: Sélectionner un mot de 32 bits dans une ligne de cache
+--
+-- Une ligne de cache contient 128 bits = 4 mots de 32 bits.
+-- word_sel (2 bits) indique quel mot extraire:
+-- - 0b00: bits 31..0   (premier mot)
+-- - 0b01: bits 63..32  (deuxième mot)
+-- - 0b10: bits 95..64  (troisième mot)
+-- - 0b11: bits 127..96 (quatrième mot)
+--
+-- Implémentation avec Mux4Way16:
+-- Comme Mux4Way16 gère 16 bits, utilisez DEUX instances:
+-- 1. lo: pour les bits bas (15..0) de chaque mot
+-- 2. hi: pour les bits hauts (31..16) de chaque mot
+--
+-- Exemple pour 'lo':
+--   lo: Mux4Way16 port map(
+--     a => line_data(15 downto 0),    -- mot 0, bits bas
+--     b => line_data(47 downto 32),   -- mot 1, bits bas
+--     c => line_data(79 downto 64),   -- mot 2, bits bas
+--     d => line_data(111 downto 96),  -- mot 3, bits bas
+--     sel => word_sel,
+--     y => word_out(15 downto 0)
+--   );
+--
+-- Faites la même chose pour 'hi' avec les bits hauts.
+-- ============================================
 
 entity WordSelect is
   port(
@@ -3217,12 +3278,13 @@ entity WordSelect is
 end entity;
 
 architecture rtl of WordSelect is
+  component Mux4Way16
+    port(a,b,c,d : in bits(15 downto 0); sel : in bits(1 downto 0); y : out bits(15 downto 0));
+  end component;
 begin
   -- YOUR CODE HERE
-  -- word_sel = 00 -> line_data(31 downto 0)
-  -- word_sel = 01 -> line_data(63 downto 32)
-  -- word_sel = 10 -> line_data(95 downto 64)
-  -- word_sel = 11 -> line_data(127 downto 96)
+  -- Instanciez lo: Mux4Way16 pour les bits bas
+  -- Instanciez hi: Mux4Way16 pour les bits hauts
   word_out <= x"00000000";
 end architecture;
 `,
@@ -3238,19 +3300,27 @@ entity WordSelect is
 end entity;
 
 architecture rtl of WordSelect is
+  component Mux4Way16
+    port(a,b,c,d : in bits(15 downto 0); sel : in bits(1 downto 0); y : out bits(15 downto 0));
+  end component;
 begin
-  process(line_data, word_sel)
-  begin
-    if word_sel = b"00" then
-      word_out <= line_data(31 downto 0);
-    elsif word_sel = b"01" then
-      word_out <= line_data(63 downto 32);
-    elsif word_sel = b"10" then
-      word_out <= line_data(95 downto 64);
-    else
-      word_out <= line_data(127 downto 96);
-    end if;
-  end process;
+  -- Use two 16-bit 4-way muxes for lower and upper halves
+  lo: Mux4Way16 port map(
+    a => line_data(15 downto 0),
+    b => line_data(47 downto 32),
+    c => line_data(79 downto 64),
+    d => line_data(111 downto 96),
+    sel => word_sel,
+    y => word_out(15 downto 0)
+  );
+  hi: Mux4Way16 port map(
+    a => line_data(31 downto 16),
+    b => line_data(63 downto 48),
+    c => line_data(95 downto 80),
+    d => line_data(127 downto 112),
+    sel => word_sel,
+    y => word_out(31 downto 16)
+  );
 end architecture;
 `,
         test: `load WordSelect
@@ -3279,9 +3349,38 @@ expect word_out 0xDDDDDDDD
         name: 'CacheController',
         description: 'Cache Controller FSM (IDLE, FETCH, WRITE_BACK)',
         dependencies: ['CacheLine', 'TagCompare', 'WordSelect'],
-        template: `-- Cache Controller
--- State machine: IDLE, FETCH, WRITE_BACK
--- Implements write-through policy
+        template: `-- ============================================
+-- Exercice: Cache Controller (Contrôleur de Cache)
+-- ============================================
+-- Objectif: Implémenter une machine à états pour le cache
+--
+-- États (encodés sur 2 bits):
+-- - IDLE (0b00): Attente de requête CPU
+-- - FETCH (0b01): Chargement d'une ligne depuis la mémoire
+-- - WRITEBACK (0b10): Écriture vers la mémoire
+--
+-- Transitions:
+-- IDLE + requête + miss -> FETCH (charger la ligne)
+-- IDLE + write + hit -> WRITEBACK (écrire en mémoire)
+-- FETCH + mem_ready -> IDLE (ou WRITEBACK si écriture en attente)
+-- WRITEBACK + mem_ready -> IDLE
+--
+-- Signaux de sortie:
+-- - cpu_ready: '1' quand le CPU peut continuer
+-- - mem_read: '1' en état FETCH
+-- - mem_write: '1' en état WRITEBACK
+-- - fill_line: '1' quand mem_ready en FETCH
+--
+-- Conseil: Utilisez des signaux auxiliaires pour simplifier:
+--   is_idle <= (state_reg = 0b00);
+--   is_fetch <= (state_reg = 0b01);
+--   is_wb <= (state_reg = 0b10);
+--   miss <= not cache_hit;
+--   req <= cpu_read or cpu_write;
+--
+-- IMPORTANT: Mettez chaque comparaison entre parenthèses!
+--   elsif (is_idle = '1') and (req = '1') then
+-- ============================================
 
 entity CacheController is
   port(
@@ -3304,25 +3403,25 @@ end entity;
 
 architecture rtl of CacheController is
   signal state_reg : bits(1 downto 0);
+  signal pending_write : bit;
+  -- Ajoutez vos signaux auxiliaires ici
 begin
+  -- Précalculez les conditions ici (combinatoire)
+
   process(clk)
   begin
     if rising_edge(clk) then
       if reset = '1' then
-        state_reg <= b"00";
-      else
-        -- YOUR CODE HERE
-        -- Implement state transitions:
-        -- IDLE (00): if read/write AND miss -> FETCH
-        --            if write AND hit -> WRITEBACK
-        -- FETCH (01): if mem_ready -> IDLE (or WRITEBACK if write)
-        -- WRITEBACK (10): if mem_ready -> IDLE
+        state_reg <= 0b00;
+        pending_write <= '0';
+      -- YOUR CODE HERE
+      -- Utilisez elsif pour chaque transition
       end if;
     end if;
   end process;
 
   state <= state_reg;
-  -- YOUR CODE HERE: Generate outputs based on state
+  -- YOUR CODE HERE: Générez les signaux de sortie
   cpu_ready <= '0';
   mem_read <= '0';
   mem_write <= '0';
@@ -3351,49 +3450,52 @@ end entity;
 architecture rtl of CacheController is
   signal state_reg : bits(1 downto 0);
   signal pending_write : bit;
+  signal fill_line_reg : bit;
+  signal is_idle, is_fetch, is_wb : bit;
+  signal miss, req : bit;
 begin
+  -- Precompute conditions
+  is_idle <= (state_reg = 0b00);
+  is_fetch <= (state_reg = 0b01);
+  is_wb <= (state_reg = 0b10);
+  miss <= not cache_hit;
+  req <= cpu_read or cpu_write;
+
   process(clk)
   begin
     if rising_edge(clk) then
       if reset = '1' then
-        state_reg <= b"00";
+        state_reg <= 0b00;
         pending_write <= '0';
+        fill_line_reg <= '0';
+      elsif (is_idle = '1') and (req = '1') and (miss = '1') then
+        state_reg <= 0b01;
+        pending_write <= cpu_write;
+        fill_line_reg <= '0';
+      elsif (is_idle = '1') and (cpu_write = '1') and (cache_hit = '1') then
+        state_reg <= 0b10;
+        fill_line_reg <= '0';
+      elsif (is_fetch = '1') and (mem_ready = '1') and (pending_write = '1') then
+        state_reg <= 0b10;
+        fill_line_reg <= '1';
+      elsif (is_fetch = '1') and (mem_ready = '1') and (pending_write = '0') then
+        state_reg <= 0b00;
+        fill_line_reg <= '1';
+      elsif (is_wb = '1') and (mem_ready = '1') then
+        state_reg <= 0b00;
+        pending_write <= '0';
+        fill_line_reg <= '0';
       else
-        if state_reg = b"00" then
-          -- IDLE
-          if (cpu_read = '1' or cpu_write = '1') and cache_hit = '0' then
-            state_reg <= b"01";  -- FETCH
-            pending_write <= cpu_write;
-          elsif cpu_write = '1' and cache_hit = '1' then
-            state_reg <= b"10";  -- WRITEBACK
-          end if;
-        elsif state_reg = b"01" then
-          -- FETCH
-          if mem_ready = '1' then
-            if pending_write = '1' then
-              state_reg <= b"10";  -- WRITEBACK
-            else
-              state_reg <= b"00";  -- IDLE
-            end if;
-          end if;
-        elsif state_reg = b"10" then
-          -- WRITEBACK
-          if mem_ready = '1' then
-            state_reg <= b"00";  -- IDLE
-            pending_write <= '0';
-          end if;
-        end if;
+        fill_line_reg <= '0';
       end if;
     end if;
   end process;
 
   state <= state_reg;
-  cpu_ready <= '1' when (state_reg = b"00" and cache_hit = '1') or
-                        (state_reg = b"01" and mem_ready = '1' and pending_write = '0') or
-                        (state_reg = b"10" and mem_ready = '1') else '0';
-  mem_read <= '1' when state_reg = b"01" else '0';
-  mem_write <= '1' when state_reg = b"10" else '0';
-  fill_line <= '1' when state_reg = b"01" and mem_ready = '1' else '0';
+  cpu_ready <= (is_idle and cache_hit) or (is_fetch and mem_ready and (not pending_write)) or (is_wb and mem_ready);
+  mem_read <= is_fetch;
+  mem_write <= is_wb;
+  fill_line <= fill_line_reg;
 end architecture;
 `,
         test: `load CacheController

@@ -2462,41 +2462,49 @@ int main() {
         name: 'Parcours en Ligne',
         description: 'Parcours cache-friendly d\'un tableau 2D',
         template: `// ============================================
-// Exercice: Parcours en Ligne
+// Exercice: Parcours en Ligne (Row-Major)
 // ============================================
 // Objectif: Comprendre l'importance de la localité spatiale
 //
-// En mémoire, un tableau 2D arr[N][M] est stocké ligne par ligne:
-//   arr[0][0], arr[0][1], ..., arr[0][M-1],
-//   arr[1][0], arr[1][1], ..., arr[1][M-1],
-//   ...
+// En mémoire, une matrice 4x4 stockée en row-major:
+//   Index 0-3:   ligne 0 (arr[0*4+0], arr[0*4+1], ...)
+//   Index 4-7:   ligne 1 (arr[1*4+0], arr[1*4+1], ...)
+//   Index 8-11:  ligne 2
+//   Index 12-15: ligne 3
 //
 // Un parcours "en ligne" (row-major) est cache-friendly car
 // les éléments consécutifs sont proches en mémoire.
 //
-// Complétez le code pour:
-// 1. Initialiser arr[i][j] = i * 4 + j
+// Simuler arr[i][j] avec arr[i * 4 + j]
+//
+// 1. Initialiser arr[i*4+j] = i * 4 + j
 // 2. Calculer la somme de tous les éléments
 //
-// Résultat attendu: 0+1+2+3 + 4+5+6+7 + 8+9+10+11 + 12+13+14+15 = 120
+// Résultat attendu: 0+1+2+...+15 = 120
 // ============================================
 
-int arr[4][4];
+int arr[16];
 
 int main() {
-    // 1. Initialiser (parcours en ligne: cache-friendly)
-    for (int i = 0; i < 4; i = i + 1) {
-        for (int j = 0; j < 4; j = j + 1) {
+    int i;
+    int j;
+    int sum;
+
+    // 1. Initialiser (parcours en ligne: i puis j)
+    for (i = 0; i < 4; i = i + 1) {
+        for (j = 0; j < 4; j = j + 1) {
             // Votre code ici:
+            // arr[i * 4 + j] = ...
 
         }
     }
 
     // 2. Calculer la somme (parcours en ligne)
-    int sum = 0;
-    for (int i = 0; i < 4; i = i + 1) {
-        for (int j = 0; j < 4; j = j + 1) {
+    sum = 0;
+    for (i = 0; i < 4; i = i + 1) {
+        for (j = 0; j < 4; j = j + 1) {
             // Votre code ici:
+            // sum = sum + arr[...]
 
         }
     }
@@ -2506,21 +2514,25 @@ int main() {
 `,
         solution: `// Parcours en Ligne - Solution
 
-int arr[4][4];
+int arr[16];
 
 int main() {
+    int i;
+    int j;
+    int sum;
+
     // Initialiser (parcours en ligne: cache-friendly)
-    for (int i = 0; i < 4; i = i + 1) {
-        for (int j = 0; j < 4; j = j + 1) {
-            arr[i][j] = i * 4 + j;
+    for (i = 0; i < 4; i = i + 1) {
+        for (j = 0; j < 4; j = j + 1) {
+            arr[i * 4 + j] = i * 4 + j;
         }
     }
 
-    // Calculer la somme
-    int sum = 0;
-    for (int i = 0; i < 4; i = i + 1) {
-        for (int j = 0; j < 4; j = j + 1) {
-            sum = sum + arr[i][j];
+    // Calculer la somme (accès séquentiel 0,1,2,3,4,5...)
+    sum = 0;
+    for (i = 0; i < 4; i = i + 1) {
+        for (j = 0; j < 4; j = j + 1) {
+            sum = sum + arr[i * 4 + j];
         }
     }
 
@@ -2535,18 +2547,18 @@ int main() {
         name: 'Parcours en Colonne',
         description: 'Comparer avec un parcours cache-unfriendly',
         template: `// ============================================
-// Exercice: Parcours en Colonne
+// Exercice: Parcours en Colonne (Column-Major)
 // ============================================
 // Objectif: Comprendre pourquoi le parcours en colonne
 // est moins efficace pour le cache
 //
-// Un parcours "en colonne" (column-major) accède aux éléments
-// avec des sauts de mémoire importants:
-//   arr[0][0], arr[1][0], arr[2][0], arr[3][0],
-//   arr[0][1], arr[1][1], ...
+// Un parcours "en colonne" accède avec des sauts:
+//   Index 0, 4, 8, 12 (colonne 0)
+//   Index 1, 5, 9, 13 (colonne 1)
+//   ...
 //
 // Cela cause plus de cache misses car chaque accès
-// peut nécessiter le chargement d'une nouvelle ligne de cache.
+// saute plusieurs éléments en mémoire.
 //
 // Malgré cela, le résultat final est le même!
 // Calculez la somme avec un parcours en colonne.
@@ -2554,21 +2566,27 @@ int main() {
 // Résultat attendu: 120 (même résultat, mais moins efficace)
 // ============================================
 
-int arr[4][4];
+int arr[16];
 
 int main() {
-    // Initialiser
-    for (int i = 0; i < 4; i = i + 1) {
-        for (int j = 0; j < 4; j = j + 1) {
-            arr[i][j] = i * 4 + j;
+    int i;
+    int j;
+    int sum;
+
+    // Initialiser (row-major comme d'habitude)
+    for (i = 0; i < 4; i = i + 1) {
+        for (j = 0; j < 4; j = j + 1) {
+            arr[i * 4 + j] = i * 4 + j;
         }
     }
 
     // Somme en colonne (j en premier, puis i)
-    int sum = 0;
-    for (int j = 0; j < 4; j = j + 1) {
-        for (int i = 0; i < 4; i = i + 1) {
+    // Accès: 0,4,8,12, 1,5,9,13, 2,6,10,14, 3,7,11,15
+    sum = 0;
+    for (j = 0; j < 4; j = j + 1) {
+        for (i = 0; i < 4; i = i + 1) {
             // Votre code ici:
+            // sum = sum + arr[...]
 
         }
     }
@@ -2578,21 +2596,26 @@ int main() {
 `,
         solution: `// Parcours en Colonne - Solution
 
-int arr[4][4];
+int arr[16];
 
 int main() {
+    int i;
+    int j;
+    int sum;
+
     // Initialiser
-    for (int i = 0; i < 4; i = i + 1) {
-        for (int j = 0; j < 4; j = j + 1) {
-            arr[i][j] = i * 4 + j;
+    for (i = 0; i < 4; i = i + 1) {
+        for (j = 0; j < 4; j = j + 1) {
+            arr[i * 4 + j] = i * 4 + j;
         }
     }
 
     // Somme en colonne (cache-unfriendly mais correct)
-    int sum = 0;
-    for (int j = 0; j < 4; j = j + 1) {
-        for (int i = 0; i < 4; i = i + 1) {
-            sum = sum + arr[i][j];
+    // Accès: 0,4,8,12, 1,5,9,13, 2,6,10,14, 3,7,11,15
+    sum = 0;
+    for (j = 0; j < 4; j = j + 1) {
+        for (i = 0; i < 4; i = i + 1) {
+            sum = sum + arr[i * 4 + j];
         }
     }
 
@@ -2617,38 +2640,44 @@ int main() {
 // Au lieu de parcourir tout le tableau d'un coup,
 // on traite des blocs de 2x2 éléments.
 //
-// Tableau 4x4, blocs de 2x2:
+// Matrice 4x4 (16 éléments), blocs de 2x2:
 // +----+----+
-// | B0 | B1 |
-// +----+----+
-// | B2 | B3 |
-// +----+----+
+// | B0 | B1 |   B0: indices 0,1,4,5
+// +----+----+   B1: indices 2,3,6,7
+// | B2 | B3 |   B2: indices 8,9,12,13
+// +----+----+   B3: indices 10,11,14,15
 //
 // Calculez la somme en utilisant des blocs 2x2.
 //
 // Résultat attendu: 120
 // ============================================
 
-int arr[4][4];
+int arr[16];
 
 int main() {
+    int i;
+    int j;
+    int bi;
+    int bj;
+    int sum;
+
     // Initialiser
-    for (int i = 0; i < 4; i = i + 1) {
-        for (int j = 0; j < 4; j = j + 1) {
-            arr[i][j] = i * 4 + j;
+    for (i = 0; i < 4; i = i + 1) {
+        for (j = 0; j < 4; j = j + 1) {
+            arr[i * 4 + j] = i * 4 + j;
         }
     }
 
-    int sum = 0;
-    int block_size = 2;
+    sum = 0;
 
-    // Parcours par blocs
-    for (int bi = 0; bi < 4; bi = bi + block_size) {
-        for (int bj = 0; bj < 4; bj = bj + block_size) {
-            // Traiter le bloc [bi..bi+1][bj..bj+1]
-            for (int i = bi; i < bi + block_size; i = i + 1) {
-                for (int j = bj; j < bj + block_size; j = j + 1) {
+    // Parcours par blocs 2x2
+    for (bi = 0; bi < 4; bi = bi + 2) {
+        for (bj = 0; bj < 4; bj = bj + 2) {
+            // Traiter le bloc 2x2 commençant à (bi, bj)
+            for (i = bi; i < bi + 2; i = i + 1) {
+                for (j = bj; j < bj + 2; j = j + 1) {
                     // Votre code ici:
+                    // sum = sum + arr[...]
 
                 }
             }
@@ -2660,25 +2689,30 @@ int main() {
 `,
         solution: `// Traitement par Blocs - Solution
 
-int arr[4][4];
+int arr[16];
 
 int main() {
+    int i;
+    int j;
+    int bi;
+    int bj;
+    int sum;
+
     // Initialiser
-    for (int i = 0; i < 4; i = i + 1) {
-        for (int j = 0; j < 4; j = j + 1) {
-            arr[i][j] = i * 4 + j;
+    for (i = 0; i < 4; i = i + 1) {
+        for (j = 0; j < 4; j = j + 1) {
+            arr[i * 4 + j] = i * 4 + j;
         }
     }
 
-    int sum = 0;
-    int block_size = 2;
+    sum = 0;
 
-    // Parcours par blocs (cache-friendly)
-    for (int bi = 0; bi < 4; bi = bi + block_size) {
-        for (int bj = 0; bj < 4; bj = bj + block_size) {
-            for (int i = bi; i < bi + block_size; i = i + 1) {
-                for (int j = bj; j < bj + block_size; j = j + 1) {
-                    sum = sum + arr[i][j];
+    // Parcours par blocs 2x2 (cache-friendly)
+    for (bi = 0; bi < 4; bi = bi + 2) {
+        for (bj = 0; bj < 4; bj = bj + 2) {
+            for (i = bi; i < bi + 2; i = i + 1) {
+                for (j = bj; j < bj + 2; j = j + 1) {
+                    sum = sum + arr[i * 4 + j];
                 }
             }
         }

@@ -149,6 +149,16 @@ Ces exercices preparent aux structs en C en montrant comment les donnees structu
 | Degrade | Effet dithering sur ecran |
 | Recherche Dichotomique | Trouver 42 en 7 essais |
 
+### Cache (Patterns d'Acces Memoire)
+
+Ces exercices illustrent l'impact des patterns d'acces memoire sur les performances cache.
+
+| Exercice | Objectif | Resultat |
+|:---------|:---------|:---------|
+| Acces Sequentiel | Parcours cache-friendly (adresses consecutives) | R0 = 100 |
+| Acces avec Stride | Parcours avec sauts de 16 bytes (moins efficace) | R0 = 28 |
+| Reutilisation Registre | Charger une fois, reutiliser plusieurs fois | R0 = 91 |
+
 ---
 
 ## C. Exercices C32

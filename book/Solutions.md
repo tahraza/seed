@@ -1494,18 +1494,9 @@ entity TagCompare is
 end entity;
 
 architecture rtl of TagCompare is
-  signal tags_equal : bit;
 begin
-  process(addr_tag, stored_tag)
-  begin
-    if addr_tag = stored_tag then
-      tags_equal <= '1';
-    else
-      tags_equal <= '0';
-    end if;
-  end process;
-
-  hit <= valid and tags_equal;
+  -- Hit when valid AND all 20 tag bits match
+  hit <= valid and (addr_tag = stored_tag);
 end architecture;
 ```
 
@@ -1525,19 +1516,27 @@ entity WordSelect is
 end entity;
 
 architecture rtl of WordSelect is
+  component Mux4Way16
+    port(a,b,c,d : in bits(15 downto 0); sel : in bits(1 downto 0); y : out bits(15 downto 0));
+  end component;
 begin
-  process(line_data, word_sel)
-  begin
-    if word_sel = b"00" then
-      word_out <= line_data(31 downto 0);
-    elsif word_sel = b"01" then
-      word_out <= line_data(63 downto 32);
-    elsif word_sel = b"10" then
-      word_out <= line_data(95 downto 64);
-    else
-      word_out <= line_data(127 downto 96);
-    end if;
-  end process;
+  -- Use two 16-bit 4-way muxes for lower and upper halves
+  lo: Mux4Way16 port map(
+    a => line_data(15 downto 0),
+    b => line_data(47 downto 32),
+    c => line_data(79 downto 64),
+    d => line_data(111 downto 96),
+    sel => word_sel,
+    y => word_out(15 downto 0)
+  );
+  hi: Mux4Way16 port map(
+    a => line_data(31 downto 16),
+    b => line_data(63 downto 48),
+    c => line_data(95 downto 80),
+    d => line_data(127 downto 112),
+    sel => word_sel,
+    y => word_out(31 downto 16)
+  );
 end architecture;
 ```
 
@@ -1567,49 +1566,52 @@ end entity;
 architecture rtl of CacheController is
   signal state_reg : bits(1 downto 0);
   signal pending_write : bit;
+  signal fill_line_reg : bit;
+  signal is_idle, is_fetch, is_wb : bit;
+  signal miss, req : bit;
 begin
+  -- Precompute conditions
+  is_idle <= (state_reg = 0b00);
+  is_fetch <= (state_reg = 0b01);
+  is_wb <= (state_reg = 0b10);
+  miss <= not cache_hit;
+  req <= cpu_read or cpu_write;
+
   process(clk)
   begin
     if rising_edge(clk) then
       if reset = '1' then
-        state_reg <= b"00";
+        state_reg <= 0b00;
         pending_write <= '0';
+        fill_line_reg <= '0';
+      elsif (is_idle = '1') and (req = '1') and (miss = '1') then
+        state_reg <= 0b01;
+        pending_write <= cpu_write;
+        fill_line_reg <= '0';
+      elsif (is_idle = '1') and (cpu_write = '1') and (cache_hit = '1') then
+        state_reg <= 0b10;
+        fill_line_reg <= '0';
+      elsif (is_fetch = '1') and (mem_ready = '1') and (pending_write = '1') then
+        state_reg <= 0b10;
+        fill_line_reg <= '1';
+      elsif (is_fetch = '1') and (mem_ready = '1') and (pending_write = '0') then
+        state_reg <= 0b00;
+        fill_line_reg <= '1';
+      elsif (is_wb = '1') and (mem_ready = '1') then
+        state_reg <= 0b00;
+        pending_write <= '0';
+        fill_line_reg <= '0';
       else
-        if state_reg = b"00" then
-          -- IDLE
-          if (cpu_read = '1' or cpu_write = '1') and cache_hit = '0' then
-            state_reg <= b"01";  -- FETCH
-            pending_write <= cpu_write;
-          elsif cpu_write = '1' and cache_hit = '1' then
-            state_reg <= b"10";  -- WRITEBACK
-          end if;
-        elsif state_reg = b"01" then
-          -- FETCH
-          if mem_ready = '1' then
-            if pending_write = '1' then
-              state_reg <= b"10";  -- WRITEBACK
-            else
-              state_reg <= b"00";  -- IDLE
-            end if;
-          end if;
-        elsif state_reg = b"10" then
-          -- WRITEBACK
-          if mem_ready = '1' then
-            state_reg <= b"00";  -- IDLE
-            pending_write <= '0';
-          end if;
-        end if;
+        fill_line_reg <= '0';
       end if;
     end if;
   end process;
 
   state <= state_reg;
-  cpu_ready <= '1' when (state_reg = b"00" and cache_hit = '1') or
-                        (state_reg = b"01" and mem_ready = '1' and pending_write = '0') or
-                        (state_reg = b"10" and mem_ready = '1') else '0';
-  mem_read <= '1' when state_reg = b"01" else '0';
-  mem_write <= '1' when state_reg = b"10" else '0';
-  fill_line <= '1' when state_reg = b"01" and mem_ready = '1' else '0';
+  cpu_ready <= (is_idle and cache_hit) or (is_fetch and mem_ready and (not pending_write)) or (is_wb and mem_ready);
+  mem_read <= is_fetch;
+  mem_write <= is_wb;
+  fill_line <= fill_line_reg;
 end architecture;
 ```
 
@@ -2612,6 +2614,142 @@ _start:
 
 ---
 
+### Cache: Acces Sequentiel
+
+```asm
+; Accès Séquentiel - Solution
+; Parcours cache-friendly d'un tableau
+
+.data
+arr:
+    .word 10
+    .word 20
+    .word 30
+    .word 40
+
+.text
+.global _start
+_start:
+    MOV R0, #0          ; somme = 0
+    LDR R1, =arr        ; adresse du tableau
+    MOV R2, #4          ; compteur
+
+.loop:
+    CMP R2, #0
+    B.EQ .done
+
+    LDR R3, [R1]        ; charger arr[i]
+    ADD R0, R0, R3      ; somme += arr[i]
+    ADD R1, R1, #4      ; adresse += 4 (accès séquentiel!)
+    SUB R2, R2, #1      ; compteur--
+    B .loop
+
+.done:
+    HALT
+```
+
+**Explication:** L'accès séquentiel (adresses 0, 4, 8, 12...) est optimal pour le cache car il exploite la localité spatiale : les données proches en mémoire sont chargées ensemble dans une ligne de cache.
+
+---
+
+### Cache: Acces avec Stride
+
+```asm
+; Accès avec Stride - Solution
+; Parcours avec sauts de 16 bytes (4 mots)
+
+.data
+matrix:
+    ; Ligne 0
+    .word 1
+    .word 2
+    .word 3
+    .word 4
+    ; Ligne 1
+    .word 5
+    .word 6
+    .word 7
+    .word 8
+    ; Ligne 2
+    .word 9
+    .word 10
+    .word 11
+    .word 12
+    ; Ligne 3
+    .word 13
+    .word 14
+    .word 15
+    .word 16
+
+.text
+.global _start
+_start:
+    MOV R0, #0          ; somme = 0
+    LDR R1, =matrix     ; adresse colonne 0
+    MOV R2, #4          ; compteur lignes
+
+.loop:
+    CMP R2, #0
+    B.EQ .done
+
+    LDR R3, [R1]        ; charger matrix[i][0]
+    ADD R0, R0, R3      ; somme += valeur
+    ADD R1, R1, #16     ; stride = 16 bytes (saute une ligne)
+    SUB R2, R2, #1
+    B .loop
+
+.done:
+    HALT
+```
+
+**Explication:** Le stride de 16 bytes signifie qu'on saute 4 éléments à chaque accès (1→5→9→13). C'est moins efficace pour le cache car chaque accès peut nécessiter une nouvelle ligne de cache.
+
+---
+
+### Cache: Reutilisation Registre
+
+```asm
+; Réutilisation des Registres - Solution
+; Charger une fois, réutiliser plusieurs fois
+
+.data
+a:
+    .word 10
+b:
+    .word 3
+
+.text
+.global _start
+_start:
+    ; Charger une seule fois depuis la mémoire
+    LDR R6, =a
+    LDR R1, [R6]        ; R1 = a = 10
+    LDR R6, =b
+    LDR R2, [R6]        ; R2 = b = 3
+
+    ; Calculer avec les registres (pas d'accès mémoire!)
+    ADD R3, R1, R2      ; sum = a + b = 13
+    SUB R4, R1, R2      ; diff = a - b = 7
+
+    ; Multiplier sum * diff par additions
+    MOV R0, #0          ; résultat
+    MOV R5, R4          ; compteur = diff = 7
+
+.mult:
+    CMP R5, #0
+    B.EQ .done
+    ADD R0, R0, R3      ; résultat += sum
+    SUB R5, R5, #1
+    B .mult
+
+.done:
+    HALT
+```
+
+**Explication:** Les registres sont ~100x plus rapides que la RAM. En chargeant `a` et `b` une seule fois et en gardant les valeurs en registre pour tous les calculs, on évite les accès mémoire coûteux.
+
+---
+
 ## C. Solutions C32
 
 ### Variables
@@ -3512,28 +3650,36 @@ int main() {
 
 ```c
 // Parcours en Ligne - Solution
+// Utilise un tableau 1D avec indexation manuelle: arr[i * 4 + j]
 
-int arr[4][4];
+int arr[16];
 
 int main() {
+    int i;
+    int j;
+    int sum;
+
     // Initialiser (parcours en ligne: cache-friendly)
-    for (int i = 0; i < 4; i = i + 1) {
-        for (int j = 0; j < 4; j = j + 1) {
-            arr[i][j] = i * 4 + j;
+    // Accès: 0, 1, 2, 3, 4, 5, 6, 7... (séquentiel)
+    for (i = 0; i < 4; i = i + 1) {
+        for (j = 0; j < 4; j = j + 1) {
+            arr[i * 4 + j] = i * 4 + j;
         }
     }
 
-    // Calculer la somme
-    int sum = 0;
-    for (int i = 0; i < 4; i = i + 1) {
-        for (int j = 0; j < 4; j = j + 1) {
-            sum = sum + arr[i][j];
+    // Calculer la somme (accès séquentiel = cache-friendly)
+    sum = 0;
+    for (i = 0; i < 4; i = i + 1) {
+        for (j = 0; j < 4; j = j + 1) {
+            sum = sum + arr[i * 4 + j];
         }
     }
 
     return sum;
 }
 ```
+
+**Explication:** Le parcours row-major (i puis j) génère des accès séquentiels en mémoire (indices 0, 1, 2, 3, 4...). C'est optimal pour le cache car une ligne de cache chargée est entièrement utilisée avant de passer à la suivante.
 
 ---
 
@@ -3541,22 +3687,28 @@ int main() {
 
 ```c
 // Parcours en Colonne - Solution
+// Même calcul, mais accès non-séquentiels (cache-unfriendly)
 
-int arr[4][4];
+int arr[16];
 
 int main() {
-    // Initialiser
-    for (int i = 0; i < 4; i = i + 1) {
-        for (int j = 0; j < 4; j = j + 1) {
-            arr[i][j] = i * 4 + j;
+    int i;
+    int j;
+    int sum;
+
+    // Initialiser (row-major comme d'habitude)
+    for (i = 0; i < 4; i = i + 1) {
+        for (j = 0; j < 4; j = j + 1) {
+            arr[i * 4 + j] = i * 4 + j;
         }
     }
 
-    // Somme en colonne (cache-unfriendly mais correct)
-    int sum = 0;
-    for (int j = 0; j < 4; j = j + 1) {
-        for (int i = 0; i < 4; i = i + 1) {
-            sum = sum + arr[i][j];
+    // Somme en colonne: j d'abord, puis i
+    // Accès: 0, 4, 8, 12, 1, 5, 9, 13... (sauts de 4!)
+    sum = 0;
+    for (j = 0; j < 4; j = j + 1) {
+        for (i = 0; i < 4; i = i + 1) {
+            sum = sum + arr[i * 4 + j];
         }
     }
 
@@ -3564,32 +3716,41 @@ int main() {
 }
 ```
 
+**Explication:** Le parcours column-major (j puis i) génère des accès avec des sauts de 4 positions (indices 0, 4, 8, 12, puis 1, 5, 9, 13...). Chaque accès peut charger une nouvelle ligne de cache, gaspillant les données déjà chargées.
+
 ---
 
 ### Traitement par Blocs
 
 ```c
 // Traitement par Blocs - Solution
+// Technique de blocking pour améliorer la localité
 
-int arr[4][4];
+int arr[16];
 
 int main() {
+    int i;
+    int j;
+    int bi;
+    int bj;
+    int sum;
+
     // Initialiser
-    for (int i = 0; i < 4; i = i + 1) {
-        for (int j = 0; j < 4; j = j + 1) {
-            arr[i][j] = i * 4 + j;
+    for (i = 0; i < 4; i = i + 1) {
+        for (j = 0; j < 4; j = j + 1) {
+            arr[i * 4 + j] = i * 4 + j;
         }
     }
 
-    int sum = 0;
-    int block_size = 2;
+    sum = 0;
 
-    // Parcours par blocs (cache-friendly)
-    for (int bi = 0; bi < 4; bi = bi + block_size) {
-        for (int bj = 0; bj < 4; bj = bj + block_size) {
-            for (int i = bi; i < bi + block_size; i = i + 1) {
-                for (int j = bj; j < bj + block_size; j = j + 1) {
-                    sum = sum + arr[i][j];
+    // Parcours par blocs 2x2
+    // On traite entièrement chaque bloc avant de passer au suivant
+    for (bi = 0; bi < 4; bi = bi + 2) {
+        for (bj = 0; bj < 4; bj = bj + 2) {
+            for (i = bi; i < bi + 2; i = i + 1) {
+                for (j = bj; j < bj + 2; j = j + 1) {
+                    sum = sum + arr[i * 4 + j];
                 }
             }
         }
@@ -3599,32 +3760,42 @@ int main() {
 }
 ```
 
+**Explication:** Le blocking divise la matrice en petits blocs (2x2 ici) qui tiennent dans le cache. On traite chaque bloc entièrement avant de passer au suivant, maximisant la réutilisation des données chargées.
+
 ---
 
 ### Localité Temporelle
 
 ```c
 // Localité Temporelle - Solution
+// Réutiliser les données pendant qu'elles sont en cache
 
 int arr[4];
 
 int main() {
+    int i;
+    int sum;
+    int factor;
+
     arr[0] = 1;
     arr[1] = 2;
     arr[2] = 3;
     arr[3] = 4;
 
-    int sum = 0;
-    int factor = 3;
+    sum = 0;
+    factor = 3;
 
-    // Un seul parcours: bonne localité temporelle
-    for (int i = 0; i < 4; i = i + 1) {
+    // Un seul parcours: chaque élément est lu une seule fois
+    // et utilisé immédiatement (bonne localité temporelle)
+    for (i = 0; i < 4; i = i + 1) {
         sum = sum + arr[i] * factor;
     }
 
     return sum;
 }
 ```
+
+**Explication:** La localité temporelle consiste à réutiliser rapidement les données récemment accédées. Ici, on lit chaque élément une seule fois et on effectue tout le calcul immédiatement, plutôt que de faire plusieurs passes sur le tableau.
 
 ---
 
