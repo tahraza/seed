@@ -441,3 +441,21 @@ Runtime may implement these via MMIO or via SVC services (`SYS_PUTC`,
 - Callee-saved: R4-R11. Caller-saved: R0-R3, R12, LR.
 - SP 4-byte aligned, descending stack.
 - LR holds the return address. If the callee uses LR, it must save/restore it.
+
+### 3.8 Literal pool and code size limitations
+The ARM-style ISA uses PC-relative addressing for loading 32-bit constants that
+cannot be encoded as immediates. These constants are placed in a "literal pool"
+near the referencing instruction.
+
+The LDR instruction has a limited offset range of ±8191 bytes from PC to the
+literal pool entry. To avoid "literal pool overflow" errors (E1008):
+
+- The compiler inserts `.ltorg` directives after each function to flush pending
+  literals.
+- Very large functions with many constants may still overflow. In this case,
+  split the function into smaller helper functions.
+- Each function can safely use up to ~2000 constant references before risking
+  overflow.
+
+This is similar to ARM's requirement for `.ltorg` placement in hand-written
+assembly.

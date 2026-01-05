@@ -1,0 +1,3490 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr" xml:lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Projet Nand2Tetris-Codex" />
+  <meta name="dcterms.date" content="2026-01-01" />
+  <title>L’Architecture Codex</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+:root {
+--background-body: #fff;
+--background: #efefef;
+--background-alt: #f7f7f7;
+--selection: #9e9e9e;
+--text-main: #363636;
+--text-bright: #000;
+--text-muted: #70777f;
+--links: #0076d1;
+--focus: #0096bfab;
+--border: #dbdbdb;
+--code: #000;
+--animation-duration: 0.1s;
+--button-base: #d0cfcf;
+--button-hover: #9b9b9b;
+--scrollbar-thumb: rgb(170, 170, 170);
+--scrollbar-thumb-hover: var(--button-hover);
+--form-placeholder: #949494;
+--form-text: #1d1d1d;
+--variable: #39a33c;
+--highlight: #ff0;
+--select-arrow: url("data:image/svg+xml;charset=utf-8,%3C?xml version='1.0' encoding='utf-8'?%3E %3Csvg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' height='62.5' width='116.9' fill='%23161f27'%3E %3Cpath d='M115.3,1.6 C113.7,0 111.1,0 109.5,1.6 L58.5,52.7 L7.4,1.6 C5.8,0 3.2,0 1.6,1.6 C0,3.2 0,5.8 1.6,7.4 L55.5,61.3 C56.3,62.1 57.3,62.5 58.4,62.5 C59.4,62.5 60.5,62.1 61.3,61.3 L115.2,7.4 C116.9,5.8 116.9,3.2 115.3,1.6Z'/%3E %3C/svg%3E");
+}
+@media (prefers-color-scheme: dark) {
+:root {
+--background-body: #202b38;
+--background: #161f27;
+--background-alt: #1a242f;
+--selection: #1c76c5;
+--text-main: #dbdbdb;
+--text-bright: #fff;
+--text-muted: #a9b1ba;
+--links: #41adff;
+--focus: #0096bfab;
+--border: #526980;
+--code: #ffbe85;
+--animation-duration: 0.1s;
+--button-base: #0c151c;
+--button-hover: #040a0f;
+--scrollbar-thumb: var(--button-hover);
+--scrollbar-thumb-hover: rgb(0, 0, 0);
+--form-placeholder: #a9a9a9;
+--form-text: #fff;
+--variable: #d941e2;
+--highlight: #efdb43;
+--select-arrow: url("data:image/svg+xml;charset=utf-8,%3C?xml version='1.0' encoding='utf-8'?%3E %3Csvg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' height='62.5' width='116.9' fill='%23efefef'%3E %3Cpath d='M115.3,1.6 C113.7,0 111.1,0 109.5,1.6 L58.5,52.7 L7.4,1.6 C5.8,0 3.2,0 1.6,1.6 C0,3.2 0,5.8 1.6,7.4 L55.5,61.3 C56.3,62.1 57.3,62.5 58.4,62.5 C59.4,62.5 60.5,62.1 61.3,61.3 L115.2,7.4 C116.9,5.8 116.9,3.2 115.3,1.6Z'/%3E %3C/svg%3E");
+}
+}
+html {
+scrollbar-color: rgb(170, 170, 170) #fff;
+scrollbar-color: var(--scrollbar-thumb) var(--background-body);
+scrollbar-width: thin;
+}
+@media (prefers-color-scheme: dark) {
+html {
+scrollbar-color: #040a0f #202b38;
+scrollbar-color: var(--scrollbar-thumb) var(--background-body);
+}
+}
+@media (prefers-color-scheme: dark) {
+html {
+scrollbar-color: #040a0f #202b38;
+scrollbar-color: var(--scrollbar-thumb) var(--background-body);
+}
+}
+@media (prefers-color-scheme: dark) {
+html {
+scrollbar-color: #040a0f #202b38;
+scrollbar-color: var(--scrollbar-thumb) var(--background-body);
+}
+}
+@media (prefers-color-scheme: dark) {
+html {
+scrollbar-color: #040a0f #202b38;
+scrollbar-color: var(--scrollbar-thumb) var(--background-body);
+}
+}
+@media (prefers-color-scheme: dark) {
+html {
+scrollbar-color: #040a0f #202b38;
+scrollbar-color: var(--scrollbar-thumb) var(--background-body);
+}
+}
+@media (prefers-color-scheme: dark) {
+html {
+scrollbar-color: #040a0f #202b38;
+scrollbar-color: var(--scrollbar-thumb) var(--background-body);
+}
+}
+body {
+font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+line-height: 1.4;
+max-width: 800px;
+margin: 20px auto;
+padding: 0 10px;
+word-wrap: break-word;
+color: #363636;
+color: var(--text-main);
+background: #fff;
+background: var(--background-body);
+text-rendering: optimizeLegibility;
+}
+@media (prefers-color-scheme: dark) {
+body {
+background: #202b38;
+background: var(--background-body);
+}
+}
+@media (prefers-color-scheme: dark) {
+body {
+color: #dbdbdb;
+color: var(--text-main);
+}
+}
+button {
+transition:
+background-color 0.1s linear,
+border-color 0.1s linear,
+color 0.1s linear,
+box-shadow 0.1s linear,
+transform 0.1s ease;
+transition:
+background-color var(--animation-duration) linear,
+border-color var(--animation-duration) linear,
+color var(--animation-duration) linear,
+box-shadow var(--animation-duration) linear,
+transform var(--animation-duration) ease;
+}
+@media (prefers-color-scheme: dark) {
+button {
+transition:
+background-color 0.1s linear,
+border-color 0.1s linear,
+color 0.1s linear,
+box-shadow 0.1s linear,
+transform 0.1s ease;
+transition:
+background-color var(--animation-duration) linear,
+border-color var(--animation-duration) linear,
+color var(--animation-duration) linear,
+box-shadow var(--animation-duration) linear,
+transform var(--animation-duration) ease;
+}
+}
+input {
+transition:
+background-color 0.1s linear,
+border-color 0.1s linear,
+color 0.1s linear,
+box-shadow 0.1s linear,
+transform 0.1s ease;
+transition:
+background-color var(--animation-duration) linear,
+border-color var(--animation-duration) linear,
+color var(--animation-duration) linear,
+box-shadow var(--animation-duration) linear,
+transform var(--animation-duration) ease;
+}
+@media (prefers-color-scheme: dark) {
+input {
+transition:
+background-color 0.1s linear,
+border-color 0.1s linear,
+color 0.1s linear,
+box-shadow 0.1s linear,
+transform 0.1s ease;
+transition:
+background-color var(--animation-duration) linear,
+border-color var(--animation-duration) linear,
+color var(--animation-duration) linear,
+box-shadow var(--animation-duration) linear,
+transform var(--animation-duration) ease;
+}
+}
+textarea {
+transition:
+background-color 0.1s linear,
+border-color 0.1s linear,
+color 0.1s linear,
+box-shadow 0.1s linear,
+transform 0.1s ease;
+transition:
+background-color var(--animation-duration) linear,
+border-color var(--animation-duration) linear,
+color var(--animation-duration) linear,
+box-shadow var(--animation-duration) linear,
+transform var(--animation-duration) ease;
+}
+@media (prefers-color-scheme: dark) {
+textarea {
+transition:
+background-color 0.1s linear,
+border-color 0.1s linear,
+color 0.1s linear,
+box-shadow 0.1s linear,
+transform 0.1s ease;
+transition:
+background-color var(--animation-duration) linear,
+border-color var(--animation-duration) linear,
+color var(--animation-duration) linear,
+box-shadow var(--animation-duration) linear,
+transform var(--animation-duration) ease;
+}
+}
+h1 {
+font-size: 2.2em;
+margin-top: 0;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+margin-bottom: 12px;
+margin-top: 24px;
+}
+h1 {
+color: #000;
+color: var(--text-bright);
+}
+@media (prefers-color-scheme: dark) {
+h1 {
+color: #fff;
+color: var(--text-bright);
+}
+}
+h2 {
+color: #000;
+color: var(--text-bright);
+}
+@media (prefers-color-scheme: dark) {
+h2 {
+color: #fff;
+color: var(--text-bright);
+}
+}
+h3 {
+color: #000;
+color: var(--text-bright);
+}
+@media (prefers-color-scheme: dark) {
+h3 {
+color: #fff;
+color: var(--text-bright);
+}
+}
+h4 {
+color: #000;
+color: var(--text-bright);
+}
+@media (prefers-color-scheme: dark) {
+h4 {
+color: #fff;
+color: var(--text-bright);
+}
+}
+h5 {
+color: #000;
+color: var(--text-bright);
+}
+@media (prefers-color-scheme: dark) {
+h5 {
+color: #fff;
+color: var(--text-bright);
+}
+}
+h6 {
+color: #000;
+color: var(--text-bright);
+}
+@media (prefers-color-scheme: dark) {
+h6 {
+color: #fff;
+color: var(--text-bright);
+}
+}
+strong {
+color: #000;
+color: var(--text-bright);
+}
+@media (prefers-color-scheme: dark) {
+strong {
+color: #fff;
+color: var(--text-bright);
+}
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+b,
+strong,
+th {
+font-weight: 600;
+}
+q::before {
+content: none;
+}
+q::after {
+content: none;
+}
+blockquote {
+border-left: 4px solid #0096bfab;
+border-left: 4px solid var(--focus);
+margin: 1.5em 0;
+padding: 0.5em 1em;
+font-style: italic;
+}
+@media (prefers-color-scheme: dark) {
+blockquote {
+border-left: 4px solid #0096bfab;
+border-left: 4px solid var(--focus);
+}
+}
+q {
+border-left: 4px solid #0096bfab;
+border-left: 4px solid var(--focus);
+margin: 1.5em 0;
+padding: 0.5em 1em;
+font-style: italic;
+}
+@media (prefers-color-scheme: dark) {
+q {
+border-left: 4px solid #0096bfab;
+border-left: 4px solid var(--focus);
+}
+}
+blockquote > footer {
+font-style: normal;
+border: 0;
+}
+blockquote cite {
+font-style: normal;
+}
+address {
+font-style: normal;
+}
+a[href^='mailto\:']::before {
+content: '📧 ';
+}
+a[href^='tel\:']::before {
+content: '📞 ';
+}
+a[href^='sms\:']::before {
+content: '💬 ';
+}
+mark {
+background-color: #ff0;
+background-color: var(--highlight);
+border-radius: 2px;
+padding: 0 2px 0 2px;
+color: #000;
+}
+@media (prefers-color-scheme: dark) {
+mark {
+background-color: #efdb43;
+background-color: var(--highlight);
+}
+}
+a > code,
+a > strong {
+color: inherit;
+}
+button,
+select,
+input[type='submit'],
+input[type='reset'],
+input[type='button'],
+input[type='checkbox'],
+input[type='range'],
+input[type='radio'] {
+cursor: pointer;
+}
+input,
+select {
+display: block;
+}
+[type='checkbox'],
+[type='radio'] {
+display: initial;
+}
+input {
+color: #1d1d1d;
+color: var(--form-text);
+background-color: #efefef;
+background-color: var(--background);
+font-family: inherit;
+font-size: inherit;
+margin-right: 6px;
+margin-bottom: 6px;
+padding: 10px;
+border: none;
+border-radius: 6px;
+outline: none;
+}
+@media (prefers-color-scheme: dark) {
+input {
+background-color: #161f27;
+background-color: var(--background);
+}
+}
+@media (prefers-color-scheme: dark) {
+input {
+color: #fff;
+color: var(--form-text);
+}
+}
+button {
+color: #1d1d1d;
+color: var(--form-text);
+background-color: #efefef;
+background-color: var(--background);
+font-family: inherit;
+font-size: inherit;
+margin-right: 6px;
+margin-bottom: 6px;
+padding: 10px;
+border: none;
+border-radius: 6px;
+outline: none;
+}
+@media (prefers-color-scheme: dark) {
+button {
+background-color: #161f27;
+background-color: var(--background);
+}
+}
+@media (prefers-color-scheme: dark) {
+button {
+color: #fff;
+color: var(--form-text);
+}
+}
+textarea {
+color: #1d1d1d;
+color: var(--form-text);
+background-color: #efefef;
+background-color: var(--background);
+font-family: inherit;
+font-size: inherit;
+margin-right: 6px;
+margin-bottom: 6px;
+padding: 10px;
+border: none;
+border-radius: 6px;
+outline: none;
+}
+@media (prefers-color-scheme: dark) {
+textarea {
+background-color: #161f27;
+background-color: var(--background);
+}
+}
+@media (prefers-color-scheme: dark) {
+textarea {
+color: #fff;
+color: var(--form-text);
+}
+}
+select {
+color: #1d1d1d;
+color: var(--form-text);
+background-color: #efefef;
+background-color: var(--background);
+font-family: inherit;
+font-size: inherit;
+margin-right: 6px;
+margin-bottom: 6px;
+padding: 10px;
+border: none;
+border-radius: 6px;
+outline: none;
+}
+@media (prefers-color-scheme: dark) {
+select {
+background-color: #161f27;
+background-color: var(--background);
+}
+}
+@media (prefers-color-scheme: dark) {
+select {
+color: #fff;
+color: var(--form-text);
+}
+}
+button {
+background-color: #d0cfcf;
+background-color: var(--button-base);
+padding-right: 30px;
+padding-left: 30px;
+}
+@media (prefers-color-scheme: dark) {
+button {
+background-color: #0c151c;
+background-color: var(--button-base);
+}
+}
+input[type='submit'] {
+background-color: #d0cfcf;
+background-color: var(--button-base);
+padding-right: 30px;
+padding-left: 30px;
+}
+@media (prefers-color-scheme: dark) {
+input[type='submit'] {
+background-color: #0c151c;
+background-color: var(--button-base);
+}
+}
+input[type='reset'] {
+background-color: #d0cfcf;
+background-color: var(--button-base);
+padding-right: 30px;
+padding-left: 30px;
+}
+@media (prefers-color-scheme: dark) {
+input[type='reset'] {
+background-color: #0c151c;
+background-color: var(--button-base);
+}
+}
+input[type='button'] {
+background-color: #d0cfcf;
+background-color: var(--button-base);
+padding-right: 30px;
+padding-left: 30px;
+}
+@media (prefers-color-scheme: dark) {
+input[type='button'] {
+background-color: #0c151c;
+background-color: var(--button-base);
+}
+}
+button:hover {
+background: #9b9b9b;
+background: var(--button-hover);
+}
+@media (prefers-color-scheme: dark) {
+button:hover {
+background: #040a0f;
+background: var(--button-hover);
+}
+}
+input[type='submit']:hover {
+background: #9b9b9b;
+background: var(--button-hover);
+}
+@media (prefers-color-scheme: dark) {
+input[type='submit']:hover {
+background: #040a0f;
+background: var(--button-hover);
+}
+}
+input[type='reset']:hover {
+background: #9b9b9b;
+background: var(--button-hover);
+}
+@media (prefers-color-scheme: dark) {
+input[type='reset']:hover {
+background: #040a0f;
+background: var(--button-hover);
+}
+}
+input[type='button']:hover {
+background: #9b9b9b;
+background: var(--button-hover);
+}
+@media (prefers-color-scheme: dark) {
+input[type='button']:hover {
+background: #040a0f;
+background: var(--button-hover);
+}
+}
+input[type='color'] {
+min-height: 2rem;
+padding: 8px;
+cursor: pointer;
+}
+input[type='checkbox'],
+input[type='radio'] {
+height: 1em;
+width: 1em;
+}
+input[type='radio'] {
+border-radius: 100%;
+}
+input {
+vertical-align: top;
+}
+label {
+vertical-align: middle;
+margin-bottom: 4px;
+display: inline-block;
+}
+input:not([type='checkbox']):not([type='radio']),
+input[type='range'],
+select,
+button,
+textarea {
+-webkit-appearance: none;
+}
+textarea {
+display: block;
+margin-right: 0;
+box-sizing: border-box;
+resize: vertical;
+}
+textarea:not([cols]) {
+width: 100%;
+}
+textarea:not([rows]) {
+min-height: 40px;
+height: 140px;
+}
+select {
+background: #efefef url("data:image/svg+xml;charset=utf-8,%3C?xml version='1.0' encoding='utf-8'?%3E %3Csvg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' height='62.5' width='116.9' fill='%23161f27'%3E %3Cpath d='M115.3,1.6 C113.7,0 111.1,0 109.5,1.6 L58.5,52.7 L7.4,1.6 C5.8,0 3.2,0 1.6,1.6 C0,3.2 0,5.8 1.6,7.4 L55.5,61.3 C56.3,62.1 57.3,62.5 58.4,62.5 C59.4,62.5 60.5,62.1 61.3,61.3 L115.2,7.4 C116.9,5.8 116.9,3.2 115.3,1.6Z'/%3E %3C/svg%3E") calc(100% - 12px) 50% / 12px no-repeat;
+background: var(--background) var(--select-arrow) calc(100% - 12px) 50% / 12px no-repeat;
+padding-right: 35px;
+}
+@media (prefers-color-scheme: dark) {
+select {
+background: #161f27 url("data:image/svg+xml;charset=utf-8,%3C?xml version='1.0' encoding='utf-8'?%3E %3Csvg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' height='62.5' width='116.9' fill='%23efefef'%3E %3Cpath d='M115.3,1.6 C113.7,0 111.1,0 109.5,1.6 L58.5,52.7 L7.4,1.6 C5.8,0 3.2,0 1.6,1.6 C0,3.2 0,5.8 1.6,7.4 L55.5,61.3 C56.3,62.1 57.3,62.5 58.4,62.5 C59.4,62.5 60.5,62.1 61.3,61.3 L115.2,7.4 C116.9,5.8 116.9,3.2 115.3,1.6Z'/%3E %3C/svg%3E") calc(100% - 12px) 50% / 12px no-repeat;
+background: var(--background) var(--select-arrow) calc(100% - 12px) 50% / 12px no-repeat;
+}
+}
+@media (prefers-color-scheme: dark) {
+select {
+background: #161f27 url("data:image/svg+xml;charset=utf-8,%3C?xml version='1.0' encoding='utf-8'?%3E %3Csvg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' height='62.5' width='116.9' fill='%23efefef'%3E %3Cpath d='M115.3,1.6 C113.7,0 111.1,0 109.5,1.6 L58.5,52.7 L7.4,1.6 C5.8,0 3.2,0 1.6,1.6 C0,3.2 0,5.8 1.6,7.4 L55.5,61.3 C56.3,62.1 57.3,62.5 58.4,62.5 C59.4,62.5 60.5,62.1 61.3,61.3 L115.2,7.4 C116.9,5.8 116.9,3.2 115.3,1.6Z'/%3E %3C/svg%3E") calc(100% - 12px) 50% / 12px no-repeat;
+background: var(--background) var(--select-arrow) calc(100% - 12px) 50% / 12px no-repeat;
+}
+}
+@media (prefers-color-scheme: dark) {
+select {
+background: #161f27 url("data:image/svg+xml;charset=utf-8,%3C?xml version='1.0' encoding='utf-8'?%3E %3Csvg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' height='62.5' width='116.9' fill='%23efefef'%3E %3Cpath d='M115.3,1.6 C113.7,0 111.1,0 109.5,1.6 L58.5,52.7 L7.4,1.6 C5.8,0 3.2,0 1.6,1.6 C0,3.2 0,5.8 1.6,7.4 L55.5,61.3 C56.3,62.1 57.3,62.5 58.4,62.5 C59.4,62.5 60.5,62.1 61.3,61.3 L115.2,7.4 C116.9,5.8 116.9,3.2 115.3,1.6Z'/%3E %3C/svg%3E") calc(100% - 12px) 50% / 12px no-repeat;
+background: var(--background) var(--select-arrow) calc(100% - 12px) 50% / 12px no-repeat;
+}
+}
+@media (prefers-color-scheme: dark) {
+select {
+background: #161f27 url("data:image/svg+xml;charset=utf-8,%3C?xml version='1.0' encoding='utf-8'?%3E %3Csvg version='1.1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' height='62.5' width='116.9' fill='%23efefef'%3E %3Cpath d='M115.3,1.6 C113.7,0 111.1,0 109.5,1.6 L58.5,52.7 L7.4,1.6 C5.8,0 3.2,0 1.6,1.6 C0,3.2 0,5.8 1.6,7.4 L55.5,61.3 C56.3,62.1 57.3,62.5 58.4,62.5 C59.4,62.5 60.5,62.1 61.3,61.3 L115.2,7.4 C116.9,5.8 116.9,3.2 115.3,1.6Z'/%3E %3C/svg%3E") calc(100% - 12px) 50% / 12px no-repeat;
+background: var(--background) var(--select-arrow) calc(100% - 12px) 50% / 12px no-repeat;
+}
+}
+select::-ms-expand {
+display: none;
+}
+select[multiple] {
+padding-right: 10px;
+background-image: none;
+overflow-y: auto;
+}
+input:focus {
+box-shadow: 0 0 0 2px #0096bfab;
+box-shadow: 0 0 0 2px var(--focus);
+}
+@media (prefers-color-scheme: dark) {
+input:focus {
+box-shadow: 0 0 0 2px #0096bfab;
+box-shadow: 0 0 0 2px var(--focus);
+}
+}
+select:focus {
+box-shadow: 0 0 0 2px #0096bfab;
+box-shadow: 0 0 0 2px var(--focus);
+}
+@media (prefers-color-scheme: dark) {
+select:focus {
+box-shadow: 0 0 0 2px #0096bfab;
+box-shadow: 0 0 0 2px var(--focus);
+}
+}
+button:focus {
+box-shadow: 0 0 0 2px #0096bfab;
+box-shadow: 0 0 0 2px var(--focus);
+}
+@media (prefers-color-scheme: dark) {
+button:focus {
+box-shadow: 0 0 0 2px #0096bfab;
+box-shadow: 0 0 0 2px var(--focus);
+}
+}
+textarea:focus {
+box-shadow: 0 0 0 2px #0096bfab;
+box-shadow: 0 0 0 2px var(--focus);
+}
+@media (prefers-color-scheme: dark) {
+textarea:focus {
+box-shadow: 0 0 0 2px #0096bfab;
+box-shadow: 0 0 0 2px var(--focus);
+}
+}
+input[type='checkbox']:active,
+input[type='radio']:active,
+input[type='submit']:active,
+input[type='reset']:active,
+input[type='button']:active,
+input[type='range']:active,
+button:active {
+transform: translateY(2px);
+}
+input:disabled,
+select:disabled,
+button:disabled,
+textarea:disabled {
+cursor: not-allowed;
+opacity: 0.5;
+}
+::-moz-placeholder {
+color: #949494;
+color: var(--form-placeholder);
+}
+:-ms-input-placeholder {
+color: #949494;
+color: var(--form-placeholder);
+}
+::-ms-input-placeholder {
+color: #949494;
+color: var(--form-placeholder);
+}
+::placeholder {
+color: #949494;
+color: var(--form-placeholder);
+}
+@media (prefers-color-scheme: dark) {
+::-moz-placeholder {
+color: #a9a9a9;
+color: var(--form-placeholder);
+}
+:-ms-input-placeholder {
+color: #a9a9a9;
+color: var(--form-placeholder);
+}
+::-ms-input-placeholder {
+color: #a9a9a9;
+color: var(--form-placeholder);
+}
+::placeholder {
+color: #a9a9a9;
+color: var(--form-placeholder);
+}
+}
+fieldset {
+border: 1px #0096bfab solid;
+border: 1px var(--focus) solid;
+border-radius: 6px;
+margin: 0;
+margin-bottom: 12px;
+padding: 10px;
+}
+@media (prefers-color-scheme: dark) {
+fieldset {
+border: 1px #0096bfab solid;
+border: 1px var(--focus) solid;
+}
+}
+legend {
+font-size: 0.9em;
+font-weight: 600;
+}
+input[type='range'] {
+margin: 10px 0;
+padding: 10px 0;
+background: transparent;
+}
+input[type='range']:focus {
+outline: none;
+}
+input[type='range']::-webkit-slider-runnable-track {
+width: 100%;
+height: 9.5px;
+-webkit-transition: 0.2s;
+transition: 0.2s;
+background: #efefef;
+background: var(--background);
+border-radius: 3px;
+}
+@media (prefers-color-scheme: dark) {
+input[type='range']::-webkit-slider-runnable-track {
+background: #161f27;
+background: var(--background);
+}
+}
+input[type='range']::-webkit-slider-thumb {
+box-shadow: 0 1px 1px #000, 0 0 1px #0d0d0d;
+height: 20px;
+width: 20px;
+border-radius: 50%;
+background: #dbdbdb;
+background: var(--border);
+-webkit-appearance: none;
+margin-top: -7px;
+}
+@media (prefers-color-scheme: dark) {
+input[type='range']::-webkit-slider-thumb {
+background: #526980;
+background: var(--border);
+}
+}
+input[type='range']:focus::-webkit-slider-runnable-track {
+background: #efefef;
+background: var(--background);
+}
+@media (prefers-color-scheme: dark) {
+input[type='range']:focus::-webkit-slider-runnable-track {
+background: #161f27;
+background: var(--background);
+}
+}
+input[type='range']::-moz-range-track {
+width: 100%;
+height: 9.5px;
+-moz-transition: 0.2s;
+transition: 0.2s;
+background: #efefef;
+background: var(--background);
+border-radius: 3px;
+}
+@media (prefers-color-scheme: dark) {
+input[type='range']::-moz-range-track {
+background: #161f27;
+background: var(--background);
+}
+}
+input[type='range']::-moz-range-thumb {
+box-shadow: 1px 1px 1px #000, 0 0 1px #0d0d0d;
+height: 20px;
+width: 20px;
+border-radius: 50%;
+background: #dbdbdb;
+background: var(--border);
+}
+@media (prefers-color-scheme: dark) {
+input[type='range']::-moz-range-thumb {
+background: #526980;
+background: var(--border);
+}
+}
+input[type='range']::-ms-track {
+width: 100%;
+height: 9.5px;
+background: transparent;
+border-color: transparent;
+border-width: 16px 0;
+color: transparent;
+}
+input[type='range']::-ms-fill-lower {
+background: #efefef;
+background: var(--background);
+border: 0.2px solid #010101;
+border-radius: 3px;
+box-shadow: 1px 1px 1px #000, 0 0 1px #0d0d0d;
+}
+@media (prefers-color-scheme: dark) {
+input[type='range']::-ms-fill-lower {
+background: #161f27;
+background: var(--background);
+}
+}
+input[type='range']::-ms-fill-upper {
+background: #efefef;
+background: var(--background);
+border: 0.2px solid #010101;
+border-radius: 3px;
+box-shadow: 1px 1px 1px #000, 0 0 1px #0d0d0d;
+}
+@media (prefers-color-scheme: dark) {
+input[type='range']::-ms-fill-upper {
+background: #161f27;
+background: var(--background);
+}
+}
+input[type='range']::-ms-thumb {
+box-shadow: 1px 1px 1px #000, 0 0 1px #0d0d0d;
+border: 1px solid #000;
+height: 20px;
+width: 20px;
+border-radius: 50%;
+background: #dbdbdb;
+background: var(--border);
+}
+@media (prefers-color-scheme: dark) {
+input[type='range']::-ms-thumb {
+background: #526980;
+background: var(--border);
+}
+}
+input[type='range']:focus::-ms-fill-lower {
+background: #efefef;
+background: var(--background);
+}
+@media (prefers-color-scheme: dark) {
+input[type='range']:focus::-ms-fill-lower {
+background: #161f27;
+background: var(--background);
+}
+}
+input[type='range']:focus::-ms-fill-upper {
+background: #efefef;
+background: var(--background);
+}
+@media (prefers-color-scheme: dark) {
+input[type='range']:focus::-ms-fill-upper {
+background: #161f27;
+background: var(--background);
+}
+}
+a {
+text-decoration: none;
+color: #0076d1;
+color: var(--links);
+}
+@media (prefers-color-scheme: dark) {
+a {
+color: #41adff;
+color: var(--links);
+}
+}
+a:hover {
+text-decoration: underline;
+}
+code {
+background: #efefef;
+background: var(--background);
+color: #000;
+color: var(--code);
+padding: 2.5px 5px;
+border-radius: 6px;
+font-size: 1em;
+}
+@media (prefers-color-scheme: dark) {
+code {
+color: #ffbe85;
+color: var(--code);
+}
+}
+@media (prefers-color-scheme: dark) {
+code {
+background: #161f27;
+background: var(--background);
+}
+}
+samp {
+background: #efefef;
+background: var(--background);
+color: #000;
+color: var(--code);
+padding: 2.5px 5px;
+border-radius: 6px;
+font-size: 1em;
+}
+@media (prefers-color-scheme: dark) {
+samp {
+color: #ffbe85;
+color: var(--code);
+}
+}
+@media (prefers-color-scheme: dark) {
+samp {
+background: #161f27;
+background: var(--background);
+}
+}
+time {
+background: #efefef;
+background: var(--background);
+color: #000;
+color: var(--code);
+padding: 2.5px 5px;
+border-radius: 6px;
+font-size: 1em;
+}
+@media (prefers-color-scheme: dark) {
+time {
+color: #ffbe85;
+color: var(--code);
+}
+}
+@media (prefers-color-scheme: dark) {
+time {
+background: #161f27;
+background: var(--background);
+}
+}
+pre > code {
+padding: 10px;
+display: block;
+overflow-x: auto;
+}
+var {
+color: #39a33c;
+color: var(--variable);
+font-style: normal;
+font-family: monospace;
+}
+@media (prefers-color-scheme: dark) {
+var {
+color: #d941e2;
+color: var(--variable);
+}
+}
+kbd {
+background: #efefef;
+background: var(--background);
+border: 1px solid #dbdbdb;
+border: 1px solid var(--border);
+border-radius: 2px;
+color: #363636;
+color: var(--text-main);
+padding: 2px 4px 2px 4px;
+}
+@media (prefers-color-scheme: dark) {
+kbd {
+color: #dbdbdb;
+color: var(--text-main);
+}
+}
+@media (prefers-color-scheme: dark) {
+kbd {
+border: 1px solid #526980;
+border: 1px solid var(--border);
+}
+}
+@media (prefers-color-scheme: dark) {
+kbd {
+background: #161f27;
+background: var(--background);
+}
+}
+img,
+video {
+max-width: 100%;
+height: auto;
+}
+hr {
+border: none;
+border-top: 1px solid #dbdbdb;
+border-top: 1px solid var(--border);
+}
+@media (prefers-color-scheme: dark) {
+hr {
+border-top: 1px solid #526980;
+border-top: 1px solid var(--border);
+}
+}
+table {
+border-collapse: collapse;
+margin-bottom: 10px;
+width: 100%;
+table-layout: fixed;
+}
+table caption {
+text-align: left;
+}
+td,
+th {
+padding: 6px;
+text-align: left;
+vertical-align: top;
+word-wrap: break-word;
+}
+thead {
+border-bottom: 1px solid #dbdbdb;
+border-bottom: 1px solid var(--border);
+}
+@media (prefers-color-scheme: dark) {
+thead {
+border-bottom: 1px solid #526980;
+border-bottom: 1px solid var(--border);
+}
+}
+tfoot {
+border-top: 1px solid #dbdbdb;
+border-top: 1px solid var(--border);
+}
+@media (prefers-color-scheme: dark) {
+tfoot {
+border-top: 1px solid #526980;
+border-top: 1px solid var(--border);
+}
+}
+tbody tr:nth-child(even) {
+background-color: #efefef;
+background-color: var(--background);
+}
+@media (prefers-color-scheme: dark) {
+tbody tr:nth-child(even) {
+background-color: #161f27;
+background-color: var(--background);
+}
+}
+tbody tr:nth-child(even) button {
+background-color: #f7f7f7;
+background-color: var(--background-alt);
+}
+@media (prefers-color-scheme: dark) {
+tbody tr:nth-child(even) button {
+background-color: #1a242f;
+background-color: var(--background-alt);
+}
+}
+tbody tr:nth-child(even) button:hover {
+background-color: #fff;
+background-color: var(--background-body);
+}
+@media (prefers-color-scheme: dark) {
+tbody tr:nth-child(even) button:hover {
+background-color: #202b38;
+background-color: var(--background-body);
+}
+}
+::-webkit-scrollbar {
+height: 10px;
+width: 10px;
+}
+::-webkit-scrollbar-track {
+background: #efefef;
+background: var(--background);
+border-radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+::-webkit-scrollbar-track {
+background: #161f27;
+background: var(--background);
+}
+}
+::-webkit-scrollbar-thumb {
+background: rgb(170, 170, 170);
+background: var(--scrollbar-thumb);
+border-radius: 6px;
+}
+@media (prefers-color-scheme: dark) {
+::-webkit-scrollbar-thumb {
+background: #040a0f;
+background: var(--scrollbar-thumb);
+}
+}
+@media (prefers-color-scheme: dark) {
+::-webkit-scrollbar-thumb {
+background: #040a0f;
+background: var(--scrollbar-thumb);
+}
+}
+::-webkit-scrollbar-thumb:hover {
+background: #9b9b9b;
+background: var(--scrollbar-thumb-hover);
+}
+@media (prefers-color-scheme: dark) {
+::-webkit-scrollbar-thumb:hover {
+background: rgb(0, 0, 0);
+background: var(--scrollbar-thumb-hover);
+}
+}
+@media (prefers-color-scheme: dark) {
+::-webkit-scrollbar-thumb:hover {
+background: rgb(0, 0, 0);
+background: var(--scrollbar-thumb-hover);
+}
+}
+::-moz-selection {
+background-color: #9e9e9e;
+background-color: var(--selection);
+color: #000;
+color: var(--text-bright);
+}
+::selection {
+background-color: #9e9e9e;
+background-color: var(--selection);
+color: #000;
+color: var(--text-bright);
+}
+@media (prefers-color-scheme: dark) {
+::-moz-selection {
+color: #fff;
+color: var(--text-bright);
+}
+::selection {
+color: #fff;
+color: var(--text-bright);
+}
+}
+@media (prefers-color-scheme: dark) {
+::-moz-selection {
+background-color: #1c76c5;
+background-color: var(--selection);
+}
+::selection {
+background-color: #1c76c5;
+background-color: var(--selection);
+}
+}
+details {
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+background-color: #f7f7f7;
+background-color: var(--background-alt);
+padding: 10px 10px 0;
+margin: 1em 0;
+border-radius: 6px;
+overflow: hidden;
+}
+@media (prefers-color-scheme: dark) {
+details {
+background-color: #1a242f;
+background-color: var(--background-alt);
+}
+}
+details[open] {
+padding: 10px;
+}
+details > :last-child {
+margin-bottom: 0;
+}
+details[open] summary {
+margin-bottom: 10px;
+}
+summary {
+display: list-item;
+background-color: #efefef;
+background-color: var(--background);
+padding: 10px;
+margin: -10px -10px 0;
+cursor: pointer;
+outline: none;
+}
+@media (prefers-color-scheme: dark) {
+summary {
+background-color: #161f27;
+background-color: var(--background);
+}
+}
+summary:hover,
+summary:focus {
+text-decoration: underline;
+}
+details > :not(summary) {
+margin-top: 0;
+}
+summary::-webkit-details-marker {
+color: #363636;
+color: var(--text-main);
+}
+@media (prefers-color-scheme: dark) {
+summary::-webkit-details-marker {
+color: #dbdbdb;
+color: var(--text-main);
+}
+}
+dialog {
+background-color: #f7f7f7;
+background-color: var(--background-alt);
+color: #363636;
+color: var(--text-main);
+border: none;
+border-radius: 6px;
+border-color: #dbdbdb;
+border-color: var(--border);
+padding: 10px 30px;
+}
+@media (prefers-color-scheme: dark) {
+dialog {
+border-color: #526980;
+border-color: var(--border);
+}
+}
+@media (prefers-color-scheme: dark) {
+dialog {
+color: #dbdbdb;
+color: var(--text-main);
+}
+}
+@media (prefers-color-scheme: dark) {
+dialog {
+background-color: #1a242f;
+background-color: var(--background-alt);
+}
+}
+dialog > header:first-child {
+background-color: #efefef;
+background-color: var(--background);
+border-radius: 6px 6px 0 0;
+margin: -10px -30px 10px;
+padding: 10px;
+text-align: center;
+}
+@media (prefers-color-scheme: dark) {
+dialog > header:first-child {
+background-color: #161f27;
+background-color: var(--background);
+}
+}
+dialog::-webkit-backdrop {
+background: #0000009c;
+-webkit-backdrop-filter: blur(4px);
+backdrop-filter: blur(4px);
+}
+dialog::backdrop {
+background: #0000009c;
+-webkit-backdrop-filter: blur(4px);
+backdrop-filter: blur(4px);
+}
+footer {
+border-top: 1px solid #dbdbdb;
+border-top: 1px solid var(--border);
+padding-top: 10px;
+color: #70777f;
+color: var(--text-muted);
+}
+@media (prefers-color-scheme: dark) {
+footer {
+color: #a9b1ba;
+color: var(--text-muted);
+}
+}
+@media (prefers-color-scheme: dark) {
+footer {
+border-top: 1px solid #526980;
+border-top: 1px solid var(--border);
+}
+}
+body > footer {
+margin-top: 40px;
+}
+@media print {
+body,
+pre,
+code,
+summary,
+details,
+button,
+input,
+textarea {
+background-color: #fff;
+}
+button,
+input,
+textarea {
+border: 1px solid #000;
+}
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+pre,
+code,
+button,
+input,
+textarea,
+footer,
+summary,
+strong {
+color: #000;
+}
+summary::marker {
+color: #000;
+}
+summary::-webkit-details-marker {
+color: #000;
+}
+tbody tr:nth-child(even) {
+background-color: #f2f2f2;
+}
+a {
+color: #00f;
+text-decoration: underline;
+}
+}
+</style>
+  
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">L’Architecture Codex</h1>
+<p class="subtitle">De la Porte Logique au Système d’Exploitation
+32-bits</p>
+<p class="author">Projet Nand2Tetris-Codex</p>
+<p class="date">2026</p>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#larchitecture-codex-guide-de-létudiant" id="toc-larchitecture-codex-guide-de-létudiant"><span class="toc-section-number">1</span> L’Architecture Codex : Guide de
+l’Étudiant</a>
+<ul>
+<li><a href="#table-des-matières" id="toc-table-des-matières"><span class="toc-section-number">1.1</span> Table des Matières</a></li>
+<li><a href="#comment-utiliser-ce-guide" id="toc-comment-utiliser-ce-guide"><span class="toc-section-number">1.2</span> Comment utiliser ce guide</a></li>
+</ul></li>
+<li><a href="#introduction" id="toc-introduction"><span class="toc-section-number">2</span> Introduction</a>
+<ul>
+<li><a href="#pourquoi-construire-un-ordinateur" id="toc-pourquoi-construire-un-ordinateur"><span class="toc-section-number">2.1</span> Pourquoi construire un ordinateur
+?</a></li>
+<li><a href="#codex-vs-hack-nand2tetris-original" id="toc-codex-vs-hack-nand2tetris-original"><span class="toc-section-number">2.2</span> Codex vs Hack (Nand2Tetris
+Original)</a></li>
+<li><a href="#vue-densemble-du-système" id="toc-vue-densemble-du-système"><span class="toc-section-number">2.3</span> Vue d’ensemble du système</a></li>
+<li><a href="#vos-outils" id="toc-vos-outils"><span class="toc-section-number">2.4</span> Vos Outils</a></li>
+</ul></li>
+<li><a href="#chapitre-1-logique-booléenne" id="toc-chapitre-1-logique-booléenne"><span class="toc-section-number">3</span> Chapitre 1 : Logique Booléenne</a>
+<ul>
+<li><a href="#labstraction-binaire" id="toc-labstraction-binaire"><span class="toc-section-number">3.1</span> 1.1 L’Abstraction Binaire</a></li>
+<li><a href="#la-porte-nand-not-and" id="toc-la-porte-nand-not-and"><span class="toc-section-number">3.2</span> 1.2 La Porte NAND
+(Not-And)</a></li>
+<li><a href="#portes-élémentaires-à-construire" id="toc-portes-élémentaires-à-construire"><span class="toc-section-number">3.3</span> 1.3 Portes Élémentaires à
+construire</a></li>
+<li><a href="#description-matérielle-codex-hdl" id="toc-description-matérielle-codex-hdl"><span class="toc-section-number">3.4</span> 1.4 Description Matérielle (Codex
+HDL)</a></li>
+<li><a href="#vos-exercices" id="toc-vos-exercices"><span class="toc-section-number">3.5</span> 1.5 Vos Exercices</a></li>
+</ul></li>
+<li><a href="#chapitre-2-arithmétique-binaire" id="toc-chapitre-2-arithmétique-binaire"><span class="toc-section-number">4</span> Chapitre 2 : Arithmétique
+Binaire</a>
+<ul>
+<li><a href="#représentation-des-nombres" id="toc-représentation-des-nombres"><span class="toc-section-number">4.1</span> 2.1 Représentation des
+Nombres</a></li>
+<li><a href="#ladditionneur" id="toc-ladditionneur"><span class="toc-section-number">4.2</span> 2.2 L’Additionneur</a></li>
+<li><a href="#lalu32-arithmetic-logic-unit" id="toc-lalu32-arithmetic-logic-unit"><span class="toc-section-number">4.3</span> 2.3 L’ALU32 (Arithmetic Logic
+Unit)</a></li>
+<li><a href="#vos-exercices-1" id="toc-vos-exercices-1"><span class="toc-section-number">4.4</span> 2.4 Vos Exercices</a></li>
+</ul></li>
+<li><a href="#chapitre-3-logique-séquentielle-et-mémoire" id="toc-chapitre-3-logique-séquentielle-et-mémoire"><span class="toc-section-number">5</span> Chapitre 3 : Logique Séquentielle et
+Mémoire</a>
+<ul>
+<li><a href="#le-temps-et-lhorloge-clock" id="toc-le-temps-et-lhorloge-clock"><span class="toc-section-number">5.1</span> 3.1 Le Temps et l’Horloge
+(Clock)</a></li>
+<li><a href="#la-brique-de-base-la-bascule-d-dff" id="toc-la-brique-de-base-la-bascule-d-dff"><span class="toc-section-number">5.2</span> 3.2 La Brique de Base : La Bascule
+D (DFF)</a></li>
+<li><a href="#construire-une-mémoire-persistante" id="toc-construire-une-mémoire-persistante"><span class="toc-section-number">5.3</span> 3.3 Construire une Mémoire
+Persistante</a></li>
+<li><a href="#des-bits-aux-registres" id="toc-des-bits-aux-registres"><span class="toc-section-number">5.4</span> 3.4 Des Bits aux
+Registres</a></li>
+<li><a href="#le-compteur-de-programme-pc" id="toc-le-compteur-de-programme-pc"><span class="toc-section-number">5.5</span> 3.5 Le Compteur de Programme
+(PC)</a></li>
+<li><a href="#vos-exercices-2" id="toc-vos-exercices-2"><span class="toc-section-number">5.6</span> 3.6 Vos Exercices</a></li>
+</ul></li>
+<li><a href="#chapitre-4-architecture-machine-isa-a32" id="toc-chapitre-4-architecture-machine-isa-a32"><span class="toc-section-number">6</span> Chapitre 4 : Architecture Machine
+(ISA A32)</a>
+<ul>
+<li><a href="#concepts-fondamentaux" id="toc-concepts-fondamentaux"><span class="toc-section-number">6.1</span> 4.1 Concepts Fondamentaux</a></li>
+<li><a href="#la-mémoire-memory-map" id="toc-la-mémoire-memory-map"><span class="toc-section-number">6.2</span> 4.2 La Mémoire (Memory
+Map)</a></li>
+<li><a href="#les-registres-le-plan-de-travail" id="toc-les-registres-le-plan-de-travail"><span class="toc-section-number">6.3</span> 4.3 Les Registres (Le plan de
+travail)</a></li>
+<li><a href="#le-format-des-instructions-32-bits" id="toc-le-format-des-instructions-32-bits"><span class="toc-section-number">6.4</span> 4.4 Le Format des Instructions (32
+bits)</a></li>
+<li><a href="#les-classes-dinstructions" id="toc-les-classes-dinstructions"><span class="toc-section-number">6.5</span> 4.5 Les Classes
+d’Instructions</a></li>
+<li><a href="#le-langage-assembleur-asm-par-lexemple" id="toc-le-langage-assembleur-asm-par-lexemple"><span class="toc-section-number">6.6</span> 4.6 Le Langage Assembleur (ASM)
+par l’exemple</a></li>
+<li><a href="#gestion-des-erreurs-traps" id="toc-gestion-des-erreurs-traps"><span class="toc-section-number">6.7</span> 4.7 Gestion des Erreurs
+(Traps)</a></li>
+<li><a href="#vos-exercices-3" id="toc-vos-exercices-3"><span class="toc-section-number">6.8</span> 4.8 Vos Exercices</a></li>
+</ul></li>
+<li><a href="#chapitre-5-le-processeur-cpu" id="toc-chapitre-5-le-processeur-cpu"><span class="toc-section-number">7</span> Chapitre 5 : Le Processeur (CPU)</a>
+<ul>
+<li><a href="#architecture-globale-data-path" id="toc-architecture-globale-data-path"><span class="toc-section-number">7.1</span> 5.1 Architecture Globale (Data
+Path)</a></li>
+<li><a href="#les-composants-clés" id="toc-les-composants-clés"><span class="toc-section-number">7.2</span> 5.2 Les Composants Clés</a></li>
+<li><a href="#le-cycle-dexécution-en-détail" id="toc-le-cycle-dexécution-en-détail"><span class="toc-section-number">7.3</span> 5.3 Le Cycle d’Exécution en
+Détail</a></li>
+<li><a href="#vos-exercices-4" id="toc-vos-exercices-4"><span class="toc-section-number">7.4</span> 5.4 Vos Exercices</a></li>
+<li><a href="#conseils-de-débogage" id="toc-conseils-de-débogage"><span class="toc-section-number">7.5</span> 5.5 Conseils de débogage</a></li>
+</ul></li>
+<li><a href="#chapitre-6-lassembleur" id="toc-chapitre-6-lassembleur"><span class="toc-section-number">8</span> Chapitre 6 : L’Assembleur</a>
+<ul>
+<li><a href="#le-rôle-de-lassembleur" id="toc-le-rôle-de-lassembleur"><span class="toc-section-number">8.1</span> 6.1 Le Rôle de
+l’Assembleur</a></li>
+<li><a href="#la-stratégie-des-deux-passes" id="toc-la-stratégie-des-deux-passes"><span class="toc-section-number">8.2</span> 6.2 La Stratégie des Deux
+Passes</a></li>
+<li><a href="#sections-et-directives" id="toc-sections-et-directives"><span class="toc-section-number">8.3</span> 6.3 Sections et
+Directives</a></li>
+<li><a href="#exemple-dencodage" id="toc-exemple-dencodage"><span class="toc-section-number">8.4</span> 6.4 Exemple d’Encodage</a></li>
+<li><a href="#la-gestion-des-grandes-constantes-value" id="toc-la-gestion-des-grandes-constantes-value"><span class="toc-section-number">8.5</span> 6.5 La Gestion des Grandes
+Constantes (<code>=value</code>)</a></li>
+<li><a href="#vos-exercices-5" id="toc-vos-exercices-5"><span class="toc-section-number">8.6</span> 6.6 Vos Exercices</a></li>
+</ul></li>
+<li><a href="#chapitre-7-construction-du-compilateur" id="toc-chapitre-7-construction-du-compilateur"><span class="toc-section-number">9</span> Chapitre 7 : Construction du
+Compilateur</a>
+<ul>
+<li><a href="#le-défi-microc" id="toc-le-défi-microc"><span class="toc-section-number">9.1</span> 7.1 Le Défi “MicroC”</a></li>
+<li><a href="#le-code-source-de-microc" id="toc-le-code-source-de-microc"><span class="toc-section-number">9.2</span> 7.2 Le Code Source de
+MicroC</a></li>
+<li><a href="#lexpérience-de-self-compilation" id="toc-lexpérience-de-self-compilation"><span class="toc-section-number">9.3</span> 7.3 L’Expérience de
+“Self-Compilation”</a></li>
+<li><a href="#comprendre-la-génération-de-code-a32" id="toc-comprendre-la-génération-de-code-a32"><span class="toc-section-number">9.4</span> 7.4 Comprendre la Génération de
+Code A32</a></li>
+<li><a href="#vos-exercices-6" id="toc-vos-exercices-6"><span class="toc-section-number">9.5</span> 7.5 Vos Exercices</a></li>
+<li><a href="#spécification-du-langage-c32" id="toc-spécification-du-langage-c32"><span class="toc-section-number">9.6</span> 8.2 Spécification du Langage
+C32</a></li>
+<li><a href="#pointeurs-et-tableaux" id="toc-pointeurs-et-tableaux"><span class="toc-section-number">9.7</span> 8.3 Pointeurs et Tableaux</a></li>
+<li><a href="#accès-au-matériel-mmio" id="toc-accès-au-matériel-mmio"><span class="toc-section-number">9.8</span> 8.4 Accès au Matériel
+(MMIO)</a></li>
+<li><a href="#organisation-dun-programme-c32" id="toc-organisation-dun-programme-c32"><span class="toc-section-number">9.9</span> 8.5 Organisation d’un programme
+C32</a></li>
+<li><a href="#limitations-ce-que-le-c32-ne-fait-pas-encore" id="toc-limitations-ce-que-le-c32-ne-fait-pas-encore"><span class="toc-section-number">9.10</span> 8.6 Limitations (Ce que le C32 ne
+fait pas encore)</a></li>
+<li><a href="#vos-exercices-7" id="toc-vos-exercices-7"><span class="toc-section-number">9.11</span> 8.7 Vos Exercices</a></li>
+</ul></li>
+<li><a href="#chapitre-9-système-dexploitation" id="toc-chapitre-9-système-dexploitation"><span class="toc-section-number">10</span> Chapitre 9 : Système
+d’Exploitation</a>
+<ul>
+<li><a href="#la-hiérarchie-logicielle" id="toc-la-hiérarchie-logicielle"><span class="toc-section-number">10.1</span> 9.1 La Hiérarchie
+Logicielle</a></li>
+<li><a href="#gestion-de-la-mémoire-le-tas-heap" id="toc-gestion-de-la-mémoire-le-tas-heap"><span class="toc-section-number">10.2</span> 9.2 Gestion de la Mémoire (Le Tas
+/ Heap)</a></li>
+<li><a href="#bibliothèque-graphique-screen.c" id="toc-bibliothèque-graphique-screen.c"><span class="toc-section-number">10.3</span> 9.3 Bibliothèque Graphique
+(<code>screen.c</code>)</a></li>
+<li><a href="#entrées-sorties-et-système-io.c-sys.c" id="toc-entrées-sorties-et-système-io.c-sys.c"><span class="toc-section-number">10.4</span> 9.4 Entrées / Sorties et Système
+(<code>io.c</code>, <code>sys.c</code>)</a></li>
+<li><a href="#interruptions-et-multitâche-concept" id="toc-interruptions-et-multitâche-concept"><span class="toc-section-number">10.5</span> 9.5 Interruptions et Multitâche
+(Concept)</a></li>
+<li><a href="#le-grand-final-votre-application" id="toc-le-grand-final-votre-application"><span class="toc-section-number">10.6</span> 9.6 Le Grand Final : Votre
+Application</a></li>
+<li><a href="#vos-exercices-8" id="toc-vos-exercices-8"><span class="toc-section-number">10.7</span> Vos Exercices</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 data-number="1" id="larchitecture-codex-guide-de-létudiant"><span class="header-section-number">1</span> L’Architecture Codex : Guide de
+l’Étudiant</h1>
+<p>Ce livre accompagne le projet <strong>Nand2Tetris-Codex</strong>. Il
+a pour but de vous guider pas à pas dans la construction d’un ordinateur
+complet, moderne et 32-bits, à partir de rien.</p>
+<h2 data-number="1.1" id="table-des-matières"><span class="header-section-number">1.1</span> Table des Matières</h2>
+<ol type="1">
+<li><strong><a href="00_introduction.md">Introduction</a></strong>
+<ul>
+<li>La philosophie du projet.</li>
+<li>Différences avec le Hack (Nand2Tetris original).</li>
+<li>Présentation des outils.</li>
+</ul></li>
+<li><strong><a href="01_logique_booleenne.md">Chapitre 1 : Logique
+Booléenne</a></strong>
+<ul>
+<li>L’abstraction binaire.</li>
+<li>Les portes logiques fondamentales (Nand, And, Or, Xor).</li>
+<li><em>Exercices :</em> Implémentation dans
+<code>hdl_lib/01_gates</code>.</li>
+</ul></li>
+<li><strong><a href="02_arithmetique.md">Chapitre 2 : Arithmétique
+Binaire</a></strong> <em>(À venir)</em>
+<ul>
+<li>Représentation des nombres (Complément à 2).</li>
+<li>Additionneurs et ALU (Arithmetic Logic Unit).</li>
+<li><em>Exercices :</em> <code>hdl_lib/03_arith</code>.</li>
+</ul></li>
+<li><strong><a href="03_memoire.md">Chapitre 3 : Logique Séquentielle et
+Mémoire</a></strong> <em>(À venir)</em>
+<ul>
+<li>Le temps et l’horloge.</li>
+<li>Flip-Flops, Registres et RAM.</li>
+<li><em>Exercices :</em> <code>hdl_lib/04_seq</code> &amp;
+<code>02_multibit</code>.</li>
+</ul></li>
+<li><strong><a href="04_architecture.md">Chapitre 4 : Architecture
+Machine (ISA A32)</a></strong> <em>(À venir)</em>
+<ul>
+<li>Le jeu d’instructions A32-Lite.</li>
+<li>Registres, adressage et structure.</li>
+<li><em>Référence :</em> <code>SPECS.md</code>.</li>
+</ul></li>
+<li><strong><a href="05_cpu.md">Chapitre 5 : Le Processeur
+(CPU)</a></strong> <em>(À venir)</em>
+<ul>
+<li>Implémentation du chemin de données (Data Path).</li>
+<li>Logique de contrôle.</li>
+<li><em>Exercices :</em> <code>hdl_lib/05_cpu</code>.</li>
+</ul></li>
+<li><strong><a href="06_assembleur.md">Chapitre 6 :
+L’Assembleur</a></strong> <em>(À venir)</em>
+<ul>
+<li>Traduction symbolique vers binaire.</li>
+<li>Gestion des symboles et des labels.</li>
+<li><em>Outils :</em> <code>a32_asm</code>.</li>
+</ul></li>
+<li><strong><a href="07_compilateur.md">Chapitre 7 : Construction du
+Compilateur</a></strong> <em>(À venir)</em>
+<ul>
+<li>Analyse lexicale et syntaxique (Parsing).</li>
+<li>Génération de code pour pile.</li>
+<li><em>Outils :</em> <code>c32_cli</code>.</li>
+</ul></li>
+<li><strong><a href="08_langage.md">Chapitre 8 : Langage de Haut Niveau
+(C32)</a></strong> <em>(À venir)</em>
+<ul>
+<li>Syntaxe du langage C32.</li>
+<li>Structures de contrôle et types.</li>
+</ul></li>
+<li><strong><a href="09_os.md">Chapitre 9 : Système
+d’Exploitation</a></strong> <em>(À venir)</em>
+<ul>
+<li>Gestion de la mémoire (Heap).</li>
+<li>Entrées/Sorties (Clavier, Écran).</li>
+<li><em>Exercices :</em> <code>os_lib</code>.</li>
+</ul></li>
+</ol>
+<h2 data-number="1.2" id="comment-utiliser-ce-guide"><span class="header-section-number">1.2</span> Comment utiliser ce guide</h2>
+<p>Chaque chapitre commence par une <strong>Théorie</strong>, expliquant
+les concepts fondamentaux. Ensuite, la section
+<strong>Implémentation</strong> détaille ce que vous devez construire,
+en faisant référence aux dossiers du projet.</p>
+<blockquote>
+<p><strong>Note :</strong> Ce projet utilise Rust pour l’outillage, mais
+votre travail consistera principalement à écrire du HDL (Hardware
+Description Language), de l’assembleur A32 et du C32.</p>
+</blockquote>
+<h1 data-number="2" id="introduction"><span class="header-section-number">2</span> Introduction</h1>
+<p>Bienvenue dans le projet <strong>Codex</strong>. Si vous lisez ceci,
+c’est que vous avez l’ambition de comprendre comment fonctionnent les
+ordinateurs, non pas en lisant des théories abstraites, mais en en
+construisant un vous-même.</p>
+<h2 data-number="2.1" id="pourquoi-construire-un-ordinateur"><span class="header-section-number">2.1</span> Pourquoi construire un
+ordinateur ?</h2>
+<p>Dans notre vie quotidienne, l’ordinateur est une “boîte noire”. Nous
+tapons sur un clavier, touchons un écran, et la magie opère. En tant
+qu’ingénieurs logiciels, nous travaillons souvent sur des couches
+d’abstraction très élevées (Python, Java, React).</p>
+<p>Ce projet a pour but de <strong>briser l’abstraction</strong>. Nous
+allons descendre au niveau le plus bas — la porte logique — et remonter
+couche par couche jusqu’à pouvoir jouer à un jeu vidéo écrit dans un
+langage de haut niveau sur notre propre machine.</p>
+<h2 data-number="2.2" id="codex-vs-hack-nand2tetris-original"><span class="header-section-number">2.2</span> Codex vs Hack (Nand2Tetris
+Original)</h2>
+<p>Ce cours est fortement inspiré du légendaire “Nand2Tetris”.
+Cependant, l’ordinateur <em>Hack</em> original a été conçu pour une
+simplicité maximale, parfois au détriment du réalisme moderne.</p>
+<p>L’ordinateur <strong>Codex</strong> propose une approche différente
+:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Caractéristique</th>
+<th style="text-align: left;">Hack (Original)</th>
+<th style="text-align: left;">Codex (Ce projet)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Architecture</strong></td>
+<td style="text-align: left;">16-bits</td>
+<td style="text-align: left;"><strong>32-bits</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Registres</strong></td>
+<td style="text-align: left;">2 (A et D)</td>
+<td style="text-align: left;"><strong>16 (r0-r15)</strong> (Inspiré par
+ARM)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Mémoire</strong></td>
+<td style="text-align: left;">Séparée (Harvard)</td>
+<td style="text-align: left;"><strong>Unifiée</strong> (Von Neumann pour
+instructions/données)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Instructions</strong></td>
+<td style="text-align: left;">Simple, propriétaire</td>
+<td style="text-align: left;"><strong>RISC moderne</strong> (Load/Store,
+Branch)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Écran</strong></td>
+<td style="text-align: left;">Monochrome</td>
+<td style="text-align: left;"><strong>Couleur</strong>
+(Framebuffer)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Pourquoi ce changement ?</strong> Parce que comprendre une
+architecture à registres généraux (comme ARM ou RISC-V) est beaucoup
+plus pertinent pour un ingénieur moderne. Le défi est légèrement plus
+grand, mais la récompense est une compréhension directe des machines qui
+propulsent nos smartphones et serveurs actuels.</p>
+<h2 data-number="2.3" id="vue-densemble-du-système"><span class="header-section-number">2.3</span> Vue d’ensemble du système</h2>
+<p>Voici les couches que nous allons traverser :</p>
+<pre class="ascii"><code>+-----------------------------------------------------+
+|                  Applications                       | Chapitre 10
+|          (Jeux, Shell, Calculatrice)                |
++-----------------------------------------------------+
+|           Langage de Haut Niveau (C32)              | Chapitre 8
++-----------------------------------------------------+
+|           Compilateur &amp; Bibliothèques               | Chapitre 7 &amp; 9
++-----------------------------------------------------+
+|               Système d&#39;Exploitation                | Chapitre 9
+|        (Gestion Mémoire, Drivers E/S)               |
++-----------------------------------------------------+
+|              Assembleur (A32 ASM)                   | Chapitre 6
++-----------------------------------------------------+
+|           Architecture Machine (ISA)                | Chapitre 4 &amp; 5
+|       (Jeu d&#39;instructions, Registres)               |
++-----------------------------------------------------+
+|              Logique Matérielle                     | Chapitre 1, 2, 3
+|    (Gates, ALU, RAM, CPU implementation)            |
++-----------------------------------------------------+</code></pre>
+<h2 data-number="2.4" id="vos-outils"><span class="header-section-number">2.4</span> Vos Outils</h2>
+<p>Le projet est fourni avec une suite d’outils performants :</p>
+<ol type="1">
+<li><strong><code>hdl_cli</code></strong> : Le simulateur de matériel en
+ligne de commande. Il lit vos fichiers <code>.hdl</code> et teste vos
+circuits.</li>
+<li><strong><code>a32_cli</code></strong> : L’assembleur. Il transforme
+votre code assembleur <code>.a32</code> en binaire.</li>
+<li><strong><code>c32_cli</code></strong> : Le compilateur. Il
+transforme votre code C <code>.c</code> en assembleur.</li>
+<li><strong><code>a32_runner</code></strong> : L’émulateur. Il exécute
+le code binaire final.</li>
+</ol>
+<h3 data-number="2.4.1" id="le-simulateur-web-web-simulator"><span class="header-section-number">2.4.1</span> Le Simulateur Web (Web
+Simulator)</h3>
+<p>Pour une expérience plus visuelle et interactive, vous pouvez
+utiliser le <strong>Simulateur Web</strong>. Il vous permet de : *
+Écrire et tester votre HDL directement dans le navigateur. * Voir l’état
+des signaux en temps réel. * Compiler et exécuter du code C et
+Assembleur avec une visualisation de l’écran et des registres.</p>
+<p>Pour le lancer localement :</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> web</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> install</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">npm</span> run dev</span></code></pre></div>
+<p>Ensuite, ouvrez votre navigateur à l’adresse indiquée (généralement
+<code>http://localhost:5173</code>).</p>
+<p>Prêt ? Passons à la première brique élémentaire : la logique
+booléenne.</p>
+<h1 data-number="3" id="chapitre-1-logique-booléenne"><span class="header-section-number">3</span> Chapitre 1 : Logique
+Booléenne</h1>
+<blockquote>
+<p>“Au commencement était le NAND.”</p>
+</blockquote>
+<p>Tout ordinateur numérique, aussi complexe soit-il, est construit à
+partir de concepts incroyablement simples : le Vrai (<code>1</code>) et
+le Faux (<code>0</code>). Ce chapitre traite de la construction de
+portes logiques élémentaires à partir d’une brique fondamentale.</p>
+<h2 data-number="3.1" id="labstraction-binaire"><span class="header-section-number">3.1</span> 1.1 L’Abstraction Binaire</h2>
+<p>Dans le monde physique, nos ordinateurs utilisent des tensions
+électriques. Par exemple, 0 Volt pour “0” et 3.3 Volts pour “1”. En tant
+qu’architectes système, nous ne nous soucions pas de la physique (les
+transistors). Nous nous soucions de la <strong>logique</strong>.</p>
+<p>Une <strong>Fonction Booléenne</strong> prend une ou plusieurs
+entrées binaires et produit une sortie binaire.</p>
+<h2 data-number="3.2" id="la-porte-nand-not-and"><span class="header-section-number">3.2</span> 1.2 La Porte NAND
+(Not-And)</h2>
+<p>La technologie actuelle (CMOS) rend la construction de portes NAND
+très efficace. C’est notre axiome. Nous supposons qu’elle existe
+déjà.</p>
+<p><strong>Table de Vérité NAND :</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>A</th>
+<th>B</th>
+<th>NAND(A, B)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>0</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>1</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>Remarquez : Le résultat est <code>0</code> <em>seulement si</em> A et
+B sont tous les deux à <code>1</code>.</p>
+<h2 data-number="3.3" id="portes-élémentaires-à-construire"><span class="header-section-number">3.3</span> 1.3 Portes Élémentaires à
+construire</h2>
+<p>Votre mission est de construire les portes suivantes en utilisant
+uniquement des NAND (puis les portes que vous aurez créées).</p>
+<h3 data-number="3.3.1" id="a.-not-inverseur"><span class="header-section-number">3.3.1</span> A. NOT (Inverseur)</h3>
+<p>L’inverseur change un 0 en 1 et un 1 en 0.</p>
+<p><em>Spécification :</em>
+<code>If in=0 then out=1 else out=0</code></p>
+<p><strong>Astuce d’implémentation :</strong> Comment utiliser une porte
+NAND (qui prend 2 entrées) pour n’en traiter qu’une seule ? Si on
+connecte le même signal <code>in</code> aux deux entrées d’un NAND…</p>
+<pre class="ascii"><code>      +------+
+in ---| a    |
+      | NAND |
+in ---| b    |
+      +------+</code></pre>
+<h3 data-number="3.3.2" id="b.-and-et"><span class="header-section-number">3.3.2</span> B. AND (Et)</h3>
+<p>La sortie vaut 1 si et seulement si A et B valent 1.</p>
+<p><em>Spécification :</em>
+<code>If a=1 and b=1 then out=1 else out=0</code></p>
+<p><strong>Schéma Conceptuel :</strong> Le NAND est un “Not-And”. Si on
+inverse le résultat d’un NAND… on obtient un AND !</p>
+<pre class="ascii"><code>     +------+      +-----+
+a ---| NAND |------| NOT |
+b ---|      |      +-----+
+     +------+</code></pre>
+<h3 data-number="3.3.3" id="c.-or-ou"><span class="header-section-number">3.3.3</span> C. OR (Ou)</h3>
+<p>La sortie vaut 1 si au moins une des entrées vaut 1.</p>
+<p><em>Table de Vérité :</em></p>
+<table>
+<thead>
+<tr class="header">
+<th>A</th>
+<th>B</th>
+<th>OR</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>0</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Théorème de De Morgan :</strong> <code>A OR B</code> est
+équivalent à <code>NOT( (NOT A) AND (NOT B) )</code>. Ou avec des NANDs
+: <code>(NOT A) NAND (NOT B)</code>.</p>
+<h3 data-number="3.3.4" id="d.-xor-ou-exclusif"><span class="header-section-number">3.3.4</span> D. XOR (Ou Exclusif)</h3>
+<p>La sortie vaut 1 si les entrées sont <em>différentes</em>.</p>
+<table>
+<thead>
+<tr class="header">
+<th>A</th>
+<th>B</th>
+<th>XOR</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>0</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>1</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>C’est une porte cruciale pour l’addition binaire (comme nous le
+verrons au chapitre 2).</p>
+<h3 data-number="3.3.5" id="e.-multiplexeur-mux"><span class="header-section-number">3.3.5</span> E. Multiplexeur (Mux)</h3>
+<p>Le Mux est l’aiguilleur du monde numérique. Il choisit entre deux
+entrées (<code>a</code> ou <code>b</code>) basé sur un signal de
+sélection (<code>sel</code>).</p>
+<ul>
+<li>Si <code>sel == 0</code> alors <code>out = a</code></li>
+<li>Si <code>sel == 1</code> alors <code>out = b</code></li>
+</ul>
+<pre class="ascii"><code>     a --\
+          \
+sel -------| MUX |--- out
+          /
+     b --/</code></pre>
+<p>C’est fondamental pour le routage des données dans le CPU.</p>
+<h2 data-number="3.4" id="description-matérielle-codex-hdl"><span class="header-section-number">3.4</span> 1.4 Description Matérielle
+(Codex HDL)</h2>
+<p>Pour décrire nos circuits, nous utilisons un langage inspiré du
+<strong>VHDL</strong>. C’est un langage déclaratif : on définit des
+composants (entités) et on décrit comment ils sont câblés
+(architectures).</p>
+<h3 data-number="3.4.1" id="structure-dun-fichier-.hdl"><span class="header-section-number">3.4.1</span> Structure d’un fichier
+<code>.hdl</code></h3>
+<p>Un fichier HDL se compose de deux parties : 1. <strong>L’entité
+(<code>entity</code>)</strong> : Elle définit l’interface (les broches
+d’entrée et de sortie). 2. <strong>L’architecture
+(<code>architecture</code>)</strong> : Elle définit le contenu de la
+puce.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- C&#39;est un commentaire</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">entity</span> <span class="dv">NomDeLaPuce</span> <span class="kw">is</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">port</span>(</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    a <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;    <span class="co">-- Entrée de 1 bit</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    b <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    y <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span>    <span class="co">-- Sortie</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  );</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="cf">end entity;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="cf">architecture</span> <span class="dv">rtl</span> <span class="kw">of</span> <span class="fu">NomDeLaPuce</span> <span class="kw">is</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Déclaration des composants que l&#39;on va utiliser</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">component</span> <span class="dv">Nand</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">port</span>(a <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; b <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; y <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span>);</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end component;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Signaux internes (fils)</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> fil_interne <span class="ot">:</span> <span class="dt">bit</span>;</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Instanciation et connexion (Port Map)</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  <span class="dv">u1</span><span class="ot">:</span> <span class="kw">Nand</span> <span class="kw">port</span> <span class="kw">map</span> (a <span class="ot">=&gt;</span> a<span class="ot">,</span> b <span class="ot">=&gt;</span> b<span class="ot">,</span> y <span class="ot">=&gt;</span> fil_interne);</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Assignation directe</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">&lt;=</span> <span class="kw">not</span> fil_interne;</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="cf">end architecture;</span></span></code></pre></div>
+<h3 data-number="3.4.2" id="règles-de-connexion"><span class="header-section-number">3.4.2</span> Règles de Connexion</h3>
+<ol type="1">
+<li><strong>Instanciation</strong> : On donne un nom d’instance (ex:
+<code>u1</code>) suivi du nom du composant.</li>
+<li><strong>Port Map</strong> :
+<ul>
+<li>À gauche du <code>=&gt;</code> : Le nom de la broche du composant
+utilisé.</li>
+<li>À droite du <code>=&gt;</code> : Le signal de <em>votre</em>
+architecture que vous y connectez.</li>
+</ul></li>
+<li><strong>Signaux</strong> : Vous devez déclarer vos fils internes
+avec le mot-clé <code>signal</code> avant le <code>begin</code>.</li>
+<li><strong>Assignations</strong> : <code>y &lt;= x;</code> signifie que
+le fil <code>y</code> est branché sur <code>x</code>.</li>
+</ol>
+<h3 data-number="3.4.3" id="bus-vecteurs-de-bits"><span class="header-section-number">3.4.3</span> Bus (Vecteurs de bits)</h3>
+<p>Pour manipuler plusieurs bits (ex: 32 bits), on utilise
+<code>bits(MSB downto LSB)</code>.</p>
+<ul>
+<li><code>bus : in bits(31 downto 0);</code> : Un bus de 32 bits.</li>
+<li><code>bus(0)</code> : Le bit de poids faible.</li>
+<li><code>bus(31)</code> : Le bit de poids fort.</li>
+</ul>
+<div class="sourceCode" id="cb7"><pre class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Exemple de connexion d&#39;un bit spécifique</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>u_gate<span class="ot">:</span> MyGate <span class="kw">port</span> <span class="kw">map</span> (a <span class="ot">=&gt;</span> mon_bus(<span class="dv">5</span>)<span class="ot">,</span> <span class="ot">...</span>);</span></code></pre></div>
+<h3 data-number="3.4.4" id="exemple-complet-xor"><span class="header-section-number">3.4.4</span> Exemple Complet : Xor</h3>
+<div class="sourceCode" id="cb8"><pre class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="cf">entity</span> <span class="dv">Xor</span> <span class="kw">is</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">port</span>(a <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; b <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; y <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span>);</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="cf">end entity;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="cf">architecture</span> <span class="dv">rtl</span> <span class="kw">of</span> <span class="fu">Xor</span> <span class="kw">is</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">component</span> <span class="dv">Not</span> <span class="cf">port</span>(a <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; y <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span>); <span class="cf">end component;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">component</span> <span class="dv">And</span> <span class="cf">port</span>(a <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; b <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; y <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span>); <span class="cf">end component;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">component</span> <span class="dv">Or</span>  <span class="cf">port</span>(a <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; b <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; y <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span>); <span class="cf">end component;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> nota<span class="ot">,</span> notb<span class="ot">,</span> w1<span class="ot">,</span> w2 <span class="ot">:</span> <span class="dt">bit</span>;</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="dv">u_nota</span><span class="ot">:</span> <span class="kw">Not</span> <span class="kw">port</span> <span class="kw">map</span> (a <span class="ot">=&gt;</span> a<span class="ot">,</span> y <span class="ot">=&gt;</span> nota);</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="dv">u_notb</span><span class="ot">:</span> <span class="kw">Not</span> <span class="kw">port</span> <span class="kw">map</span> (a <span class="ot">=&gt;</span> b<span class="ot">,</span> y <span class="ot">=&gt;</span> notb);</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="dv">u_and1</span><span class="ot">:</span> <span class="kw">And</span> <span class="kw">port</span> <span class="kw">map</span> (a <span class="ot">=&gt;</span> a<span class="ot">,</span> b <span class="ot">=&gt;</span> notb<span class="ot">,</span> y <span class="ot">=&gt;</span> w1);</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="dv">u_and2</span><span class="ot">:</span> <span class="kw">And</span> <span class="kw">port</span> <span class="kw">map</span> (a <span class="ot">=&gt;</span> nota<span class="ot">,</span> b <span class="ot">=&gt;</span> b<span class="ot">,</span> y <span class="ot">=&gt;</span> w2);</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="dv">u_or</span><span class="ot">:</span>   <span class="kw">Or</span>  <span class="kw">port</span> <span class="kw">map</span> (a <span class="ot">=&gt;</span> w1<span class="ot">,</span> b <span class="ot">=&gt;</span> w2<span class="ot">,</span> y <span class="ot">=&gt;</span> y);</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="cf">end architecture;</span></span></code></pre></div>
+<h2 data-number="3.5" id="vos-exercices"><span class="header-section-number">3.5</span> 1.5 Vos Exercices</h2>
+<p>Rendez-vous dans le répertoire <code>hdl_lib/01_gates</code>. Vous y
+trouverez les fichiers squelettes (<code>.hdl</code>).</p>
+<p><strong>Ordre conseillé :</strong> 1. <code>Not.hdl</code>,
+<code>And.hdl</code>, <code>Or.hdl</code>, <code>Xor.hdl</code>,
+<code>Mux.hdl</code>, <code>DMux.hdl</code>.</p>
+<h3 data-number="3.5.1" id="comment-tester"><span class="header-section-number">3.5.1</span> Comment tester ?</h3>
+<p><strong>Option A : En ligne de commande (CLI)</strong> Utilisez la
+commande suivante pour tester une porte spécifique :</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> hdl_cli <span class="at">--</span> test hdl_lib/01_gates/Not.hdl</span></code></pre></div>
+<p><strong>Option B : Simulateur Web (Recommandé pour débuter)</strong>
+1. Lancez le serveur web (<code>cd web &amp;&amp; npm run dev</code>).
+2. Ouvrez l’interface. 3. Allez dans la section <strong>HDL
+Progression</strong>. 4. Vous pouvez copier-coller votre code ou
+travailler directement dans l’éditeur intégré pour voir les
+chronogrammes et les tests passer en temps réel.</p>
+<p><strong>Validation :</strong> L’objectif est que tous les tests
+passent. Si une porte échoue, vérifiez votre table de vérité et
+assurez-vous de ne pas avoir créé de cycles (boucles) dans votre logique
+combinatoire).</p>
+<h1 data-number="4" id="chapitre-2-arithmétique-binaire"><span class="header-section-number">4</span> Chapitre 2 : Arithmétique
+Binaire</h1>
+<p>Dans le chapitre précédent, nous avons appris à manipuler des bits
+individuels. Mais un ordinateur doit savoir compter et effectuer des
+opérations mathématiques sur des nombres. Comment passer d’une simple
+porte logique à une calculatrice capable de traiter des nombres sur 32
+bits ?</p>
+<h2 data-number="4.1" id="représentation-des-nombres"><span class="header-section-number">4.1</span> 2.1 Représentation des
+Nombres</h2>
+<h3 data-number="4.1.1" id="le-binaire-base-2"><span class="header-section-number">4.1.1</span> Le Binaire (Base 2)</h3>
+<p>Un nombre binaire est une suite de bits. Chaque position correspond à
+une puissance de 2. Pour un nombre de 4 bits :</p>
+<pre class="ascii"><code>Position :   3    2    1    0
+Poids    :  2^3  2^2  2^1  2^0
+Valeur   :   8    4    2    1
+
+Exemple : 1011 (binaire) = 1*8 + 0*4 + 1*2 + 1*1 = 11 (décimal)</code></pre>
+<p>Dans l’ordinateur Codex, nous travaillons sur <strong>32
+bits</strong>, ce qui permet de représenter des nombres allant de <span class="math inline">0</span> à <span class="math inline">2<sup>32</sup> − 1</span> (environ 4 milliards).</p>
+<h3 data-number="4.1.2" id="nombres-signés-le-complément-à-2"><span class="header-section-number">4.1.2</span> Nombres Signés : Le
+Complément à 2</h3>
+<p>Comment représenter des nombres négatifs ? On utilise le système du
+<strong>Complément à 2</strong>. Le bit le plus à gauche (MSB, bit 31)
+est le “bit de signe”. * S’il vaut <code>0</code>, le nombre est
+positif. * S’il vaut <code>1</code>, le nombre est négatif.</p>
+<p><strong>La règle d’or du Complément à 2 :</strong> Pour obtenir <span class="math inline">−<em>X</em></span> à partir de <span class="math inline"><em>X</em></span> : 1. Inverser tous les bits de
+<span class="math inline"><em>X</em></span>. 2. Ajouter 1 au
+résultat.</p>
+<p><em>Pourquoi ?</em> Parce que cela permet à l’additionneur de
+fonctionner de la même manière pour les additions et les soustractions
+sans circuit spécial pour le signe.</p>
+<h2 data-number="4.2" id="ladditionneur"><span class="header-section-number">4.2</span> 2.2 L’Additionneur</h2>
+<p>L’addition binaire suit les mêmes règles que l’addition décimale : on
+additionne colonne par colonne en gérant la retenue
+(<em>carry</em>).</p>
+<h3 data-number="4.2.1" id="a.-le-demi-additionneur-half-adder"><span class="header-section-number">4.2.1</span> A. Le Demi-Additionneur (Half
+Adder)</h3>
+<p>Il additionne deux bits et produit une somme et une retenue.</p>
+<table>
+<thead>
+<tr class="header">
+<th>a</th>
+<th>b</th>
+<th>sum</th>
+<th>carry</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Observation :</strong> * <code>sum</code> correspond à la
+fonction <strong>XOR(a, b)</strong>. * <code>carry</code> correspond à
+la fonction <strong>AND(a, b)</strong>.</p>
+<pre class="ascii"><code>      +------------+
+a ----|            |---- sum
+      | Half Adder |
+b ----|            |---- carry
+      +------------+</code></pre>
+<h3 data-number="4.2.2" id="b.-ladditionneur-complet-full-adder"><span class="header-section-number">4.2.2</span> B. L’Additionneur Complet
+(Full Adder)</h3>
+<p>Pour additionner des nombres de plusieurs bits, chaque colonne (sauf
+la première) doit accepter une retenue venant de la colonne
+précédente.</p>
+<pre class="ascii"><code>         cin (retenue entrante)
+          |
+      +------------+
+a ----|            |---- sum
+      | Full Adder |
+b ----|            |---- cout (retenue sortante)
+      +------------+</code></pre>
+<h3 data-number="4.2.3" id="c.-ladditionneur-32-bits-add32"><span class="header-section-number">4.2.3</span> C. L’Additionneur 32-bits
+(Add32)</h3>
+<p>En cascade, nous connectons 32 Full Adders. La retenue de l’un va
+vers l’entrée de l’autre. C’est le “Ripple Carry Adder”.</p>
+<pre class="ascii"><code>      a31 b31       a1 b1       a0 b0
+       |   |         |  |        |  |
+     +-------+     +------+     +------+
+cout-|  FA   |&lt;----|  FA  |&lt;----|  FA  |&lt;-- cin(0)
+     +-------+     +------+     +------+
+       |             |            |
+      y31           y1           y0</code></pre>
+<h2 data-number="4.3" id="lalu32-arithmetic-logic-unit"><span class="header-section-number">4.3</span> 2.3 L’ALU32 (Arithmetic Logic
+Unit)</h2>
+<p>L’ALU est le cœur battant du processeur. C’est elle qui effectue les
+calculs. L’ALU du Codex est une version 32-bits évoluée. Elle prend deux
+entrées (<code>a</code>, <code>b</code>) et un code d’opération
+(<code>op</code>).</p>
+<h3 data-number="4.3.1" id="les-opérations-de-lalu32"><span class="header-section-number">4.3.1</span> Les Opérations de
+l’ALU32</h3>
+<p>L’ALU reçoit un signal <code>op</code> de 4 bits qui définit l’action
+à réaliser :</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">op</th>
+<th style="text-align: left;">Nom</th>
+<th style="text-align: left;">Opération</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">0000</td>
+<td style="text-align: left;">AND</td>
+<td style="text-align: left;">Et logique (<code>a &amp; b</code>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0001</td>
+<td style="text-align: left;">EOR</td>
+<td style="text-align: left;">Ou exclusif (<code>a ^ b</code>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0010</td>
+<td style="text-align: left;">SUB</td>
+<td style="text-align: left;">Soustraction (<code>a - b</code>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0011</td>
+<td style="text-align: left;">ADD</td>
+<td style="text-align: left;">Addition (<code>a + b</code>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0100</td>
+<td style="text-align: left;">ORR</td>
+<td style="text-align: left;">Ou logique (<code>a | b</code>)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0101</td>
+<td style="text-align: left;">MOV</td>
+<td style="text-align: left;">Copie (<code>b</code>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0110</td>
+<td style="text-align: left;">MVN</td>
+<td style="text-align: left;">Inversion (<code>~b</code>)</td>
+</tr>
+</tbody>
+</table>
+<h3 data-number="4.3.2" id="les-drapeaux-flags"><span class="header-section-number">4.3.2</span> Les Drapeaux (Flags)</h3>
+<p>En plus du résultat, l’ALU nous donne des informations sur celui-ci :
+* <strong>n_flag (Negative)</strong> : 1 si le résultat est négatif. *
+<strong>z_flag (Zero)</strong> : 1 si le résultat est exactement 0. *
+<strong>c_flag (Carry)</strong> : 1 s’il y a eu une retenue (utile pour
+les grands nombres). * <strong>v_flag (Overflow)</strong> : 1 s’il y a
+eu un dépassement de capacité (ex: ajouter deux grands positifs qui
+donne un négatif).</p>
+<h2 data-number="4.4" id="vos-exercices-1"><span class="header-section-number">4.4</span> 2.4 Vos Exercices</h2>
+<p>Rendez-vous dans <code>hdl_lib/03_arith</code>.</p>
+<p><strong>Ordre conseillé :</strong> 1.
+<strong><code>HalfAdder.hdl</code></strong> : Utilisez un
+<code>Xor</code> et un <code>And</code>. 2.
+<strong><code>FullAdder.hdl</code></strong> : Utilisez deux
+<code>HalfAdder</code> et une porte <code>Or</code>. 3.
+<strong><code>Add32.hdl</code></strong> : Connectez 32
+<code>FullAdder</code>. Attention : le premier bit n’a pas de retenue
+entrante (ou une retenue à 0). 4.
+<strong><code>ALU32.hdl</code></strong> : C’est le gros morceau. Vous
+devrez utiliser des multiplexeurs pour choisir le bon résultat en
+fonction de <code>op</code>.</p>
+<h3 data-number="4.4.1" id="conseils-pour-lalu32"><span class="header-section-number">4.4.1</span> Conseils pour l’ALU32</h3>
+<ul>
+<li>Pour la soustraction <code>a - b</code>, on utilise l’astuce du
+complément à 2 : <code>a + (NOT b) + 1</code>.</li>
+<li>Regardez comment les Multiplexeurs (<code>Mux32</code>,
+<code>Mux4Way32</code>) peuvent vous aider à sélectionner la
+sortie.</li>
+</ul>
+<p><strong>Testez vos circuits :</strong></p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> hdl_cli <span class="at">--</span> test hdl_lib/03_arith/FullAdder.hdl</span></code></pre></div>
+<p>Ou via le <strong>Simulateur Web</strong> dans la section progression
+!</p>
+<h1 data-number="5" id="chapitre-3-logique-séquentielle-et-mémoire"><span class="header-section-number">5</span> Chapitre 3 : Logique Séquentielle
+et Mémoire</h1>
+<blockquote>
+<p>“Le temps est ce qui empêche tout d’arriver en même temps.”</p>
+</blockquote>
+<p>Jusqu’à présent, nos puces étaient <strong>combinatoires</strong> :
+la sortie dépendait uniquement de l’entrée instantanée (comme une
+fonction mathématique <span class="math inline"><em>y</em> = <em>f</em>(<em>x</em>)</span>). Si vous
+coupez le courant, elles “oublient” tout.</p>
+<p>Pour construire un ordinateur, nous devons pouvoir <strong>stocker de
+l’information</strong> et la récupérer plus tard. C’est le rôle de la
+<strong>Logique Séquentielle</strong>.</p>
+<h2 data-number="5.1" id="le-temps-et-lhorloge-clock"><span class="header-section-number">5.1</span> 3.1 Le Temps et l’Horloge
+(Clock)</h2>
+<p>Pour coordonner les mouvements de données, l’ordinateur utilise une
+<strong>Horloge</strong> (<code>clk</code>). C’est un signal qui oscille
+perpétuellement entre 0 et 1.</p>
+<pre class="ascii"><code>     __    __    __
+clk |  |__|  |__|  |__ ...</code></pre>
+<p>Un “cycle” d’horloge se compose d’un front montant (le passage de 0 à
+1) et d’un front descendant. Dans le système Codex, les changements
+d’état se produisent sur le <strong>front montant</strong> (<em>rising
+edge</em>).</p>
+<h2 data-number="5.2" id="la-brique-de-base-la-bascule-d-dff"><span class="header-section-number">5.2</span> 3.2 La Brique de Base : La
+Bascule D (DFF)</h2>
+<p>La <code>DFF</code> (Data Flip-Flop) est notre atome de mémoire.</p>
+<ul>
+<li>Entrée <code>d</code> (Data)</li>
+<li>Sortie <code>q</code></li>
+<li>Horloge <code>clk</code> (implicite ou explicite selon les
+outils)</li>
+</ul>
+<p><strong>Comportement :</strong> <code>out(t) = in(t-1)</code></p>
+<p>La sortie à l’instant <em>t</em> est égale à ce qu’était l’entrée à
+l’instant <em>t-1</em> (le cycle précédent). Elle “mémorise” le bit
+pendant un cycle.</p>
+<p><em>Dans le simulateur Codex, vous devrez souvent câbler
+explicitement le signal <code>clk</code>.</em></p>
+<h2 data-number="5.3" id="construire-une-mémoire-persistante"><span class="header-section-number">5.3</span> 3.3 Construire une Mémoire
+Persistante</h2>
+<p>Comment se souvenir d’une valeur indéfiniment, et pas seulement
+pendant un cycle ? En bouclant la sortie sur l’entrée !</p>
+<h3 data-number="5.3.1" id="le-registre-1-bit-bit"><span class="header-section-number">5.3.1</span> Le Registre 1-bit
+(<code>Bit</code>)</h3>
+<p>Nous voulons une puce qui : 1. Si <code>load=1</code>, stocke la
+nouvelle valeur <code>in</code>. 2. Si <code>load=0</code>, garde
+l’ancienne valeur.</p>
+<p>Pour cela, on combine une DFF avec un Multiplexeur.</p>
+<pre class="ascii"><code>             +------+
+        /---&gt;|      |
+        |    | Mux  |--+---&gt;[ DFF ]--- out
+in -----+---&gt;|      |  |
+             +------+  |
+                ^      |
+                |      |
+              load     |
+                       |
+        (boucle de rétroaction)</code></pre>
+<p>Si <code>load=0</code>, le Mux sélectionne l’ancienne sortie de la
+DFF. La DFF ré-enregistre donc sa propre valeur. Si <code>load=1</code>,
+le Mux laisse passer la nouvelle donnée <code>in</code>.</p>
+<h2 data-number="5.4" id="des-bits-aux-registres"><span class="header-section-number">5.4</span> 3.4 Des Bits aux Registres</h2>
+<h3 data-number="5.4.1" id="le-registre-32-bits-register"><span class="header-section-number">5.4.1</span> Le Registre 32-bits
+(<code>Register</code>)</h3>
+<p>C’est simplement 32 puces <code>Bit</code> mises en parallèle,
+partageant le même signal <code>load</code>. C’est la brique
+fondamentale du CPU pour stocker des entiers.</p>
+<h3 data-number="5.4.2" id="la-mémoire-ram-random-access-memory"><span class="header-section-number">5.4.2</span> La Mémoire RAM (Random Access
+Memory)</h3>
+<p>La RAM est un énorme tableau de registres. Pour lire ou écrire, on
+doit spécifier une <strong>adresse</strong>.</p>
+<ul>
+<li><code>RAM8</code> : 8 registres. Adresse sur 3 bits (<span class="math inline">2<sup>3</sup> = 8</span>).</li>
+<li><code>RAM64</code> : 64 registres. Adresse sur 6 bits.</li>
+<li>… et ainsi de suite jusqu’à la <code>RAM4K</code>.</li>
+</ul>
+<p><strong>Structure d’une RAM8 :</strong> On utilise : * Un
+<strong>DMux8Way</strong> pour envoyer le signal <code>load</code> vers
+<em>un seul</em> des 8 registres (celui qu’on veut écrire). * 8
+<strong>Register</strong> pour stocker les données. * Un
+<strong>Mux8Way32</strong> pour sélectionner <em>une seule</em> sortie
+parmi les 8 (celle qu’on veut lire).</p>
+<h2 data-number="5.5" id="le-compteur-de-programme-pc"><span class="header-section-number">5.5</span> 3.5 Le Compteur de Programme
+(PC)</h2>
+<p>Le PC (Program Counter) est un registre spécial qui indique au CPU
+l’adresse de la <em>prochaine instruction</em> à exécuter.</p>
+<p>Il a trois modes de fonctionnement : 1. <strong>Reset</strong>
+(<code>reset=1</code>) : Retour à 0 (démarrage du programme). 2.
+<strong>Saut</strong> (<code>load=1</code>) : On va à une adresse
+spécifique (pour les boucles, les <code>if</code>, les appels de
+fonction). 3. <strong>Incrément</strong> (<code>inc=1</code>) : On passe
+à l’instruction suivante (<code>PC = PC + 1</code>).</p>
+<pre class="ascii"><code>     +-----+
+in --|     |
+     | Mux |--&gt; [ Registre ] --&gt; out
+PC+1-|     |         |
+     +-----+      [Add16]
+        ^            |
+        |            |
+   (logique de contrôle)</code></pre>
+<h2 data-number="5.6" id="vos-exercices-2"><span class="header-section-number">5.6</span> 3.6 Vos Exercices</h2>
+<p>Rendez-vous dans <code>hdl_lib/04_seq</code> (et
+<code>02_multibit</code> pour les Mux larges).</p>
+<p><strong>Ordre conseillé :</strong></p>
+<ol type="1">
+<li><strong><code>Bit.hdl</code></strong> : Le registre 1 bit (Mux +
+DFF).</li>
+<li><strong><code>Register.hdl</code></strong> : Le registre 32
+bits.</li>
+<li><strong><code>RAM8.hdl</code></strong> : Une mémoire de 8 mots de 32
+bits.</li>
+<li><strong><code>RAM64.hdl</code></strong> : Combinez 8
+<code>RAM8</code> pour faire une <code>RAM64</code>.
+<ul>
+<li><em>Astuce :</em> Les bits de poids fort de l’adresse choisissent
+<em>quelle</em> RAM8 activer. Les bits de poids faible choisissent le
+registre <em>dans</em> cette RAM8.</li>
+</ul></li>
+<li><strong><code>PC.hdl</code></strong> : Le compteur de programme. Il
+faut gérer la priorité : Reset &gt; Load &gt; Inc &gt; Maintien.</li>
+</ol>
+<p><strong>Note sur les bus larges :</strong> Pour construire
+<code>RAM8</code>, vous aurez besoin de <code>Mux8Way32</code> et
+<code>DMux8Way</code>. Ces composants sont souvent à implémenter dans le
+dossier <code>hdl_lib/02_multibit</code>. Assurez-vous de les faire si
+ce n’est pas déjà fait !</p>
+<p><strong>Validation :</strong> Testez vos RAMs une par une. Si
+<code>RAM8</code> ne marche pas, <code>RAM64</code> ne marchera pas non
+plus.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> hdl_cli <span class="at">--</span> test hdl_lib/04_seq/RAM8.hdl</span></code></pre></div>
+<p>Ou via le <strong>Simulateur Web</strong>.</p>
+<h1 data-number="6" id="chapitre-4-architecture-machine-isa-a32"><span class="header-section-number">6</span> Chapitre 4 : Architecture Machine
+(ISA A32)</h1>
+<blockquote>
+<p>“Le langage est la limite de mon monde.” — Wittgenstein</p>
+</blockquote>
+<p>Nous avons maintenant des portes logiques, des additionneurs, et de
+la mémoire. Mais comment <strong>commander</strong> tout cela ? C’est le
+rôle de l’<strong>Architecture de Jeu d’Instructions</strong> (ISA -
+Instruction Set Architecture). C’est le contrat entre le matériel (le
+processeur) et le logiciel (votre code).</p>
+<p>L’architecture <strong>Codex A32-Lite</strong> est une architecture
+<strong>RISC 32-bits</strong>, inspirée de la célèbre architecture ARM.
+Elle est conçue pour être simple à comprendre mais suffisamment
+puissante pour supporter un système d’exploitation moderne.</p>
+<h2 data-number="6.1" id="concepts-fondamentaux"><span class="header-section-number">6.1</span> 4.1 Concepts Fondamentaux</h2>
+<h3 data-number="6.1.1" id="pourquoi-32-bits"><span class="header-section-number">6.1.1</span> Pourquoi 32 bits ?</h3>
+<p>Dire qu’une machine est “32 bits”, c’est dire que ses “mots”
+standards font 32 bits de large. * Elle peut compter jusqu’à <span class="math inline">2<sup>32</sup> ≈ 4</span> milliards. * Elle peut
+adresser 4 Go de mémoire. * Ses registres font 32 bits.</p>
+<h3 data-number="6.1.2" id="risc-vs-cisc"><span class="header-section-number">6.1.2</span> RISC vs CISC</h3>
+<ul>
+<li><strong>CISC (Complex Instruction Set Computer)</strong> : Comme les
+processeurs Intel (x86). Ils ont des instructions très complexes (ex:
+“copie une chaîne de caractères de A à B”). C’est puissant mais
+difficile à construire.</li>
+<li><strong>RISC (Reduced Instruction Set Computer)</strong> : Comme
+ARM, MIPS, ou Codex. Les instructions sont simples et rapides.
+<ul>
+<li><em>Règle d’or :</em> Le CPU ne calcule <strong>jamais</strong>
+directement en mémoire. Il doit d’abord charger les données dans des
+registres (<code>Load</code>), calculer (<code>Add</code>), puis
+sauvegarder (<code>Store</code>). C’est l’architecture
+<strong>Load/Store</strong>.</li>
+</ul></li>
+</ul>
+<h3 data-number="6.1.3" id="le-cycle-de-vie-dune-instruction"><span class="header-section-number">6.1.3</span> Le Cycle de Vie d’une
+Instruction</h3>
+<p>Le cœur du processeur bat au rythme de trois étapes, répétées à
+l’infini : 1. <strong>Fetch (Chercher)</strong> : Le CPU demande à la
+mémoire : “Donne-moi l’instruction à l’adresse pointée par mon PC”. 2.
+<strong>Decode (Décoder)</strong> : Le CPU regarde les bits (0 et 1) et
+comprend : “Ah, c’est une addition entre R1 et R2”. 3. <strong>Execute
+(Exécuter)</strong> : L’ALU effectue l’addition et le résultat est
+rangé.</p>
+<h2 data-number="6.2" id="la-mémoire-memory-map"><span class="header-section-number">6.2</span> 4.2 La Mémoire (Memory
+Map)</h2>
+<p>La mémoire n’est pas juste un sac de données. Elle est organisée
+géographiquement. L’adresse est sur 32 bits (<code>0x00000000</code> à
+<code>0xFFFFFFFF</code>).</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Adresse Début</th>
+<th style="text-align: left;">Adresse Fin</th>
+<th style="text-align: left;">Nom</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>0x00000000</code></td>
+<td style="text-align: left;"><code>0x003FFFFF</code></td>
+<td style="text-align: left;"><strong>RAM Système</strong></td>
+<td style="text-align: left;">C’est ici que vit votre programme (Code +
+Données + Pile).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">…</td>
+<td style="text-align: left;">…</td>
+<td style="text-align: left;"><em>Vide</em></td>
+<td style="text-align: left;">Si vous tapez ici -&gt;
+<code>MEM_FAULT</code>.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>0x00400000</code></td>
+<td style="text-align: left;"><code>0x00402580</code></td>
+<td style="text-align: left;"><strong>Screen (Écran)</strong></td>
+<td style="text-align: left;">Écrire ici allume des pixels sur l’écran
+(Noir &amp; Blanc).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>0x00402600</code></td>
+<td style="text-align: left;">…</td>
+<td style="text-align: left;"><strong>Clavier</strong></td>
+<td style="text-align: left;">Lire ici donne la touche pressée.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>0xFFFF0000</code></td>
+<td style="text-align: left;">…</td>
+<td style="text-align: left;"><strong>MMIO (E/S)</strong></td>
+<td style="text-align: left;">Adresses magiques pour afficher du texte
+ou éteindre la machine.</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="6.3" id="les-registres-le-plan-de-travail"><span class="header-section-number">6.3</span> 4.3 Les Registres (Le plan de
+travail)</h2>
+<p>Le processeur dispose de <strong>16 registres généraux</strong> de 32
+bits, nommés <code>R0</code> à <code>R15</code>.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Registre</th>
+<th style="text-align: left;">Nom</th>
+<th style="text-align: left;">Rôle (Convention)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>R0 - R3</strong></td>
+<td style="text-align: left;">Args / Return</td>
+<td style="text-align: left;">Pour passer les arguments aux fonctions et
+récupérer le résultat.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>R4 - R11</strong></td>
+<td style="text-align: left;">Variable</td>
+<td style="text-align: left;">Pour stocker vos variables locales.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>R12</strong></td>
+<td style="text-align: left;">Temp</td>
+<td style="text-align: left;">Registre temporaire (IP).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>R13</strong></td>
+<td style="text-align: left;"><strong>SP</strong> (Stack Pointer)</td>
+<td style="text-align: left;">Pointe vers le sommet de la Pile (Stack).
+La pile grandit vers le bas (des adresses hautes vers les basses).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>R14</strong></td>
+<td style="text-align: left;"><strong>LR</strong> (Link Register)</td>
+<td style="text-align: left;">Retient l’adresse de retour lors d’un
+appel de fonction (<code>BL</code>).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>R15</strong></td>
+<td style="text-align: left;"><strong>PC</strong> (Program Counter)</td>
+<td style="text-align: left;">Contient l’adresse de l’instruction <em>en
+cours d’exécution</em>.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Note importante sur le PC (R15) :</strong> Si vous écrivez
+dans R15, vous forcez le processeur à sauter ailleurs. C’est comme ça
+que fonctionnent les boucles et les <code>goto</code>.</p>
+</blockquote>
+<h2 data-number="6.4" id="le-format-des-instructions-32-bits"><span class="header-section-number">6.4</span> 4.4 Le Format des Instructions
+(32 bits)</h2>
+<p>Chaque instruction est un mot de 32 bits. Le processeur doit
+“décoder” ces bits pour savoir quoi faire.</p>
+<h3 data-number="6.4.1" id="structure-générale"><span class="header-section-number">6.4.1</span> Structure Générale</h3>
+<p>Les bits <code>31..28</code> sont <em>toujours</em> la
+<strong>Condition</strong>. Les bits <code>27..25</code> définissent la
+<strong>Classe</strong> de l’instruction.</p>
+<pre class="ascii"><code>31   28 27   25 24                                             0
++------+-------+-----------------------------------------------+
+| Cond | Class |              Reste de l&#39;instruction           |
++------+-------+-----------------------------------------------+</code></pre>
+<h3 data-number="6.4.2" id="la-condition-bits-31-28-et-la-prédication"><span class="header-section-number">6.4.2</span> La Condition (Bits 31-28) et
+la Prédication</h3>
+<p>C’est une fonctionnalité unique et puissante d’ARM/Codex.
+<strong>Toutes</strong> les instructions peuvent être conditionnelles.
+Au lieu de faire des petits sauts (<code>if x then jump</code>), on peut
+dire “Exécute cette instruction <em>seulement si</em> Zéro est à 1”.</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Code</th>
+<th style="text-align: left;">Suffixe ASM</th>
+<th style="text-align: left;">Signification</th>
+<th style="text-align: left;">Exemple</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1110</td>
+<td style="text-align: left;">(vide)</td>
+<td style="text-align: left;">Always (Toujours)</td>
+<td style="text-align: left;"><code>ADD ...</code> (défaut)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0000</td>
+<td style="text-align: left;"><code>EQ</code></td>
+<td style="text-align: left;">Equal (Z=1)</td>
+<td style="text-align: left;"><code>ADD.EQ ...</code> (Si égal)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0001</td>
+<td style="text-align: left;"><code>NE</code></td>
+<td style="text-align: left;">Not Equal (Z=0)</td>
+<td style="text-align: left;"><code>ADD.NE ...</code> (Si
+différent)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">1011</td>
+<td style="text-align: left;"><code>LT</code></td>
+<td style="text-align: left;">Less Than (Signé)</td>
+<td style="text-align: left;"><code>MOV.LT ...</code> (Si plus
+petit)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">1100</td>
+<td style="text-align: left;"><code>GT</code></td>
+<td style="text-align: left;">Greater Than (Signé)</td>
+<td style="text-align: left;"><code>MOV.GT ...</code> (Si plus
+grand)</td>
+</tr>
+</tbody>
+</table>
+<h2 data-number="6.5" id="les-classes-dinstructions"><span class="header-section-number">6.5</span> 4.5 Les Classes
+d’Instructions</h2>
+<h3 data-number="6.5.1" id="a.-opérations-arithmétiques-alu---classe-000-et-001"><span class="header-section-number">6.5.1</span> A. Opérations Arithmétiques
+(ALU) - Classe <code>000</code> et <code>001</code></h3>
+<p>C’est ici qu’on fait les maths. Format :
+<code>OP Rd, Rn, Operand2</code> -&gt;
+<code>Rd = Rn OP Operand2</code></p>
+<p><strong>Encodage :</strong> * <code>Op</code> (24-21) : L’opération
+(ADD=0011, SUB=0010, MOV=0101…). * <code>S</code> (20) : Si 1, met à
+jour les Flags (N, Z, C, V). * <code>Rn</code> (19-16) : Premier
+opérande (registre). * <code>Rd</code> (15-12) : Registre de
+destination. * <strong>Operand2</strong> : * Si Classe <code>000</code>
+: Un registre <code>Rm</code> (bits 3-0). * Si Classe <code>001</code> :
+Une valeur immédiate 12 bits (bits 11-0). Attention, on ne peut mettre
+que des petits nombres (0-4095).</p>
+<p><strong>Exemple :</strong> <code>ADD R1, R2, #10</code> (R1 = R2 +
+10)</p>
+<h3 data-number="6.5.2" id="b.-accès-mémoire-loadstore---classe-010"><span class="header-section-number">6.5.2</span> B. Accès Mémoire (Load/Store)
+- Classe <code>010</code></h3>
+<p>Pour lire ou écrire dans la RAM. Format :
+<code>LDR Rd, [Rn, #offset]</code></p>
+<p><strong>Encodage :</strong> * <code>L</code> (24) : 1=Load (LDR),
+0=Store (STR). * <code>B</code> (23) : 1=Byte (8 bits), 0=Word (32
+bits). * <code>U</code> (21) : 1=Add offset, 0=Subtract offset. *
+<code>Rd</code> (20-17) : Registre à charger/sauvegarder. *
+<code>Rn</code> (16-13) : Registre de base (l’adresse). *
+<code>Offset</code> (12-0) : Décalage immédiat de 13 bits.</p>
+<p><strong>Exemple :</strong> <code>LDR R0, [R1, #4]</code> (Charge dans
+R0 la valeur à l’adresse R1 + 4).</p>
+<h3 data-number="6.5.3" id="c.-branchements-branch---classe-011"><span class="header-section-number">6.5.3</span> C. Branchements (Branch) -
+Classe <code>011</code></h3>
+<p>Pour sauter dans le code. Format : <code>B Label</code> ou
+<code>BL Label</code></p>
+<p><strong>Encodage :</strong> * <code>L</code> (24) : 1=Branch with
+Link (<code>BL</code>), 0=Branch simple (<code>B</code>). *
+<code>Offset</code> (23-0) : Décalage signé relatif au PC actuel.</p>
+<blockquote>
+<p><strong>Le mystère du BL (Branch with Link) :</strong> Quand on
+appelle une fonction (<code>BL function</code>), le processeur fait deux
+choses : 1. Il sauvegarde l’adresse de l’instruction suivante dans
+<code>LR</code> (R14). 2. Il saute à l’adresse de la fonction. Pour
+revenir, la fonction fera simplement <code>MOV PC, LR</code>.</p>
+</blockquote>
+<h2 data-number="6.6" id="le-langage-assembleur-asm-par-lexemple"><span class="header-section-number">6.6</span> 4.6 Le Langage Assembleur (ASM)
+par l’exemple</h2>
+<h3 data-number="6.6.1" id="les-variables-et-constantes-literal-pools"><span class="header-section-number">6.6.1</span> Les Variables et Constantes
+(Literal Pools)</h3>
+<p>Comme une instruction ne fait que 32 bits, on ne peut pas y faire
+entrer une constante de 32 bits (comme une grande adresse). L’assembleur
+utilise une astuce : le <strong>Literal Pool</strong>.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>LDR R0<span class="op">,</span> <span class="op">=</span><span class="bn">0x12345678</span>  <span class="co">; L&#39;assembleur stocke cette valeur plus loin en mémoire</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>                     <span class="co">; et génère un LDR relatif au PC pour aller la chercher.</span></span></code></pre></div>
+<h3 data-number="6.6.2" id="la-pile-stack-push-et-pop"><span class="header-section-number">6.6.2</span> La Pile (Stack) : Push et
+Pop</h3>
+<p>Contrairement à x86, il n’y a pas d’instruction <code>PUSH</code> ou
+<code>POP</code>. On utilise <code>LDR/STR</code> avec
+<code>SP</code>.</p>
+<ul>
+<li><p><strong>PUSH R0</strong> (Empiler R0) :
+<code>asm     SUB SP, SP, #4    ; On fait de la place (la pile descend)     STR R0, [SP]      ; On stocke</code></p></li>
+<li><p><strong>POP R0</strong> (Dépiler dans R0) :
+<code>asm     LDR R0, [SP]      ; On lit     ADD SP, SP, #4    ; On rend la place</code></p></li>
+</ul>
+<h3 data-number="6.6.3" id="structures-de-contrôle"><span class="header-section-number">6.6.3</span> Structures de Contrôle</h3>
+<p><strong>1. Conditionnelle (If/Else)</strong> C :
+<code>if (r0 == r1) r2 = 1; else r2 = 0;</code></p>
+<p>ASM (Classique) :</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> R1</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    BEQ egaux</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R2<span class="op">,</span> <span class="op">#</span><span class="dv">0</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    B fin</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="fu">egaux:</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R2<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="fu">fin:</span></span></code></pre></div>
+<p>ASM (Prédication - Plus rapide !) :</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> R1</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span><span class="op">.</span>EQ R2<span class="op">,</span> <span class="op">#</span><span class="dv">1</span>    <span class="co">; Exécuté seulement si égal</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span><span class="op">.</span>NE R2<span class="op">,</span> <span class="op">#</span><span class="dv">0</span>    <span class="co">; Exécuté seulement si différent</span></span></code></pre></div>
+<p><strong>2. Boucle (While)</strong> C :
+<code>while (r0 &lt; 10) r0++;</code></p>
+<p>ASM :</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">loop:</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">10</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    BGE done         <span class="co">; Si R0 &gt;= 10, on sort</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    B loop</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="fu">done:</span></span></code></pre></div>
+<h2 data-number="6.7" id="gestion-des-erreurs-traps"><span class="header-section-number">6.7</span> 4.7 Gestion des Erreurs
+(Traps)</h2>
+<p>Si le processeur rencontre une situation impossible, il déclenche une
+<strong>Trap</strong> (piège) et arrête tout.</p>
+<ul>
+<li><code>ILLEGAL</code> : L’instruction ne correspond à aucun format
+connu.</li>
+<li><code>MEM_FAULT</code> : Tentative d’accès à une mémoire qui
+n’existe pas.</li>
+<li><code>MISALIGNED</code> : Tentative de lire un mot de 32 bits (4
+octets) à une adresse qui n’est pas multiple de 4 (ex: adresse 3).</li>
+<li><code>DIV_ZERO</code> : Division par zéro.</li>
+</ul>
+<h2 data-number="6.8" id="vos-exercices-3"><span class="header-section-number">6.8</span> 4.8 Vos Exercices</h2>
+<p>Vous ne construisez pas le hardware tout de suite (ce sera au
+Chapitre 5). Pour l’instant, vous allez <strong>programmer</strong> la
+machine.</p>
+<p>Rendez-vous dans le <strong>Simulateur Web</strong> (Section A32
+Assembly) ou utilisez <code>a32_cli</code>.</p>
+<p><strong>Défis suggérés :</strong> 1. <strong>Somme :</strong> Écrire
+un programme qui calcule la somme des nombres de 1 à 10. 2. <strong>Max
+:</strong> Écrire un programme qui trouve le maximum entre deux
+registres sans utiliser de branchement (<code>MOV.GT</code>). 3.
+<strong>Graphique :</strong> Écrivez dans la mémoire vidéo
+(<code>0x00400000</code>) pour dessiner une ligne blanche.</p>
+<h1 data-number="7" id="chapitre-5-le-processeur-cpu"><span class="header-section-number">7</span> Chapitre 5 : Le Processeur
+(CPU)</h1>
+<blockquote>
+<p>“Si vous ne pouvez pas le construire, vous ne le comprenez pas.”</p>
+</blockquote>
+<p>C’est le grand moment. Nous allons assembler toutes les pièces du
+puzzle (ALU, Registres, Décodeur, Mémoire) pour construire le cœur de
+l’ordinateur : le <strong>CPU A32-Lite</strong>.</p>
+<h2 data-number="7.1" id="architecture-globale-data-path"><span class="header-section-number">7.1</span> 5.1 Architecture Globale (Data
+Path)</h2>
+<p>Voici le schéma complet de l’intérieur du processeur que vous allez
+construire. Prenez le temps de l’étudier.</p>
+<pre class="ascii"><code>                                    +-------------+
+                                    | Control Unit|
+                                    +-------------+
+                                     | | | | | | |
+      (PC Next Logic)                v v v v v v v
+      +---+    +------+             +-------------+
++----&gt;| + |&lt;---|  PC  |------------&gt;| Instruction |
+|     +---+    +------+    (addr)   | Memory      |
+|       ^         |                 +-------------+ 
+|       |         |                        |
++-------|---------+                        v (instr)
+        |                           +-------------+
+   Branch Offset                    |   Decoder   |
+                                    +-------------+
+                                     /    |     \ 
+                                   Rn     Rd     Op, Imm... 
+                                   /      |       \ 
+                                  v       v        v 
+                           +-------------+   +-----------+
+                           | Register    |   | Extension |
+                           | File (16)   |   | Unit      |
+                           +-------------+   +-----------+
+                              |       |            |
+                              v       v            v 
+                           (A)      (B)         (Imm)
+                              |       |            |
+                              |     /---&quot;          |
+                              |     |Mux|0&lt;--------+
+                              |     \---/1
+                              |       ^
+                              |       |
+                              v       v 
+                           +-------------+
+                           |    ALU32    |
+                           +-------------+
+                              |       |
+                     (Result) v       v (Zero, Neg flags...) 
+                 +---------------------------+
+                 | Data Memory Interface     |
+                 +---------------------------+</code></pre>
+<h2 data-number="7.2" id="les-composants-clés"><span class="header-section-number">7.2</span> 5.2 Les Composants Clés</h2>
+<h3 data-number="7.2.1" id="le-décodeur-decoder.hdl"><span class="header-section-number">7.2.1</span> 1. Le Décodeur
+(<code>Decoder.hdl</code>)</h3>
+<p>Le CPU est aveugle. Il reçoit un mot de 32 bits et doit le découper
+pour activer les bons fils. Le décodeur prend l’instruction brute et
+extrait : * <code>class</code> : Le type d’instruction (ALU, MEM,
+BRANCH). * <code>op</code> : L’opération précise (ADD, SUB…). *
+<code>rd</code>, <code>rn</code>, <code>rm</code> : Les numéros des
+registres. * <code>imm12</code>, <code>imm24</code> : Les valeurs
+immédiates.</p>
+<p>C’est du pur câblage (des <code>Or</code>, des <code>And</code> et
+des connexions de bus).</p>
+<h3 data-number="7.2.2" id="lunité-de-contrôle-control.hdl"><span class="header-section-number">7.2.2</span> 2. L’Unité de Contrôle
+(<code>Control.hdl</code>)</h3>
+<p>C’est le chef d’orchestre. En fonction de ce que dit le décodeur,
+elle active ou désactive les composants. Exemple : Si l’instruction est
+<code>LDR</code> (Load) : * <code>mem_read</code> = 1 (Lire la mémoire)
+* <code>reg_write</code> = 1 (Écrire dans le registre) *
+<code>alu_src</code> = 1 (Utiliser l’offset immédiat, pas Rm)</p>
+<h3 data-number="7.2.3" id="le-banc-de-registres-regfile16.hdl"><span class="header-section-number">7.2.3</span> 3. Le Banc de Registres
+(<code>RegFile16.hdl</code>)</h3>
+<p>Il contient les 16 registres R0-R15. Il a deux ports de lecture
+(<code>ra</code>, <code>rb</code>) et un port d’écriture
+(<code>wa</code>, <code>wd</code>, <code>we</code>). * <strong>Important
+:</strong> Le registre R15 (PC) est spécial. Dans notre implémentation
+simplifiée, le PC est souvent géré à part, mais l’architecture logique
+le place ici.</p>
+<h2 data-number="7.3" id="le-cycle-dexécution-en-détail"><span class="header-section-number">7.3</span> 5.3 Le Cycle d’Exécution en
+Détail</h2>
+<p>Notre CPU est “Single-Cycle” : il effectue tout le travail en un seul
+coup d’horloge.</p>
+<h3 data-number="7.3.1" id="phase-1-fetch-récupération"><span class="header-section-number">7.3.1</span> Phase 1 : Fetch
+(Récupération)</h3>
+<p>Le composant <code>PC</code> envoie l’adresse courante à la mémoire
+d’instructions. La mémoire renvoie les 32 bits de l’instruction.</p>
+<h3 data-number="7.3.2" id="phase-2-decode-décodage"><span class="header-section-number">7.3.2</span> Phase 2 : Decode
+(Décodage)</h3>
+<p>L’instruction est “éclatée” par le <code>Decoder</code>. L’unité de
+contrôle (<code>Control</code>) décide quoi faire. Le
+<code>RegFile</code> lit les valeurs des registres sources
+<code>Rn</code> et <code>Rm</code>.</p>
+<h3 data-number="7.3.3" id="phase-3-execute-exécution"><span class="header-section-number">7.3.3</span> Phase 3 : Execute
+(Exécution)</h3>
+<p>L’ALU entre en scène. * Entrée A : Toujours <code>Rn</code>. * Entrée
+B : Soit <code>Rm</code>, soit une valeur immédiate (sélectionnée par un
+Mux). L’ALU calcule le résultat. Elle met aussi à jour les drapeaux (N,
+Z, C, V) si demandé (<code>s_flag</code>).</p>
+<h3 data-number="7.3.4" id="phase-4-memory-writeback-mémoire-et-écriture"><span class="header-section-number">7.3.4</span> Phase 4 : Memory / Writeback
+(Mémoire et Écriture)</h3>
+<ul>
+<li>Si c’est une opération ALU (ADD…) : Le résultat de l’ALU est renvoyé
+vers le <code>RegFile</code> pour être stocké
+(<code>reg_write=1</code>).</li>
+<li>Si c’est un Store (STR) : La valeur de <code>Rm</code> est envoyée à
+la mémoire de données.</li>
+<li>Si c’est un Load (LDR) : On lit la mémoire de données et le résultat
+va vers le <code>RegFile</code>.</li>
+</ul>
+<h3 data-number="7.3.5" id="phase-5-pc-update-mise-à-jour-du-pc"><span class="header-section-number">7.3.5</span> Phase 5 : PC Update (Mise à
+jour du PC)</h3>
+<p>Où va-t-on ensuite ? * Par défaut : <code>PC = PC + 4</code>. * Si
+branchement (<code>B</code>, <code>BL</code>) :
+<code>PC = PC + Offset</code> (calculé par un additionneur dédié ou
+l’ALU).</p>
+<h2 data-number="7.4" id="vos-exercices-4"><span class="header-section-number">7.4</span> 5.4 Vos Exercices</h2>
+<p>Rendez-vous dans <code>hdl_lib/05_cpu</code>. Vous devez implémenter
+les fichiers dans cet ordre :</p>
+<ol type="1">
+<li><strong><code>CondCheck.hdl</code></strong> : Un petit circuit qui
+regarde les drapeaux (N, Z, C, V) et le code de condition (EQ, NE, LT…)
+et dit “Oui” ou “Non”. C’est crucial pour la prédication.</li>
+<li><strong><code>Decoder.hdl</code></strong> : Découpez l’instruction
+de 32 bits. Utilisez la syntaxe de sous-bus
+(<code>instr[20..24]</code>).</li>
+<li><strong><code>Control.hdl</code></strong> : La logique de commande.
+C’est une grosse table de vérité.
+<ul>
+<li><em>Astuce :</em> Regardez la classe et l’opcode pour décider si
+<code>reg_write</code> doit être à 1.</li>
+</ul></li>
+<li><strong><code>CPU.hdl</code></strong> : Le grand assemblage.
+<ul>
+<li>Instanciez le <code>PC</code>, le <code>Decoder</code>, le
+<code>Control</code>, le <code>RegFile16</code>,
+l’<code>ALU32</code>.</li>
+<li>Connectez-les selon le schéma ci-dessus.</li>
+<li>N’oubliez pas les multiplexeurs pour choisir les entrées de l’ALU et
+les données à écrire !</li>
+</ul></li>
+</ol>
+<h2 data-number="7.5" id="conseils-de-débogage"><span class="header-section-number">7.5</span> 5.5 Conseils de débogage</h2>
+<ul>
+<li><strong>Le PC reste bloqué à 0 ?</strong> Vérifiez le signal
+<code>inc</code> de votre PC.</li>
+<li><strong>Les branchements ne marchent pas ?</strong> Vérifiez le
+calcul de l’offset (il doit être multiplié par 4 ou décalé, selon la
+spec).</li>
+<li><strong>Rien ne s’écrit ?</strong> Vérifiez <code>reg_write</code>.
+Il ne doit être à 1 que si la condition (<code>CondCheck</code>) est
+vraie !</li>
+</ul>
+<p>Une fois ce chapitre terminé, vous aurez construit un ordinateur
+complet capable d’exécuter du vrai code. Félicitations !</p>
+<h1 data-number="8" id="chapitre-6-lassembleur"><span class="header-section-number">8</span> Chapitre 6 : L’Assembleur</h1>
+<blockquote>
+<p>“Traduire, c’est trahir ?” — Pas ici.</p>
+</blockquote>
+<p>Dans les chapitres précédents, nous avons conçu le matériel capable
+d’exécuter des instructions 32 bits. Mais écrire un programme en
+hexadécimal (comme <code>0xE2801001</code>) est extrêmement pénible et
+source d’erreurs.</p>
+<p>L’<strong>Assembleur</strong> est l’outil logiciel qui fait le pont
+entre le programmeur et la machine. Il traduit un fichier texte
+contenant des mnémoniques (ex: <code>ADD</code>) en un fichier binaire
+exécutable par le CPU.</p>
+<h2 data-number="8.1" id="le-rôle-de-lassembleur"><span class="header-section-number">8.1</span> 6.1 Le Rôle de
+l’Assembleur</h2>
+<p>L’assembleur effectue trois tâches principales : 1. <strong>Analyse
+(Parsing)</strong> : Lire le code source et comprendre les instructions
+et les opérandes. 2. <strong>Résolution des Symboles</strong> :
+Transformer les étiquettes (labels) comme <code>loop:</code> en adresses
+numériques réelles. 3. <strong>Encodage</strong> : Transformer chaque
+instruction en son équivalent binaire de 32 bits selon la spécification
+de l’ISA.</p>
+<h2 data-number="8.2" id="la-stratégie-des-deux-passes"><span class="header-section-number">8.2</span> 6.2 La Stratégie des Deux
+Passes</h2>
+<p>Pourquoi ne peut-on pas traduire le fichier d’un seul coup, ligne par
+ligne ? À cause des <strong>références vers l’avant</strong>.</p>
+<p>Regardez ce code :</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>    B suite    <span class="co">; Où est &#39;suite&#39; ? On ne le sait pas encore !</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">suite:</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span></code></pre></div>
+<p>Pour résoudre ce problème, l’assembleur travaille en deux étapes
+(passes) :</p>
+<h3 data-number="8.2.1" id="passe-1-construction-de-la-table-des-symboles"><span class="header-section-number">8.2.1</span> Passe 1 : Construction de la
+Table des Symboles</h3>
+<p>L’assembleur parcourt le fichier et compte la taille de chaque
+instruction. Il note l’adresse de chaque étiquette qu’il rencontre. *
+<code>suite</code> est à l’adresse 8 (car il y a deux instructions de 4
+octets avant). * Table des symboles :
+<code>{ &quot;suite&quot;: 0x00000008 }</code>.</p>
+<h3 data-number="8.2.2" id="passe-2-génération-du-code"><span class="header-section-number">8.2.2</span> Passe 2 : Génération du
+Code</h3>
+<p>L’assembleur reparcourt le fichier. Lorsqu’il voit
+<code>B suite</code>, il regarde dans sa table, voit
+<code>0x00000008</code>, calcule la distance relative, et encode
+l’instruction binaire complète.</p>
+<h2 data-number="8.3" id="sections-et-directives"><span class="header-section-number">8.3</span> 6.3 Sections et Directives</h2>
+<p>Un programme n’est pas fait que d’instructions. Il contient aussi des
+données (du texte, des constantes). On utilise des
+<strong>directives</strong> (commençant par un point) pour guider
+l’assembleur.</p>
+<h3 data-number="8.3.1" id="les-sections"><span class="header-section-number">8.3.1</span> Les Sections</h3>
+<ul>
+<li><code>.text</code> : C’est ici que vous placez votre code (les
+instructions). Cette zone est généralement en lecture seule.</li>
+<li><code>.data</code> : Pour les variables globales initialisées (ex:
+un message de bienvenue).</li>
+<li><code>.bss</code> : Pour les variables globales non initialisées
+(mises à zéro au démarrage).</li>
+</ul>
+<h3 data-number="8.3.2" id="lallocation-de-données"><span class="header-section-number">8.3.2</span> L’Allocation de Données</h3>
+<ul>
+<li><code>.word 123</code> : Réserve 4 octets et y écrit la valeur
+123.</li>
+<li><code>.asciz &quot;Hello&quot;</code> : Réserve de la place pour une chaîne de
+caractères terminée par un zéro (null-terminated).</li>
+<li><code>.align 2</code> : Aligne l’adresse suivante sur un multiple de
+4 (<span class="math inline">2<sup>2</sup></span>) octets. C’est crucial
+pour le CPU Codex qui exige que les instructions soient alignées.</li>
+</ul>
+<h2 data-number="8.4" id="exemple-dencodage"><span class="header-section-number">8.4</span> 6.4 Exemple d’Encodage</h2>
+<p>Comment l’assembleur encode-t-il l’instruction
+<code>ADD R1, R2, #10</code> ?</p>
+<ol type="1">
+<li><strong>Mnémonique</strong> : <code>ADD</code> -&gt; Code
+d’opération <code>0011</code>.</li>
+<li><strong>Condition</strong> : Pas de suffixe -&gt; <code>1110</code>
+(Always).</li>
+<li><strong>Classe</strong> : Immédiat utilisé -&gt; Classe
+<code>001</code>.</li>
+<li><strong>Registres</strong> : <code>R1</code> (Dest) -&gt;
+<code>0001</code>, <code>R2</code> (Src) -&gt; <code>0010</code>.</li>
+<li><strong>Immédiat</strong> : <code>10</code> -&gt;
+<code>000000001010</code> (12 bits).</li>
+</ol>
+<p><strong>Résultat final :</strong></p>
+<pre class="ascii"><code>Cond | Cls | Op   | S | Rn   | Rd   | Imm12
+1110 | 001 | 0011 | 0 | 0010 | 0001 | 000000001010</code></pre>
+<p>Soit en hexadécimal : <code>0xE282100A</code>.</p>
+<h2 data-number="8.5" id="la-gestion-des-grandes-constantes-value"><span class="header-section-number">8.5</span> 6.5 La Gestion des Grandes
+Constantes (<code>=value</code>)</h2>
+<p>Comme vu au chapitre 4, on ne peut pas mettre une valeur de 32 bits
+dans une instruction de 32 bits. L’assembleur Codex offre une syntaxe
+magique : <code>LDR R0, =0xDEADBEEF</code>.</p>
+<p>Lorsque l’assembleur voit cela : 1. Il ajoute la valeur
+<code>0xDEADBEEF</code> dans une zone spéciale appelée <strong>Literal
+Pool</strong> (générée via la directive <code>.pool</code> ou en fin de
+fichier). 2. Il remplace l’instruction par un <code>LDR</code> relatif
+au PC : <code>LDR R0, [PC, #offset]</code>.</p>
+<h2 data-number="8.6" id="vos-exercices-5"><span class="header-section-number">8.6</span> 6.6 Vos Exercices</h2>
+<p>L’outillage de ce projet contient déjà un assembleur
+(<code>a32_asm</code>). Votre but est de comprendre comment il
+fonctionne ou d’en simuler une partie.</p>
+<p><strong>Exercice 1 : Encodage Manuel</strong> Traduisez les
+instructions suivantes en binaire (32 bits) : * <code>MOV R0, #5</code>
+* <code>SUB R1, R1, #1</code> * <code>B 0</code> (Un saut sur soi-même,
+offset = -8 octets car PC est à +8 par rapport à l’instruction en cours
+dans le pipeline ARM réel, mais dans notre simulateur simplifié, adaptez
+selon la spec).</p>
+<p><strong>Exercice 2 : La Table des Symboles</strong> Étant donné le
+code suivant, calculez l’adresse de chaque label (en supposant que le
+code commence à 0) :</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>.text</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">start:</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">0</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="fu">loop:</span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">10</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    BEQ end</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    B loop</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="fu">end:</span></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>    HALT</span></code></pre></div>
+<p><strong>Exercice 3 : Utilisation de l’outil</strong> Créez un fichier
+<code>test.a32</code>, assemblez-le avec
+<code>cargo run -p a32_cli -- assemble test.a32 -o test.bin</code>, puis
+examinez le contenu binaire (avec <code>hexdump</code> ou un éditeur
+hexadécimal).</p>
+<p><em>Note :</em> L’assembleur du projet génère des fichiers au format
+<strong>A32B</strong> (A32 Binary), qui incluent un en-tête pour le
+simulateur web.</p>
+<h1 data-number="9" id="chapitre-7-construction-du-compilateur"><span class="header-section-number">9</span> Chapitre 7 : Construction du
+Compilateur</h1>
+<blockquote>
+<p>“Pour comprendre la récursivité, il faut d’abord comprendre la
+récursivité.”</p>
+</blockquote>
+<p>Dans ce chapitre, nous allons réaliser un tour de magie : écrire un
+compilateur… en C, pour notre propre machine. L’objectif ultime est le
+<strong>Self-Hosting</strong> : utiliser notre compilateur pour compiler
+notre compilateur.</p>
+<p>Comme notre compilateur principal (<code>c32_cli</code>) est écrit en
+Rust (trop complexe pour être porté tout de suite), nous allons étudier
+et utiliser un <strong>Micro-Compilateur</strong> écrit en C32.</p>
+<h2 data-number="9.1" id="le-défi-microc"><span class="header-section-number">9.1</span> 7.1 Le Défi “MicroC”</h2>
+<p>Nous allons porter le célèbre compilateur pédagogique
+<strong>TinyC</strong> de Marc Feeley pour qu’il tourne sur notre
+architecture Codex. Ce compilateur : 1. Est écrit en un seul fichier C.
+2. Lit du code C sur l’entrée standard (<code>stdin</code>). 3. Génère
+de l’assembleur A32 sur la sortie standard (<code>stdout</code>).</p>
+<h3 data-number="9.1.1" id="limitations-de-c32"><span class="header-section-number">9.1.1</span> Limitations de C32</h3>
+<p>Notre langage C32 a quelques limites par rapport au C standard qu’il
+faut contourner : * Pas de <code>struct</code> (on utilisera des
+tableaux et des offsets manuels). * Pas de <code>malloc</code> complexe
+(on utilisera un gros tableau global comme “tas”). * Pas de
+<code>FILE*</code> (on utilise <code>getchar</code> et
+<code>putchar</code>).</p>
+<h2 data-number="9.2" id="le-code-source-de-microc"><span class="header-section-number">9.2</span> 7.2 Le Code Source de
+MicroC</h2>
+<p>Voici une version adaptée de TinyC. Copiez ce code dans un fichier
+<code>micro_c.c</code>.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">// micro_c.c - Un compilateur C minimaliste pour Codex A32</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Basé sur TinyC de Marc Feeley</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co">// --- Lexer ---</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> ch<span class="op">;</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> sym<span class="op">;</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> int_val<span class="op">;</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Symboles</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> DO_SYM <span class="op">=</span> <span class="dv">0</span><span class="op">;</span>   <span class="dt">int</span> ELSE_SYM <span class="op">=</span> <span class="dv">1</span><span class="op">;</span> <span class="dt">int</span> IF_SYM <span class="op">=</span> <span class="dv">2</span><span class="op">;</span> <span class="dt">int</span> WHILE_SYM <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> LBRA <span class="op">=</span> <span class="dv">4</span><span class="op">;</span>     <span class="dt">int</span> RBRA <span class="op">=</span> <span class="dv">5</span><span class="op">;</span>     <span class="dt">int</span> LPAR <span class="op">=</span> <span class="dv">6</span><span class="op">;</span>   <span class="dt">int</span> RPAR <span class="op">=</span> <span class="dv">7</span><span class="op">;</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> PLUS <span class="op">=</span> <span class="dv">8</span><span class="op">;</span>     <span class="dt">int</span> MINUS <span class="op">=</span> <span class="dv">9</span><span class="op">;</span>    <span class="dt">int</span> LESS <span class="op">=</span> <span class="dv">10</span><span class="op">;</span>  <span class="dt">int</span> SEMI <span class="op">=</span> <span class="dv">11</span><span class="op">;</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> EQUAL <span class="op">=</span> <span class="dv">12</span><span class="op">;</span>   <span class="dt">int</span> INT <span class="op">=</span> <span class="dv">13</span><span class="op">;</span>     <span class="dt">int</span> ID <span class="op">=</span> <span class="dv">14</span><span class="op">;</span>    <span class="dt">int</span> EOI <span class="op">=</span> <span class="dv">15</span><span class="op">;</span></span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> next_ch<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>    ch <span class="op">=</span> getchar<span class="op">();</span> <span class="co">// Appel système A32</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> next_sym<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>ch <span class="op">==</span> <span class="dv">32</span> <span class="op">||</span> ch <span class="op">==</span> <span class="dv">10</span><span class="op">)</span> next_ch<span class="op">();</span> <span class="co">// Skip espaces et sauts de ligne</span></span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ch <span class="op">==</span> <span class="op">-</span><span class="dv">1</span><span class="op">)</span> <span class="op">{</span> sym <span class="op">=</span> EOI<span class="op">;</span> <span class="cf">return</span><span class="op">;</span> <span class="op">}</span></span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ch <span class="op">==</span> <span class="dv">123</span><span class="op">)</span> <span class="op">{</span> next_ch<span class="op">();</span> sym <span class="op">=</span> LBRA<span class="op">;</span> <span class="cf">return</span><span class="op">;</span> <span class="op">}</span> <span class="co">// {</span></span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ch <span class="op">==</span> <span class="dv">125</span><span class="op">)</span> <span class="op">{</span> next_ch<span class="op">();</span> sym <span class="op">=</span> RBRA<span class="op">;</span> <span class="cf">return</span><span class="op">;</span> <span class="op">}</span> <span class="co">// }</span></span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ch <span class="op">==</span> <span class="dv">40</span><span class="op">)</span>  <span class="op">{</span> next_ch<span class="op">();</span> sym <span class="op">=</span> LPAR<span class="op">;</span> <span class="cf">return</span><span class="op">;</span> <span class="op">}</span> <span class="co">// (</span></span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ch <span class="op">==</span> <span class="dv">41</span><span class="op">)</span>  <span class="op">{</span> next_ch<span class="op">();</span> sym <span class="op">=</span> RPAR<span class="op">;</span> <span class="cf">return</span><span class="op">;</span> <span class="op">}</span> <span class="co">// )</span></span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ch <span class="op">==</span> <span class="dv">43</span><span class="op">)</span>  <span class="op">{</span> next_ch<span class="op">();</span> sym <span class="op">=</span> PLUS<span class="op">;</span> <span class="cf">return</span><span class="op">;</span> <span class="op">}</span> <span class="co">// +</span></span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ch <span class="op">==</span> <span class="dv">45</span><span class="op">)</span>  <span class="op">{</span> next_ch<span class="op">();</span> sym <span class="op">=</span> MINUS<span class="op">;</span> <span class="cf">return</span><span class="op">;</span> <span class="op">}</span> <span class="co">// -</span></span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ch <span class="op">==</span> <span class="dv">60</span><span class="op">)</span>  <span class="op">{</span> next_ch<span class="op">();</span> sym <span class="op">=</span> LESS<span class="op">;</span> <span class="cf">return</span><span class="op">;</span> <span class="op">}</span> <span class="co">// &lt;</span></span>
+<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ch <span class="op">==</span> <span class="dv">59</span><span class="op">)</span>  <span class="op">{</span> next_ch<span class="op">();</span> sym <span class="op">=</span> SEMI<span class="op">;</span> <span class="cf">return</span><span class="op">;</span> <span class="op">}</span> <span class="co">// ;</span></span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ch <span class="op">==</span> <span class="dv">61</span><span class="op">)</span>  <span class="op">{</span> next_ch<span class="op">();</span> sym <span class="op">=</span> EQUAL<span class="op">;</span> <span class="cf">return</span><span class="op">;</span> <span class="op">}</span> <span class="co">// =</span></span>
+<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>ch <span class="op">&gt;=</span> <span class="dv">48</span> <span class="op">&amp;&amp;</span> ch <span class="op">&lt;=</span> <span class="dv">57</span><span class="op">)</span> <span class="op">{</span> <span class="co">// 0-9</span></span>
+<span id="cb28-33"><a href="#cb28-33" aria-hidden="true" tabindex="-1"></a>        int_val <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb28-34"><a href="#cb28-34" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> <span class="op">(</span>ch <span class="op">&gt;=</span> <span class="dv">48</span> <span class="op">&amp;&amp;</span> ch <span class="op">&lt;=</span> <span class="dv">57</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb28-35"><a href="#cb28-35" aria-hidden="true" tabindex="-1"></a>            int_val <span class="op">=</span> int_val <span class="op">*</span> <span class="dv">10</span> <span class="op">+</span> <span class="op">(</span>ch <span class="op">-</span> <span class="dv">48</span><span class="op">);</span></span>
+<span id="cb28-36"><a href="#cb28-36" aria-hidden="true" tabindex="-1"></a>            next_ch<span class="op">();</span></span>
+<span id="cb28-37"><a href="#cb28-37" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb28-38"><a href="#cb28-38" aria-hidden="true" tabindex="-1"></a>        sym <span class="op">=</span> INT<span class="op">;</span></span>
+<span id="cb28-39"><a href="#cb28-39" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>ch <span class="op">&gt;=</span> <span class="dv">97</span> <span class="op">&amp;&amp;</span> ch <span class="op">&lt;=</span> <span class="dv">122</span><span class="op">)</span> <span class="op">{</span> <span class="co">// a-z</span></span>
+<span id="cb28-40"><a href="#cb28-40" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Simplification : une seule lettre pour les variables</span></span>
+<span id="cb28-41"><a href="#cb28-41" aria-hidden="true" tabindex="-1"></a>        int_val <span class="op">=</span> ch <span class="op">-</span> <span class="dv">97</span><span class="op">;</span> <span class="co">// 0 for &#39;a&#39;, 1 for &#39;b&#39;...</span></span>
+<span id="cb28-42"><a href="#cb28-42" aria-hidden="true" tabindex="-1"></a>        next_ch<span class="op">();</span></span>
+<span id="cb28-43"><a href="#cb28-43" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check keywords (très simplifié pour l&#39;exemple)</span></span>
+<span id="cb28-44"><a href="#cb28-44" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Dans une vraie implémentation, il faudrait un buffer de string</span></span>
+<span id="cb28-45"><a href="#cb28-45" aria-hidden="true" tabindex="-1"></a>        sym <span class="op">=</span> ID<span class="op">;</span> </span>
+<span id="cb28-46"><a href="#cb28-46" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Note: Ici on triche, on assume que if/while/do sont gérés </span></span>
+<span id="cb28-47"><a href="#cb28-47" aria-hidden="true" tabindex="-1"></a>        <span class="co">// par un lexer plus complet ou que l&#39;utilisateur n&#39;utilise pas de variables qui clashent.</span></span>
+<span id="cb28-48"><a href="#cb28-48" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Pour cet exemple pédagogique, supposons des variables d&#39;une lettre et pas de mots clés complexes.</span></span>
+<span id="cb28-49"><a href="#cb28-49" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb28-50"><a href="#cb28-50" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb28-51"><a href="#cb28-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-52"><a href="#cb28-52" aria-hidden="true" tabindex="-1"></a><span class="co">// --- Générateur de Code (A32 Stack Machine) ---</span></span>
+<span id="cb28-53"><a href="#cb28-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-54"><a href="#cb28-54" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> g_push<span class="op">(</span><span class="dt">int</span> val<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb28-55"><a href="#cb28-55" aria-hidden="true" tabindex="-1"></a>    <span class="co">// MOV R0, #val; SUB SP, SP, #4; STR R0, [SP]</span></span>
+<span id="cb28-56"><a href="#cb28-56" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">&quot;.word 0xE3A00000 + </span><span class="sc">%d\n</span><span class="st">&quot;</span><span class="op">,</span> val<span class="op">);</span> <span class="co">// Hack: on émet du binaire ou pseudo-asm</span></span>
+<span id="cb28-57"><a href="#cb28-57" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Pour simplifier l&#39;exemple, imaginons qu&#39;on sort du texte ASM :</span></span>
+<span id="cb28-58"><a href="#cb28-58" aria-hidden="true" tabindex="-1"></a>    <span class="co">// printf(&quot;MOV R0, #%d\n&quot;, val); ...</span></span>
+<span id="cb28-59"><a href="#cb28-59" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb28-60"><a href="#cb28-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-61"><a href="#cb28-61" aria-hidden="true" tabindex="-1"></a><span class="co">// --- Parser &amp; Compilateur ---</span></span>
+<span id="cb28-62"><a href="#cb28-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-63"><a href="#cb28-63" aria-hidden="true" tabindex="-1"></a><span class="co">// ... (Le parser récursif descendrait ici, similaire à TinyC)</span></span>
+<span id="cb28-64"><a href="#cb28-64" aria-hidden="true" tabindex="-1"></a><span class="co">// ... (Il appellerait g_push, g_add, g_sub pour générer l&#39;ASM A32)</span></span>
+<span id="cb28-65"><a href="#cb28-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-66"><a href="#cb28-66" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb28-67"><a href="#cb28-67" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">&quot;.text</span><span class="sc">\n</span><span class="st">.global _start</span><span class="sc">\n</span><span class="st">_start:</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb28-68"><a href="#cb28-68" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb28-69"><a href="#cb28-69" aria-hidden="true" tabindex="-1"></a>    next_ch<span class="op">();</span></span>
+<span id="cb28-70"><a href="#cb28-70" aria-hidden="true" tabindex="-1"></a>    next_sym<span class="op">();</span></span>
+<span id="cb28-71"><a href="#cb28-71" aria-hidden="true" tabindex="-1"></a>    <span class="co">// parser(); // Lancer le parsing</span></span>
+<span id="cb28-72"><a href="#cb28-72" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb28-73"><a href="#cb28-73" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">&quot;HALT</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb28-74"><a href="#cb28-74" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb28-75"><a href="#cb28-75" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><em>Note : Le code ci-dessus est un squelette. Pour le défi complet,
+vous devrez porter l’intégralité de la logique de TinyC.</em></p>
+<h2 data-number="9.3" id="lexpérience-de-self-compilation"><span class="header-section-number">9.3</span> 7.3 L’Expérience de
+“Self-Compilation”</h2>
+<p>Voici la procédure pour réaliser l’Inception :</p>
+<ol type="1">
+<li><strong>Écriture</strong> : Écrivez votre compilateur
+<code>micro_c.c</code> (en C32).</li>
+<li><strong>Compilation</strong> : Utilisez notre compilateur Rust
+(<code>c32_cli</code>) pour compiler <code>micro_c.c</code> en binaire
+A32.
+<code>bash     cargo run -p c32_cli -- compile micro_c.c -o compiler.bin</code></li>
+<li><strong>Exécution</strong> : Lancez le simulateur avec ce binaire.
+<ul>
+<li>L’entrée standard (<code>stdin</code>) sera votre code source C (ex:
+<code>i=10;</code>).</li>
+<li>La sortie standard (<code>stdout</code>) sera le code Assembleur
+généré !</li>
+</ul></li>
+</ol>
+<div class="sourceCode" id="cb29"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;i=10;&quot;</span> <span class="kw">|</span> <span class="ex">cargo</span> run <span class="at">-p</span> a32_runner <span class="at">--</span> compiler.bin</span></code></pre></div>
+<p>Si tout fonctionne, vous verrez s’afficher à l’écran :</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode asm"><code class="sourceCode fasm"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">10</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="bu">STR</span> R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#-</span><span class="dv">4</span><span class="op">]!</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>...</span></code></pre></div>
+<p>C’est la preuve que votre ordinateur (simulé) est capable de
+comprendre et de traduire des langages de haut niveau.</p>
+<h2 data-number="9.4" id="comprendre-la-génération-de-code-a32"><span class="header-section-number">9.4</span> 7.4 Comprendre la Génération de
+Code A32</h2>
+<p>Votre <code>micro_c</code> doit générer de l’assembleur valide. Voici
+les modèles (templates) à utiliser :</p>
+<h3 data-number="9.4.1" id="push-constante"><span class="header-section-number">9.4.1</span> Push Constante</h3>
+<div class="sourceCode" id="cb31"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;MOV R0, #</span><span class="sc">%d\n</span><span class="st">&quot;</span><span class="op">,</span> val<span class="op">);</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;SUB SP, SP, #4</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;STR R0, [SP]</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span></code></pre></div>
+<h3 data-number="9.4.2" id="addition-pop-pop-add-push"><span class="header-section-number">9.4.2</span> Addition (Pop, Pop, Add,
+Push)</h3>
+<div class="sourceCode" id="cb32"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;LDR R1, [SP]</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;ADD SP, SP, #4</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span> <span class="co">// Pop R1</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;LDR R0, [SP]</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;ADD SP, SP, #4</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span> <span class="co">// Pop R0</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;ADD R0, R0, R1</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;SUB SP, SP, #4</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;STR R0, [SP]</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span>   <span class="co">// Push Res</span></span></code></pre></div>
+<h3 data-number="9.4.3" id="variables-a-z"><span class="header-section-number">9.4.3</span> Variables (a-z)</h3>
+<p>On peut mapper les variables <code>a</code>..<code>z</code> à des
+adresses mémoire fixes (ex: <code>0x1000</code> + 4*index).</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Lecture &#39;a&#39;</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;LDR R0, =0x1000</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;LDR R0, [R0]</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;SUB SP, SP, #4</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>printf<span class="op">(</span><span class="st">&quot;STR R0, [SP]</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span></code></pre></div>
+<h2 data-number="9.5" id="vos-exercices-6"><span class="header-section-number">9.5</span> 7.5 Vos Exercices</h2>
+<p><strong>Défi Ultime :</strong> Portez le code complet de
+<code>tinyc.c</code> (disponible dans les ressources du livre original
+ou sur le web) pour qu’il fonctionne en C32. 1. Remplacez les
+<code>enum</code> par des <code>int</code>. 2. Remplacez les
+<code>struct</code> par des variables globales ou des tableaux. 3.
+Remplacez la génération de bytecode par des <code>printf</code>
+d’instructions ASM A32.</p>
+<p>Si vous y arrivez, vous aurez créé un compilateur C qui tourne sur
+votre propre CPU !</p>
+<pre><code>
+# Chapitre 8 : Langage de Haut Niveau (C32)
+
+&gt; &quot;Le logiciel est l&#39;esprit qui anime la machine.&quot;
+
+Jusqu&#39;à présent, nous avons construit le matériel et appris à lui murmurer à l&#39;oreille en assembleur. Mais écrire des applications complexes (comme un traitement de texte ou un jeu de plateforme) en assembleur est laborieux. 
+
+C&#39;est ici qu&#39;intervient le **C32**. C&#39;est un langage de haut niveau qui vous permet de vous concentrer sur la **logique** de votre programme plutôt que sur la gestion des registres et des adresses mémoire.
+
+## 8.1 Pourquoi un langage de haut niveau ?
+
+Imaginez que vous vouliez calculer la moyenne de 10 nombres.
+*   **En Assembleur** : Vous devez décider quel registre contient le compteur, lequel contient la somme, comment faire la boucle, et gérer manuellement les sauts mémoire.
+*   **En C32** : Vous écrivez une boucle `for` et utilisez des variables nommées. Le compilateur se charge de la &quot;cuisine&quot; interne.
+
+**L&#39;Abstraction :**
+```ascii
+[ Pensée Humaine ]  -&gt; &quot;Calculer la moyenne&quot;
+      |
+      v
+[ Langage C32 ]     -&gt; sum = sum + tab[i];
+      |
+      v
+[ Assembleur A32 ]  -&gt; LDR R0, [R1, R2]; ADD R3, R3, R0...
+      |
+      v
+[ Code Machine ]    -&gt; 0xE0833000...</code></pre>
+<h2 data-number="9.6" id="spécification-du-langage-c32"><span class="header-section-number">9.6</span> 8.2 Spécification du Langage
+C32</h2>
+<p>Le C32 est un sous-ensemble du langage C. Si vous connaissez le C ou
+le Java/C++, vous vous sentirez chez vous.</p>
+<h3 data-number="9.6.1" id="les-types-de-données"><span class="header-section-number">9.6.1</span> 1. Les Types de Données</h3>
+<p>Le Codex est une machine 32-bits, donc le type de base est le mot de
+32 bits.</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Taille</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>int</code></td>
+<td style="text-align: left;">32 bits</td>
+<td style="text-align: left;">Entier signé (Complément à 2).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>uint</code></td>
+<td style="text-align: left;">32 bits</td>
+<td style="text-align: left;">Entier non-signé (positif
+uniquement).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>char</code></td>
+<td style="text-align: left;">8 bits</td>
+<td style="text-align: left;">Caractère (ASCII).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>bool</code></td>
+<td style="text-align: left;">1 bit</td>
+<td style="text-align: left;"><code>true</code> ou
+<code>false</code>.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>void</code></td>
+<td style="text-align: left;">-</td>
+<td style="text-align: left;">Type “vide” pour les fonctions qui ne
+retournent rien.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>type*</code></td>
+<td style="text-align: left;">32 bits</td>
+<td style="text-align: left;">Pointeur (adresse mémoire d’un autre
+objet).</td>
+</tr>
+</tbody>
+</table>
+<h3 data-number="9.6.2" id="variables-et-portée"><span class="header-section-number">9.6.2</span> 2. Variables et Portée</h3>
+<ul>
+<li><strong>Variables Globales</strong> : Déclarées en dehors des
+fonctions. Elles vivent dans la section <code>.data</code> ou
+<code>.bss</code> et sont accessibles partout.</li>
+<li><strong>Variables Locales</strong> : Déclarées à l’intérieur d’une
+fonction. Elles vivent sur la <strong>Pile (Stack)</strong> et
+disparaissent quand la fonction se termine.</li>
+</ul>
+<h3 data-number="9.6.3" id="structures-de-contrôle-1"><span class="header-section-number">9.6.3</span> 3. Structures de
+Contrôle</h3>
+<p><strong>Si / Sinon (If / Else) :</strong></p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="op">(</span>score <span class="op">&gt;</span> <span class="dv">100</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    win<span class="op">();</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    try_again<span class="op">();</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Boucle Tant Que (While) :</strong></p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="op">(</span>x <span class="op">&lt;</span> <span class="dv">10</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> x <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><strong>Boucle Pour (For) :</strong></p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">10</span><span class="op">;</span> i <span class="op">=</span> i <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    draw_pixel<span class="op">(</span>i<span class="op">,</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 data-number="9.7" id="pointeurs-et-tableaux"><span class="header-section-number">9.7</span> 8.3 Pointeurs et Tableaux</h2>
+<p>C’est ici que le C32 montre sa puissance et sa proximité avec le
+matériel.</p>
+<h3 data-number="9.7.1" id="les-tableaux"><span class="header-section-number">9.7.1</span> Les Tableaux</h3>
+<p>Un tableau est une suite de valeurs consécutives en mémoire.</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> scores<span class="op">[</span><span class="dv">5</span><span class="op">];</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>scores<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">=</span> <span class="dv">10</span><span class="op">;</span></span></code></pre></div>
+<h3 data-number="9.7.2" id="les-pointeurs"><span class="header-section-number">9.7.2</span> Les Pointeurs</h3>
+<p>Un pointeur contient une adresse mémoire.</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> x <span class="op">=</span> <span class="dv">42</span><span class="op">;</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span><span class="op">*</span> p <span class="op">=</span> <span class="op">&amp;</span>x<span class="op">;</span> <span class="co">// p contient l&#39;adresse de x</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="op">*</span>p <span class="op">=</span> <span class="dv">100</span><span class="op">;</span>    <span class="co">// x vaut maintenant 100</span></span></code></pre></div>
+<p><strong>Pourquoi est-ce important ?</strong> C’est grâce aux
+pointeurs que nous allons pouvoir manipuler le matériel (Screen,
+Keyboard) en écrivant directement aux adresses magiques définies au
+Chapitre 4.</p>
+<h2 data-number="9.8" id="accès-au-matériel-mmio"><span class="header-section-number">9.8</span> 8.4 Accès au Matériel
+(MMIO)</h2>
+<p>En C32, on accède aux périphériques en utilisant des pointeurs vers
+des adresses fixes.</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co">// L&#39;écran commence à 0x00400000</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clear_screen<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    uint<span class="op">*</span> screen <span class="op">=</span> <span class="op">(</span>uint<span class="op">*)</span><span class="bn">0x00400000</span><span class="op">;</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">9600</span><span class="op">/</span><span class="dv">4</span><span class="op">;</span> i <span class="op">=</span> i <span class="op">+</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>        screen<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Lire une touche</span></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> get_key<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span><span class="op">*</span> keyboard <span class="op">=</span> <span class="op">(</span><span class="dt">int</span><span class="op">*)</span><span class="bn">0x00402600</span><span class="op">;</span></span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">*</span>keyboard<span class="op">;</span></span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 data-number="9.9" id="organisation-dun-programme-c32"><span class="header-section-number">9.9</span> 8.5 Organisation d’un programme
+C32</h2>
+<p>Tout programme doit avoir une fonction <code>main</code>, qui est le
+point d’entrée.</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Inclusion de bibliothèques (si disponibles)</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> <span class="dt">void</span> putchar<span class="op">(</span><span class="dt">char</span> c<span class="op">);</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">char</span><span class="op">*</span> msg <span class="op">=</span> <span class="st">&quot;Hello Codex!&quot;</span><span class="op">;</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>msg<span class="op">[</span>i<span class="op">]</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>        putchar<span class="op">(</span>msg<span class="op">[</span>i<span class="op">]);</span></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>        i <span class="op">=</span> i <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 data-number="9.10" id="limitations-ce-que-le-c32-ne-fait-pas-encore"><span class="header-section-number">9.10</span> 8.6 Limitations (Ce que le C32
+ne fait pas encore)</h2>
+<p>Pour rester simple et pédagogique, le compilateur C32 actuel a
+quelques limites : 1. <strong>Pas de <code>struct</code></strong> : Vous
+ne pouvez pas créer de types complexes. 2. <strong>Pas de
+flottants</strong> : Uniquement des entiers (pas de <code>float</code>
+ou <code>double</code>). 3. <strong>Gestion mémoire manuelle</strong> :
+Il n’y a pas de ramasse-miettes (Garbage Collector). Si vous voulez de
+la mémoire dynamique, vous devez utiliser <code>malloc</code> (que nous
+verrons au Chapitre 9).</p>
+<h2 data-number="9.11" id="vos-exercices-7"><span class="header-section-number">9.11</span> 8.7 Vos Exercices</h2>
+<p>Rendez-vous dans le dossier <code>tests_c/</code>. Vous y trouverez
+une multitude de programmes de test.</p>
+<p><strong>Défis suggérés :</strong> 1. <strong>T01_sum_to.c</strong> :
+Calculez la somme des entiers de 1 à N. 2.
+<strong>T06_array_ptr.c</strong> : Manipulez un tableau via des
+pointeurs. 3. <strong>Application Graphique</strong> : Créez un fichier
+<code>mon_dessin.c</code> qui dessine un rectangle sur l’écran en
+utilisant une boucle <code>for</code> et l’adresse
+<code>0x00400000</code>.</p>
+<p><strong>Compilation et Test :</strong></p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compiler le fichier C vers un binaire A32</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> c32_cli <span class="at">--</span> compile mon_dessin.c <span class="at">-o</span> mon_dessin.bin</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Exécuter dans le simulateur</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="at">-p</span> a32_runner <span class="at">--</span> mon_dessin.bin</span></code></pre></div>
+<p>Ou, plus simplement, utilisez le <strong>Simulateur Web</strong> pour
+une visualisation immédiate !</p>
+<h1 data-number="10" id="chapitre-9-système-dexploitation"><span class="header-section-number">10</span> Chapitre 9 : Système
+d’Exploitation</h1>
+<blockquote>
+<p>“Un OS est ce qui reste quand on a enlevé tout ce qui est utile.”</p>
+</blockquote>
+<p>Félicitations ! Vous avez construit le matériel, l’assembleur et le
+compilateur. Votre machine Codex est fonctionnelle. Mais pour l’instant,
+chaque programmeur doit réinventer la roue : comment dessiner un cercle
+? comment lire une chaîne de caractères ?</p>
+<p>Dans ce dernier chapitre, nous allons construire une
+<strong>Bibliothèque Système</strong> (<code>os_lib</code>). Ce n’est
+pas encore un Windows ou un Linux, mais c’est la fondation de ce qu’on
+appelle un <strong>Système d’Exploitation</strong> : une couche
+logicielle qui simplifie l’accès au matériel.</p>
+<h2 data-number="10.1" id="la-hiérarchie-logicielle"><span class="header-section-number">10.1</span> 9.1 La Hiérarchie
+Logicielle</h2>
+<p>L’OS s’insère entre votre application et le matériel brut.</p>
+<pre class="ascii"><code>+-------------------------+
+|      Application        | (Ex: Snake, Calculatrice)
++-------------------------+
+|    Bibliothèque OS      | (os_lib: malloc, draw_line, printf)
++-------------------------+
+|      Matériel (CPU)     | (Registres, MMIO, Interruptions)
++-------------------------+</code></pre>
+<h2 data-number="10.2" id="gestion-de-la-mémoire-le-tas-heap"><span class="header-section-number">10.2</span> 9.2 Gestion de la Mémoire (Le
+Tas / Heap)</h2>
+<p>Jusqu’à présent, nous utilisions des variables globales ou locales
+(sur la pile). Mais que faire si nous avons besoin d’une quantité de
+mémoire inconnue à l’avance (ex: charger une image) ?</p>
+<p>C’est le rôle de l’allocateur de mémoire (<code>alloc.c</code>). Il
+gère une zone appelée le <strong>Tas (Heap)</strong>.</p>
+<h3 data-number="10.2.1" id="lallocateur-bump-simple"><span class="header-section-number">10.2.1</span> L’Allocateur “Bump”
+(Simple)</h3>
+<p>C’est la méthode la plus simple : on a un pointeur qui avance à
+chaque allocation.</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> <span class="op">*</span>malloc<span class="op">(</span>uint size<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    uint result <span class="op">=</span> heap_ptr<span class="op">;</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    heap_ptr <span class="op">=</span> heap_ptr <span class="op">+</span> size<span class="op">;</span> <span class="co">// On avance le curseur</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">(</span><span class="dt">char</span> <span class="op">*)</span>result<span class="op">;</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p><em>Inconvénient :</em> On ne peut pas libérer (<code>free</code>) de
+la mémoire individuellement.</p>
+<h3 data-number="10.2.2" id="lallocateur-par-liste-chaînée-avancé"><span class="header-section-number">10.2.2</span> L’Allocateur par Liste
+Chaînée (Avancé)</h3>
+<p>L’OS Codex propose aussi une version plus maligne où chaque bloc de
+mémoire libre contient un pointeur vers le suivant. Cela permet de
+réutiliser les trous laissés par les blocs libérés.</p>
+<h2 data-number="10.3" id="bibliothèque-graphique-screen.c"><span class="header-section-number">10.3</span> 9.3 Bibliothèque Graphique
+(<code>screen.c</code>)</h2>
+<p>Plutôt que de calculer manuellement les bits pour chaque pixel (comme
+nous l’avons fait au Chapitre 8), l’OS nous offre des fonctions de haut
+niveau.</p>
+<p><strong>L’algorithme de Bresenham :</strong> C’est l’algorithme
+classique utilisé dans <code>os_lib</code> pour dessiner des lignes
+droites avec uniquement des additions et des soustractions (pas besoin
+de nombres à virgule !).</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> screen_draw_line<span class="op">(</span><span class="dt">int</span> x1<span class="op">,</span> <span class="dt">int</span> y1<span class="op">,</span> <span class="dt">int</span> x2<span class="op">,</span> <span class="dt">int</span> y2<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Calcul complexe des pixels...</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Grâce à l’OS, dessiner devient un jeu d’enfant :</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>screen_init<span class="op">();</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>screen_set_color<span class="op">(</span>COLOR_BLACK<span class="op">);</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>screen_draw_circle<span class="op">(</span><span class="dv">160</span><span class="op">,</span> <span class="dv">120</span><span class="op">,</span> <span class="dv">50</span><span class="op">);</span> <span class="co">// Un cercle au centre !</span></span></code></pre></div>
+<h2 data-number="10.4" id="entrées-sorties-et-système-io.c-sys.c"><span class="header-section-number">10.4</span> 9.4 Entrées / Sorties et
+Système (<code>io.c</code>, <code>sys.c</code>)</h2>
+<p>L’OS cache aussi la complexité des appels système
+(<code>SVC</code>).</p>
+<ul>
+<li><strong><code>printf</code></strong> : Formate et affiche du texte
+en utilisant <code>putchar</code>.</li>
+<li><strong><code>keyboard_read</code></strong> : Lit une touche et gère
+les codes spéciaux (flèches, entrée).</li>
+<li><strong><code>exit(code)</code></strong> : Arrête proprement le
+programme.</li>
+</ul>
+<h2 data-number="10.5" id="interruptions-et-multitâche-concept"><span class="header-section-number">10.5</span> 9.5 Interruptions et
+Multitâche (Concept)</h2>
+<p>Bien que nous ne construisions pas un système multitâche complet, le
+Codex supporte les <strong>Interruptions</strong>. Imaginez que vous
+jouez à un jeu (Snake) : 1. Le CPU exécute le code du jeu. 2. Un
+<strong>Timer matériel</strong> déclenche une interruption toutes les
+10ms. 3. Le CPU s’arrête instantanément et saute vers un “Handler” de
+l’OS. 4. L’OS met à jour l’horloge ou vérifie le clavier. 5. Le CPU
+reprend le jeu là où il s’était arrêté.</p>
+<p>C’est la base de tout système moderne : le matériel peut “forcer” le
+logiciel à réagir à un événement.</p>
+<h2 data-number="10.6" id="le-grand-final-votre-application"><span class="header-section-number">10.6</span> 9.6 Le Grand Final : Votre
+Application</h2>
+<p>Vous avez tous les outils en main. Le répertoire <code>demos/</code>
+contient des exemples de ce que vous pouvez réaliser avec l’OS Codex : *
+<code>01_hello</code> : Le classique. * <code>04_snake</code> : Un jeu
+complet utilisant les graphismes et le clavier. * <code>05_shell</code>
+: Une interface en ligne de commande qui tourne sur votre CPU !</p>
+<h2 data-number="10.7" id="vos-exercices-8"><span class="header-section-number">10.7</span> Vos Exercices</h2>
+<p><strong>Exercice 1 : Extension de l’OS</strong> Ajoutez une fonction
+<code>screen_draw_triangle</code> à <code>os_lib/screen.c</code> en
+utilisant trois appels à <code>screen_draw_line</code>.</p>
+<p><strong>Exercice 2 : Gestion Mémoire</strong> Testez l’allocateur.
+Allouez 10 petits blocs avec <code>malloc</code>, puis essayez d’en
+libérer certains avec la version <code>ll_free</code> (liste chaînée).
+Observez-vous une fragmentation ?</p>
+<p><strong>Exercice 3 : Le Projet Final</strong> Créez votre propre
+application dans un nouveau dossier <code>demos/08_mon_projet/</code>.
+Utilisez tout ce que vous avez appris : le HDL pour comprendre le CPU,
+l’assembleur pour optimiser les parties critiques, le C32 pour la
+logique, et l’OS pour l’interface.</p>
+<hr />
+<p><strong>Félicitations !</strong> Vous avez parcouru tout le chemin,
+de la porte NAND au système d’exploitation. Vous comprenez maintenant
+que l’ordinateur n’est pas une boîte magique, mais une immense pile
+d’abstractions magnifiquement ordonnées.</p>
+</body>
+</html>

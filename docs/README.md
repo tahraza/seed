@@ -1,60 +1,69 @@
-# Documentation Pédagogique nand2tetris-codex
+# Documentation Pedagogique nand2tetris-codex
 
-Bienvenue dans la documentation pédagogique du projet nand2tetris-codex !
+Bienvenue dans la documentation pedagogique du projet nand2tetris-codex !
 
-## 🎯 Objectif
+## Objectif
 
-Ce projet permet aux étudiants de comprendre l'informatique de bas en haut :
+Ce projet permet aux etudiants de comprendre l'informatique de bas en haut :
 - Des portes logiques au processeur
 - De l'assembleur au compilateur
-- Du bare metal au système d'exploitation
+- Du bare metal au systeme d'exploitation
 
-## 📚 Structure
+## Structure
 
 ```
 docs/
+├── 00_hdl/              # Conception de chips (HDL)
 ├── 01_architecture/     # Comprendre le CPU A32-Lite
 ├── 02_assembleur/       # Programmer en assembleur
 ├── 03_compilateur/      # Construire un compilateur
-├── 04_os/               # Créer un mini-OS
-├── 05_timer_interrupts/ # Timer, interruptions, multitâche
+├── 04_os/               # Creer un mini-OS
+├── 05_timer_interrupts/ # Timer, interruptions, multitache
 └── exercices/           # Travaux pratiques
     ├── niveau1_asm/
     ├── niveau2_compilateur/
     └── niveau3_os/
 ```
 
-## 🗺️ Parcours recommandé
+## Parcours recommande
 
-### Semaine 1-2 : Architecture
+### HDL : Conception de Chips (6 semaines)
+Du NAND au CPU complet en 5 projets.
+1. [Progression HDL](00_hdl/PROGRESSION.md)
+   - P1: Portes de base (Not, And, Or, Xor, Mux, DMux)
+   - P2: Portes multi-bits (16/32 bits)
+   - P3: Arithmetique (Adders, ALU32)
+   - P4: Sequentiel (DFF, Register, RAM)
+   - P5: CPU A32
+
+### Assembleur (2 semaines)
+Programmer en langage machine.
 1. [Vue d'ensemble](01_architecture/overview.md)
 2. Jeu d'instructions
-3. Carte mémoire
+3. Carte memoire
 
-### Semaine 3-4 : Assembleur
-1. Premier programme
-2. Structures de contrôle
-3. Fonctions
-
-### Semaine 5-8 : Compilateur
+### Compilateur (4 semaines)
+Construire un compilateur C.
 1. [Lexer](03_compilateur/01_lexer.md)
 2. [Parser](03_compilateur/02_parser.md)
 3. [AST](03_compilateur/03_ast.md)
-4. [Génération de code](03_compilateur/04_codegen.md)
+4. [Generation de code](03_compilateur/04_codegen.md)
 5. [Optimisations](03_compilateur/05_optimisations.md)
 
-### Semaine 9-12 : Système d'exploitation
+### Systeme d'exploitation (4 semaines)
+Du bare metal au shell.
 1. [Bare Metal](04_os/01_bare_metal.md)
 2. [Bootstrap](04_os/02_bootstrap.md)
 3. [Allocateur](04_os/03_allocateur.md)
 4. [Drivers](04_os/04_drivers.md)
 5. [Shell](04_os/05_shell.md)
 
-### Semaine 13-14 : Timer, Interruptions, Multitâche
+### Multitache (2 semaines)
+Timer, interruptions, scheduler.
 1. [Timer Hardware](05_timer_interrupts/01_timer.md)
 2. [Interruptions](05_timer_interrupts/02_interrupts.md)
 3. [Coroutines](05_timer_interrupts/03_coroutines.md)
-4. [Scheduler Préemptif](05_timer_interrupts/04_scheduler_preemptif.md)
+4. [Scheduler Preemptif](05_timer_interrupts/04_scheduler_preemptif.md)
 
 ## 🎮 Démos
 
