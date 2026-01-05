@@ -2163,6 +2163,295 @@ int main() {
 }
 `,
         expectedReturn: 28
+    },
+
+    // ========================================
+    // STRUCTURES (Structs)
+    // ========================================
+    'c-struct-def': {
+        id: 'c-struct-def',
+        name: 'Définition Struct',
+        description: 'Définir et utiliser une structure',
+        template: `// ============================================
+// Exercice: Définition Struct
+// ============================================
+// Objectif: Créer une structure Point avec x et y
+//
+// 1. Définir une struct Point avec deux champs int: x et y
+// 2. Créer une variable p de type struct Point
+// 3. Assigner p.x = 17 et p.y = 25
+// 4. Retourner p.x + p.y
+//
+// Résultat attendu: 42
+// ============================================
+
+// Définir la structure Point ici:
+
+
+int main() {
+    // Créer une variable de type struct Point
+    // Assigner les valeurs et retourner la somme
+
+    return 0;
+}
+`,
+        solution: `// Définition Struct - Solution
+
+struct Point { int x; int y; };
+
+int main() {
+    struct Point p;
+    p.x = 17;
+    p.y = 25;
+    return p.x + p.y;
+}
+`,
+        expectedReturn: 42
+    },
+
+    'c-struct-ptr': {
+        id: 'c-struct-ptr',
+        name: 'Pointeur Struct',
+        description: 'Utiliser l\'opérateur flèche ->',
+        template: `// ============================================
+// Exercice: Pointeur Struct
+// ============================================
+// Objectif: Utiliser un pointeur vers une structure
+//
+// L'opérateur -> permet d'accéder aux champs
+// via un pointeur: ptr->x équivaut à (*ptr).x
+//
+// 1. Créer une struct Point avec x=10, y=32
+// 2. Créer un pointeur vers cette struct
+// 3. Utiliser le pointeur pour retourner ptr->x + ptr->y
+//
+// Résultat attendu: 42
+// ============================================
+
+struct Point { int x; int y; };
+
+int main() {
+    struct Point p;
+    p.x = 10;
+    p.y = 32;
+
+    // Créer un pointeur vers p et utiliser ->
+
+    return 0;
+}
+`,
+        solution: `// Pointeur Struct - Solution
+
+struct Point { int x; int y; };
+
+int main() {
+    struct Point p;
+    p.x = 10;
+    p.y = 32;
+
+    struct Point *ptr = &p;
+    return ptr->x + ptr->y;
+}
+`,
+        expectedReturn: 42
+    },
+
+    'c-struct-func': {
+        id: 'c-struct-func',
+        name: 'Struct et Fonctions',
+        description: 'Passer une struct à une fonction',
+        template: `// ============================================
+// Exercice: Struct et Fonctions
+// ============================================
+// Objectif: Passer un pointeur de struct à une fonction
+//
+// Créer une fonction distance_sq qui calcule
+// le carré de la distance à l'origine:
+// distance_sq(p) = p->x * p->x + p->y * p->y
+//
+// Tester avec Point(3, 4): 3² + 4² = 9 + 16 = 25
+//
+// Résultat attendu: 25
+// ============================================
+
+struct Point { int x; int y; };
+
+// Définir la fonction distance_sq ici:
+
+
+int main() {
+    struct Point p;
+    p.x = 3;
+    p.y = 4;
+    return distance_sq(&p);
+}
+`,
+        solution: `// Struct et Fonctions - Solution
+
+struct Point { int x; int y; };
+
+int distance_sq(struct Point *p) {
+    return p->x * p->x + p->y * p->y;
+}
+
+int main() {
+    struct Point p;
+    p.x = 3;
+    p.y = 4;
+    return distance_sq(&p);
+}
+`,
+        expectedReturn: 25
+    },
+
+    'c-struct-nested': {
+        id: 'c-struct-nested',
+        name: 'Structs Imbriquées',
+        description: 'Struct contenant une autre struct',
+        template: `// ============================================
+// Exercice: Structs Imbriquées
+// ============================================
+// Objectif: Créer une struct contenant une autre struct
+//
+// 1. Struct Point avec x, y
+// 2. Struct Rectangle avec un Point (coin) et largeur/hauteur
+// 3. Calculer l'aire: width * height
+//
+// Rectangle avec coin=(0,0), width=6, height=7
+// Aire = 6 * 7 = 42
+//
+// Résultat attendu: 42
+// ============================================
+
+struct Point { int x; int y; };
+
+// Définir Rectangle ici (contient un Point):
+
+
+int main() {
+    struct Rectangle r;
+    r.corner.x = 0;
+    r.corner.y = 0;
+    r.width = 6;
+    r.height = 7;
+
+    return r.width * r.height;
+}
+`,
+        solution: `// Structs Imbriquées - Solution
+
+struct Point { int x; int y; };
+struct Rectangle { struct Point corner; int width; int height; };
+
+int main() {
+    struct Rectangle r;
+    r.corner.x = 0;
+    r.corner.y = 0;
+    r.width = 6;
+    r.height = 7;
+
+    return r.width * r.height;
+}
+`,
+        expectedReturn: 42
+    },
+
+    'c-struct-array': {
+        id: 'c-struct-array',
+        name: 'Tableau de Structs',
+        description: 'Créer et parcourir un tableau de structs',
+        template: `// ============================================
+// Exercice: Tableau de Structs
+// ============================================
+// Objectif: Manipuler un tableau de structures
+//
+// Créer un tableau de 3 Points:
+// - points[0] = (10, 2)
+// - points[1] = (15, 5)
+// - points[2] = (8, 2)
+//
+// Calculer la somme de tous les x:
+// 10 + 15 + 8 = 33
+//
+// Résultat attendu: 33
+// ============================================
+
+struct Point { int x; int y; };
+
+int main() {
+    struct Point points[3];
+
+    // Initialiser les 3 points
+
+    // Calculer la somme des x
+
+    return 0;
+}
+`,
+        solution: `// Tableau de Structs - Solution
+
+struct Point { int x; int y; };
+
+int main() {
+    struct Point points[3];
+
+    points[0].x = 10;
+    points[0].y = 2;
+    points[1].x = 15;
+    points[1].y = 5;
+    points[2].x = 8;
+    points[2].y = 2;
+
+    int sum = 0;
+    for (int i = 0; i < 3; i = i + 1) {
+        sum = sum + points[i].x;
+    }
+    return sum;
+}
+`,
+        expectedReturn: 33
+    },
+
+    'c-struct-sizeof': {
+        id: 'c-struct-sizeof',
+        name: 'Sizeof Struct',
+        description: 'Comprendre la taille des structures',
+        template: `// ============================================
+// Exercice: Sizeof Struct
+// ============================================
+// Objectif: Comprendre sizeof avec les structures
+//
+// Les structures ont une taille qui dépend de:
+// - La taille de chaque champ
+// - L'alignement en mémoire
+//
+// struct S1 { int a; } -> 4 bytes
+// struct S2 { int x; int y; char c; } -> 12 bytes
+//   (char est aligné sur 4 bytes)
+//
+// Calculer: sizeof(struct S1) + sizeof(struct S2)
+// = 4 + 12 = 16
+//
+// Résultat attendu: 16
+// ============================================
+
+struct S1 { int a; };
+struct S2 { int x; int y; char c; };
+
+int main() {
+    return sizeof(struct S1) + sizeof(struct S2);
+}
+`,
+        solution: `// Sizeof Struct - Solution
+
+struct S1 { int a; };
+struct S2 { int x; int y; char c; };
+
+int main() {
+    return sizeof(struct S1) + sizeof(struct S2);
+}
+`,
+        expectedReturn: 16
     }
 };
 

@@ -402,9 +402,9 @@ mod wasm_api {
         /// Compile C source code and load the resulting binary
         pub fn compile(&mut self, source: &str) -> Result<(), JsValue> {
             // Parse C to AST
-            let program = parse_program(source).map_err(|e| js_err(e.to_string()))?;
+            let (program, struct_defs) = parse_program(source).map_err(|e| js_err(e.to_string()))?;
             // Compile AST to assembly
-            let asm = compile_to_a32(&program).map_err(|e| js_err(e.to_string()))?;
+            let asm = compile_to_a32(&program, &struct_defs).map_err(|e| js_err(e.to_string()))?;
             // Assemble to binary
             let bytes = assemble_a32b(&asm).map_err(|e| js_err(e.to_string()))?;
             // Load into machine
@@ -413,8 +413,8 @@ mod wasm_api {
 
         /// Compile C source code and return the generated assembly
         pub fn compile_to_asm(&self, source: &str) -> Result<String, JsValue> {
-            let program = parse_program(source).map_err(|e| js_err(e.to_string()))?;
-            compile_to_a32(&program).map_err(|e| js_err(e.to_string()))
+            let (program, struct_defs) = parse_program(source).map_err(|e| js_err(e.to_string()))?;
+            compile_to_a32(&program, &struct_defs).map_err(|e| js_err(e.to_string()))
         }
 
         /// Get register value by index (0-15)
