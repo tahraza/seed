@@ -2566,6 +2566,346 @@ set instr 0x0000
 tick
 `,
     },
+
+    // =========================================================================
+    // Project 6: Pipelined CPU
+    // =========================================================================
+
+    'IF_ID_Reg': {
+        project: 6,
+        name: 'IF_ID_Reg',
+        description: 'IF/ID Pipeline Register',
+        dependencies: ['CPU'],
+        template: `-- IF/ID Pipeline Register
+-- Latches instruction and PC+4 from Fetch to Decode stage
+-- Supports stall (hold values) and flush (clear to NOP)
+
+entity IF_ID_Reg is
+  port(
+    clk : in bit;
+    reset : in bit;
+    stall : in bit;        -- Hold current values
+    flush : in bit;        -- Clear to NOP
+    -- Inputs from IF stage
+    if_instr : in bits(31 downto 0);
+    if_pc_plus4 : in bits(31 downto 0);
+    -- Outputs to ID stage
+    id_instr : out bits(31 downto 0);
+    id_pc_plus4 : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of IF_ID_Reg is
+  signal instr_reg : bits(31 downto 0);
+  signal pc_plus4_reg : bits(31 downto 0);
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      -- YOUR CODE HERE
+      -- Handle reset, flush, stall, and normal operation
+    end if;
+  end process;
+
+  id_instr <= instr_reg;
+  id_pc_plus4 <= pc_plus4_reg;
+end architecture;
+`,
+        solution: `-- IF/ID Pipeline Register
+
+entity IF_ID_Reg is
+  port(
+    clk : in bit;
+    reset : in bit;
+    stall : in bit;
+    flush : in bit;
+    if_instr : in bits(31 downto 0);
+    if_pc_plus4 : in bits(31 downto 0);
+    id_instr : out bits(31 downto 0);
+    id_pc_plus4 : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of IF_ID_Reg is
+  signal instr_reg : bits(31 downto 0);
+  signal pc_plus4_reg : bits(31 downto 0);
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if reset = '1' or flush = '1' then
+        instr_reg <= x"E0000000";  -- NOP
+        pc_plus4_reg <= x"00000000";
+      elsif stall = '0' then
+        instr_reg <= if_instr;
+        pc_plus4_reg <= if_pc_plus4;
+      end if;
+    end if;
+  end process;
+
+  id_instr <= instr_reg;
+  id_pc_plus4 <= pc_plus4_reg;
+end architecture;
+`,
+        test: `load IF_ID_Reg
+set reset 1
+tick
+expect id_instr 0xE0000000
+set reset 0
+set stall 0
+set flush 0
+set if_instr 0x12345678
+set if_pc_plus4 0x00000004
+tick
+expect id_instr 0x12345678
+expect id_pc_plus4 0x00000004
+set stall 1
+set if_instr 0xAAAAAAAA
+tick
+expect id_instr 0x12345678
+set stall 0
+set flush 1
+tick
+expect id_instr 0xE0000000
+`,
+    },
+
+    'HazardDetect': {
+        project: 6,
+        name: 'HazardDetect',
+        description: 'Hazard Detection Unit',
+        dependencies: ['IF_ID_Reg'],
+        template: `-- Hazard Detection Unit
+-- Detects load-use hazards and generates stall signal
+--
+-- A load-use hazard occurs when:
+-- - The instruction in EX stage is a load (mem_read = 1)
+-- - The instruction in ID stage uses the loaded value
+
+entity HazardDetect is
+  port(
+    -- From ID stage
+    id_rn : in bits(3 downto 0);     -- Source register 1
+    id_rm : in bits(3 downto 0);     -- Source register 2
+    id_rn_used : in bit;             -- Rn is used
+    id_rm_used : in bit;             -- Rm is used
+    -- From EX stage
+    ex_rd : in bits(3 downto 0);     -- Destination register
+    ex_mem_read : in bit;            -- Is it a load?
+    -- Output
+    stall : out bit                  -- Stall IF and ID stages
+  );
+end entity;
+
+architecture rtl of HazardDetect is
+begin
+  -- YOUR CODE HERE
+  -- Detect if ID stage instruction depends on EX stage load
+  stall <= '0';
+end architecture;
+`,
+        solution: `-- Hazard Detection Unit
+
+entity HazardDetect is
+  port(
+    id_rn : in bits(3 downto 0);
+    id_rm : in bits(3 downto 0);
+    id_rn_used : in bit;
+    id_rm_used : in bit;
+    ex_rd : in bits(3 downto 0);
+    ex_mem_read : in bit;
+    stall : out bit
+  );
+end entity;
+
+architecture rtl of HazardDetect is
+  signal rn_hazard : bit;
+  signal rm_hazard : bit;
+begin
+  rn_hazard <= '1' when (ex_mem_read = '1' and id_rn_used = '1' and id_rn = ex_rd) else '0';
+  rm_hazard <= '1' when (ex_mem_read = '1' and id_rm_used = '1' and id_rm = ex_rd) else '0';
+  stall <= rn_hazard or rm_hazard;
+end architecture;
+`,
+        test: `load HazardDetect
+set id_rn 0x5
+set id_rm 0x6
+set id_rn_used 1
+set id_rm_used 1
+set ex_rd 0x5
+set ex_mem_read 1
+eval
+expect stall 1
+set ex_mem_read 0
+eval
+expect stall 0
+set ex_mem_read 1
+set ex_rd 0x7
+eval
+expect stall 0
+`,
+    },
+
+    'ForwardUnit': {
+        project: 6,
+        name: 'ForwardUnit',
+        description: 'Data Forwarding Unit',
+        dependencies: ['HazardDetect'],
+        template: `-- Forwarding Unit
+-- Handles data hazards by forwarding results from later stages
+--
+-- Forward encoding:
+-- 00 = No forwarding (use register file value)
+-- 01 = Forward from EX/MEM (ALU result)
+-- 10 = Forward from MEM/WB (final result)
+
+entity ForwardUnit is
+  port(
+    -- Source registers from EX stage
+    ex_rn : in bits(3 downto 0);
+    ex_rm : in bits(3 downto 0);
+    -- From MEM stage
+    mem_rd : in bits(3 downto 0);
+    mem_reg_write : in bit;
+    -- From WB stage
+    wb_rd : in bits(3 downto 0);
+    wb_reg_write : in bit;
+    -- Forwarding control
+    forward_a : out bits(1 downto 0);
+    forward_b : out bits(1 downto 0)
+  );
+end entity;
+
+architecture rtl of ForwardUnit is
+begin
+  -- YOUR CODE HERE
+  -- Priority: MEM stage has precedence over WB stage
+  forward_a <= b"00";
+  forward_b <= b"00";
+end architecture;
+`,
+        solution: `-- Forwarding Unit
+
+entity ForwardUnit is
+  port(
+    ex_rn : in bits(3 downto 0);
+    ex_rm : in bits(3 downto 0);
+    mem_rd : in bits(3 downto 0);
+    mem_reg_write : in bit;
+    wb_rd : in bits(3 downto 0);
+    wb_reg_write : in bit;
+    forward_a : out bits(1 downto 0);
+    forward_b : out bits(1 downto 0)
+  );
+end entity;
+
+architecture rtl of ForwardUnit is
+begin
+  forward_a <= b"01" when (mem_reg_write = '1' and mem_rd = ex_rn) else
+               b"10" when (wb_reg_write = '1' and wb_rd = ex_rn) else
+               b"00";
+  forward_b <= b"01" when (mem_reg_write = '1' and mem_rd = ex_rm) else
+               b"10" when (wb_reg_write = '1' and wb_rd = ex_rm) else
+               b"00";
+end architecture;
+`,
+        test: `load ForwardUnit
+set ex_rn 0x3
+set ex_rm 0x4
+set mem_rd 0x3
+set mem_reg_write 1
+set wb_rd 0x4
+set wb_reg_write 1
+eval
+expect forward_a 0b01
+expect forward_b 0b10
+set mem_reg_write 0
+eval
+expect forward_a 0b00
+`,
+    },
+
+    'CPU_Pipeline': {
+        project: 6,
+        name: 'CPU_Pipeline',
+        description: '5-Stage Pipelined CPU',
+        dependencies: ['ForwardUnit'],
+        template: `-- A32-Lite CPU (5-Stage Pipeline)
+-- Stages: IF -> ID -> EX -> MEM -> WB
+-- Features: Data forwarding, hazard detection
+
+entity CPU_Pipeline is
+  port(
+    clk : in bit;
+    reset : in bit;
+    instr_addr : out bits(31 downto 0);
+    instr_data : in bits(31 downto 0);
+    mem_addr : out bits(31 downto 0);
+    mem_wdata : out bits(31 downto 0);
+    mem_rdata : in bits(31 downto 0);
+    mem_read : out bit;
+    mem_write : out bit;
+    halted : out bit
+  );
+end entity;
+
+architecture rtl of CPU_Pipeline is
+  -- This is a complex exercise!
+  -- Combine all pipeline components:
+  -- 1. IF stage: PC, instruction fetch
+  -- 2. IF/ID register with stall/flush
+  -- 3. ID stage: Decode, register read, hazard detect
+  -- 4. ID/EX register
+  -- 5. EX stage: ALU, forwarding muxes
+  -- 6. EX/MEM register
+  -- 7. MEM stage: Data memory access
+  -- 8. MEM/WB register
+  -- 9. WB stage: Register writeback
+
+  -- Refer to CPU.hdl and add pipeline registers between stages
+begin
+  -- YOUR CODE HERE
+  -- This is a capstone exercise - build the full pipeline!
+  halted <= '0';
+end architecture;
+`,
+        solution: `-- 5-Stage Pipelined CPU
+-- See hdl_lib/05_cpu/CPU_Pipeline.hdl for full implementation
+-- This exercise is a capstone project
+
+entity CPU_Pipeline is
+  port(
+    clk : in bit;
+    reset : in bit;
+    instr_addr : out bits(31 downto 0);
+    instr_data : in bits(31 downto 0);
+    mem_addr : out bits(31 downto 0);
+    mem_wdata : out bits(31 downto 0);
+    mem_rdata : in bits(31 downto 0);
+    mem_read : out bit;
+    mem_write : out bit;
+    halted : out bit
+  );
+end entity;
+
+architecture rtl of CPU_Pipeline is
+begin
+  -- Simplified: just show the interface works
+  instr_addr <= x"00000000";
+  mem_addr <= x"00000000";
+  mem_wdata <= x"00000000";
+  mem_read <= '0';
+  mem_write <= '0';
+  halted <= '0';
+end architecture;
+`,
+        test: `load CPU_Pipeline
+set reset 1
+tick
+set reset 0
+tick
+`,
+    },
 };
 
 // Project order for display
@@ -2575,6 +2915,7 @@ export const PROJECTS = [
     { id: 3, name: 'Arithmetique', chips: ['HalfAdder', 'FullAdder', 'Add16', 'Inc16', 'Sub16', 'ALU'] },
     { id: 4, name: 'Sequentiel', chips: ['DFF1', 'BitReg', 'Register16', 'PC', 'RAM8', 'RAM64', 'RegFile'] },
     { id: 5, name: 'CPU', chips: ['Decoder', 'CondCheck', 'Control', 'CPU'] },
+    { id: 6, name: 'CPU Pipeline', chips: ['IF_ID_Reg', 'HazardDetect', 'ForwardUnit', 'CPU_Pipeline'] },
 ];
 
 // Get chip info
