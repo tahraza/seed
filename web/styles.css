@@ -138,7 +138,43 @@ body {
 .header-right {
     margin-left: auto;
     display: flex;
+    align-items: center;
     gap: 8px;
+}
+
+.visualizer-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #a855f7, #6366f1);
+    border-radius: 6px;
+    color: white;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+    margin-right: 8px;
+}
+
+.visualizer-link:hover {
+    background: linear-gradient(135deg, #9333ea, #4f46e5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+}
+
+.viz-icon {
+    font-size: 16px;
+}
+
+.viz-label {
+    display: inline;
+}
+
+@media (max-width: 800px) {
+    .viz-label {
+        display: none;
+    }
 }
 
 .icon-btn {

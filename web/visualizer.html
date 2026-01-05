@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU Visualizer - nand2tetris-codex</title>
+    <link rel="stylesheet" href="visualizer.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="viz-header">
+            <a href="index.html" class="back-link">← Retour IDE</a>
+            <h1>CPU Visualizer</h1>
+            <div class="header-controls">
+                <input type="file" id="file-input" accept=".a32b" style="display: none;">
+                <button class="btn" id="btn-load">Charger .a32b</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="viz-main">
+            <!-- Left: CPU Diagram -->
+            <section class="cpu-diagram">
+                <h2>Architecture CPU</h2>
+
+                <!-- Fetch Stage -->
+                <div class="cpu-stage" id="stage-fetch">
+                    <div class="stage-label">FETCH</div>
+                    <div class="stage-content">
+                        <div class="component pc-box" id="pc-box">
+                            <div class="component-label">PC</div>
+                            <div class="component-value" id="pc-value">0x00000000</div>
+                        </div>
+                        <div class="arrow-right"></div>
+                        <div class="component memory-box" id="imem-box">
+                            <div class="component-label">Mémoire Instructions</div>
+                            <div class="component-value" id="instr-hex">0x00000000</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Decode Stage -->
+                <div class="cpu-stage" id="stage-decode">
+                    <div class="stage-label">DECODE</div>
+                    <div class="stage-content">
+                        <div class="component decode-box" id="decode-box">
+                            <div class="component-label">Instruction</div>
+                            <div class="component-value" id="instr-decoded">-</div>
+                            <div class="decode-fields" id="decode-fields">
+                                <span class="field" id="field-op">op</span>
+                                <span class="field" id="field-rd">Rd</span>
+                                <span class="field" id="field-rn">Rn</span>
+                                <span class="field" id="field-rm">Rm/imm</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Execute Stage -->
+                <div class="cpu-stage" id="stage-execute">
+                    <div class="stage-label">EXECUTE</div>
+                    <div class="stage-content">
+                        <div class="component alu-box" id="alu-box">
+                            <div class="component-label">ALU</div>
+                            <div class="alu-inputs">
+                                <div class="alu-input" id="alu-a">A: 0</div>
+                                <div class="alu-input" id="alu-b">B: 0</div>
+                            </div>
+                            <div class="alu-op" id="alu-op">+</div>
+                            <div class="alu-output" id="alu-result">= 0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Memory Stage -->
+                <div class="cpu-stage" id="stage-memory">
+                    <div class="stage-label">MEMORY</div>
+                    <div class="stage-content">
+                        <div class="component cache-box" id="cache-box">
+                            <div class="component-label">Cache L1</div>
+                            <div class="cache-status" id="cache-status">-</div>
+                            <div class="cache-indicator" id="cache-indicator"></div>
+                        </div>
+                        <div class="arrow-right"></div>
+                        <div class="component dmem-box" id="dmem-box">
+                            <div class="component-label">Mémoire Données</div>
+                            <div class="component-value" id="mem-addr">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Writeback Stage -->
+                <div class="cpu-stage" id="stage-writeback">
+                    <div class="stage-label">WRITEBACK</div>
+                    <div class="stage-content">
+                        <div class="component regfile-box" id="regfile-box">
+                            <div class="component-label">Registres</div>
+                            <div class="writeback-info" id="wb-info">-</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Center: Registers & Flags -->
+            <section class="registers-panel">
+                <h2>Registres</h2>
+                <div class="registers-grid" id="registers-grid">
+                    <!-- R0-R15 will be generated by JS -->
+                </div>
+
+                <h3>Flags (CPSR)</h3>
+                <div class="flags-display" id="flags-display">
+                    <div class="flag-item" id="flag-n" data-flag="N">
+                        <span class="flag-name">N</span>
+                        <span class="flag-desc">Négatif</span>
+                    </div>
+                    <div class="flag-item" id="flag-z" data-flag="Z">
+                        <span class="flag-name">Z</span>
+                        <span class="flag-desc">Zéro</span>
+                    </div>
+                    <div class="flag-item" id="flag-c" data-flag="C">
+                        <span class="flag-name">C</span>
+                        <span class="flag-desc">Retenue</span>
+                    </div>
+                    <div class="flag-item" id="flag-v" data-flag="V">
+                        <span class="flag-name">V</span>
+                        <span class="flag-desc">Overflow</span>
+                    </div>
+                </div>
+
+                <h3>Statistiques</h3>
+                <div class="stats-panel" id="stats-panel">
+                    <div class="stat-item">
+                        <span class="stat-label">Cycles</span>
+                        <span class="stat-value" id="stat-cycles">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Instructions</span>
+                        <span class="stat-value" id="stat-instrs">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Cache Hits</span>
+                        <span class="stat-value" id="stat-hits">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Cache Misses</span>
+                        <span class="stat-value" id="stat-misses">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Hit Rate</span>
+                        <span class="stat-value" id="stat-hitrate">-</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right: Memory View -->
+            <section class="memory-panel">
+                <h2>Mémoire</h2>
+                <div class="memory-controls">
+                    <input type="text" id="mem-goto" placeholder="Adresse (ex: 0x1000)">
+                    <button class="btn small" id="btn-mem-goto">Aller</button>
+                    <label class="mem-follow">
+                        <input type="checkbox" id="mem-follow-pc" checked>
+                        Suivre PC
+                    </label>
+                </div>
+                <div class="memory-view" id="memory-view">
+                    <!-- Memory rows will be generated by JS -->
+                </div>
+
+                <h3>Cache L1</h3>
+                <div class="cache-view" id="cache-view">
+                    <div class="cache-header">
+                        <span>Ligne</span>
+                        <span>Valid</span>
+                        <span>Tag</span>
+                        <span>Données</span>
+                    </div>
+                    <div class="cache-lines" id="cache-lines">
+                        <!-- Cache lines will be generated by JS -->
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Controls Bar -->
+        <footer class="controls-bar">
+            <div class="playback-controls">
+                <button class="ctrl-btn" id="btn-reset" title="Reset">
+                    <span class="icon">⟲</span> Reset
+                </button>
+                <button class="ctrl-btn" id="btn-step" title="Step (une instruction)">
+                    <span class="icon">⏭</span> Step
+                </button>
+                <button class="ctrl-btn primary" id="btn-play" title="Play/Pause">
+                    <span class="icon" id="play-icon">▶</span> <span id="play-label">Play</span>
+                </button>
+            </div>
+
+            <div class="speed-control">
+                <label>Vitesse:</label>
+                <input type="range" id="speed-slider" min="1" max="10" value="5">
+                <span id="speed-label">5</span>
+            </div>
+
+            <div class="animation-control">
+                <label>
+                    <input type="checkbox" id="animate-stages" checked>
+                    Animer étapes
+                </label>
+            </div>
+
+            <div class="status-display">
+                <span class="status-label">État:</span>
+                <span class="status-value" id="status-value">Aucun programme</span>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module" src="visualizer.js"></script>
+</body>
+</html>
