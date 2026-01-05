@@ -2700,11 +2700,11 @@ expect id_instr 0xE0000000
 --
 -- Étapes:
 -- 1. Créer un signal rn_hazard pour détecter si Rn est en conflit:
---    rn_hazard = ex_mem_read='1' AND id_rn_used='1' AND id_rn=ex_rd
+--    rn_hazard <= ex_mem_read and id_rn_used and (id_rn = ex_rd);
 -- 2. Créer un signal rm_hazard similaire pour Rm
--- 3. stall = rn_hazard OR rm_hazard
+-- 3. stall <= rn_hazard or rm_hazard;
 --
--- Syntaxe: utilisez "when (...) else '0'" pour les signaux
+-- Note: La comparaison (a = b) retourne un bit directement
 -- ============================================
 
 entity HazardDetect is
@@ -2748,8 +2748,9 @@ architecture rtl of HazardDetect is
   signal rn_hazard : bit;
   signal rm_hazard : bit;
 begin
-  rn_hazard <= '1' when (ex_mem_read = '1' and id_rn_used = '1' and id_rn = ex_rd) else '0';
-  rm_hazard <= '1' when (ex_mem_read = '1' and id_rm_used = '1' and id_rm = ex_rd) else '0';
+  -- Hazard if: load in EX AND register used in ID AND same register
+  rn_hazard <= ex_mem_read and id_rn_used and (id_rn = ex_rd);
+  rm_hazard <= ex_mem_read and id_rm_used and (id_rm = ex_rd);
   stall <= rn_hazard or rm_hazard;
 end architecture;
 `,
@@ -2791,12 +2792,12 @@ expect stall 0
 --   b"10" = Forward depuis WB (résultat final)
 --
 -- Logique:
--- 1. Si mem_reg_write='1' ET mem_rd=ex_rn → forward_a = b"01"
--- 2. Sinon si wb_reg_write='1' ET wb_rd=ex_rn → forward_a = b"10"
--- 3. Sinon → forward_a = b"00"
+-- 1. Créer mem_fwd_a = mem_reg_write and (mem_rd = ex_rn)
+-- 2. Créer wb_fwd_a = wb_reg_write and (wb_rd = ex_rn) and (not mem_fwd_a)
+-- 3. Encoder: forward_a <= wb_fwd_a & mem_fwd_a (concaténation)
 -- (Même logique pour forward_b avec ex_rm)
 --
--- Syntaxe: forward_a <= b"01" when (...) else b"10" when (...) else b"00";
+-- Note: & concatène deux bits en un vecteur de 2 bits
 -- ============================================
 
 entity ForwardUnit is
@@ -2840,13 +2841,20 @@ entity ForwardUnit is
 end entity;
 
 architecture rtl of ForwardUnit is
+  signal mem_fwd_a : bit;
+  signal wb_fwd_a : bit;
+  signal mem_fwd_b : bit;
+  signal wb_fwd_b : bit;
 begin
-  forward_a <= b"01" when (mem_reg_write = '1' and mem_rd = ex_rn) else
-               b"10" when (wb_reg_write = '1' and wb_rd = ex_rn) else
-               b"00";
-  forward_b <= b"01" when (mem_reg_write = '1' and mem_rd = ex_rm) else
-               b"10" when (wb_reg_write = '1' and wb_rd = ex_rm) else
-               b"00";
+  -- Detect forwarding conditions
+  mem_fwd_a <= mem_reg_write and (mem_rd = ex_rn);
+  wb_fwd_a <= wb_reg_write and (wb_rd = ex_rn) and (not mem_fwd_a);
+  mem_fwd_b <= mem_reg_write and (mem_rd = ex_rm);
+  wb_fwd_b <= wb_reg_write and (wb_rd = ex_rm) and (not mem_fwd_b);
+
+  -- Encode output: 00=none, 01=MEM, 10=WB
+  forward_a <= wb_fwd_a & mem_fwd_a;
+  forward_b <= wb_fwd_b & mem_fwd_b;
 end architecture;
 `,
         test: `load ForwardUnit
