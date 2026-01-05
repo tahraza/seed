@@ -1,26 +1,220 @@
-  1. Simulateur HDL (parser + exécution + tests)
-  2. Assembleur + émulateur A32‑Lite
-  3. Toolchain C‑like (parser + IR + codegen)
-  4. Web IDE (UI + integration)
+# Codex - TODO & Roadmap
 
+## État actuel du projet
 
-    Ce qu’on a
+### Ce qu'on a ✓
 
-  - Un HDL VHDL‑like avec parser + simulateur (CLI hdl_cli et UI web).
-  - Une ISA A32‑Lite inspirée ARM (predication, ALU/LS/branch/system) + assembleur A32 + format binaire A32B.
-  - Un émulateur A32 avec MMIO/traps + runner de tests .a32/.ref.
-  - Une UI web minimale pour charger/exécuter des .a32b (step/run/reset + sortie).
-  - Des specs détaillées pour l’ISA, le format binaire, les tests de référence.
+- HDL VHDL-like avec parser + simulateur (CLI `hdl_cli` et UI web)
+- ISA A32-Lite inspirée ARM (predication, ALU/LS/branch/system)
+- Assembleur A32 + format binaire A32B
+- Émulateur A32 avec MMIO/traps + runner de tests
+- CPU single-cycle en HDL
+- **CPU pipeline 5 étages en HDL** (IF/ID/EX/MEM/WB + hazards + forwarding)
+- Compilateur C32 fonctionnel (types, variables, if/while/for, pointeurs, arrays, **structs**, sizeof)
+- UI web avec exercices progressifs (HDL, ASM, C)
+- Documentation complète (livre PDF + solutions)
 
-  Ce qu’on n’a pas (par rapport à nand2tetris)
+### Ce qui reste à faire (core)
 
-  - Le parcours matériel NAND→CPU (lib de portes, chips, CPU/ALU/registers en HDL comme dans Hack).
-  - La toolchain complète (VM translator, compilateur Jack, OS), ni l’assembleur Hack.
-  - Un compilateur C‑like opérationnel (la spec est posée, mais pas d’implémentation).
-  - Un linker/objdump/map/archive réellement implémentés (specs seulement).
-  - Un IDE/traceur/debugger complet (breakpoints, traces, perf, etc.).
+- [ ] Linker/objdump réellement implémentés
+- [ ] Debugger avec breakpoints
 
-  1. Étendre le compilateur au subset complet (types, variables, if/while/for, pointeurs, arrays, casts, sizeof,
-     etc.) + runner tests_c.
-  2. Implémenter le CPU A32‑Lite en HDL (multi‑cycle) avec RAM et un testbench.
+---
 
+## Extensions recommandées
+
+*Objectif: mieux comprendre le fonctionnement des ordinateurs*
+
+### Tier 1: Haute valeur pédagogique (prioritaire)
+
+#### 1. Cache mémoire
+**Pourquoi:** Explique 90% des problèmes de performance modernes.
+
+```
+CPU ←→ [Cache L1] ←→ [RAM]
+         ↓
+    Hit/Miss, LRU eviction
+```
+
+- **Concepts:** Localité spatiale/temporelle, lignes de cache, associativité
+- **Exercices:** Écrire du code "cache-friendly" vs "cache-hostile", mesurer les miss
+- **Implémentation:** Cache direct-mapped simple en HDL + simulation
+- **Effort:** ~1-2 semaines
+
+#### 2. Debugger (comment ça marche)
+**Pourquoi:** Démystifie un outil utilisé quotidiennement.
+
+```
+Breakpoint = remplacer instruction par BKPT
+Single-step = flag trap dans CPU
+Watchpoint = comparateur sur bus mémoire
+```
+
+- **Concepts:** Instructions trap, registres debug, single-stepping hardware
+- **Exercices:** Implémenter un mini-debugger en ASM
+- **Implémentation:** Instruction BKPT + handler dans émulateur
+- **Effort:** ~1 semaine
+
+#### 3. Bootloader complet
+**Pourquoi:** Complète le parcours "power-on to printf".
+
+```
+Power On → ROM → Init hardware → Copie code → Jump to main
+```
+
+- **Concepts:** Reset vector, initialisation BSS/stack, relocation
+- **Exercices:** Écrire un bootloader qui charge un programme depuis "flash"
+- **Effort:** ~3-4 jours (partiellement fait)
+
+### Tier 2: Valeur moyenne (recommandé)
+
+#### 4. Mémoire virtuelle (MMU simplifié)
+**Pourquoi:** Fondation de tout OS moderne.
+
+```
+Adresse virtuelle → [MMU/TLB] → Adresse physique
+                      ↓
+                 Page fault → OS handler
+```
+
+- **Concepts:** Pages, tables de pages, TLB, protection mémoire
+- **Exercices:** Implémenter pagination simple, gérer page faults
+- **Implémentation:** MMU basique avec 2 niveaux de tables
+- **Effort:** ~2-3 semaines
+
+#### 5. Floating Point (IEEE 754)
+**Pourquoi:** Explique pourquoi 0.1 + 0.2 ≠ 0.3.
+
+```
+Sign | Exponent | Mantissa
+  1  |    8     |    23    (float32)
+```
+
+- **Concepts:** Représentation, arrondis, NaN/Inf, dénormalisés
+- **Exercices:** Implémenter addition flottante en software
+- **Optionnel:** FPU simple en HDL
+- **Effort:** ~1-2 semaines
+
+#### 6. DMA (Direct Memory Access)
+**Pourquoi:** Explique l'efficacité des transferts disque/réseau.
+
+```
+CPU: "Copie 1KB de 0x1000 vers 0x2000"
+DMA controller: [fait le transfert]
+DMA → IRQ → "Terminé!"
+```
+
+- **Concepts:** Bus mastering, canaux DMA, interruptions
+- **Exercices:** Copier un buffer pendant que le CPU fait autre chose
+- **Effort:** ~1 semaine
+
+### Tier 3: Avancé (optionnel)
+
+#### 7. Système de fichiers minimal
+**Pourquoi:** Comment les fichiers sont organisés sur disque.
+
+```
+Superblock | Bitmap | Inodes | Data blocks
+```
+
+- **Concepts:** Blocs, inodes, allocation, journaling
+- **Exercices:** Implémenter FAT12 ou ext2 très simplifié
+- **Effort:** ~3-4 semaines
+
+#### 8. Branch Predictor
+**Pourquoi:** Extension naturelle du CPU pipeline.
+
+```
+if (x > 0) → Prédit TAKEN ou NOT_TAKEN?
+             Pipeline flush si mauvaise prédiction
+```
+
+- **Concepts:** Prédiction statique/dynamique, BHT, BTB
+- **Exercices:** Mesurer l'impact des mispredictions
+- **Effort:** ~1-2 semaines
+
+#### 9. Multi-cœur simplifié
+**Pourquoi:** Comprendre pourquoi le parallélisme est difficile.
+
+```
+CPU0 ←→ [Bus partagé] ←→ CPU1
+           ↓
+    Cohérence cache, spinlocks
+```
+
+- **Concepts:** Cache coherence (MESI), atomicité, memory barriers
+- **Exercices:** Race conditions, implémenter mutex
+- **Effort:** ~3-4 semaines (complexe)
+
+---
+
+## Extension MCU (optionnel, embarqué)
+
+*Note: Cette section est optionnelle et s'éloigne de l'objectif principal "comprendre les ordinateurs". À considérer comme un projet séparé.*
+
+### Version minimaliste recommandée
+
+```
+┌─────────────────────────────────┐
+│           A32 CPU               │
+└───────────┬─────────────────────┘
+            │
+  ┌─────────┼─────────┬───────────┐
+  │         │         │           │
+GPIO      Timer     UART       NVIC
+(8 pins)  (1, IRQ)  (TX/RX)   (4 sources)
+```
+
+### 1. GPIO (General Purpose I/O)
+- **Adresse Base:** `0x40020000`
+- **Registres:**
+  - `GPIO_MODER` (+0x00): Mode (Input/Output)
+  - `GPIO_IDR` (+0x10): Input Data Register
+  - `GPIO_ODR` (+0x14): Output Data Register
+- **Effort:** ~3-4 jours
+
+### 2. Timer avec interruption
+- **Adresse Base:** `0x40000000`
+- **Registres:** CNT, ARR, CR (enable, interrupt enable)
+- **Génère IRQ quand CNT == ARR**
+- **Effort:** ~2-3 jours
+
+### 3. UART simple
+- **Adresse Base:** `0x40004400`
+- **Registres:** SR (status), DR (data), CR (control)
+- **Remplace/complète PUTC actuel**
+- **Effort:** ~2-3 jours
+
+### 4. NVIC (Contrôleur d'interruptions)
+- **Table des vecteurs à 0x00000000**
+- **4 sources:** Reset, Timer, UART, GPIO
+- **Registres:** ISER, ICER, ISPR
+- **Effort:** ~1 semaine
+
+---
+
+## Non recommandé (hors scope)
+
+Les éléments suivants sont intéressants mais constituent des projets séparés:
+
+| Élément | Raison |
+|---------|--------|
+| Side-Channel Analysis | Cours de cryptanalyse, pas d'architecture |
+| Simulation Low Power/Batterie | Trop spécialisé embarqué |
+| Breadboard visuelle | Effort UI énorme, valeur limitée |
+| GPU/Shaders | Domaine complètement différent |
+| Réseau/TCP-IP | Autre cours |
+
+---
+
+## Priorités suggérées
+
+| Priorité | Extension | Impact pédagogique |
+|----------|-----------|-------------------|
+| 1 | Cache mémoire | ★★★★★ |
+| 2 | Debugger internals | ★★★★☆ |
+| 3 | MMU/Mémoire virtuelle | ★★★★☆ |
+| 4 | Bootloader complet | ★★★☆☆ |
+| 5 | Floating point | ★★★☆☆ |
+| 6 | DMA | ★★★☆☆ |
+| 7 | Branch predictor | ★★★☆☆ |
