@@ -1,3 +1,43 @@
+ 1. Visualisations Interactives Web
+
+  Simulateurs visuels animés :
+  - Animation du flux de données dans le CPU (fetch → decode → execute)
+  - Visualisation du cache avec accès mémoire en temps réel (hits en vert, miss en rouge)
+  - Pipeline avec bulles de stall visibles
+  - Propagation des signaux dans les portes logiques
+
+  2. Progression Plus Granulaire
+
+  Micro-exercices entre les chapitres :
+  - Quiz de compréhension avant chaque nouveau concept
+  - Exercices "trouver l'erreur" dans du code HDL/ASM
+  - Challenges de débogage progressifs
+
+  3. Analogies du Monde Réel
+
+  Dans chaque chapitre, ajouter :
+  - Chapitre ALU → Calculatrice avec historique
+  - Chapitre Mémoire → Casiers numérotés dans un vestiaire
+  - Chapitre CPU → Cuisinier suivant une recette
+  - Chapitre Assembleur → Traduction français → anglais
+
+  4. Mode "Exploration Guidée"
+
+  Parcours narratif :
+  - Scénario fil rouge : "Construisons un jeu Pong ensemble"
+  - Chaque chapitre résout un problème concret du jeu
+  - Motivation immédiate pour chaque concept
+
+  5. Feedback Enrichi
+
+  Messages d'erreur pédagogiques :
+  - Expliquer pourquoi l'erreur s'est produite
+  - Suggérer la correction
+  - Lien vers la section du livre concernée
+
+
+
+
 # Codex - TODO & Roadmap
 
 ## État actuel du projet
