@@ -190,6 +190,49 @@ impl A32Session {
             .ok_or_else(|| format!("invalid register index: {}", index))?;
         Ok(machine.get_reg(reg))
     }
+
+    /// Read a 32-bit word from memory
+    pub fn read_word(&self, addr: u32) -> Result<u32, String> {
+        let machine = self.machine.as_ref().ok_or("program not loaded")?;
+        machine.read_u32(addr).ok_or_else(|| format!("invalid address: 0x{:08x}", addr))
+    }
+
+    /// Get CPU flags as a u8 bitmask: bit0=N, bit1=Z, bit2=C, bit3=V
+    pub fn flags(&self) -> Result<u8, String> {
+        let machine = self.machine.as_ref().ok_or("program not loaded")?;
+        let f = machine.flags();
+        let mut result: u8 = 0;
+        if f.n { result |= 1; }
+        if f.z { result |= 2; }
+        if f.c { result |= 4; }
+        if f.v { result |= 8; }
+        Ok(result)
+    }
+
+    /// Get cache statistics as [hits, misses]
+    pub fn cache_stats(&self) -> Result<(u64, u64), String> {
+        let machine = self.machine.as_ref().ok_or("program not loaded")?;
+        let stats = machine.cache_stats();
+        Ok((stats.hits, stats.misses))
+    }
+
+    /// Get number of cache lines
+    pub fn cache_num_lines(&self) -> Result<usize, String> {
+        let machine = self.machine.as_ref().ok_or("program not loaded")?;
+        Ok(machine.cache().num_lines())
+    }
+
+    /// Get cache line state: returns (valid, tag, first 4 bytes as u32) or None
+    pub fn cache_line(&self, index: usize) -> Result<Option<(bool, u32, u32)>, String> {
+        let machine = self.machine.as_ref().ok_or("program not loaded")?;
+        if let Some((valid, tag, data)) = machine.cache().get_line_state(index) {
+            // Return first 4 bytes as a word for display
+            let word = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
+            Ok(Some((valid, tag, word)))
+        } else {
+            Ok(None)
+        }
+    }
 }
 
 fn format_outcome(outcome: StepOutcome) -> String {
@@ -242,6 +285,7 @@ mod wasm_api {
     use hdl_core::run_test;
     use std::collections::HashMap;
     use wasm_bindgen::prelude::*;
+    use js_sys;
 
     #[wasm_bindgen]
     pub struct WasmHdl {
@@ -420,6 +464,47 @@ mod wasm_api {
         /// Get register value by index (0-15)
         pub fn reg(&self, index: u32) -> Result<u32, JsValue> {
             self.inner.reg(index).map_err(js_err)
+        }
+
+        /// Read a 32-bit word from memory
+        pub fn read_word(&self, addr: u32) -> Result<u32, JsValue> {
+            self.inner.read_word(addr).map_err(js_err)
+        }
+
+        /// Get CPU flags as bitmask: bit0=N, bit1=Z, bit2=C, bit3=V
+        pub fn flags(&self) -> Result<u8, JsValue> {
+            self.inner.flags().map_err(js_err)
+        }
+
+        /// Get cache hits count
+        pub fn cache_hits(&self) -> Result<u32, JsValue> {
+            let (hits, _) = self.inner.cache_stats().map_err(js_err)?;
+            Ok(hits as u32)
+        }
+
+        /// Get cache misses count
+        pub fn cache_misses(&self) -> Result<u32, JsValue> {
+            let (_, misses) = self.inner.cache_stats().map_err(js_err)?;
+            Ok(misses as u32)
+        }
+
+        /// Get number of cache lines
+        pub fn cache_num_lines(&self) -> Result<u32, JsValue> {
+            self.inner.cache_num_lines().map(|n| n as u32).map_err(js_err)
+        }
+
+        /// Get cache line info: returns [valid (0/1), tag, first_word] or null
+        pub fn cache_line(&self, index: u32) -> Result<JsValue, JsValue> {
+            match self.inner.cache_line(index as usize).map_err(js_err)? {
+                Some((valid, tag, word)) => {
+                    let arr = js_sys::Array::new();
+                    arr.push(&JsValue::from(if valid { 1u32 } else { 0u32 }));
+                    arr.push(&JsValue::from(tag));
+                    arr.push(&JsValue::from(word));
+                    Ok(arr.into())
+                }
+                None => Ok(JsValue::NULL),
+            }
         }
 
         /// Get the loaded binary (for display purposes)

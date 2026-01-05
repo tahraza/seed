@@ -40,6 +40,12 @@ possibles. Il est organise en pipeline top-down, puis detaille chaque outil.
 2) Charger le .a32b dans la page web (panel A32).
 3) Step/Run/Reset et lire la sortie.
 
+### 1.7 CPU Visualizer (visualisation pedagogique)
+1) Lancer le serveur web (`npm run dev` dans le dossier `web`).
+2) Ouvrir `http://localhost:5173` et cliquer sur "CPU Visualizer".
+3) Choisir une demo ou charger un fichier .asm/.a32.
+4) Utiliser Step/Play pour voir l'execution en temps reel.
+
 ## 2. Outils CLI (mode d'emploi + explication exhaustive)
 
 ### 2.1 hdl_cli
@@ -311,7 +317,65 @@ cargo run -p a32_cli -- main.a32
 cargo run -p a32_runner -- main.a32
 ```
 
-## 3. Statut par outil (resume)
+## 3. Outils Web
+
+### 3.1 CPU Visualizer
+
+**Role**
+- Interface web interactive pour visualiser l'execution du CPU A32.
+- Affiche le pipeline, les registres, les flags, la memoire et le cache.
+- Permet d'executer du code assembleur pas-a-pas ou en continu.
+
+**Acces**
+```bash
+cd web
+npm install
+npm run dev
+# Ouvrir http://localhost:5173 -> CPU Visualizer
+```
+
+**Panneaux**
+
+| Panneau | Description |
+|:--------|:------------|
+| **Architecture CPU** | Affiche les 5 etapes du pipeline (Fetch, Decode, Execute, Memory, Writeback) |
+| **Registres** | Affiche R0-R15 avec alias (SP, LR, PC) et flags NZCV |
+| **Code Source** | Affiche le code assembleur avec coloration syntaxique et surlignage de la ligne courante |
+| **Memoire/Cache** | Vue memoire, statistiques cache, contenu des lignes cache |
+
+**Demos integrees**
+
+| Demo | Fichier | Concept illustre |
+|:-----|:--------|:-----------------|
+| Addition | 01_addition.asm | Instructions ALU basiques |
+| Boucle | 02_boucle.asm | Branchements conditionnels |
+| Memoire | 03_memoire.asm | LDR/STR |
+| Condition | 04_condition.asm | Predication |
+| Tableau | 05_tableau.asm | Boucle + acces memoire |
+| Flags | 06_flags.asm | Drapeaux NZCV |
+| Cache | 07_cache.asm | Cache hits/misses |
+
+**Controles**
+
+| Bouton | Raccourci | Action |
+|:-------|:----------|:-------|
+| Reset | Ctrl+R | Reinitialise le CPU |
+| Step | N, F10 | Execute une instruction |
+| Play/Pause | Espace | Lance/arrete l'execution continue |
+| Vitesse | Slider 1-10 | Ajuste la vitesse d'animation |
+
+**Charger du code**
+- Cliquer sur "Charger fichier"
+- Formats acceptes: `.asm`, `.a32`, `.s`, `.a32b`
+- Le code est assemble automatiquement (sauf .a32b deja binaire)
+
+**Affichages en temps reel**
+- **Registres modifies** : Flash vert sur le registre qui change
+- **Flags modifies** : Animation sur le flag qui change
+- **Cache hit/miss** : Indicateur vert (HIT) ou rouge (MISS)
+- **Ligne courante** : Surlignage jaune dans le code source
+
+## 4. Statut par outil (resume)
 
 | Outil | Statut | Notes |
 | --- | --- | --- |
@@ -319,8 +383,9 @@ cargo run -p a32_runner -- main.a32
 | a32_cli | OK | Assembleur A32-Lite stable, produit A32B. |
 | a32_runner | OK | Tests A32 .a32/.ref + support A32LDS. |
 | c32_cli | MVP | C-like -> A32 texte, subset tres reduit. |
+| CPU Visualizer | OK | Interface web pour visualisation du CPU. |
 
-## 4. Limitations connues
+## 5. Limitations connues
 
 - c32_cli: pas de variables, pas de controle de flux, pas de types complets.
 - c32_cli: arguments de fonctions non supportes.

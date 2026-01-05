@@ -754,6 +754,56 @@ Une matrice 4x4 est stockée **ligne par ligne** en mémoire (row-major) :
 
 ---
 
+## Visualiser le Cache avec le CPU Visualizer
+
+Le **CPU Visualizer** vous permet d'observer le comportement du cache en temps réel pendant l'exécution d'un programme.
+
+### Accéder au Visualizer
+
+```bash
+cd web
+npm run dev
+# Ouvrir http://localhost:5173 -> CPU Visualizer
+```
+
+### La Démo "Cache"
+
+Chargez la démo **"7. Cache"** dans le menu déroulant. Ce programme :
+1. Parcourt un tableau de 16 éléments une première fois (cache misses)
+2. Parcourt le même tableau une seconde fois (cache hits)
+
+### Ce que vous verrez
+
+**Panneau "Cache L1"** :
+- **Hits** : Nombre d'accès trouvés dans le cache
+- **Misses** : Nombre d'accès qui ont dû aller en RAM
+- **Taux** : Pourcentage de hits (ex: "94.2%")
+- **Indicateur HIT/MISS** : Flash vert pour hit, rouge pour miss
+
+**Contenu du cache** :
+- **Ligne** : Numéro de la ligne (0-63)
+- **Valid** : 1 si la ligne contient des données valides
+- **Tag** : Identifie quelle zone mémoire est stockée
+- **Données** : Le mot stocké dans la ligne
+
+### Exercice Pratique
+
+1. Lancez la démo "Cache" et observez :
+   - Au premier parcours : beaucoup de **MISS** (flash rouge)
+   - Au second parcours : beaucoup de **HIT** (flash vert)
+
+2. Regardez le taux de hits évoluer :
+   - Début : ~0% (cache vide)
+   - Après premier parcours : ~50%
+   - Fin : ~85-95%
+
+3. Observez les lignes de cache se remplir :
+   - Les bits Valid passent de 0 à 1
+   - Les Tags s'affichent
+   - Les données apparaissent
+
+---
+
 ## Exercices
 
 ### Exercices HDL

@@ -14,7 +14,7 @@
 
 const CACHE_LINES: usize = 64;
 const LINE_SIZE: usize = 16;  // 16 octets par ligne
-const TAG_BITS: usize = 22;
+const _TAG_BITS: usize = 22;  // Documentation only
 const INDEX_BITS: usize = 6;
 const OFFSET_BITS: usize = 4;
 

@@ -429,6 +429,115 @@ cargo run -p hdl_cli -- test hdl_lib/05_cpu/CPU.hdl
 
 ---
 
+## CPU Visualizer : L'Outil Interactif
+
+Pour mieux comprendre comment le CPU exécute les instructions, le projet inclut un **CPU Visualizer** interactif. C'est un outil web qui vous permet de voir en temps réel le fonctionnement du processeur.
+
+### Accéder au Visualizer
+
+1. Lancez le serveur web :
+```bash
+cd web
+npm install
+npm run dev
+```
+
+2. Ouvrez votre navigateur à l'adresse indiquée (généralement `http://localhost:5173`)
+
+3. Cliquez sur **CPU Visualizer** dans la barre de navigation
+
+### Fonctionnalités du Visualizer
+
+#### Vue Pipeline
+
+Le Visualizer affiche les **5 étapes du cycle d'exécution** :
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  FETCH      │  DECODE     │  EXECUTE    │  MEMORY     │ WRITEBACK│
+│             │             │             │             │          │
+│  PC ───────►│ Instruction │ ALU         │ Cache L1    │ Registres│
+│  Mémoire    │ décodée     │ A op B = R  │ Hit/Miss    │ Rd ← R   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+Chaque étape s'illumine en jaune quand elle est active, vous permettant de suivre la progression de l'instruction.
+
+#### Panneau Registres
+
+Affiche les **16 registres** (R0-R15) avec les alias :
+- **SP** (R13) : Stack Pointer
+- **LR** (R14) : Link Register
+- **PC** (R15) : Program Counter
+
+Les registres modifiés s'illuminent en vert pendant un instant.
+
+#### Panneau Flags (CPSR)
+
+Les 4 drapeaux du processeur sont affichés :
+- **N** (Negative) : Le résultat est négatif
+- **Z** (Zero) : Le résultat est zéro
+- **C** (Carry) : Retenue/emprunt
+- **V** (Overflow) : Débordement signé
+
+Les flags changent de couleur quand ils sont actifs.
+
+#### Panneau Code Source
+
+Affiche le code assembleur avec :
+- **Coloration syntaxique** : Instructions, registres, nombres, commentaires
+- **Surlignage de la ligne courante** : La ligne en cours d'exécution est mise en évidence en jaune
+- **Défilement automatique** : Le code défile pour suivre l'exécution
+
+#### Panneau Mémoire et Cache
+
+Affiche :
+- **Vue mémoire** : Les octets en mémoire autour du PC
+- **Statistiques cache** : Hits, Misses, Taux de réussite
+- **Contenu du cache L1** : Lignes valides avec tag et données
+- **Indicateur HIT/MISS** : Flash vert pour hit, rouge pour miss
+
+### Les Démos Intégrées
+
+Le Visualizer inclut 7 démos prêtes à l'emploi :
+
+| Demo | Description | Concept illustré |
+|:-----|:------------|:-----------------|
+| **1. Addition** | 5 + 3 = 8 | Instructions ALU basiques |
+| **2. Boucle** | Somme 1-5 | Branchements conditionnels |
+| **3. Mémoire** | LDR/STR | Accès mémoire |
+| **4. Condition** | Valeur absolue | Prédication |
+| **5. Tableau** | Somme tableau | Boucle + mémoire |
+| **6. Flags** | N, Z, C, V | Drapeaux CPU |
+| **7. Cache** | Parcours mémoire | Cache hits/misses |
+
+### Contrôles
+
+| Bouton | Raccourci | Action |
+|:-------|:----------|:-------|
+| **Reset** | Ctrl+R | Remet le CPU à zéro |
+| **Step** | N, F10 | Exécute une instruction |
+| **Play/Pause** | Espace | Lance/arrête l'exécution continue |
+| **Vitesse** | Slider | Ajuste la vitesse d'exécution |
+
+### Charger Votre Propre Code
+
+1. Cliquez sur **Charger fichier**
+2. Sélectionnez un fichier `.asm`, `.a32` ou `.a32b`
+3. Le code est assemblé et chargé automatiquement
+
+### Exercice Pratique
+
+Utilisez le Visualizer pour observer ces comportements :
+
+1. **Suivez une addition** : Chargez la démo "Addition" et observez comment ADD lit deux registres et écrit le résultat
+
+2. **Observez un branchement** : Chargez la démo "Boucle" et regardez comment B.LE revient au début de la boucle
+
+3. **Analysez le cache** : Chargez la démo "Cache" et observez les miss au premier parcours, puis les hits au second
+
+---
+
 ## Conseils de Débogage
 
 ### Le PC reste à 0 ?

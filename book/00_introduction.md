@@ -176,6 +176,27 @@ npm run dev
 ```
 Ouvrez ensuite votre navigateur à l'adresse indiquée (généralement `http://localhost:5173`).
 
+### Le CPU Visualizer
+
+Le **CPU Visualizer** est un outil pédagogique spécialement conçu pour comprendre le fonctionnement du processeur. Il affiche en temps réel :
+
+- **Le pipeline** : Les 5 étapes d'exécution (Fetch, Decode, Execute, Memory, Writeback) s'illuminent au fur et à mesure
+- **Les registres** : R0-R15 avec mise en évidence des modifications
+- **Les flags** : N, Z, C, V avec animations lors des changements
+- **Le code source** : Coloration syntaxique et surlignage de la ligne en cours d'exécution
+- **Le cache** : Statistiques (hits/misses) et contenu des lignes cache
+
+Accédez-y depuis le menu principal du Simulateur Web ou directement via `/visualizer.html`.
+
+**7 démos intégrées** vous permettent d'explorer différents concepts :
+1. Addition simple
+2. Boucles et branchements
+3. Accès mémoire (LDR/STR)
+4. Conditions et prédication
+5. Tableaux
+6. Flags CPU
+7. Comportement du cache
+
 ## Comment Utiliser ce Livre
 
 ### L'approche recommandée

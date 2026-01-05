@@ -1,0 +1,53 @@
+{
+  "demos": [
+    {
+      "id": "addition",
+      "name": "1. Addition",
+      "description": "5 + 3 = 8",
+      "file": "01_addition.asm",
+      "expected": "R0 = 8"
+    },
+    {
+      "id": "boucle",
+      "name": "2. Boucle",
+      "description": "Somme 1-5",
+      "file": "02_boucle.asm",
+      "expected": "R0 = 15"
+    },
+    {
+      "id": "memoire",
+      "name": "3. Memoire",
+      "description": "LDR/STR",
+      "file": "03_memoire.asm",
+      "expected": "42 -> 84"
+    },
+    {
+      "id": "condition",
+      "name": "4. Condition",
+      "description": "Valeur absolue",
+      "file": "04_condition.asm",
+      "expected": "R0 = 7"
+    },
+    {
+      "id": "tableau",
+      "name": "5. Tableau",
+      "description": "Somme tableau",
+      "file": "05_tableau.asm",
+      "expected": "R0 = 100"
+    },
+    {
+      "id": "flags",
+      "name": "6. Flags",
+      "description": "N, Z, C, V",
+      "file": "06_flags.asm",
+      "expected": "R0 = 0"
+    },
+    {
+      "id": "cache",
+      "name": "7. Cache",
+      "description": "Hits/Misses",
+      "file": "07_cache.asm",
+      "expected": "R0 = 136"
+    }
+  ]
+}

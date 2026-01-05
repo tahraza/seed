@@ -6,6 +6,14 @@ platform with a VHDL-like HDL, an ARM-inspired 32-bit CPU, and a C-like language
 CLI usage:
 - See `TOOLS.md` for a top-down pipeline and detailed CLI tool guides.
 
+Web tools:
+- **CPU Visualizer** (`web/visualizer.html`): Interactive CPU execution visualization
+  - Displays pipeline stages (Fetch, Decode, Execute, Memory, Writeback)
+  - Shows registers, flags (NZCV), memory, and cache in real-time
+  - Highlights current source line during execution
+  - Includes 7 demo programs (addition, loops, memory, conditions, arrays, flags, cache)
+  - Run with: `cd web && npm run dev` then open `http://localhost:5173`
+
 ## 1. HDL (VHDL-like, sync-only)
 
 Status: validated.
