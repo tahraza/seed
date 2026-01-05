@@ -1,24 +1,32 @@
+use std::collections::HashMap;
+
 use crate::ast::{
     bool_type, char_type, int_type, uint_type, void_type, BinaryOp, Decl, Expr, Func,
-    Global, Item, NumberLit, Param, Program, Stmt, Type, UnaryOp,
+    Global, Item, NumberLit, Param, Program, Stmt, StructDef, StructField, Type, UnaryOp,
 };
 use crate::error::CError;
 use crate::lexer::{Lexer, Token, TokenKind};
 
-pub fn parse_program(input: &str) -> Result<Program, CError> {
+pub fn parse_program(input: &str) -> Result<(Program, HashMap<String, StructDef>), CError> {
     let tokens = Lexer::new(input).tokenize()?;
     let mut parser = Parser::new(tokens);
-    parser.parse_program()
+    let program = parser.parse_program()?;
+    Ok((program, parser.struct_defs))
 }
 
 struct Parser {
     tokens: Vec<Token>,
     pos: usize,
+    struct_defs: HashMap<String, StructDef>,
 }
 
 impl Parser {
     fn new(tokens: Vec<Token>) -> Self {
-        Self { tokens, pos: 0 }
+        Self {
+            tokens,
+            pos: 0,
+            struct_defs: HashMap::new(),
+        }
     }
 
     fn parse_program(&mut self) -> Result<Program, CError> {
@@ -30,6 +38,25 @@ impl Parser {
     }
 
     fn parse_item(&mut self) -> Result<Item, CError> {
+        // Check for struct definition: struct Name { ... };
+        if self.peek_keyword("struct") {
+            let saved_pos = self.pos;
+            self.next(); // consume "struct"
+            if let TokenKind::Ident(_) = self.peek_kind() {
+                let name_token = self.next();
+                if self.peek_kind() == TokenKind::LBrace {
+                    // This is a struct definition
+                    if let TokenKind::Ident(name) = name_token.kind {
+                        let struct_def = self.parse_struct_def_body(name)?;
+                        self.struct_defs.insert(struct_def.name.clone(), struct_def.clone());
+                        return Ok(Item::StructDef(struct_def));
+                    }
+                }
+            }
+            // Not a struct definition, restore position and continue as normal
+            self.pos = saved_pos;
+        }
+
         let is_extern = self.consume_keyword("extern");
         let base = self.parse_base_type()?;
         let (ty, name) = self.parse_declarator(base)?;
@@ -40,6 +67,51 @@ impl Parser {
             let global = self.finish_global(ty, name, is_extern)?;
             Ok(Item::Global(global))
         }
+    }
+
+    fn parse_struct_def_body(&mut self, name: String) -> Result<StructDef, CError> {
+        self.expect(TokenKind::LBrace, "expected '{'")?;
+        let mut fields = Vec::new();
+        let mut offset: usize = 0;
+        let mut max_align: usize = 1;
+
+        while self.peek_kind() != TokenKind::RBrace {
+            if self.is_eof() {
+                return Err(self.error_at(self.peek(), "unexpected end of input in struct"));
+            }
+            let field_base = self.parse_base_type()?;
+            let (field_ty, field_name) = self.parse_declarator(field_base)?;
+
+            // Calculate alignment and offset
+            let field_align = field_ty.align().unwrap_or(1);
+            if field_align > max_align {
+                max_align = field_align;
+            }
+            // Align offset
+            offset = (offset + field_align - 1) & !(field_align - 1);
+
+            fields.push(StructField {
+                name: field_name,
+                ty: field_ty.clone(),
+                offset,
+            });
+
+            offset += field_ty.size().unwrap_or(0);
+            self.expect(TokenKind::Semicolon, "expected ';' after field")?;
+        }
+
+        self.expect(TokenKind::RBrace, "expected '}'")?;
+        self.expect(TokenKind::Semicolon, "expected ';' after struct definition")?;
+
+        // Pad to struct alignment
+        let size = (offset + max_align - 1) & !(max_align - 1);
+
+        Ok(StructDef {
+            name,
+            fields,
+            size,
+            align: max_align,
+        })
     }
 
     fn finish_function(&mut self, ret: Type, name: String, is_extern: bool) -> Result<Func, CError> {
@@ -481,6 +553,24 @@ impl Parser {
                 };
                 continue;
             }
+            if self.peek_kind() == TokenKind::Dot {
+                self.next();
+                let field = self.expect_ident("expected field name")?;
+                expr = Expr::Member {
+                    base: Box::new(expr),
+                    field,
+                };
+                continue;
+            }
+            if self.peek_kind() == TokenKind::Arrow {
+                self.next();
+                let field = self.expect_ident("expected field name")?;
+                expr = Expr::Arrow {
+                    base: Box::new(expr),
+                    field,
+                };
+                continue;
+            }
             break;
         }
         Ok(expr)
@@ -562,7 +652,14 @@ impl Parser {
                     Ok(uint_type())
                 }
             }
-            "struct" => Err(self.error_at_code(&token, "E2008", "unsupported feature")),
+            "struct" => {
+                let name = self.expect_ident("expected struct name")?;
+                if let Some(def) = self.struct_defs.get(&name) {
+                    Ok(Type::Struct(name, def.size, def.align))
+                } else {
+                    Err(self.error_at_code(&token, "E2003", &format!("undefined struct '{}'", name)))
+                }
+            }
             _ => Err(self.error_at_code(&token, "E2001", "unknown type")),
         }
     }

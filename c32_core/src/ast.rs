@@ -7,6 +7,26 @@ pub struct Program {
 pub enum Item {
     Func(Func),
     Global(Global),
+    StructDef(StructDef),
+}
+
+// ============================================================================
+// Struct definitions
+// ============================================================================
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StructField {
+    pub name: String,
+    pub ty: Type,
+    pub offset: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StructDef {
+    pub name: String,
+    pub fields: Vec<StructField>,
+    pub size: usize,
+    pub align: usize,
 }
 
 #[derive(Debug, Clone)]
@@ -97,6 +117,16 @@ pub enum Expr {
     },
     SizeofType(Type),
     SizeofExpr(Box<Expr>),
+    /// Member access: s.field
+    Member {
+        base: Box<Expr>,
+        field: String,
+    },
+    /// Arrow member access: p->field
+    Arrow {
+        base: Box<Expr>,
+        field: String,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -150,6 +180,8 @@ pub enum Type {
     Base(BaseType),
     Pointer(Box<Type>),
     Array(Box<Type>, usize),
+    /// Struct type, stores (name, size, align) for self-contained size/align info
+    Struct(String, usize, usize),
 }
 
 impl Type {
@@ -163,6 +195,17 @@ impl Type {
 
     pub fn is_array(&self) -> bool {
         matches!(self, Type::Array(_, _))
+    }
+
+    pub fn is_struct(&self) -> bool {
+        matches!(self, Type::Struct(_, _, _))
+    }
+
+    pub fn struct_name(&self) -> Option<&str> {
+        match self {
+            Type::Struct(name, _, _) => Some(name),
+            _ => None,
+        }
     }
 
     pub fn base(&self) -> Option<BaseType> {
@@ -186,6 +229,7 @@ impl Type {
             Type::Base(BaseType::Void) => None,
             Type::Pointer(_) => Some(4),
             Type::Array(elem, len) => elem.size().map(|s| s * len),
+            Type::Struct(_, size, _) => Some(*size),
         }
     }
 
@@ -197,6 +241,7 @@ impl Type {
             Type::Base(BaseType::Char) | Type::Base(BaseType::Bool) => Some(1),
             Type::Base(BaseType::Void) => None,
             Type::Array(elem, _) => elem.align(),
+            Type::Struct(_, _, align) => Some(*align),
         }
     }
 

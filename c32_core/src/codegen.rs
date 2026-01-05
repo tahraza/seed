@@ -1,13 +1,13 @@
 use crate::ast::{
     bool_type, char_type, int_type, uint_type, BaseType, BinaryOp, Expr, Func, Item,
-    NumberLit, Program, Stmt, Type, UnaryOp,
+    NumberLit, Program, Stmt, StructDef, Type, UnaryOp,
 };
 use crate::error::CError;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 
-pub fn compile_to_a32(program: &Program) -> Result<String, CError> {
-    let mut codegen = Codegen::new();
+pub fn compile_to_a32(program: &Program, struct_defs: &HashMap<String, StructDef>) -> Result<String, CError> {
+    let mut codegen = Codegen::new(struct_defs.clone());
     codegen.collect_symbols(program)?;
     codegen.emit_program(program)
 }
@@ -35,10 +35,11 @@ struct Codegen {
     funcs: HashMap<String, FuncSymbol>,
     globals: HashMap<String, GlobalSymbol>,
     global_order: Vec<String>,
+    struct_defs: HashMap<String, StructDef>,
 }
 
 impl Codegen {
-    fn new() -> Self {
+    fn new(struct_defs: HashMap<String, StructDef>) -> Self {
         Self {
             text: String::new(),
             data: String::new(),
@@ -48,6 +49,7 @@ impl Codegen {
             funcs: HashMap::new(),
             globals: HashMap::new(),
             global_order: Vec::new(),
+            struct_defs,
         }
     }
 
@@ -105,6 +107,9 @@ impl Codegen {
                             self.global_order.push(global.name.clone());
                         }
                     }
+                }
+                Item::StructDef(_) => {
+                    // Struct definitions are already handled by the parser
                 }
             }
         }
@@ -714,6 +719,35 @@ impl<'a> FuncContext<'a> {
                 self.emit_move_imm(out, "R0", size as i64);
                 Ok(int_type())
             }
+            Expr::Member { base: _, field: _ } => {
+                // Member access as rvalue: get address then load
+                let lval = self.emit_lvalue_addr(expr, out)?;
+                self.emit_load_addr(out, "R0", &lval.ty)?;
+                Ok(lval.ty)
+            }
+            Expr::Arrow { base, field } => {
+                // Arrow access: p->field = (*p).field
+                let ptr_ty = self.emit_expr(base, out)?;
+                let struct_ty = match ptr_ty {
+                    Type::Pointer(inner) => *inner,
+                    _ => return Err(CError::new("E2002", "arrow on non-pointer")),
+                };
+                let struct_name = struct_ty.struct_name()
+                    .ok_or_else(|| CError::new("E2002", "arrow on non-struct pointer"))?;
+                let struct_def = self.cg.struct_defs.get(struct_name)
+                    .ok_or_else(|| CError::new("E2003", "undefined struct"))?
+                    .clone();
+                let field_info = struct_def.fields.iter()
+                    .find(|f| f.name == *field)
+                    .ok_or_else(|| CError::new("E2003", "undefined field"))?;
+                // R0 has pointer, add field offset
+                if field_info.offset > 0 {
+                    emit_add_reg_imm(out, "R0", "R0", field_info.offset as i32);
+                }
+                // Load the field value
+                self.emit_load_addr(out, "R0", &field_info.ty)?;
+                Ok(field_info.ty.clone())
+            }
         }
     }
 
@@ -1116,6 +1150,52 @@ impl<'a> FuncContext<'a> {
                     readonly: self.is_readonly_ptr_expr(base),
                 })
             }
+            Expr::Member { base, field } => {
+                // Get base struct address
+                let base_lval = self.emit_lvalue_addr(base, out)?;
+                let struct_name = base_lval.ty.struct_name()
+                    .ok_or_else(|| CError::new("E2002", "member access on non-struct"))?;
+                let struct_def = self.cg.struct_defs.get(struct_name)
+                    .ok_or_else(|| CError::new("E2003", "undefined struct"))?
+                    .clone();
+                let field_info = struct_def.fields.iter()
+                    .find(|f| f.name == *field)
+                    .ok_or_else(|| CError::new("E2003", "undefined field"))?;
+                // Add field offset to base address
+                if field_info.offset > 0 {
+                    emit_add_reg_imm(out, "R0", "R0", field_info.offset as i32);
+                }
+                Ok(LValue {
+                    ty: field_info.ty.clone(),
+                    assignable: true,
+                    readonly: false,
+                })
+            }
+            Expr::Arrow { base, field } => {
+                // Get pointer value
+                let ptr_ty = self.emit_expr(base, out)?;
+                let struct_ty = match ptr_ty {
+                    Type::Pointer(inner) => *inner,
+                    _ => return Err(CError::new("E2002", "arrow on non-pointer")),
+                };
+                let struct_name = struct_ty.struct_name()
+                    .ok_or_else(|| CError::new("E2002", "arrow on non-struct pointer"))?;
+                let struct_def = self.cg.struct_defs.get(struct_name)
+                    .ok_or_else(|| CError::new("E2003", "undefined struct"))?
+                    .clone();
+                let field_info = struct_def.fields.iter()
+                    .find(|f| f.name == *field)
+                    .ok_or_else(|| CError::new("E2003", "undefined field"))?;
+                // Add field offset to pointer
+                if field_info.offset > 0 {
+                    emit_add_reg_imm(out, "R0", "R0", field_info.offset as i32);
+                }
+                Ok(LValue {
+                    ty: field_info.ty.clone(),
+                    assignable: true,
+                    readonly: false,
+                })
+            }
             _ => Err(CError::new("E2005", "invalid lvalue")),
         }
     }
@@ -1329,6 +1409,32 @@ impl<'a> FuncContext<'a> {
             }
             Expr::Cast { ty, .. } => Ok(ty.clone()),
             Expr::SizeofType(_) | Expr::SizeofExpr(_) => Ok(int_type()),
+            Expr::Member { base, field } => {
+                let bt = self.type_of_expr(base, false)?;
+                let struct_name = bt.struct_name()
+                    .ok_or_else(|| CError::new("E2002", "member access on non-struct"))?;
+                let struct_def = self.cg.struct_defs.get(struct_name)
+                    .ok_or_else(|| CError::new("E2003", "undefined struct"))?;
+                let field_info = struct_def.fields.iter()
+                    .find(|f| f.name == *field)
+                    .ok_or_else(|| CError::new("E2003", "undefined field"))?;
+                Ok(field_info.ty.clone())
+            }
+            Expr::Arrow { base, field } => {
+                let bt = self.type_of_expr(base, true)?;
+                let struct_ty = match bt {
+                    Type::Pointer(inner) => *inner,
+                    _ => return Err(CError::new("E2002", "arrow on non-pointer")),
+                };
+                let struct_name = struct_ty.struct_name()
+                    .ok_or_else(|| CError::new("E2002", "arrow on non-struct pointer"))?;
+                let struct_def = self.cg.struct_defs.get(struct_name)
+                    .ok_or_else(|| CError::new("E2003", "undefined struct"))?;
+                let field_info = struct_def.fields.iter()
+                    .find(|f| f.name == *field)
+                    .ok_or_else(|| CError::new("E2003", "undefined field"))?;
+                Ok(field_info.ty.clone())
+            }
         }
     }
 
@@ -1568,6 +1674,7 @@ fn const_to_u32(value: i64, ty: &Type) -> Result<u32, CError> {
         Type::Base(BaseType::UInt) | Type::Pointer(_) => Ok(value as u32),
         Type::Array(_, _) => Err(CError::new("E2002", "invalid const conversion")),
         Type::Base(BaseType::Void) => Err(CError::new("E2002", "invalid const conversion")),
+        Type::Struct(_, _, _) => Err(CError::new("E2002", "invalid const conversion")),
     }
 }
 

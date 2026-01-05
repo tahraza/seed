@@ -2,7 +2,7 @@ use a32_asm::ast::Expr as AsmExpr;
 use a32_asm::parser::parse_expr_str;
 use a32_asm::{assemble_a32b_with_config, AsmConfig, AsmError};
 use a32_core::{Machine, Reg, SimConfig, TrapCode};
-use c32_core::ast::Program;
+use c32_core::ast::{Program, StructDef};
 use c32_core::{compile_to_a32, parse_program, CError};
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -359,13 +359,15 @@ fn run_case(case: &TestCase) -> Result<(), String> {
 
 fn build_program(case: &TestCase, spec: &TestSpec) -> Result<BuildOutput, BuildError> {
     let mut items = Vec::new();
+    let mut all_struct_defs: HashMap<String, StructDef> = HashMap::new();
     for path in &case.sources {
         let source = fs::read_to_string(path).map_err(|e| BuildError::Compile(CError::new("E2008", e.to_string())))?;
-        let program = parse_program(&source).map_err(BuildError::Compile)?;
+        let (program, struct_defs) = parse_program(&source).map_err(BuildError::Compile)?;
         items.extend(program.items);
+        all_struct_defs.extend(struct_defs);
     }
     let program = Program { items };
-    let asm = compile_to_a32(&program).map_err(BuildError::Compile)?;
+    let asm = compile_to_a32(&program, &all_struct_defs).map_err(BuildError::Compile)?;
 
     let mut asm_config = AsmConfig::default();
     asm_config.ram_size = spec.config.ram_size;

@@ -43,8 +43,8 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap_or_else(|| default_output_path(&input_path));
 
     let source = fs::read_to_string(&input_path)?;
-    let program = parse_program(&source)?;
-    let asm = compile_to_a32(&program)?;
+    let (program, struct_defs) = parse_program(&source)?;
+    let asm = compile_to_a32(&program, &struct_defs)?;
     fs::write(&output_path, asm)?;
     Ok(())
 }

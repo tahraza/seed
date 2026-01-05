@@ -37,6 +37,8 @@ pub enum TokenKind {
     PipePipe,
     Shl,
     Shr,
+    Dot,
+    Arrow,
     Eof,
 }
 
@@ -121,8 +123,18 @@ impl Lexer {
                 self.token(TokenKind::Plus)
             }
             '-' => {
+                if self.peek_next() == Some('>') {
+                    self.advance();
+                    self.advance();
+                    self.token(TokenKind::Arrow)
+                } else {
+                    self.advance();
+                    self.token(TokenKind::Minus)
+                }
+            }
+            '.' => {
                 self.advance();
-                self.token(TokenKind::Minus)
+                self.token(TokenKind::Dot)
             }
             '*' => {
                 self.advance();
