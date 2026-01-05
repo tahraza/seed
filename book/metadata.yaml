@@ -1,0 +1,26 @@
+---
+title: "L'Architecture Codex"
+subtitle: "De la Porte Logique au Système d'Exploitation 32-bits"
+author: "Projet Nand2Tetris-Codex"
+date: "2026"
+lang: fr
+geometry:
+- top=2.5cm
+- bottom=2.5cm
+- left=2.5cm
+- right=2.5cm
+mainfont: "DejaVu Serif"
+sansfont: "DejaVu Sans"
+monofont: "DejaVu Sans Mono"
+fontsize: 11pt
+header-includes:
+- |
+  \usepackage{fancyhdr}
+  \pagestyle{fancy}
+  \fancyhead[CO,CE]{L'Architecture Codex}
+  \fancyfoot[CO,CE]{\thepage}
+  \usepackage{xcolor}
+  \definecolor{codegray}{gray}{0.95}
+  \let\oldtexttt\texttt
+  \renewcommand{\texttt}[1]{\colorbox{codegray}{\oldtexttt{#1}}}
+...
