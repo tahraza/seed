@@ -1,0 +1,36 @@
+-- Hazard Detection Unit
+-- Detects load-use hazards and generates stall signal
+--
+-- A load-use hazard occurs when:
+-- - The instruction in EX stage is a load (mem_read = 1)
+-- - The instruction in ID stage needs the loaded value
+--   (rn or rm matches the load destination rd)
+
+entity HazardDetect is
+  port(
+    -- From ID stage (current instruction sources)
+    id_rn : in bits(3 downto 0);     -- Source register 1
+    id_rm : in bits(3 downto 0);     -- Source register 2
+    id_rn_used : in bit;             -- Rn is used by current instruction
+    id_rm_used : in bit;             -- Rm is used by current instruction
+    -- From EX stage (previous instruction)
+    ex_rd : in bits(3 downto 0);     -- Destination register
+    ex_mem_read : in bit;            -- Is it a load instruction?
+    -- Output
+    stall : out bit                  -- Stall IF and ID stages
+  );
+end entity;
+
+architecture rtl of HazardDetect is
+  signal rn_hazard : bit;
+  signal rm_hazard : bit;
+begin
+  -- Check if ID.rn depends on EX load result
+  rn_hazard <= '1' when (ex_mem_read = '1' and id_rn_used = '1' and id_rn = ex_rd) else '0';
+
+  -- Check if ID.rm depends on EX load result
+  rm_hazard <= '1' when (ex_mem_read = '1' and id_rm_used = '1' and id_rm = ex_rd) else '0';
+
+  -- Stall if either source has hazard
+  stall <= rn_hazard or rm_hazard;
+end architecture;

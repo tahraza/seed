@@ -1,0 +1,476 @@
+-- A32-Lite CPU (5-Stage Pipeline implementation)
+-- 32-bit ARM-inspired CPU with 16 registers, NZCV flags
+-- Pipeline stages: IF -> ID -> EX -> MEM -> WB
+-- Features: Data forwarding, hazard detection, branch prediction (not taken)
+
+entity CPU_Pipeline is
+  port(
+    clk : in bit;
+    reset : in bit;
+    -- Instruction memory interface
+    instr_addr : out bits(31 downto 0);
+    instr_data : in bits(31 downto 0);
+    -- Data memory interface
+    mem_addr : out bits(31 downto 0);
+    mem_wdata : out bits(31 downto 0);
+    mem_rdata : in bits(31 downto 0);
+    mem_read : out bit;
+    mem_write : out bit;
+    mem_byte : out bit;
+    -- Status
+    halted : out bit
+  );
+end entity;
+
+architecture rtl of CPU_Pipeline is
+  -- Components declaration
+  component PC
+    port(clk : in bit; d : in bits(31 downto 0); inc : in bit; load : in bit; reset : in bit; q : out bits(31 downto 0));
+  end component;
+
+  component Decoder
+    port(instr : in bits(31 downto 0);
+         cond : out bits(3 downto 0); class : out bits(2 downto 0);
+         op : out bits(3 downto 0); s_flag : out bit;
+         rd : out bits(3 downto 0); rn : out bits(3 downto 0); rm : out bits(3 downto 0);
+         shift_amt : out bits(5 downto 0); shift_type : out bits(1 downto 0);
+         imm12 : out bits(11 downto 0); off13 : out bits(12 downto 0);
+         imm24 : out bits(23 downto 0); imm21 : out bits(20 downto 0);
+         ls_load : out bit; ls_byte : out bit; ls_wb : out bit; ls_up : out bit;
+         br_link : out bit);
+  end component;
+
+  component CondCheck
+    port(cond : in bits(3 downto 0); n : in bit; z : in bit; c : in bit; v : in bit; ok : out bit);
+  end component;
+
+  component Control
+    port(class : in bits(2 downto 0); op : in bits(3 downto 0);
+         s_flag : in bit; cond_ok : in bit; ls_load : in bit; br_link : in bit;
+         reg_write : out bit; mem_read : out bit; mem_write : out bit;
+         alu_src : out bit; mem_to_reg : out bit; branch : out bit;
+         update_flags : out bit; pc_write : out bit; link : out bit; halt : out bit);
+  end component;
+
+  component RegFile16
+    port(clk : in bit; wd : in bits(31 downto 0); wa : in bits(3 downto 0); we : in bit;
+         ra : in bits(3 downto 0); qa : out bits(31 downto 0);
+         rb : in bits(3 downto 0); qb : out bits(31 downto 0));
+  end component;
+
+  component ALU32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); op : in bits(3 downto 0);
+         y : out bits(31 downto 0); n_flag : out bit; z_flag : out bit; c_flag : out bit; v_flag : out bit);
+  end component;
+
+  component Shifter32
+    port(a : in bits(31 downto 0); amt : in bits(4 downto 0); mode : in bits(1 downto 0);
+         y : out bits(31 downto 0); cout : out bit);
+  end component;
+
+  component Add32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); cin : in bit;
+         y : out bits(31 downto 0); cout : out bit);
+  end component;
+
+  component Mux32
+    port(a : in bits(31 downto 0); b : in bits(31 downto 0); sel : in bit; y : out bits(31 downto 0));
+  end component;
+
+  component IF_ID_Reg
+    port(clk : in bit; reset : in bit; stall : in bit; flush : in bit;
+         if_instr : in bits(31 downto 0); if_pc_plus4 : in bits(31 downto 0);
+         id_instr : out bits(31 downto 0); id_pc_plus4 : out bits(31 downto 0));
+  end component;
+
+  component ID_EX_Reg
+    port(clk : in bit; reset : in bit; flush : in bit;
+         id_pc_plus4 : in bits(31 downto 0); id_rd1 : in bits(31 downto 0); id_rd2 : in bits(31 downto 0);
+         id_imm12_ext : in bits(31 downto 0); id_off13_ext : in bits(31 downto 0);
+         id_branch_offset : in bits(31 downto 0);
+         id_rn : in bits(3 downto 0); id_rm : in bits(3 downto 0); id_rd : in bits(3 downto 0);
+         id_op : in bits(3 downto 0); id_shift_type : in bits(1 downto 0); id_shift_amt : in bits(4 downto 0);
+         id_alu_src : in bit; id_mem_read : in bit; id_mem_write : in bit;
+         id_mem_to_reg : in bit; id_reg_write : in bit; id_branch : in bit;
+         id_update_flags : in bit; id_ls_byte : in bit; id_ls_up : in bit; id_cond_ok : in bit;
+         ex_pc_plus4 : out bits(31 downto 0); ex_rd1 : out bits(31 downto 0); ex_rd2 : out bits(31 downto 0);
+         ex_imm12_ext : out bits(31 downto 0); ex_off13_ext : out bits(31 downto 0);
+         ex_branch_offset : out bits(31 downto 0);
+         ex_rn : out bits(3 downto 0); ex_rm : out bits(3 downto 0); ex_rd : out bits(3 downto 0);
+         ex_op : out bits(3 downto 0); ex_shift_type : out bits(1 downto 0); ex_shift_amt : out bits(4 downto 0);
+         ex_alu_src : out bit; ex_mem_read : out bit; ex_mem_write : out bit;
+         ex_mem_to_reg : out bit; ex_reg_write : out bit; ex_branch : out bit;
+         ex_update_flags : out bit; ex_ls_byte : out bit; ex_ls_up : out bit; ex_cond_ok : out bit);
+  end component;
+
+  component EX_MEM_Reg
+    port(clk : in bit; reset : in bit;
+         ex_alu_result : in bits(31 downto 0); ex_rd2 : in bits(31 downto 0); ex_rd : in bits(3 downto 0);
+         ex_mem_read : in bit; ex_mem_write : in bit; ex_mem_to_reg : in bit;
+         ex_reg_write : in bit; ex_ls_byte : in bit;
+         mem_alu_result : out bits(31 downto 0); mem_rd2 : out bits(31 downto 0); mem_rd : out bits(3 downto 0);
+         mem_mem_read : out bit; mem_mem_write : out bit; mem_mem_to_reg : out bit;
+         mem_reg_write : out bit; mem_ls_byte : out bit);
+  end component;
+
+  component MEM_WB_Reg
+    port(clk : in bit; reset : in bit;
+         mem_alu_result : in bits(31 downto 0); mem_read_data : in bits(31 downto 0);
+         mem_rd : in bits(3 downto 0); mem_mem_to_reg : in bit; mem_reg_write : in bit;
+         wb_alu_result : out bits(31 downto 0); wb_read_data : out bits(31 downto 0);
+         wb_rd : out bits(3 downto 0); wb_mem_to_reg : out bit; wb_reg_write : out bit);
+  end component;
+
+  component HazardDetect
+    port(id_rn : in bits(3 downto 0); id_rm : in bits(3 downto 0);
+         id_rn_used : in bit; id_rm_used : in bit;
+         ex_rd : in bits(3 downto 0); ex_mem_read : in bit;
+         stall : out bit);
+  end component;
+
+  component ForwardUnit
+    port(ex_rn : in bits(3 downto 0); ex_rm : in bits(3 downto 0);
+         mem_rd : in bits(3 downto 0); mem_reg_write : in bit;
+         wb_rd : in bits(3 downto 0); wb_reg_write : in bit;
+         forward_a : out bits(1 downto 0); forward_b : out bits(1 downto 0));
+  end component;
+
+  -- ========================================
+  -- IF Stage signals
+  -- ========================================
+  signal pc_out : bits(31 downto 0);
+  signal pc_next : bits(31 downto 0);
+  signal pc_plus4 : bits(31 downto 0);
+  signal pc_branch : bits(31 downto 0);
+  signal pc_load : bit;
+  signal pc_inc : bit;
+  signal if_stall : bit;
+  signal if_flush : bit;
+  signal add_cout : bit;
+
+  -- ========================================
+  -- ID Stage signals
+  -- ========================================
+  signal id_instr : bits(31 downto 0);
+  signal id_pc_plus4 : bits(31 downto 0);
+  -- Decoder outputs
+  signal dec_cond : bits(3 downto 0);
+  signal dec_class : bits(2 downto 0);
+  signal dec_op : bits(3 downto 0);
+  signal dec_s : bit;
+  signal dec_rd : bits(3 downto 0);
+  signal dec_rn : bits(3 downto 0);
+  signal dec_rm : bits(3 downto 0);
+  signal dec_shift_amt : bits(5 downto 0);
+  signal dec_shift_type : bits(1 downto 0);
+  signal dec_imm12 : bits(11 downto 0);
+  signal dec_off13 : bits(12 downto 0);
+  signal dec_imm24 : bits(23 downto 0);
+  signal dec_imm21 : bits(20 downto 0);
+  signal dec_ls_load : bit;
+  signal dec_ls_byte : bit;
+  signal dec_ls_wb : bit;
+  signal dec_ls_up : bit;
+  signal dec_br_link : bit;
+  -- Register file outputs
+  signal rf_rd1 : bits(31 downto 0);
+  signal rf_rd2 : bits(31 downto 0);
+  -- Control signals
+  signal id_cond_ok : bit;
+  signal id_reg_write : bit;
+  signal id_mem_read : bit;
+  signal id_mem_write : bit;
+  signal id_alu_src : bit;
+  signal id_mem_to_reg : bit;
+  signal id_branch : bit;
+  signal id_update_flags : bit;
+  signal id_halt : bit;
+  -- Immediate extensions
+  signal id_imm12_ext : bits(31 downto 0);
+  signal id_off13_ext : bits(31 downto 0);
+  signal id_branch_offset : bits(31 downto 0);
+  -- Hazard signals
+  signal hazard_stall : bit;
+  signal id_rn_used : bit;
+  signal id_rm_used : bit;
+
+  -- ========================================
+  -- EX Stage signals
+  -- ========================================
+  signal ex_pc_plus4 : bits(31 downto 0);
+  signal ex_rd1 : bits(31 downto 0);
+  signal ex_rd2 : bits(31 downto 0);
+  signal ex_imm12_ext : bits(31 downto 0);
+  signal ex_off13_ext : bits(31 downto 0);
+  signal ex_branch_offset : bits(31 downto 0);
+  signal ex_rn : bits(3 downto 0);
+  signal ex_rm : bits(3 downto 0);
+  signal ex_rd : bits(3 downto 0);
+  signal ex_op : bits(3 downto 0);
+  signal ex_shift_type : bits(1 downto 0);
+  signal ex_shift_amt : bits(4 downto 0);
+  signal ex_alu_src : bit;
+  signal ex_mem_read : bit;
+  signal ex_mem_write : bit;
+  signal ex_mem_to_reg : bit;
+  signal ex_reg_write : bit;
+  signal ex_branch : bit;
+  signal ex_update_flags : bit;
+  signal ex_ls_byte : bit;
+  signal ex_ls_up : bit;
+  signal ex_cond_ok : bit;
+  -- Forwarding
+  signal forward_a : bits(1 downto 0);
+  signal forward_b : bits(1 downto 0);
+  signal fwd_a_data : bits(31 downto 0);
+  signal fwd_b_data : bits(31 downto 0);
+  -- ALU
+  signal shifted_rm : bits(31 downto 0);
+  signal shift_cout : bit;
+  signal alu_a : bits(31 downto 0);
+  signal alu_b : bits(31 downto 0);
+  signal alu_b_pre : bits(31 downto 0);
+  signal alu_result : bits(31 downto 0);
+  signal alu_n : bit;
+  signal alu_z : bit;
+  signal alu_c : bit;
+  signal alu_v : bit;
+  -- Memory address
+  signal mem_eff_addr : bits(31 downto 0);
+  signal mem_offset : bits(31 downto 0);
+  -- Branch taken
+  signal branch_taken : bit;
+
+  -- ========================================
+  -- MEM Stage signals
+  -- ========================================
+  signal mem_alu_result : bits(31 downto 0);
+  signal mem_rd2_data : bits(31 downto 0);
+  signal mem_rd_addr : bits(3 downto 0);
+  signal mem_mem_read_sig : bit;
+  signal mem_mem_write_sig : bit;
+  signal mem_mem_to_reg : bit;
+  signal mem_reg_write : bit;
+  signal mem_ls_byte_sig : bit;
+
+  -- ========================================
+  -- WB Stage signals
+  -- ========================================
+  signal wb_alu_result : bits(31 downto 0);
+  signal wb_read_data : bits(31 downto 0);
+  signal wb_rd : bits(3 downto 0);
+  signal wb_mem_to_reg : bit;
+  signal wb_reg_write : bit;
+  signal wb_result : bits(31 downto 0);
+
+  -- Flags
+  signal flag_n : bit;
+  signal flag_z : bit;
+  signal flag_c : bit;
+  signal flag_v : bit;
+
+  -- Halt
+  signal halt_reg : bit;
+
+begin
+  -- ========================================
+  -- IF Stage: Instruction Fetch
+  -- ========================================
+  u_pc: PC port map (
+    clk => clk, d => pc_next, inc => pc_inc, load => pc_load, reset => reset, q => pc_out
+  );
+
+  instr_addr <= pc_out;
+
+  -- PC + 4
+  u_pc_plus4: Add32 port map (a => pc_out, b => x"00000004", cin => '0', y => pc_plus4, cout => add_cout);
+
+  -- PC control
+  if_stall <= hazard_stall;
+  if_flush <= branch_taken;
+  pc_inc <= not halt_reg and not if_stall and not branch_taken;
+  pc_load <= branch_taken and not halt_reg;
+  pc_next <= pc_branch when branch_taken = '1' else pc_plus4;
+
+  -- IF/ID Pipeline Register
+  u_if_id: IF_ID_Reg port map (
+    clk => clk, reset => reset, stall => if_stall, flush => if_flush,
+    if_instr => instr_data, if_pc_plus4 => pc_plus4,
+    id_instr => id_instr, id_pc_plus4 => id_pc_plus4
+  );
+
+  -- ========================================
+  -- ID Stage: Instruction Decode
+  -- ========================================
+  u_dec: Decoder port map (
+    instr => id_instr,
+    cond => dec_cond, class => dec_class, op => dec_op, s_flag => dec_s,
+    rd => dec_rd, rn => dec_rn, rm => dec_rm,
+    shift_amt => dec_shift_amt, shift_type => dec_shift_type,
+    imm12 => dec_imm12, off13 => dec_off13,
+    imm24 => dec_imm24, imm21 => dec_imm21,
+    ls_load => dec_ls_load, ls_byte => dec_ls_byte, ls_wb => dec_ls_wb, ls_up => dec_ls_up,
+    br_link => dec_br_link
+  );
+
+  u_cond: CondCheck port map (
+    cond => dec_cond, n => flag_n, z => flag_z, c => flag_c, v => flag_v, ok => id_cond_ok
+  );
+
+  u_ctrl: Control port map (
+    class => dec_class, op => dec_op, s_flag => dec_s, cond_ok => id_cond_ok,
+    ls_load => dec_ls_load, br_link => dec_br_link,
+    reg_write => id_reg_write, mem_read => id_mem_read, mem_write => id_mem_write,
+    alu_src => id_alu_src, mem_to_reg => id_mem_to_reg, branch => id_branch,
+    update_flags => id_update_flags, pc_write => open, link => open, halt => id_halt
+  );
+
+  u_rf: RegFile16 port map (
+    clk => clk, wd => wb_result, wa => wb_rd, we => wb_reg_write,
+    ra => dec_rn, qa => rf_rd1,
+    rb => dec_rm, qb => rf_rd2
+  );
+
+  -- Sign extensions
+  id_imm12_ext <= (19 downto 0 => dec_imm12(11)) & dec_imm12;
+  id_off13_ext <= (18 downto 0 => dec_off13(12)) & dec_off13;
+  id_branch_offset <= dec_imm24(21 downto 0) & b"00";
+
+  -- Determine which registers are used (for hazard detection)
+  id_rn_used <= '1';  -- Rn is always used
+  id_rm_used <= not id_alu_src;  -- Rm used only for register operations
+
+  u_hazard: HazardDetect port map (
+    id_rn => dec_rn, id_rm => dec_rm,
+    id_rn_used => id_rn_used, id_rm_used => id_rm_used,
+    ex_rd => ex_rd, ex_mem_read => ex_mem_read,
+    stall => hazard_stall
+  );
+
+  -- ID/EX Pipeline Register
+  u_id_ex: ID_EX_Reg port map (
+    clk => clk, reset => reset, flush => hazard_stall,
+    id_pc_plus4 => id_pc_plus4, id_rd1 => rf_rd1, id_rd2 => rf_rd2,
+    id_imm12_ext => id_imm12_ext, id_off13_ext => id_off13_ext,
+    id_branch_offset => id_branch_offset,
+    id_rn => dec_rn, id_rm => dec_rm, id_rd => dec_rd,
+    id_op => dec_op, id_shift_type => dec_shift_type, id_shift_amt => dec_shift_amt(4 downto 0),
+    id_alu_src => id_alu_src, id_mem_read => id_mem_read, id_mem_write => id_mem_write,
+    id_mem_to_reg => id_mem_to_reg, id_reg_write => id_reg_write, id_branch => id_branch,
+    id_update_flags => id_update_flags, id_ls_byte => dec_ls_byte, id_ls_up => dec_ls_up,
+    id_cond_ok => id_cond_ok,
+    ex_pc_plus4 => ex_pc_plus4, ex_rd1 => ex_rd1, ex_rd2 => ex_rd2,
+    ex_imm12_ext => ex_imm12_ext, ex_off13_ext => ex_off13_ext,
+    ex_branch_offset => ex_branch_offset,
+    ex_rn => ex_rn, ex_rm => ex_rm, ex_rd => ex_rd,
+    ex_op => ex_op, ex_shift_type => ex_shift_type, ex_shift_amt => ex_shift_amt,
+    ex_alu_src => ex_alu_src, ex_mem_read => ex_mem_read, ex_mem_write => ex_mem_write,
+    ex_mem_to_reg => ex_mem_to_reg, ex_reg_write => ex_reg_write, ex_branch => ex_branch,
+    ex_update_flags => ex_update_flags, ex_ls_byte => ex_ls_byte, ex_ls_up => ex_ls_up,
+    ex_cond_ok => ex_cond_ok
+  );
+
+  -- ========================================
+  -- EX Stage: Execute
+  -- ========================================
+  u_forward: ForwardUnit port map (
+    ex_rn => ex_rn, ex_rm => ex_rm,
+    mem_rd => mem_rd_addr, mem_reg_write => mem_reg_write,
+    wb_rd => wb_rd, wb_reg_write => wb_reg_write,
+    forward_a => forward_a, forward_b => forward_b
+  );
+
+  -- Forwarding muxes for operand A
+  fwd_a_data <= ex_rd1 when forward_a = b"00" else
+                mem_alu_result when forward_a = b"01" else
+                wb_result;
+
+  -- Forwarding muxes for operand B
+  fwd_b_data <= ex_rd2 when forward_b = b"00" else
+                mem_alu_result when forward_b = b"01" else
+                wb_result;
+
+  -- Shifter
+  u_shift: Shifter32 port map (
+    a => fwd_b_data, amt => ex_shift_amt, mode => ex_shift_type,
+    y => shifted_rm, cout => shift_cout
+  );
+
+  -- ALU inputs
+  alu_a <= fwd_a_data;
+  alu_b_pre <= shifted_rm when ex_alu_src = '0' else ex_imm12_ext;
+  alu_b <= alu_b_pre;
+
+  u_alu: ALU32 port map (
+    a => alu_a, b => alu_b, op => ex_op,
+    y => alu_result, n_flag => alu_n, z_flag => alu_z, c_flag => alu_c, v_flag => alu_v
+  );
+
+  -- Memory address calculation
+  mem_offset <= ex_off13_ext when ex_ls_up = '1' else (not ex_off13_ext);
+  u_mem_add: Add32 port map (a => fwd_a_data, b => mem_offset, cin => not ex_ls_up, y => mem_eff_addr, cout => add_cout);
+
+  -- Branch address calculation
+  u_branch_add: Add32 port map (a => ex_pc_plus4, b => ex_branch_offset, cin => '0', y => pc_branch, cout => add_cout);
+  branch_taken <= ex_branch and ex_cond_ok;
+
+  -- EX/MEM Pipeline Register
+  u_ex_mem: EX_MEM_Reg port map (
+    clk => clk, reset => reset,
+    ex_alu_result => alu_result, ex_rd2 => fwd_b_data, ex_rd => ex_rd,
+    ex_mem_read => ex_mem_read, ex_mem_write => ex_mem_write,
+    ex_mem_to_reg => ex_mem_to_reg, ex_reg_write => ex_reg_write, ex_ls_byte => ex_ls_byte,
+    mem_alu_result => mem_alu_result, mem_rd2 => mem_rd2_data, mem_rd => mem_rd_addr,
+    mem_mem_read => mem_mem_read_sig, mem_mem_write => mem_mem_write_sig,
+    mem_mem_to_reg => mem_mem_to_reg, mem_reg_write => mem_reg_write, mem_ls_byte => mem_ls_byte_sig
+  );
+
+  -- ========================================
+  -- MEM Stage: Memory Access
+  -- ========================================
+  mem_addr <= mem_alu_result;
+  mem_wdata <= mem_rd2_data;
+  mem_read <= mem_mem_read_sig;
+  mem_write <= mem_mem_write_sig;
+  mem_byte <= mem_ls_byte_sig;
+
+  -- MEM/WB Pipeline Register
+  u_mem_wb: MEM_WB_Reg port map (
+    clk => clk, reset => reset,
+    mem_alu_result => mem_alu_result, mem_read_data => mem_rdata,
+    mem_rd => mem_rd_addr, mem_mem_to_reg => mem_mem_to_reg, mem_reg_write => mem_reg_write,
+    wb_alu_result => wb_alu_result, wb_read_data => wb_read_data,
+    wb_rd => wb_rd, wb_mem_to_reg => wb_mem_to_reg, wb_reg_write => wb_reg_write
+  );
+
+  -- ========================================
+  -- WB Stage: Write Back
+  -- ========================================
+  wb_result <= wb_read_data when wb_mem_to_reg = '1' else wb_alu_result;
+
+  -- ========================================
+  -- Flags and Halt
+  -- ========================================
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        flag_n <= '0';
+        flag_z <= '0';
+        flag_c <= '0';
+        flag_v <= '0';
+        halt_reg <= '0';
+      elsif ex_update_flags = '1' then
+        flag_n <= alu_n;
+        flag_z <= alu_z;
+        flag_c <= alu_c;
+        flag_v <= alu_v;
+      end if;
+      if id_halt = '1' and id_cond_ok = '1' then
+        halt_reg <= '1';
+      end if;
+    end if;
+  end process;
+
+  halted <= halt_reg;
+end architecture;

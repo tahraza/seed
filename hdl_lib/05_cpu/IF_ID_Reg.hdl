@@ -1,0 +1,42 @@
+-- IF/ID Pipeline Register
+-- Latches instruction and PC+4 from Fetch stage to Decode stage
+-- Supports stall (hold values) and flush (clear to NOP)
+
+entity IF_ID_Reg is
+  port(
+    clk : in bit;
+    reset : in bit;
+    stall : in bit;        -- Hold current values (for load-use hazard)
+    flush : in bit;        -- Clear to NOP (for branch taken)
+    -- Inputs from IF stage
+    if_instr : in bits(31 downto 0);
+    if_pc_plus4 : in bits(31 downto 0);
+    -- Outputs to ID stage
+    id_instr : out bits(31 downto 0);
+    id_pc_plus4 : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of IF_ID_Reg is
+  signal instr_reg : bits(31 downto 0);
+  signal pc_plus4_reg : bits(31 downto 0);
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if reset = '1' or flush = '1' then
+        -- Insert NOP (encoded as 0xE0000000 - unconditional NOP)
+        instr_reg <= x"E0000000";
+        pc_plus4_reg <= x"00000000";
+      elsif stall = '0' then
+        -- Normal operation: latch new values
+        instr_reg <= if_instr;
+        pc_plus4_reg <= if_pc_plus4;
+      end if;
+      -- When stall='1' and flush='0', hold current values
+    end if;
+  end process;
+
+  id_instr <= instr_reg;
+  id_pc_plus4 <= pc_plus4_reg;
+end architecture;

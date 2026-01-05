@@ -1,0 +1,54 @@
+-- Forwarding Unit
+-- Handles data hazards by forwarding results from later stages
+--
+-- Forwarding sources:
+-- - EX/MEM: ALU result from previous instruction
+-- - MEM/WB: Result (ALU or memory) from instruction before previous
+--
+-- Forward encoding:
+-- 00 = No forwarding (use register file value)
+-- 01 = Forward from EX/MEM (ALU result)
+-- 10 = Forward from MEM/WB (final result)
+
+entity ForwardUnit is
+  port(
+    -- Source registers from EX stage
+    ex_rn : in bits(3 downto 0);     -- Source register 1 (used by EX)
+    ex_rm : in bits(3 downto 0);     -- Source register 2 (used by EX)
+    -- Destination and control from MEM stage
+    mem_rd : in bits(3 downto 0);
+    mem_reg_write : in bit;
+    -- Destination and control from WB stage
+    wb_rd : in bits(3 downto 0);
+    wb_reg_write : in bit;
+    -- Forwarding control outputs
+    forward_a : out bits(1 downto 0);  -- For operand A (Rn)
+    forward_b : out bits(1 downto 0)   -- For operand B (Rm)
+  );
+end entity;
+
+architecture rtl of ForwardUnit is
+  signal fwd_a_mem : bit;
+  signal fwd_a_wb : bit;
+  signal fwd_b_mem : bit;
+  signal fwd_b_wb : bit;
+begin
+  -- Forward A (Rn operand)
+  -- Priority: EX/MEM has precedence over MEM/WB (most recent value)
+  fwd_a_mem <= '1' when (mem_reg_write = '1' and mem_rd = ex_rn and ex_rn /= x"0") else '0';
+  fwd_a_wb <= '1' when (wb_reg_write = '1' and wb_rd = ex_rn and ex_rn /= x"0"
+                        and not (mem_reg_write = '1' and mem_rd = ex_rn)) else '0';
+
+  forward_a <= b"01" when fwd_a_mem = '1' else
+               b"10" when fwd_a_wb = '1' else
+               b"00";
+
+  -- Forward B (Rm operand)
+  fwd_b_mem <= '1' when (mem_reg_write = '1' and mem_rd = ex_rm and ex_rm /= x"0") else '0';
+  fwd_b_wb <= '1' when (wb_reg_write = '1' and wb_rd = ex_rm and ex_rm /= x"0"
+                        and not (mem_reg_write = '1' and mem_rd = ex_rm)) else '0';
+
+  forward_b <= b"01" when fwd_b_mem = '1' else
+               b"10" when fwd_b_wb = '1' else
+               b"00";
+end architecture;

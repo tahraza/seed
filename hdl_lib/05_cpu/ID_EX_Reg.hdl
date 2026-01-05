@@ -1,0 +1,160 @@
+-- ID/EX Pipeline Register
+-- Latches decoded instruction fields from Decode to Execute stage
+
+entity ID_EX_Reg is
+  port(
+    clk : in bit;
+    reset : in bit;
+    flush : in bit;        -- Clear to NOP (for branch/hazard)
+    -- Decoded instruction fields
+    id_pc_plus4 : in bits(31 downto 0);
+    id_rd1 : in bits(31 downto 0);       -- Rn value
+    id_rd2 : in bits(31 downto 0);       -- Rm value
+    id_imm12_ext : in bits(31 downto 0); -- Sign-extended imm12
+    id_off13_ext : in bits(31 downto 0); -- Sign-extended off13
+    id_branch_offset : in bits(31 downto 0);
+    -- Register addresses
+    id_rn : in bits(3 downto 0);
+    id_rm : in bits(3 downto 0);
+    id_rd : in bits(3 downto 0);
+    -- Control signals
+    id_op : in bits(3 downto 0);
+    id_shift_type : in bits(1 downto 0);
+    id_shift_amt : in bits(4 downto 0);
+    id_alu_src : in bit;
+    id_mem_read : in bit;
+    id_mem_write : in bit;
+    id_mem_to_reg : in bit;
+    id_reg_write : in bit;
+    id_branch : in bit;
+    id_update_flags : in bit;
+    id_ls_byte : in bit;
+    id_ls_up : in bit;
+    id_cond_ok : in bit;
+    -- Outputs to EX stage
+    ex_pc_plus4 : out bits(31 downto 0);
+    ex_rd1 : out bits(31 downto 0);
+    ex_rd2 : out bits(31 downto 0);
+    ex_imm12_ext : out bits(31 downto 0);
+    ex_off13_ext : out bits(31 downto 0);
+    ex_branch_offset : out bits(31 downto 0);
+    ex_rn : out bits(3 downto 0);
+    ex_rm : out bits(3 downto 0);
+    ex_rd : out bits(3 downto 0);
+    ex_op : out bits(3 downto 0);
+    ex_shift_type : out bits(1 downto 0);
+    ex_shift_amt : out bits(4 downto 0);
+    ex_alu_src : out bit;
+    ex_mem_read : out bit;
+    ex_mem_write : out bit;
+    ex_mem_to_reg : out bit;
+    ex_reg_write : out bit;
+    ex_branch : out bit;
+    ex_update_flags : out bit;
+    ex_ls_byte : out bit;
+    ex_ls_up : out bit;
+    ex_cond_ok : out bit
+  );
+end entity;
+
+architecture rtl of ID_EX_Reg is
+  signal pc_plus4_reg : bits(31 downto 0);
+  signal rd1_reg : bits(31 downto 0);
+  signal rd2_reg : bits(31 downto 0);
+  signal imm12_ext_reg : bits(31 downto 0);
+  signal off13_ext_reg : bits(31 downto 0);
+  signal branch_offset_reg : bits(31 downto 0);
+  signal rn_reg : bits(3 downto 0);
+  signal rm_reg : bits(3 downto 0);
+  signal rd_reg : bits(3 downto 0);
+  signal op_reg : bits(3 downto 0);
+  signal shift_type_reg : bits(1 downto 0);
+  signal shift_amt_reg : bits(4 downto 0);
+  signal alu_src_reg : bit;
+  signal mem_read_reg : bit;
+  signal mem_write_reg : bit;
+  signal mem_to_reg_reg : bit;
+  signal reg_write_reg : bit;
+  signal branch_reg : bit;
+  signal update_flags_reg : bit;
+  signal ls_byte_reg : bit;
+  signal ls_up_reg : bit;
+  signal cond_ok_reg : bit;
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if reset = '1' or flush = '1' then
+        -- Insert bubble (NOP)
+        pc_plus4_reg <= x"00000000";
+        rd1_reg <= x"00000000";
+        rd2_reg <= x"00000000";
+        imm12_ext_reg <= x"00000000";
+        off13_ext_reg <= x"00000000";
+        branch_offset_reg <= x"00000000";
+        rn_reg <= x"0";
+        rm_reg <= x"0";
+        rd_reg <= x"0";
+        op_reg <= x"0";
+        shift_type_reg <= b"00";
+        shift_amt_reg <= b"00000";
+        alu_src_reg <= '0';
+        mem_read_reg <= '0';
+        mem_write_reg <= '0';
+        mem_to_reg_reg <= '0';
+        reg_write_reg <= '0';
+        branch_reg <= '0';
+        update_flags_reg <= '0';
+        ls_byte_reg <= '0';
+        ls_up_reg <= '0';
+        cond_ok_reg <= '0';
+      else
+        pc_plus4_reg <= id_pc_plus4;
+        rd1_reg <= id_rd1;
+        rd2_reg <= id_rd2;
+        imm12_ext_reg <= id_imm12_ext;
+        off13_ext_reg <= id_off13_ext;
+        branch_offset_reg <= id_branch_offset;
+        rn_reg <= id_rn;
+        rm_reg <= id_rm;
+        rd_reg <= id_rd;
+        op_reg <= id_op;
+        shift_type_reg <= id_shift_type;
+        shift_amt_reg <= id_shift_amt;
+        alu_src_reg <= id_alu_src;
+        mem_read_reg <= id_mem_read;
+        mem_write_reg <= id_mem_write;
+        mem_to_reg_reg <= id_mem_to_reg;
+        reg_write_reg <= id_reg_write;
+        branch_reg <= id_branch;
+        update_flags_reg <= id_update_flags;
+        ls_byte_reg <= id_ls_byte;
+        ls_up_reg <= id_ls_up;
+        cond_ok_reg <= id_cond_ok;
+      end if;
+    end if;
+  end process;
+
+  ex_pc_plus4 <= pc_plus4_reg;
+  ex_rd1 <= rd1_reg;
+  ex_rd2 <= rd2_reg;
+  ex_imm12_ext <= imm12_ext_reg;
+  ex_off13_ext <= off13_ext_reg;
+  ex_branch_offset <= branch_offset_reg;
+  ex_rn <= rn_reg;
+  ex_rm <= rm_reg;
+  ex_rd <= rd_reg;
+  ex_op <= op_reg;
+  ex_shift_type <= shift_type_reg;
+  ex_shift_amt <= shift_amt_reg;
+  ex_alu_src <= alu_src_reg;
+  ex_mem_read <= mem_read_reg;
+  ex_mem_write <= mem_write_reg;
+  ex_mem_to_reg <= mem_to_reg_reg;
+  ex_reg_write <= reg_write_reg;
+  ex_branch <= branch_reg;
+  ex_update_flags <= update_flags_reg;
+  ex_ls_byte <= ls_byte_reg;
+  ex_ls_up <= ls_up_reg;
+  ex_cond_ok <= cond_ok_reg;
+end architecture;

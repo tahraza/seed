@@ -1,0 +1,72 @@
+-- EX/MEM Pipeline Register
+-- Latches ALU result and memory control from Execute to Memory stage
+
+entity EX_MEM_Reg is
+  port(
+    clk : in bit;
+    reset : in bit;
+    -- Inputs from EX stage
+    ex_alu_result : in bits(31 downto 0);
+    ex_rd2 : in bits(31 downto 0);       -- Store data
+    ex_rd : in bits(3 downto 0);          -- Destination register
+    ex_mem_read : in bit;
+    ex_mem_write : in bit;
+    ex_mem_to_reg : in bit;
+    ex_reg_write : in bit;
+    ex_ls_byte : in bit;
+    -- Outputs to MEM stage
+    mem_alu_result : out bits(31 downto 0);
+    mem_rd2 : out bits(31 downto 0);
+    mem_rd : out bits(3 downto 0);
+    mem_mem_read : out bit;
+    mem_mem_write : out bit;
+    mem_mem_to_reg : out bit;
+    mem_reg_write : out bit;
+    mem_ls_byte : out bit
+  );
+end entity;
+
+architecture rtl of EX_MEM_Reg is
+  signal alu_result_reg : bits(31 downto 0);
+  signal rd2_reg : bits(31 downto 0);
+  signal rd_reg : bits(3 downto 0);
+  signal mem_read_reg : bit;
+  signal mem_write_reg : bit;
+  signal mem_to_reg_reg : bit;
+  signal reg_write_reg : bit;
+  signal ls_byte_reg : bit;
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        alu_result_reg <= x"00000000";
+        rd2_reg <= x"00000000";
+        rd_reg <= x"0";
+        mem_read_reg <= '0';
+        mem_write_reg <= '0';
+        mem_to_reg_reg <= '0';
+        reg_write_reg <= '0';
+        ls_byte_reg <= '0';
+      else
+        alu_result_reg <= ex_alu_result;
+        rd2_reg <= ex_rd2;
+        rd_reg <= ex_rd;
+        mem_read_reg <= ex_mem_read;
+        mem_write_reg <= ex_mem_write;
+        mem_to_reg_reg <= ex_mem_to_reg;
+        reg_write_reg <= ex_reg_write;
+        ls_byte_reg <= ex_ls_byte;
+      end if;
+    end if;
+  end process;
+
+  mem_alu_result <= alu_result_reg;
+  mem_rd2 <= rd2_reg;
+  mem_rd <= rd_reg;
+  mem_mem_read <= mem_read_reg;
+  mem_mem_write <= mem_write_reg;
+  mem_mem_to_reg <= mem_to_reg_reg;
+  mem_reg_write <= reg_write_reg;
+  mem_ls_byte <= ls_byte_reg;
+end architecture;
