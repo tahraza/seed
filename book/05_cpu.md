@@ -452,6 +452,81 @@ cargo run -p hdl_cli -- test hdl_lib/05_cpu/CPU.hdl
 
 ---
 
+## Aller Plus Loin : Le CPU Pipeline
+
+Le CPU single-cycle que nous avons construit est simple et pédagogique, mais les vrais processeurs utilisent le **pipeline** pour exécuter plusieurs instructions simultanément.
+
+### Le Concept du Pipeline
+
+Imaginez une chaîne de montage automobile :
+
+```
+┌─────────┬─────────┬─────────┬─────────┬─────────┐
+│ Châssis │ Moteur  │ Carros. │ Peinture│ Finition│
+│  Voiture 1        │  Voiture 2        │ Voit. 3 │
+└─────────┴─────────┴─────────┴─────────┴─────────┘
+```
+
+Chaque étape travaille sur une voiture différente en parallèle !
+
+### Les 5 Étapes du Pipeline
+
+```
+     Cycle 1   Cycle 2   Cycle 3   Cycle 4   Cycle 5
+     ─────────────────────────────────────────────────
+IF   │ Instr 1 │ Instr 2 │ Instr 3 │ Instr 4 │ Instr 5 │  Fetch
+ID   │         │ Instr 1 │ Instr 2 │ Instr 3 │ Instr 4 │  Decode
+EX   │         │         │ Instr 1 │ Instr 2 │ Instr 3 │  Execute
+MEM  │         │         │         │ Instr 1 │ Instr 2 │  Memory
+WB   │         │         │         │         │ Instr 1 │  Writeback
+```
+
+Après le remplissage initial (5 cycles), on complète **une instruction par cycle** !
+
+### Les Problèmes du Pipeline
+
+#### 1. Aléas de données (Data Hazards)
+
+```assembly
+ADD R1, R2, R3    ; Écrit dans R1
+ADD R4, R1, R5    ; Lit R1 (pas encore écrit!)
+```
+
+**Solution : Forwarding** — Transférer le résultat directement de l'ALU au lieu d'attendre le writeback.
+
+#### 2. Aléas de contrôle (Control Hazards)
+
+```assembly
+BEQ label         ; Branchement conditionnel
+ADD R1, R2, R3    ; Exécutée même si on branche?
+```
+
+**Solution : Flush** — Annuler les instructions dans le pipeline si le branchement est pris.
+
+### Les Composants du Pipeline
+
+| Composant | Rôle |
+|:----------|:-----|
+| IF/ID Register | Latch entre Fetch et Decode |
+| ID/EX Register | Latch entre Decode et Execute |
+| EX/MEM Register | Latch entre Execute et Memory |
+| MEM/WB Register | Latch entre Memory et Writeback |
+| HazardDetect | Détecte les aléas load-use |
+| ForwardUnit | Gère le forwarding des données |
+
+### Exercice Avancé : CPU Pipeline
+
+Pour les plus motivés, nous proposons un **Projet 6** :
+
+1. **IF_ID_Reg** : Registre avec stall/flush
+2. **HazardDetect** : Détection des aléas
+3. **ForwardUnit** : Forwarding des données
+4. **CPU_Pipeline** : CPU complet 5 étages
+
+Ces composants sont disponibles dans `hdl_lib/05_cpu/` et dans les exercices web du Projet 6.
+
+---
+
 ## Le Lien avec la Suite
 
 **Félicitations !** Vous venez de construire un ordinateur complet.

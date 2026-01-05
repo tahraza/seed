@@ -351,13 +351,81 @@ La section **C32** contient de nombreux exercices progressifs :
 
 ---
 
+## Les Structures (Structs)
+
+Le C32 supporte les structures (structs) pour regrouper plusieurs variables :
+
+### Définition d'une structure
+
+```c
+struct Point {
+    int x;
+    int y;
+};
+```
+
+### Utilisation
+
+```c
+struct Point p;     // Déclarer une variable de type struct
+p.x = 10;           // Accéder aux champs avec .
+p.y = 20;
+```
+
+### Pointeur vers structure
+
+```c
+struct Point *ptr = &p;
+ptr->x = 30;        // Accéder via pointeur avec ->
+ptr->y = 40;
+```
+
+### Exemple complet
+
+```c
+struct Point { int x; int y; };
+
+int distance_sq(struct Point *p) {
+    return p->x * p->x + p->y * p->y;
+}
+
+int main() {
+    struct Point p;
+    p.x = 3;
+    p.y = 4;
+    return distance_sq(&p);  // Retourne 25
+}
+```
+
+### Structures imbriquées
+
+```c
+struct Point { int x; int y; };
+struct Rectangle {
+    struct Point corner;
+    int width;
+    int height;
+};
+
+int main() {
+    struct Rectangle r;
+    r.corner.x = 0;
+    r.corner.y = 0;
+    r.width = 100;
+    r.height = 50;
+    return r.width * r.height;  // Retourne 5000
+}
+```
+
+---
+
 ## Limitations du C32
 
 Pour rester simple et pédagogique, le C32 a quelques limites :
 
 | Fonctionnalité | État |
 |:---------------|:-----|
-| `struct` | Non supporté |
+| `struct` | Supporté |
 | `float`, `double` | Non supporté |
 | `malloc`/`free` | Via OS uniquement |
 | Chaînes de caractères | Basique |
