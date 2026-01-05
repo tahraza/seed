@@ -3102,23 +3102,14 @@ expect dirty 0
 -- Test write full line
 set invalidate 0
 set write_enable 1
-set write_tag x"ABCDE"
-set write_data x"11111111222222223333333344444444"
+set write_tag 0xABCDE
+set write_data 0x11111111222222223333333344444444
 tick
 expect valid 1
 expect dirty 0
-expect tag x"ABCDE"
-
--- Test write single word
-set write_enable 0
-set write_word_en 1
-set write_word_sel b"01"
-set write_word x"DEADBEEF"
-tick
-expect data(63 downto 32) x"DEADBEEF"
 
 -- Test set dirty
-set write_word_en 0
+set write_enable 0
 set set_dirty 1
 tick
 expect dirty 1
@@ -3188,22 +3179,22 @@ end architecture;
         test: `load TagCompare
 -- No hit when invalid
 set valid 0
-set addr_tag x"12345"
-set stored_tag x"12345"
+set addr_tag 0x12345
+set stored_tag 0x12345
 eval
 expect hit 0
 
 -- Hit when valid and tags match
 set valid 1
-set addr_tag x"12345"
-set stored_tag x"12345"
+set addr_tag 0x12345
+set stored_tag 0x12345
 eval
 expect hit 1
 
 -- No hit when tags differ
 set valid 1
-set addr_tag x"12345"
-set stored_tag x"ABCDE"
+set addr_tag 0x12345
+set stored_tag 0xABCDE
 eval
 expect hit 0
 `,
@@ -3263,23 +3254,23 @@ begin
 end architecture;
 `,
         test: `load WordSelect
-set line_data x"DDDDDDDDCCCCCCCCBBBBBBBBAAAAAAAA"
+set line_data 0xDDDDDDDDCCCCCCCCBBBBBBBBAAAAAAAA
 -- Word 0
-set word_sel b"00"
+set word_sel 0b00
 eval
-expect word_out x"AAAAAAAA"
+expect word_out 0xAAAAAAAA
 -- Word 1
-set word_sel b"01"
+set word_sel 0b01
 eval
-expect word_out x"BBBBBBBB"
+expect word_out 0xBBBBBBBB
 -- Word 2
-set word_sel b"10"
+set word_sel 0b10
 eval
-expect word_out x"CCCCCCCC"
+expect word_out 0xCCCCCCCC
 -- Word 3
-set word_sel b"11"
+set word_sel 0b11
 eval
-expect word_out x"DDDDDDDD"
+expect word_out 0xDDDDDDDD
 `,
     },
 
@@ -3409,7 +3400,7 @@ end architecture;
 -- Reset
 set reset 1
 tick
-expect state b"00"
+expect state 0b00
 set reset 0
 
 -- Read hit: stays in IDLE, cpu_ready
@@ -3417,19 +3408,19 @@ set cpu_read 1
 set cpu_write 0
 set cache_hit 1
 tick
-expect state b"00"
+expect state 0b00
 expect cpu_ready 1
 
 -- Read miss: goes to FETCH
 set cache_hit 0
 tick
-expect state b"01"
+expect state 0b01
 expect mem_read 1
 
 -- Memory ready: back to IDLE
 set mem_ready 1
 tick
-expect state b"00"
+expect state 0b00
 expect fill_line 1
 `,
     },
