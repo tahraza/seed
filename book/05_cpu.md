@@ -34,6 +34,95 @@ Ce chapitre est le **point culminant** de tout le travail matériel. Après ce c
 
 ---
 
+## Deux Implémentations du CPU
+
+Le projet Codex propose **deux implémentations** du CPU A32, chacune avec un objectif pédagogique différent :
+
+### CPU Mono-cycle (Simulateur Rust)
+
+Le **simulateur Rust** (`a32_core`) implémente un CPU **mono-cycle** :
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     CPU MONO-CYCLE                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   Cycle 1        Cycle 2        Cycle 3        Cycle 4          │
+│   ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐     │
+│   │ Instr 1 │    │ Instr 2 │    │ Instr 3 │    │ Instr 4 │     │
+│   │ F D E M W│    │ F D E M W│    │ F D E M W│    │ F D E M W│     │
+│   └─────────┘    └─────────┘    └─────────┘    └─────────┘     │
+│                                                                  │
+│   Chaque instruction traverse TOUTES les étapes en UN cycle     │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Utilisé par :**
+- Le **CPU Visualizer** (interface web)
+- Le **runner** (`a32_runner`)
+- L'**IDE web** (exécution des programmes)
+- Les **tests** C32 et A32
+
+**Avantages :** Simple à comprendre, facile à déboguer, comportement prévisible.
+
+### CPU Pipeline (HDL)
+
+Le **CPU en HDL** (`hdl_lib/05_cpu/CPU_Pipeline.hdl`) implémente un vrai **pipeline 5 étages** :
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     CPU PIPELINE 5 ÉTAGES                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   Cycle 1   Cycle 2   Cycle 3   Cycle 4   Cycle 5   Cycle 6     │
+│   ┌───┐                                                          │
+│   │ F │ ─► ID ─► EX ─► MEM ─► WB     Instr 1                    │
+│   └───┘                                                          │
+│        ┌───┐                                                     │
+│        │ F │ ─► ID ─► EX ─► MEM ─► WB     Instr 2               │
+│        └───┘                                                     │
+│             ┌───┐                                                │
+│             │ F │ ─► ID ─► EX ─► MEM ─► WB     Instr 3          │
+│             └───┘                                                │
+│                                                                  │
+│   Jusqu'à 5 instructions en vol simultanément !                  │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Composants HDL :**
+
+| Fichier | Rôle |
+|:--------|:-----|
+| `IF_ID_Reg.hdl` | Registre pipeline IF→ID |
+| `ID_EX_Reg.hdl` | Registre pipeline ID→EX |
+| `EX_MEM_Reg.hdl` | Registre pipeline EX→MEM |
+| `MEM_WB_Reg.hdl` | Registre pipeline MEM→WB |
+| `HazardDetect.hdl` | Détection des hazards (stall) |
+| `ForwardUnit.hdl` | Bypass/forwarding des données |
+| `CPU_Pipeline.hdl` | CPU complet assemblé |
+
+**Utilisé par :**
+- Les **exercices HDL** (apprentissage hardware)
+- Le **simulateur HDL** (`hdl_cli`)
+
+**Avantages :** Réaliste, montre les vrais défis du design CPU (hazards, forwarding, stalls).
+
+### Pourquoi deux implémentations ?
+
+| Aspect | Mono-cycle (Rust) | Pipeline (HDL) |
+|:-------|:------------------|:---------------|
+| **Objectif** | Exécuter des programmes | Apprendre le hardware |
+| **Complexité** | Simple | Réaliste |
+| **Performance** | 1 instr/cycle | Jusqu'à 1 instr/cycle (avec hazards) |
+| **Hazards** | Aucun | Gérés (stall + forward) |
+| **Utilisation** | IDE, tests, visualizer | Exercices HDL |
+
+> **Note :** Le CPU Visualizer affiche les étapes (Fetch, Decode, Execute, Memory, Writeback) de manière **pédagogique**, mais l'exécution sous-jacente est mono-cycle. Pour voir un vrai pipeline avec hazards et forwarding, utilisez le simulateur HDL avec `CPU_Pipeline.hdl`.
+
+---
+
 ## Qu'est-ce qu'un CPU ?
 
 ### Le chef d'orchestre
@@ -1125,6 +1214,98 @@ end architecture;
 C'est le grand défi ! Assembler tous les composants en un CPU pipeliné complet.
 
 **Conseil** : L'implémentation de référence est dans `hdl_lib/05_cpu/CPU_Pipeline.hdl` (~450 lignes).
+
+---
+
+### Comment Tester le CPU Pipeline HDL
+
+Pour tester le CPU Pipeline en HDL, créez un script de test `.tst` :
+
+**Fichier `CPU_Pipeline_test.tst` :**
+```
+-- Test du CPU Pipeline
+load CPU_Pipeline.hdl;
+
+-- Charger les composants requis
+load IF_ID_Reg.hdl;
+load ID_EX_Reg.hdl;
+load EX_MEM_Reg.hdl;
+load MEM_WB_Reg.hdl;
+load HazardDetect.hdl;
+load ForwardUnit.hdl;
+load Decoder.hdl;
+load Control.hdl;
+load CondCheck.hdl;
+load RegFile16.hdl;
+load ALU32.hdl;
+load Shifter32.hdl;
+load Add32.hdl;
+load PC.hdl;
+load Mux32.hdl;
+
+-- Initialiser
+set reset 1;
+tick; tock;
+set reset 0;
+
+-- Charger une instruction ADD R1, R0, #5 en mémoire
+set instr_data 0x22100005;  -- ADD R1, R0, #5
+
+-- Exécuter plusieurs cycles (5 cycles pour traverser le pipeline)
+tick; tock;  -- IF
+tick; tock;  -- ID
+tick; tock;  -- EX
+tick; tock;  -- MEM
+tick; tock;  -- WB
+
+-- Vérifier l'état
+expect halted 0;
+```
+
+**Exécuter le test :**
+```bash
+cargo run -p hdl_cli -- CPU_Pipeline_test.tst
+```
+
+**Structure des fichiers HDL pour le pipeline :**
+
+```
+hdl_lib/05_cpu/
+├── CPU_Pipeline.hdl      # CPU complet assemblé
+├── IF_ID_Reg.hdl         # Registre pipeline IF→ID
+├── ID_EX_Reg.hdl         # Registre pipeline ID→EX
+├── EX_MEM_Reg.hdl        # Registre pipeline EX→MEM
+├── MEM_WB_Reg.hdl        # Registre pipeline MEM→WB
+├── HazardDetect.hdl      # Détection load-use hazards
+├── ForwardUnit.hdl       # Bypass/forwarding
+├── Decoder.hdl           # Décodage instruction
+├── Control.hdl           # Signaux de contrôle
+└── CondCheck.hdl         # Vérification conditions
+```
+
+**Observer le pipeline en action :**
+
+Pour voir les hazards et le forwarding, testez avec des instructions dépendantes :
+
+```
+-- Test de forwarding (EX→EX)
+-- ADD R1, R0, #5     ; R1 = 5
+-- ADD R2, R1, #3     ; R2 = R1 + 3 = 8 (forward depuis EX)
+set instr_data 0x22100005;  tick; tock;
+set instr_data 0x22210003;  tick; tock;
+-- Le ForwardUnit détecte que R1 est produit par l'instruction précédente
+-- et bypass la valeur directement sans attendre le writeback
+```
+
+```
+-- Test de stall (load-use hazard)
+-- LDR R1, [R0]       ; R1 = mem[R0]
+-- ADD R2, R1, #3     ; R2 = R1 + 3 (doit attendre le load)
+set instr_data 0x51100000;  tick; tock;
+set instr_data 0x22210003;  tick; tock;
+-- Le HazardDetect insère un stall car le LDR n'a pas encore
+-- la valeur disponible au moment où ADD en a besoin
+```
 
 ---
 

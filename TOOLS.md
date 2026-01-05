@@ -46,6 +46,125 @@ possibles. Il est organise en pipeline top-down, puis detaille chaque outil.
 3) Choisir une demo ou charger un fichier .asm/.a32.
 4) Utiliser Step/Play pour voir l'execution en temps reel.
 
+### 1.8 Architectures CPU disponibles
+
+Le projet propose **deux implementations** du CPU A32 :
+
+| Implementation | Type | Utilisation |
+|:---------------|:-----|:------------|
+| **Mono-cycle (Rust)** | `a32_core/src/sim.rs` | CPU Visualizer, a32_runner, IDE web, tests |
+| **Pipeline (HDL)** | `hdl_lib/05_cpu/CPU_Pipeline.hdl` | Exercices HDL, hdl_cli |
+
+**CPU Mono-cycle** (simulateur Rust) :
+- Chaque instruction s'execute entierement en un seul "step"
+- Pas de hazards, pas de forwarding
+- Simple, comportement previsible
+- Utilise par tous les outils d'execution (runner, visualizer, web)
+
+**CPU Pipeline 5 etages** (HDL) :
+- Vrai pipeline avec registres IF/ID, ID/EX, EX/MEM, MEM/WB
+- Detection de hazards (HazardDetect.hdl)
+- Forwarding des donnees (ForwardUnit.hdl)
+- Realiste, montre les defis du design CPU
+- Utilise pour l'apprentissage hardware via hdl_cli
+
+> **Note :** Le CPU Visualizer affiche les etapes (Fetch, Decode, Execute, Memory, Writeback) de maniere pedagogique, mais l'execution sous-jacente est mono-cycle.
+
+### 1.9 Utiliser le CPU Pipeline HDL
+
+Le CPU Pipeline HDL (`hdl_lib/05_cpu/CPU_Pipeline.hdl`) est un vrai CPU 5 etages avec hazard detection et forwarding. Voici comment l'utiliser :
+
+**Etape 1 : Creer un script de test**
+
+Creer un fichier `test_pipeline.tst` :
+```
+-- Charger le CPU Pipeline et toutes ses dependances
+load CPU_Pipeline hdl_lib/05_cpu/CPU_Pipeline.hdl
+     hdl_lib/05_cpu/IF_ID_Reg.hdl
+     hdl_lib/05_cpu/ID_EX_Reg.hdl
+     hdl_lib/05_cpu/EX_MEM_Reg.hdl
+     hdl_lib/05_cpu/MEM_WB_Reg.hdl
+     hdl_lib/05_cpu/HazardDetect.hdl
+     hdl_lib/05_cpu/ForwardUnit.hdl
+     hdl_lib/05_cpu/Decoder.hdl
+     hdl_lib/05_cpu/Control.hdl
+     hdl_lib/05_cpu/CondCheck.hdl
+     hdl_lib/04_seq/RegFile16.hdl
+     hdl_lib/03_arith/ALU32.hdl
+     hdl_lib/03_arith/Shifter32.hdl
+     hdl_lib/03_arith/Add32.hdl
+     hdl_lib/04_seq/PC.hdl
+     hdl_lib/02_multibit/Mux32.hdl;
+
+-- Reset
+set reset 1;
+step;
+set reset 0;
+
+-- Simuler une instruction (fournir via instr_data)
+set instr_data 0xE2100005;   -- ADD R1, R0, #5
+step;                         -- IF: fetch
+step;                         -- ID: decode
+step;                         -- EX: execute
+step;                         -- MEM: memory
+step;                         -- WB: writeback
+
+-- Verifier que le CPU n'est pas arrete
+expect halted 0;
+```
+
+**Etape 2 : Executer le test**
+
+```bash
+cargo run -p hdl_cli -- test_pipeline.tst
+```
+
+**Etape 3 : Observer les signaux**
+
+Ajouter des `output` pour voir les signaux internes :
+```
+output instr_addr;    -- Adresse instruction (PC)
+output mem_addr;      -- Adresse memoire
+output mem_read;      -- Signal lecture memoire
+output mem_write;     -- Signal ecriture memoire
+output halted;        -- CPU arrete?
+```
+
+**Composants HDL du Pipeline :**
+
+| Fichier | Role |
+|:--------|:-----|
+| `CPU_Pipeline.hdl` | Top-level : assemble tous les composants |
+| `IF_ID_Reg.hdl` | Registre pipeline IF→ID (instruction, PC+4) |
+| `ID_EX_Reg.hdl` | Registre pipeline ID→EX (registres, immediats, controle) |
+| `EX_MEM_Reg.hdl` | Registre pipeline EX→MEM (resultat ALU, donnees) |
+| `MEM_WB_Reg.hdl` | Registre pipeline MEM→WB (resultat final) |
+| `HazardDetect.hdl` | Detecte les load-use hazards, genere stall |
+| `ForwardUnit.hdl` | Detecte les dependances, selectionne le forwarding |
+
+**Exemple de test avec forwarding :**
+
+```
+-- Deux instructions dependantes (R1 produit puis consomme)
+-- ADD R1, R0, #5    ; R1 = 5
+-- ADD R2, R1, #3    ; R2 = R1 + 3 = 8 (forwarding EX→EX)
+set instr_data 0xE2100005; step;  -- ADD R1, R0, #5 entre dans IF
+set instr_data 0xE2210003; step;  -- ADD R2, R1, #3 entre dans IF
+                                   -- ForwardUnit bypass R1 de EX vers EX
+```
+
+**Exemple de test avec stall (load-use hazard) :**
+
+```
+-- LDR suivi d'une instruction qui utilise le resultat
+-- LDR R1, [R0]      ; R1 = mem[R0]
+-- ADD R2, R1, #3    ; R2 = R1 + 3 (stall necessaire)
+set instr_data 0xE5100000; step;  -- LDR R1, [R0]
+set instr_data 0xE2210003; step;  -- ADD R2, R1, #3
+                                   -- HazardDetect insere un stall
+step;                              -- Cycle supplementaire (stall)
+```
+
 ## 2. Outils CLI (mode d'emploi + explication exhaustive)
 
 ### 2.1 hdl_cli

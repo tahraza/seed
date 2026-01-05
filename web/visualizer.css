@@ -194,6 +194,23 @@ body {
     gap: 0.5rem;
 }
 
+.cpu-diagram h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.cpu-type-badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    background: var(--accent-blue);
+    color: var(--bg-dark);
+    border-radius: 3px;
+    font-weight: normal;
+    cursor: help;
+}
+
 .cpu-stage {
     background: var(--bg-component);
     border-radius: 6px;

@@ -13,8 +13,8 @@
             <a href="index.html" class="back-link">← Retour IDE</a>
             <h1>CPU Visualizer</h1>
             <div class="header-controls">
-                <input type="file" id="file-input" accept=".a32b" style="display: none;">
-                <button class="btn" id="btn-load">Charger .a32b</button>
+                <input type="file" id="file-input" accept=".asm,.a32b" style="display: none;">
+                <button class="btn" id="btn-load">Charger fichier</button>
             </div>
         </header>
 
@@ -22,7 +22,7 @@
         <main class="viz-main">
             <!-- Left: CPU Diagram -->
             <section class="cpu-diagram">
-                <h2>Architecture CPU</h2>
+                <h2>Architecture CPU <span class="cpu-type-badge" title="Le simulateur utilise une exécution mono-cycle. Pour le vrai pipeline HDL, voir hdl_lib/05_cpu/CPU_Pipeline.hdl">Mono-cycle</span></h2>
 
                 <!-- Fetch Stage -->
                 <div class="cpu-stage" id="stage-fetch">
@@ -154,6 +154,12 @@
                 </div>
             </section>
 
+            <!-- Center-Right: Source Code -->
+            <section class="source-panel" id="source-panel">
+                <h2>Code Source</h2>
+                <pre class="source-code" id="source-code">; Choisissez une demo ou chargez un fichier .asm</pre>
+            </section>
+
             <!-- Right: Memory View -->
             <section class="memory-panel">
                 <h2>Mémoire</h2>
@@ -170,6 +176,23 @@
                 </div>
 
                 <h3>Cache L1</h3>
+                <div class="cache-stats-bar">
+                    <div class="cache-stat">
+                        <span class="cache-stat-label">Hits:</span>
+                        <span class="cache-stat-value" id="cache-hits-display">0</span>
+                    </div>
+                    <div class="cache-stat">
+                        <span class="cache-stat-label">Misses:</span>
+                        <span class="cache-stat-value" id="cache-misses-display">0</span>
+                    </div>
+                    <div class="cache-stat">
+                        <span class="cache-stat-label">Taux:</span>
+                        <span class="cache-stat-value" id="cache-rate-display">-</span>
+                    </div>
+                    <div class="cache-stat last-access" id="cache-last-access">
+                        <span class="cache-indicator" id="cache-indicator">-</span>
+                    </div>
+                </div>
                 <div class="cache-view" id="cache-view">
                     <div class="cache-header">
                         <span>Ligne</span>
