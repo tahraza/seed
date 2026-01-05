@@ -9,7 +9,10 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 hdl_core = { path = "../hdl_core" }
 a32_core = { path = "../a32_core" }
+a32_asm = { path = "../a32_asm" }
+c32_core = { path = "../c32_core" }
 wasm-bindgen = { version = "0.2", optional = true }
+serde-json-wasm = { version = "1.0", optional = true }
 
 [features]
-wasm = ["wasm-bindgen"]
+wasm = ["wasm-bindgen", "serde-json-wasm"]

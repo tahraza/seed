@@ -298,7 +298,9 @@ impl Codegen {
         writeln!(self.text, "  LDR R11, [SP]").unwrap();
         writeln!(self.text, "  LDR LR, [SP, #4]").unwrap();
         writeln!(self.text, "  ADD SP, SP, #8").unwrap();
-        writeln!(self.text, "  MOV PC, LR\n").unwrap();
+        writeln!(self.text, "  MOV PC, LR").unwrap();
+        // Flush literal pool after each function to avoid overflow
+        writeln!(self.text, "  .ltorg\n").unwrap();
         Ok(())
     }
 

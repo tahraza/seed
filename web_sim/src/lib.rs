@@ -3,7 +3,7 @@ use hdl_core::elab::elaborate;
 use hdl_core::parser::parse_str;
 use hdl_core::sim::Simulator;
 use hdl_core::value::BitVec;
-use a32_core::{Machine, SimConfig, StepOutcome, SCREEN_WIDTH, SCREEN_HEIGHT};
+use a32_core::{Machine, Reg, SimConfig, StepOutcome, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 pub struct HdlSession {
     sim: Option<Simulator>,
@@ -80,7 +80,7 @@ impl HdlSession {
 
 pub struct A32Session {
     machine: Option<Machine>,
-    program: Option<Vec<u8>>,
+    pub program: Option<Vec<u8>>,
     config: SimConfig,
 }
 
@@ -182,6 +182,14 @@ impl A32Session {
         let machine = self.machine.as_ref().ok_or("program not loaded")?;
         Ok(machine.get_key())
     }
+
+    /// Get register value by index (0-15)
+    pub fn reg(&self, index: u32) -> Result<u32, String> {
+        let machine = self.machine.as_ref().ok_or("program not loaded")?;
+        let reg = Reg::from_u8(index as u8)
+            .ok_or_else(|| format!("invalid register index: {}", index))?;
+        Ok(machine.get_reg(reg))
+    }
 }
 
 fn format_outcome(outcome: StepOutcome) -> String {
@@ -229,6 +237,10 @@ fn format_value(bits: &BitVec) -> String {
 #[cfg(feature = "wasm")]
 mod wasm_api {
     use super::{A32Session, HdlSession};
+    use a32_asm::assemble_a32b;
+    use c32_core::{compile_to_a32, parse_program};
+    use hdl_core::run_test;
+    use std::collections::HashMap;
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
@@ -271,6 +283,37 @@ mod wasm_api {
 
         pub fn tock(&mut self) -> Result<(), JsValue> {
             self.inner.tock().map_err(js_err)
+        }
+
+        /// Run a test script against HDL source
+        /// Returns JSON: { passed: bool, total: number, passed_checks: number, errors: string[] }
+        pub fn run_test(
+            &self,
+            hdl_source: &str,
+            test_script: &str,
+            library_json: &str,
+        ) -> Result<String, JsValue> {
+            // Parse library from JSON (map of chip name -> HDL source)
+            let library: HashMap<String, String> = if library_json.is_empty() {
+                HashMap::new()
+            } else {
+                serde_json_wasm::from_str(library_json)
+                    .map_err(|e| js_err(format!("invalid library JSON: {}", e)))?
+            };
+
+            let result = run_test(hdl_source, test_script, &library)
+                .map_err(|e| js_err(e.to_string()))?;
+
+            // Return as JSON
+            let json = format!(
+                r#"{{"passed":{},"total":{},"passed_checks":{},"errors":{}}}"#,
+                result.passed,
+                result.total_checks,
+                result.passed_checks,
+                serde_json_wasm::to_string(&result.errors)
+                    .unwrap_or_else(|_| "[]".to_string())
+            );
+            Ok(json)
         }
     }
 
@@ -348,6 +391,43 @@ mod wasm_api {
         /// Get current keyboard key
         pub fn get_key(&self) -> Result<u32, JsValue> {
             self.inner.get_key().map_err(js_err)
+        }
+
+        /// Assemble source code and load the resulting binary
+        pub fn assemble(&mut self, source: &str) -> Result<(), JsValue> {
+            let bytes = assemble_a32b(source).map_err(|e| js_err(e.to_string()))?;
+            self.inner.load_a32b(&bytes, 0, false).map_err(js_err)
+        }
+
+        /// Compile C source code and load the resulting binary
+        pub fn compile(&mut self, source: &str) -> Result<(), JsValue> {
+            // Parse C to AST
+            let program = parse_program(source).map_err(|e| js_err(e.to_string()))?;
+            // Compile AST to assembly
+            let asm = compile_to_a32(&program).map_err(|e| js_err(e.to_string()))?;
+            // Assemble to binary
+            let bytes = assemble_a32b(&asm).map_err(|e| js_err(e.to_string()))?;
+            // Load into machine
+            self.inner.load_a32b(&bytes, 0, false).map_err(js_err)
+        }
+
+        /// Compile C source code and return the generated assembly
+        pub fn compile_to_asm(&self, source: &str) -> Result<String, JsValue> {
+            let program = parse_program(source).map_err(|e| js_err(e.to_string()))?;
+            compile_to_a32(&program).map_err(|e| js_err(e.to_string()))
+        }
+
+        /// Get register value by index (0-15)
+        pub fn reg(&self, index: u32) -> Result<u32, JsValue> {
+            self.inner.reg(index).map_err(js_err)
+        }
+
+        /// Get the loaded binary (for display purposes)
+        pub fn get_binary(&self) -> Result<Vec<u8>, JsValue> {
+            self.inner
+                .program
+                .clone()
+                .ok_or_else(|| js_err("no program loaded".to_string()))
         }
     }
 

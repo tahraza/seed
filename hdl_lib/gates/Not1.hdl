@@ -1,3 +1,6 @@
+-- NOT gate built from NAND
+-- Not(a) = Nand(a, a)
+
 entity Not1 is
   port(
     a : in bit;
@@ -6,7 +9,7 @@ entity Not1 is
 end entity;
 
 architecture rtl of Not1 is
-  component Nand2
+  component nand2
     port(
       a : in bit;
       b : in bit;
@@ -14,5 +17,5 @@ architecture rtl of Not1 is
     );
   end component;
 begin
-  u_nand: Nand2 port map (a => a, b => a, y => y);
+  u_nand: nand2 port map (a => a, b => a, y => y);
 end architecture;

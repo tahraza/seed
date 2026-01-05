@@ -85,6 +85,17 @@ impl Simulator {
             let mut ram_idx = 0usize;
             for prim in primitives {
                 match prim {
+                    PrimitiveNet::Nand2 { a, b, y } => {
+                        let av = self.eval_expr(&a)?;
+                        let bv = self.eval_expr(&b)?;
+                        let value = Value {
+                            bits: BitVec::and(&av.bits, &bv.bits).not(),
+                            kind: ValueKind::Bitwise,
+                        };
+                        if self.apply_target(&y, value)? {
+                            changed = true;
+                        }
+                    }
                     PrimitiveNet::Not1 { a, y } => {
                         let v = self.eval_expr(&a)?;
                         let value = Value {
@@ -183,6 +194,9 @@ impl Simulator {
     }
 
     pub fn tick(&mut self) -> Result<(), Error> {
+        // First evaluate combinational logic to get stable inputs
+        self.eval_comb()?;
+
         let mut updates: HashMap<usize, BitVec> = HashMap::new();
         for proc in &self.netlist.processes {
             let mut local: HashMap<usize, BitVec> = HashMap::new();
@@ -194,44 +208,39 @@ impl Simulator {
         let mut ram_idx = 0usize;
         for prim in &self.netlist.primitives {
             match prim {
-                PrimitiveNet::Dff { clk, d, q } => {
-                    let clk_v = self.eval_expr(clk)?;
-                    if self.value_is_true(&clk_v) {
-                        let val = self.eval_expr(d)?;
-                        self.apply_to_updates(q, val, &mut updates)?;
-                    }
+                PrimitiveNet::Dff { d, q, .. } => {
+                    // tick() represents the rising clock edge - always latch
+                    let val = self.eval_expr(d)?;
+                    self.apply_to_updates(q, val, &mut updates)?;
                 }
                 PrimitiveNet::Ram {
-                    clk,
                     we,
                     addr,
                     din,
                     addr_width,
                     ..
                 } => {
-                    let clk_v = self.eval_expr(clk)?;
-                    if self.value_is_true(&clk_v) {
-                        let we_v = self.eval_expr(we)?;
-                        if self.value_is_true(&we_v) {
-                            let addr_v = self.eval_expr(addr)?;
-                            let addr_bits = addr_v.bits.resize_zero(*addr_width);
-                            let idx = addr_bits.to_u64_trunc() as usize;
-                            let din_v = self.eval_expr(din)?;
-                            let data_width = self
-                                .ram_state
-                                .get(ram_idx)
-                                .ok_or_else(|| Error::new("ram state missing"))?
-                                .data_width;
-                            let data = Self::value_to_width(&din_v, data_width);
-                            let state = self
-                                .ram_state
-                                .get_mut(ram_idx)
-                                .ok_or_else(|| Error::new("ram state missing"))?;
-                            if idx >= state.mem.len() {
-                                return Err(Error::new("ram address out of range"));
-                            }
-                            state.mem[idx] = data;
+                    // tick() represents the rising clock edge - check write enable only
+                    let we_v = self.eval_expr(we)?;
+                    if self.value_is_true(&we_v) {
+                        let addr_v = self.eval_expr(addr)?;
+                        let addr_bits = addr_v.bits.resize_zero(*addr_width);
+                        let idx = addr_bits.to_u64_trunc() as usize;
+                        let din_v = self.eval_expr(din)?;
+                        let data_width = self
+                            .ram_state
+                            .get(ram_idx)
+                            .ok_or_else(|| Error::new("ram state missing"))?
+                            .data_width;
+                        let data = Self::value_to_width(&din_v, data_width);
+                        let state = self
+                            .ram_state
+                            .get_mut(ram_idx)
+                            .ok_or_else(|| Error::new("ram state missing"))?;
+                        if idx >= state.mem.len() {
+                            return Err(Error::new("ram address out of range"));
                         }
+                        state.mem[idx] = data;
                     }
                     ram_idx += 1;
                 }

@@ -71,6 +71,7 @@ pub struct ProcessNet {
 
 #[derive(Clone, Debug)]
 pub enum PrimitiveNet {
+    Nand2 { a: ExprRef, b: ExprRef, y: TargetRef },
     Not1 { a: ExprRef, y: TargetRef },
     And2 { a: ExprRef, b: ExprRef, y: TargetRef },
     Or2 { a: ExprRef, b: ExprRef, y: TargetRef },
@@ -202,6 +203,9 @@ impl Library {
             }
         }
 
+        // Track signals with indexed output assignments to avoid multiple driver errors
+        let mut indexed_out_sigs: HashSet<usize> = HashSet::new();
+
         for stmt in &arch.stmts {
             match stmt {
                 ConcurrentStmt::Assign(a) => {
@@ -221,7 +225,7 @@ impl Library {
                     netlist.processes.push(proc);
                 }
                 ConcurrentStmt::Instance(i) => {
-                    self.elaborate_instance(i, inst_prefix, &mapping, netlist, drivers, &in_ports)?;
+                    self.elaborate_instance(i, inst_prefix, &mapping, netlist, drivers, &in_ports, &mut indexed_out_sigs)?;
                 }
             }
         }
@@ -236,6 +240,7 @@ impl Library {
         netlist: &mut Netlist,
         drivers: &mut HashMap<usize, usize>,
         in_ports: &HashSet<usize>,
+        indexed_out_sigs: &mut HashSet<usize>,
     ) -> Result<(), Error> {
         if !self.entities.contains_key(&inst.entity) {
             let lower = inst.entity.to_ascii_lowercase();
@@ -298,7 +303,7 @@ impl Library {
                 }
                 Direction::Out => {
                     let target_ast = match &assoc.expr {
-                        Expr::Target(t) if t.sel.is_none() => t,
+                        Expr::Target(t) => t,
                         _ => {
                             return Err(Error::new(format!(
                                 "out port {} must map to a signal",
@@ -308,14 +313,45 @@ impl Library {
                     };
                     let target_ref = convert_target(target_ast, parent_map)?;
                     let port_width = type_width(&port.ty);
-                    let target_width = netlist.signals[target_ref.signal].width;
+                    // For indexed targets, check the selection width, not the full signal width
+                    let target_width = if let Some(ref sel) = target_ref.sel {
+                        match sel {
+                            Selector::Index(_) => 1,
+                            Selector::Range { msb, lsb, .. } => (msb - lsb).unsigned_abs() as usize + 1,
+                        }
+                    } else {
+                        netlist.signals[target_ref.signal].width
+                    };
                     if target_width != port_width {
                         return Err(Error::new(format!(
-                            "port width mismatch for {}",
-                            port.name
+                            "port width mismatch for {} (expected {}, got {})",
+                            port.name, port_width, target_width
                         )));
                     }
-                    mapping.insert(port.name.clone(), target_ref.signal);
+
+                    // If output target has a selection (e.g., y(0)), create an intermediate signal
+                    // and add an assignment to propagate the output to the correct bits
+                    if target_ref.sel.is_some() {
+                        // Create intermediate signal for the child's output port
+                        let inter_name = scoped(Some(&inst_name), &format!("{}_out", port.name));
+                        let inter_id = define_signal(netlist, &inter_name, &port.ty, None)?;
+                        mapping.insert(port.name.clone(), inter_id);
+
+                        // Add assignment: parent_target = intermediate_signal
+                        let inter_target = TargetRef { signal: inter_id, sel: None };
+                        netlist.assigns.push(AssignNet {
+                            target: target_ref.clone(),
+                            expr: ExprRef::Target(inter_target),
+                        });
+                        // Track this signal for indexed output - only register once per signal
+                        if !indexed_out_sigs.contains(&target_ref.signal) {
+                            indexed_out_sigs.insert(target_ref.signal);
+                            let target = TargetRef { signal: target_ref.signal, sel: None };
+                            register_driver(&target, in_ports, drivers)?;
+                        }
+                    } else {
+                        mapping.insert(port.name.clone(), target_ref.signal);
+                    }
                 }
             }
         }
@@ -626,7 +662,7 @@ fn register_driver(
 }
 
 fn is_primitive_name(name: &str) -> bool {
-    matches!(name, "not1" | "and2" | "or2" | "xor2" | "mux2" | "dff" | "ram")
+    matches!(name, "nand2" | "not1" | "and2" | "or2" | "xor2" | "mux2" | "dff" | "ram")
 }
 
 fn ensure_exact_ports(assoc_map: &HashMap<String, &Assoc>, required: &[&str]) -> Result<(), Error> {
@@ -669,6 +705,23 @@ fn elaborate_primitive(
     }
 
     match kind {
+        "nand2" => {
+            ensure_exact_ports(&assoc_map, &["a", "b", "y"])?;
+            let a_expr = &assoc_map["a"].expr;
+            let b_expr = &assoc_map["b"].expr;
+            let y_target = assoc_target_no_sel(assoc_map["y"])?;
+            let a_w = expr_width(a_expr, parent_map, netlist)?;
+            let b_w = expr_width(b_expr, parent_map, netlist)?;
+            let y_w = target_width(y_target, parent_map, netlist)?;
+            if a_w != b_w || a_w != y_w {
+                return Err(Error::new("nand2 width mismatch"));
+            }
+            let a = convert_expr(a_expr, parent_map)?;
+            let b = convert_expr(b_expr, parent_map)?;
+            let y = convert_target(y_target, parent_map)?;
+            register_driver(&y, in_ports, drivers)?;
+            netlist.primitives.push(PrimitiveNet::Nand2 { a, b, y });
+        }
         "not1" => {
             ensure_exact_ports(&assoc_map, &["a", "y"])?;
             let a_expr = &assoc_map["a"].expr;
