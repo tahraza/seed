@@ -1,200 +1,833 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>nand2tetris A32 + HDL</title>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <div class="bg"></div>
-    <div class="app">
-      <header class="hero">
-        <div>
-          <div class="eyebrow">nand2tetris-codex</div>
-          <h1>HDL + A32 Lab</h1>
-          <p>Simulate HDL designs and run A32-Lite binaries right in the browser.</p>
-        </div>
-        <div class="hero-actions">
-          <label class="field">
-            <span>Top entity</span>
-            <input id="top-entity" type="text" value="HalfAdder" />
-          </label>
-          <label class="field">
-            <span>Clock</span>
-            <input id="clock-name" type="text" value="clk" />
-          </label>
-          <button id="btn-load" class="btn primary">Load</button>
-        </div>
-      </header>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nand2tetris-codex - IDE Pédagogique</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1 class="logo">🎓 nand2tetris-codex</h1>
+            </div>
+            <nav class="header-nav">
+                <button class="nav-btn" data-mode="hdl">
+                    <span class="nav-icon">⚡</span>
+                    <span class="nav-label">HDL</span>
+                </button>
+                <button class="nav-btn active" data-mode="asm">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-label">ASM</span>
+                </button>
+                <button class="nav-btn" data-mode="c">
+                    <span class="nav-icon">🔧</span>
+                    <span class="nav-label">C</span>
+                </button>
+            </nav>
+            <div class="header-right">
+                <button class="icon-btn" id="btn-save-progress" title="Sauvegarder la progression">💾</button>
+                <button class="icon-btn" id="btn-load-progress" title="Restaurer la progression">📂</button>
+                <button class="icon-btn" id="btn-reset-progress" title="Réinitialiser la progression">🗑️</button>
+                <button class="icon-btn" id="btn-help" title="Aide">❓</button>
+                <button class="icon-btn" id="btn-theme" title="Thème">🌙</button>
+                <input type="file" id="progress-file-input" accept=".json" style="display: none;">
+            </div>
+        </header>
 
-      <main class="grid">
-        <section class="panel">
-          <h2>HDL Sources</h2>
-          <div class="source-block">
-            <div class="source-head">
-              <span>Source 1</span>
-              <span class="hint">HDL</span>
-            </div>
-            <textarea class="source" id="source-1"></textarea>
-          </div>
-          <div class="source-block">
-            <div class="source-head">
-              <span>Source 2</span>
-              <span class="hint">optional</span>
-            </div>
-            <textarea class="source" id="source-2"></textarea>
-          </div>
-        </section>
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Editor Panel (Split View) -->
+            <section class="panel editor-panel split-editor">
+                <!-- Left: Source Code Editor -->
+                <div class="editor-left">
+                    <div class="panel-header">
+                        <div class="tabs" id="file-tabs">
+                            <button class="tab active" data-file="main">main.asm</button>
+                            <button class="tab-add" id="btn-new-file" title="Nouveau fichier">+</button>
+                        </div>
+                        <div class="panel-actions">
+                            <button class="action-btn" id="btn-open" title="Ouvrir fichier">
+                                <span>📂</span> Ouvrir
+                            </button>
+                            <button class="action-btn" id="btn-save" title="Sauvegarder">
+                                <span>💾</span> Sauver
+                            </button>
+                        </div>
+                    </div>
+                    <div class="panel-content">
+                        <div id="editor-container"></div>
+                    </div>
+                </div>
 
-        <section class="panel">
-          <h2>Controls</h2>
-          <div class="controls">
-            <div class="row">
-              <button id="btn-eval" class="btn">Eval</button>
-              <button id="btn-tick" class="btn">Tick</button>
-              <button id="btn-tock" class="btn">Tock</button>
-            </div>
-            <div class="row">
-              <label class="field">
-                <span>Signal</span>
-                <input id="set-name" type="text" placeholder="a" />
-              </label>
-              <label class="field">
-                <span>Value</span>
-                <input id="set-value" type="text" placeholder="0b1" />
-              </label>
-              <button id="btn-set" class="btn">Set</button>
-            </div>
-            <div class="row">
-              <label class="field">
-                <span>Signal</span>
-                <input id="get-name" type="text" placeholder="sum" />
-              </label>
-              <button id="btn-get" class="btn">Get</button>
-            </div>
-          </div>
-          <div class="log" id="log"></div>
-        </section>
+                <!-- Right: Output Panel (mode-dependent) -->
+                <div class="editor-right" id="output-panel">
+                    <!-- HDL Mode: Chip specification and tests -->
+                    <div class="output-section output-hdl" id="output-hdl">
+                        <div class="output-header">
+                            <span class="output-title">Chip: <span id="current-chip-name">Inv</span></span>
+                            <div class="hdl-header-actions">
+                                <button class="action-btn small" id="btn-test-hdl" title="Tester le chip">
+                                    ✓ Test
+                                </button>
+                                <button class="action-btn small solution" id="btn-solution-hdl" title="Voir la solution">
+                                    💡
+                                </button>
+                            </div>
+                        </div>
+                        <div class="output-content">
+                            <!-- Chip specification -->
+                            <div class="chip-spec" id="chip-spec">
+                                <div class="chip-desc" id="chip-desc">Inverseur (porte NOT)</div>
+                                <div class="chip-interface" id="chip-interface"></div>
+                                <div class="chip-deps" id="chip-deps"></div>
+                            </div>
 
-        <section class="panel wide">
-          <h2>A32 Runner</h2>
-          <div class="controls">
-            <div class="row">
-              <label class="field">
-                <span>Binary</span>
-                <input id="a32-file" type="file" accept=".a32b" />
-              </label>
-              <label class="field">
-                <span>RAM size</span>
-                <input id="a32-ram" type="text" value="0x00100000" />
-              </label>
-              <label class="field">
-                <span>Strict traps</span>
-                <select id="a32-strict">
-                  <option value="true" selected>on</option>
-                  <option value="false">off</option>
-                </select>
-              </label>
-              <button id="a32-load" class="btn primary">Load</button>
-            </div>
-            <div class="row">
-              <button id="a32-step" class="btn">Step</button>
-              <button id="a32-run" class="btn">Run</button>
-              <button id="a32-reset" class="btn">Reset</button>
-            </div>
-          </div>
-          <div class="log" id="a32-log"></div>
-        </section>
+                            <!-- Expected tests (truth table) -->
+                            <div class="chip-tests">
+                                <div class="chip-tests-title">Table de vérité attendue</div>
+                                <div class="truth-table" id="truth-table"></div>
+                            </div>
 
-        <section class="panel wide">
-          <h2>Screen (320x240)</h2>
-          <div class="screen-container">
-            <canvas id="a32-screen" width="640" height="480" tabindex="0"></canvas>
-            <div class="screen-info">
-              <span id="screen-key">Key: none</span>
-              <span id="screen-fps">FPS: 0</span>
-            </div>
-          </div>
+                            <!-- Test results after running -->
+                            <div class="test-results" id="hdl-test-results" style="display: none;">
+                                <div class="test-results-header">
+                                    <span class="test-results-title">Résultats</span>
+                                    <span class="test-results-summary" id="test-summary">0/0</span>
+                                </div>
+                                <div id="test-results-list"></div>
+                            </div>
+                        </div>
+                    </div>
 
-          <div class="virtual-keyboard" id="virtual-keyboard">
-            <div class="kb-row">
-              <button class="kb-key" data-key="27">Esc</button>
-              <button class="kb-key" data-key="49">1</button>
-              <button class="kb-key" data-key="50">2</button>
-              <button class="kb-key" data-key="51">3</button>
-              <button class="kb-key" data-key="52">4</button>
-              <button class="kb-key" data-key="53">5</button>
-              <button class="kb-key" data-key="54">6</button>
-              <button class="kb-key" data-key="55">7</button>
-              <button class="kb-key" data-key="56">8</button>
-              <button class="kb-key" data-key="57">9</button>
-              <button class="kb-key" data-key="48">0</button>
-              <button class="kb-key" data-key="45">-</button>
-              <button class="kb-key" data-key="61">=</button>
-              <button class="kb-key wide" data-key="8">Bksp</button>
+                    <!-- ASM Mode: Assembled binary -->
+                    <div class="output-section output-asm" id="output-asm" style="display: none;">
+                        <div class="output-header">
+                            <span class="output-title">Listing ASM → Binaire</span>
+                            <button class="action-btn small" id="btn-download-a32b" title="Télécharger .a32b">
+                                ⬇ .a32b
+                            </button>
+                        </div>
+                        <div class="output-content">
+                            <pre id="asm-binary-output" class="binary-output">Appuyez sur Run pour assembler...</pre>
+                        </div>
+                    </div>
+
+                    <!-- C Mode: Generated assembly -->
+                    <div class="output-section output-c" id="output-c" style="display: none;">
+                        <div class="output-header">
+                            <span class="output-title">Code ASM Généré</span>
+                            <button class="action-btn small" id="btn-copy-asm" title="Copier ASM">
+                                📋 Copier
+                            </button>
+                        </div>
+                        <div class="output-content">
+                            <div id="asm-output-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Simulator Panel -->
+            <section class="panel simulator-panel">
+                <!-- Controls -->
+                <div class="controls-bar">
+                    <button class="ctrl-btn primary" id="btn-run" title="Exécuter (F5)">
+                        ▶ Run
+                    </button>
+                    <button class="ctrl-btn" id="btn-pause" title="Pause">⏸</button>
+                    <button class="ctrl-btn" id="btn-stop" title="Stop (Shift+F5)">⏹</button>
+                    <button class="ctrl-btn" id="btn-step" title="Step (F10)">⏭</button>
+                    <button class="ctrl-btn" id="btn-reset" title="Reset">🔄</button>
+                    <div class="speed-control">
+                        <label>Vitesse</label>
+                        <input type="range" id="speed-slider" min="1" max="100" value="50">
+                    </div>
+                </div>
+
+                <!-- Screen -->
+                <div class="screen-wrapper">
+                    <div class="screen-title">Écran 320×240</div>
+                    <canvas id="screen" width="320" height="240"></canvas>
+                </div>
+
+                <!-- Keyboard -->
+                <div class="keyboard-section">
+                    <div class="section-title">
+                        Clavier
+                        <label class="keyboard-toggle">
+                            <input type="checkbox" id="keyboard-capture">
+                            <span>Capture</span>
+                        </label>
+                    </div>
+                    <div class="keyboard-display">
+                        <div class="key-info">
+                            <span class="key-label">Touche:</span>
+                            <span class="key-value" id="key-char">-</span>
+                        </div>
+                        <div class="key-info">
+                            <span class="key-label">Code:</span>
+                            <span class="key-value" id="key-code">0x0000</span>
+                        </div>
+                    </div>
+                    <div class="keyboard-hint">
+                        Activez "Capture" puis cliquez sur l'écran pour envoyer des touches au simulateur
+                    </div>
+                </div>
+
+                <!-- Registers -->
+                <div class="registers-section">
+                    <div class="section-title">Registres</div>
+                    <div class="registers-grid" id="registers"></div>
+                    <div class="flags-row">
+                        <span class="flag" data-flag="n">N</span>
+                        <span class="flag" data-flag="z">Z</span>
+                        <span class="flag" data-flag="c">C</span>
+                        <span class="flag" data-flag="v">V</span>
+                    </div>
+                </div>
+
+                <!-- Memory View -->
+                <details class="memory-section">
+                    <summary>Mémoire</summary>
+                    <div class="memory-addr-bar">
+                        <input type="text" id="mem-addr" value="0x00000000" placeholder="Adresse">
+                        <button class="small-btn" id="btn-mem-go">Go</button>
+                    </div>
+                    <div class="memory-grid" id="memory-view"></div>
+                </details>
+            </section>
+
+            <!-- Progression Panel -->
+            <aside class="panel progression-panel">
+                <div class="panel-header">
+                    <h2>📚 Parcours</h2>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <span class="progress-text" id="progress-text">0%</span>
+                </div>
+
+                <!-- HDL Chips Progress -->
+                <div class="hdl-progress-section">
+                    <button class="section-header expanded" id="hdl-section-toggle">
+                        <span class="arrow">▼</span>
+                        <span>🔧 Chips HDL</span>
+                    </button>
+                    <div class="hdl-section-content" id="hdl-section-content">
+                        <p class="hdl-hint">Construis chaque chip en utilisant uniquement NAND et les chips déjà validés</p>
+                        <div id="hdl-chips"></div>
+                    </div>
+                </div>
+
+                <!-- Exercises Curriculum -->
+                <div class="curriculum" id="curriculum">
+                    <!-- ASM: Assembleur -->
+                    <div class="curriculum-week">
+                        <button class="week-header" data-week="asm-ex">
+                            <span class="arrow">▶</span>
+                            <span class="week-title">ASM: Assembleur</span>
+                            <span class="week-progress">0/29</span>
+                        </button>
+                        <div class="week-content collapsed" id="asm-ex">
+                            <!-- Basics -->
+                            <div class="lesson-group-title">Bases</div>
+                            <a href="#" class="lesson-item" data-lesson="asm-hello" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Hello World</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-add" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Addition</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-sub" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Soustraction</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-logic" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Logique</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-double" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Doubler</span>
+                            </a>
+                            <!-- Control Flow -->
+                            <div class="lesson-group-title">Contrôle</div>
+                            <a href="#" class="lesson-item" data-lesson="asm-cond" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Conditions</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-abs" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Valeur Absolue</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-loop" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Boucles</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-mult" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Multiplication</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-fib" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Fibonacci</span>
+                            </a>
+                            <!-- Memory -->
+                            <div class="lesson-group-title">Mémoire</div>
+                            <a href="#" class="lesson-item" data-lesson="asm-array" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Tableaux</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-max" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Maximum Tableau</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-mem" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Mémoire</span>
+                            </a>
+                            <!-- Functions -->
+                            <div class="lesson-group-title">Fonctions</div>
+                            <a href="#" class="lesson-item" data-lesson="asm-func" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Fonctions</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-func2" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Fonction Add3</span>
+                            </a>
+                            <!-- I/O -->
+                            <div class="lesson-group-title">Entrées/Sorties</div>
+                            <a href="#" class="lesson-item" data-lesson="asm-putc" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Écrire Caractère</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-hello-str" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Hello String</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-print-loop" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Print Loop</span>
+                            </a>
+                            <!-- Screen -->
+                            <div class="lesson-group-title">Écran</div>
+                            <a href="#" class="lesson-item" data-lesson="asm-pixel" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Pixel</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-hline" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Ligne Horizontale</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-vline" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Ligne Verticale</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-rect" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Rectangle</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-checkerboard" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Damier</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-gradient" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Dégradé (Dithering)</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-gradient-full" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Dégradé Complet</span>
+                            </a>
+                            <!-- Jeux -->
+                            <div class="lesson-group-title">Jeux</div>
+                            <a href="#" class="lesson-item" data-lesson="asm-getc" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Lire un Caractère</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-getc2" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Nombre à 2 Chiffres</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-guess" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Deviner le Nombre</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="asm-guess-loop" data-mode="asm">
+                                <span class="status">○</span>
+                                <span>Recherche Dichotomique</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- C: Compilateur -->
+                    <div class="curriculum-week">
+                        <button class="week-header" data-week="c-ex">
+                            <span class="arrow">▶</span>
+                            <span class="week-title">C: Programmation</span>
+                            <span class="week-progress">0/38</span>
+                        </button>
+                        <div class="week-content collapsed" id="c-ex">
+                            <!-- Bases -->
+                            <div class="lesson-group-title">Bases</div>
+                            <a href="#" class="lesson-item" data-lesson="c-var" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Variables</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-expr" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Expressions</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-mod" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Modulo</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-incr" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Incrémentation</span>
+                            </a>
+                            <!-- Conditions -->
+                            <div class="lesson-group-title">Conditions</div>
+                            <a href="#" class="lesson-item" data-lesson="c-cond" data-mode="c">
+                                <span class="status">○</span>
+                                <span>If/Else</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-cond2" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Else-If</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-logic" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Opérateurs Logiques</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-max3" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Maximum de 3</span>
+                            </a>
+                            <!-- Boucles -->
+                            <div class="lesson-group-title">Boucles</div>
+                            <a href="#" class="lesson-item" data-lesson="c-loop" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Boucle For</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-while" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Boucle While</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-nested" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Boucles Imbriquées</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-mult" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Multiplication</span>
+                            </a>
+                            <!-- Fonctions -->
+                            <div class="lesson-group-title">Fonctions</div>
+                            <a href="#" class="lesson-item" data-lesson="c-func" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Fonctions</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-func2" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Paramètres Multiples</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-abs" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Valeur Absolue</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-minmax" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Min et Max</span>
+                            </a>
+                            <!-- Tableaux -->
+                            <div class="lesson-group-title">Tableaux</div>
+                            <a href="#" class="lesson-item" data-lesson="c-array" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Tableaux</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-array-max" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Maximum Tableau</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-array-count" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Compter Éléments</span>
+                            </a>
+                            <!-- Pointeurs -->
+                            <div class="lesson-group-title">Pointeurs</div>
+                            <a href="#" class="lesson-item" data-lesson="c-ptr" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Pointeurs</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-swap" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Swap</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-ptr-arr" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Pointeurs et Tableaux</span>
+                            </a>
+                            <!-- Bits -->
+                            <div class="lesson-group-title">Bits</div>
+                            <a href="#" class="lesson-item" data-lesson="c-bitwise" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Opérations Binaires</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-ispow2" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Puissance de 2</span>
+                            </a>
+                            <!-- Récursion -->
+                            <div class="lesson-group-title">Récursion</div>
+                            <a href="#" class="lesson-item" data-lesson="c-recur" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Factorielle</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-fib" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Fibonacci</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-sum-recur" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Somme Récursive</span>
+                            </a>
+                            <!-- Algorithmes -->
+                            <div class="lesson-group-title">Algorithmes</div>
+                            <a href="#" class="lesson-item" data-lesson="c-gcd" data-mode="c">
+                                <span class="status">○</span>
+                                <span>PGCD (Euclide)</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-power" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Puissance</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-prime" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Test Primalité</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-sort" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Tri à Bulles</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-search" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Recherche Binaire</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-reverse" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Inverser Tableau</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-digits" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Somme des Chiffres</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-palindrome" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Nombre Palindrome</span>
+                            </a>
+                            <!-- Entrées/Sorties -->
+                            <div class="lesson-group-title">Entrées/Sorties</div>
+                            <a href="#" class="lesson-item" data-lesson="c-putchar" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Écrire un Caractère</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-print" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Afficher une Chaîne</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-print-num" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Afficher un Nombre</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-screen-pixel" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Dessiner un Pixel</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-screen-line" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Ligne Horizontale</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-screen-rect" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Dessiner un Rectangle</span>
+                            </a>
+                            <!-- Projets -->
+                            <div class="lesson-group-title">Projets</div>
+                            <a href="#" class="lesson-item" data-lesson="c-sieve" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Crible d'Ératosthène</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-collatz" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Suite de Collatz</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="c-project" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Projet Final</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- OS: Système -->
+                    <div class="curriculum-week">
+                        <button class="week-header" data-week="os-ex">
+                            <span class="arrow">▶</span>
+                            <span class="week-title">OS: Système</span>
+                            <span class="week-progress">0/15</span>
+                        </button>
+                        <div class="week-content collapsed" id="os-ex">
+                            <a href="#" class="lesson-item" data-lesson="os-boot" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Bootstrap</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-bump" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Bump allocator</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-free" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Free list</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-screen" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Driver écran</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-font" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Police bitmap</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-console" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Console</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-kbd" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Driver clavier</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-shell" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Shell</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-calc" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Calculatrice</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-var" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Variables shell</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-timer" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Timer</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-irq" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Interruptions</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-coro" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Coroutines</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-sched" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Scheduler</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-project" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Projet 1: Mini-OS Shell</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="os-project2" data-mode="c">
+                                <span class="status">○</span>
+                                <span>Projet 2: Task Manager</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Compiler: Construction -->
+                    <div class="curriculum-week">
+                        <button class="week-header" data-week="compiler-ex">
+                            <span class="arrow">▶</span>
+                            <span class="week-title">Compilateur: Construction</span>
+                            <span class="week-progress">0/18</span>
+                        </button>
+                        <div class="week-content collapsed" id="compiler-ex">
+                            <!-- Phase 1: Lexer -->
+                            <div class="lesson-group-title">Phase 1: Lexer</div>
+                            <a href="#" class="lesson-item" data-lesson="cc-lexer-digit" data-mode="c">
+                                <span class="status">○</span>
+                                <span>1.1 Reconnaître Chiffre</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="cc-lexer-number" data-mode="c">
+                                <span class="status">○</span>
+                                <span>1.2 Lire Nombre</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="cc-lexer-token" data-mode="c">
+                                <span class="status">○</span>
+                                <span>1.3 Identifier Tokens</span>
+                            </a>
+                            <!-- Phase 2: Parser -->
+                            <div class="lesson-group-title">Phase 2: Parser</div>
+                            <a href="#" class="lesson-item" data-lesson="cc-parser-simple" data-mode="c">
+                                <span class="status">○</span>
+                                <span>2.1 Évaluer a + b</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="cc-parser-chain" data-mode="c">
+                                <span class="status">○</span>
+                                <span>2.2 Évaluer a + b + c</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="cc-parser-precedence" data-mode="c">
+                                <span class="status">○</span>
+                                <span>2.3 Précédence</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="cc-parser-parens" data-mode="c">
+                                <span class="status">○</span>
+                                <span>2.4 Parenthèses</span>
+                            </a>
+                            <!-- Phase 3: Émission -->
+                            <div class="lesson-group-title">Phase 3: Émission ASM</div>
+                            <a href="#" class="lesson-item" data-lesson="cc-emit-mov" data-mode="c">
+                                <span class="status">○</span>
+                                <span>3.1 Émettre MOV</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="cc-emit-binop" data-mode="c">
+                                <span class="status">○</span>
+                                <span>3.2 Émettre ADD/SUB/MUL</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="cc-emit-stack" data-mode="c">
+                                <span class="status">○</span>
+                                <span>3.3 Émettre PUSH/POP</span>
+                            </a>
+                            <!-- Phase 4: CodeGen Expressions -->
+                            <div class="lesson-group-title">Phase 4: CodeGen Expressions</div>
+                            <a href="#" class="lesson-item" data-lesson="cc-codegen-const" data-mode="c">
+                                <span class="status">○</span>
+                                <span>4.1 Compiler Constante</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="cc-codegen-binop" data-mode="c">
+                                <span class="status">○</span>
+                                <span>4.2 Compiler a + b</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="cc-codegen-expr" data-mode="c">
+                                <span class="status">○</span>
+                                <span>4.3 Expressions Complètes</span>
+                            </a>
+                            <!-- Phase 5: Contrôle -->
+                            <div class="lesson-group-title">Phase 5: Contrôle</div>
+                            <a href="#" class="lesson-item" data-lesson="cc-codegen-labels" data-mode="c">
+                                <span class="status">○</span>
+                                <span>5.1 Labels</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="cc-codegen-cmp" data-mode="c">
+                                <span class="status">○</span>
+                                <span>5.2 Comparaisons</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="cc-codegen-if" data-mode="c">
+                                <span class="status">○</span>
+                                <span>5.3 Compiler if/else</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="cc-codegen-while" data-mode="c">
+                                <span class="status">○</span>
+                                <span>5.4 Compiler while</span>
+                            </a>
+                            <!-- Phase 6: Fonctions -->
+                            <div class="lesson-group-title">Phase 6: Fonctions</div>
+                            <a href="#" class="lesson-item" data-lesson="cc-codegen-func" data-mode="c">
+                                <span class="status">○</span>
+                                <span>6.1 Prologue/Épilogue</span>
+                            </a>
+                            <a href="#" class="lesson-item" data-lesson="cc-codegen-call" data-mode="c">
+                                <span class="status">○</span>
+                                <span>6.2 Appels Fonction</span>
+                            </a>
+                            <!-- Phase 7: Projet Final -->
+                            <div class="lesson-group-title">Phase 7: Projet Final</div>
+                            <a href="#" class="lesson-item" data-lesson="cc-mini-complete" data-mode="c">
+                                <span class="status">○</span>
+                                <span>7.1 Mini-Compilateur</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Demos -->
+                <div class="demos-section">
+                    <h3>🎮 Démos</h3>
+                    <div class="demo-buttons">
+                        <button class="demo-btn" data-demo="hello">Hello</button>
+                        <button class="demo-btn" data-demo="fibonacci">Fibonacci</button>
+                        <button class="demo-btn" data-demo="graphics">Graphics</button>
+                        <button class="demo-btn" data-demo="snake">Snake</button>
+                        <button class="demo-btn" data-demo="shell">Shell</button>
+                        <button class="demo-btn" data-demo="coroutines">Coroutines</button>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Console -->
+        <footer class="console">
+            <div class="console-header">
+                <span>Console</span>
+                <button class="icon-btn small" id="btn-clear-console" title="Effacer">🗑️</button>
             </div>
-            <div class="kb-row">
-              <button class="kb-key" data-key="9">Tab</button>
-              <button class="kb-key" data-key="113">q</button>
-              <button class="kb-key" data-key="119">w</button>
-              <button class="kb-key" data-key="101">e</button>
-              <button class="kb-key" data-key="114">r</button>
-              <button class="kb-key" data-key="116">t</button>
-              <button class="kb-key" data-key="121">y</button>
-              <button class="kb-key" data-key="117">u</button>
-              <button class="kb-key" data-key="105">i</button>
-              <button class="kb-key" data-key="111">o</button>
-              <button class="kb-key" data-key="112">p</button>
-              <button class="kb-key" data-key="91">[</button>
-              <button class="kb-key" data-key="93">]</button>
-              <button class="kb-key" data-key="92">\</button>
+            <div class="console-output" id="console-output">
+                <div class="log-line info">Bienvenue dans nand2tetris-codex !</div>
             </div>
-            <div class="kb-row">
-              <button class="kb-key wide" data-key="0">Caps</button>
-              <button class="kb-key" data-key="97">a</button>
-              <button class="kb-key" data-key="115">s</button>
-              <button class="kb-key" data-key="100">d</button>
-              <button class="kb-key" data-key="102">f</button>
-              <button class="kb-key" data-key="103">g</button>
-              <button class="kb-key" data-key="104">h</button>
-              <button class="kb-key" data-key="106">j</button>
-              <button class="kb-key" data-key="107">k</button>
-              <button class="kb-key" data-key="108">l</button>
-              <button class="kb-key" data-key="59">;</button>
-              <button class="kb-key" data-key="39">'</button>
-              <button class="kb-key wide" data-key="10">Enter</button>
+            <div class="console-input-row">
+                <span class="prompt">›</span>
+                <input type="text" id="console-input" placeholder="Entrée...">
             </div>
-            <div class="kb-row">
-              <button class="kb-key extra-wide" data-key="0">Shift</button>
-              <button class="kb-key" data-key="122">z</button>
-              <button class="kb-key" data-key="120">x</button>
-              <button class="kb-key" data-key="99">c</button>
-              <button class="kb-key" data-key="118">v</button>
-              <button class="kb-key" data-key="98">b</button>
-              <button class="kb-key" data-key="110">n</button>
-              <button class="kb-key" data-key="109">m</button>
-              <button class="kb-key" data-key="44">,</button>
-              <button class="kb-key" data-key="46">.</button>
-              <button class="kb-key" data-key="47">/</button>
-              <button class="kb-key extra-wide" data-key="0">Shift</button>
-            </div>
-            <div class="kb-row">
-              <button class="kb-key" data-key="0">Ctrl</button>
-              <button class="kb-key" data-key="0">Alt</button>
-              <button class="kb-key space" data-key="32">Space</button>
-              <button class="kb-key" data-key="0">Alt</button>
-              <button class="kb-key" data-key="0">Ctrl</button>
-              <button class="kb-key" data-key="128">↑</button>
-              <button class="kb-key" data-key="129">↓</button>
-              <button class="kb-key" data-key="130">←</button>
-              <button class="kb-key" data-key="131">→</button>
-            </div>
-          </div>
-          <p class="hint">Click canvas or keyboard keys. Physical keyboard also works when canvas is focused.</p>
-        </section>
-      </main>
+        </footer>
     </div>
-    <script type="module" src="./main.js"></script>
-  </body>
+
+    <!-- Help Modal -->
+    <div class="modal-backdrop" id="modal-help">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Aide</h2>
+                <button class="close-btn" data-close="modal-help">×</button>
+            </div>
+            <div class="modal-body">
+                <h3>Raccourcis clavier</h3>
+                <table class="shortcuts">
+                    <tr><td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td><td>Exécuter</td></tr>
+                    <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Sauvegarder</td></tr>
+                    <tr><td><kbd>F5</kbd></td><td>Run</td></tr>
+                    <tr><td><kbd>F10</kbd></td><td>Step</td></tr>
+                    <tr><td><kbd>Shift</kbd>+<kbd>F5</kbd></td><td>Stop</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lesson Modal -->
+    <div class="modal-backdrop" id="modal-lesson">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h2 id="lesson-title">Leçon</h2>
+                <button class="close-btn" data-close="modal-lesson">×</button>
+            </div>
+            <div class="modal-body" id="lesson-content"></div>
+            <div class="modal-footer">
+                <button class="btn" id="btn-lesson-prev">← Précédent</button>
+                <button class="btn primary" id="btn-lesson-done">✓ Terminé</button>
+                <button class="btn" id="btn-lesson-next">Suivant →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monaco Editor -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
 </html>
