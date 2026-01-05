@@ -6449,6 +6449,37 @@ inc/load/reset</td>
 </tr>
 </tbody>
 </table>
+<h3 data-number="12.1.5" id="projet-6-cpu-pipeline-avance"><span class="header-section-number">12.1.5</span> Projet 6 : CPU Pipeline
+(Avance)</h3>
+<p>Ces exercices construisent un CPU pipeline 5 etages avec gestion des
+aleas.</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Exercice</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">IF_ID_Reg</td>
+<td style="text-align: left;">Registre pipeline IF/ID avec stall et
+flush</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">HazardDetect</td>
+<td style="text-align: left;">Detection des aleas load-use</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ForwardUnit</td>
+<td style="text-align: left;">Bypass des donnees (forwarding)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CPU_Pipeline</td>
+<td style="text-align: left;">CPU pipeline 5 etages complet</td>
+</tr>
+</tbody>
+</table>
 <hr />
 <h2 data-number="12.2" id="b.-exercices-assembleur-a32"><span class="header-section-number">12.2</span> B. Exercices Assembleur
 A32</h2>
@@ -6554,7 +6585,53 @@ A32</h2>
 </tr>
 </tbody>
 </table>
-<h3 data-number="12.2.4" id="fonctions-1"><span class="header-section-number">12.2.4</span> Fonctions</h3>
+<h3 data-number="12.2.4" id="structures"><span class="header-section-number">12.2.4</span> Structures</h3>
+<p>Ces exercices preparent aux structs en C en montrant comment les
+donnees structurees sont organisees en memoire.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Exercice</th>
+<th style="text-align: left;">Objectif</th>
+<th style="text-align: left;">Resultat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Structure Simple</td>
+<td style="text-align: left;">Lire champs d’un Point (x+y)</td>
+<td style="text-align: left;">R0 = 42</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Initialiser Structure</td>
+<td style="text-align: left;">Ecrire dans les champs d’un Point</td>
+<td style="text-align: left;">R0 = 42</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Structure Rectangle</td>
+<td style="text-align: left;">Structure avec 4 champs, calcul aire</td>
+<td style="text-align: left;">R0 = 42</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Tableau de Structures</td>
+<td style="text-align: left;">Parcourir tableau de Points, somme des
+x</td>
+<td style="text-align: left;">R0 = 33</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Somme x+y Structures</td>
+<td style="text-align: left;">Acceder aux deux champs de chaque
+Point</td>
+<td style="text-align: left;">R0 = 42</td>
+</tr>
+</tbody>
+</table>
+<h3 data-number="12.2.5" id="fonctions-1"><span class="header-section-number">12.2.5</span> Fonctions</h3>
 <table>
 <thead>
 <tr class="header">
@@ -6576,7 +6653,7 @@ A32</h2>
 </tr>
 </tbody>
 </table>
-<h3 data-number="12.2.5" id="entreessorties"><span class="header-section-number">12.2.5</span> Entrees/Sorties</h3>
+<h3 data-number="12.2.6" id="entreessorties"><span class="header-section-number">12.2.6</span> Entrees/Sorties</h3>
 <table>
 <thead>
 <tr class="header">
@@ -6603,7 +6680,7 @@ A32</h2>
 </tr>
 </tbody>
 </table>
-<h3 data-number="12.2.6" id="ecran-320x240-1-bitpixel"><span class="header-section-number">12.2.6</span> Ecran (320x240, 1
+<h3 data-number="12.2.7" id="ecran-320x240-1-bitpixel"><span class="header-section-number">12.2.7</span> Ecran (320x240, 1
 bit/pixel)</h3>
 <table>
 <thead>
@@ -6641,7 +6718,7 @@ bit/pixel)</h3>
 </tr>
 </tbody>
 </table>
-<h3 data-number="12.2.7" id="jeux-interactifs"><span class="header-section-number">12.2.7</span> Jeux Interactifs</h3>
+<h3 data-number="12.2.8" id="jeux-interactifs"><span class="header-section-number">12.2.8</span> Jeux Interactifs</h3>
 <table>
 <thead>
 <tr class="header">
@@ -6958,7 +7035,50 @@ bit/pixel)</h3>
 </tr>
 </tbody>
 </table>
-<h3 data-number="12.3.10" id="entreessorties-1"><span class="header-section-number">12.3.10</span> Entrees/Sorties</h3>
+<h3 data-number="12.3.10" id="structures-1"><span class="header-section-number">12.3.10</span> Structures</h3>
+<p>Les structures permettent de regrouper plusieurs variables liees.</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Exercice</th>
+<th style="text-align: left;">Objectif</th>
+<th style="text-align: left;">Resultat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Definition Struct</td>
+<td style="text-align: left;">struct Point, p.x + p.y</td>
+<td style="text-align: left;">42</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Pointeur Struct</td>
+<td style="text-align: left;">Utiliser l’operateur -&gt;</td>
+<td style="text-align: left;">42</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Struct et Fonctions</td>
+<td style="text-align: left;">distance_sq(Point*)</td>
+<td style="text-align: left;">25</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Structs Imbriquees</td>
+<td style="text-align: left;">Rectangle avec Point</td>
+<td style="text-align: left;">42</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Tableau de Structs</td>
+<td style="text-align: left;">Point[3], somme des x</td>
+<td style="text-align: left;">33</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sizeof Struct</td>
+<td style="text-align: left;">Taille des structures</td>
+<td style="text-align: left;">16</td>
+</tr>
+</tbody>
+</table>
+<h3 data-number="12.3.11" id="entreessorties-1"><span class="header-section-number">12.3.11</span> Entrees/Sorties</h3>
 <table>
 <thead>
 <tr class="header">
@@ -7000,7 +7120,7 @@ bit/pixel)</h3>
 </tr>
 </tbody>
 </table>
-<h3 data-number="12.3.11" id="projets-avances"><span class="header-section-number">12.3.11</span> Projets Avances</h3>
+<h3 data-number="12.3.12" id="projets-avances"><span class="header-section-number">12.3.12</span> Projets Avances</h3>
 <table>
 <thead>
 <tr class="header">
