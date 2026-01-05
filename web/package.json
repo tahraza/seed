@@ -4,8 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "build:wasm": "wasm-pack build ../web_sim --target web --out-dir ../web_sim/pkg -- --features wasm",
+    "build:wasm": "wasm-pack build ../web_sim --target web --out-dir ../web/pkg -- --features wasm",
     "dev": "vite",
+    "dev:solutions": "vite -- --solutions",
     "build": "vite build",
     "preview": "vite preview"
   },
