@@ -46,6 +46,17 @@ Ces exercices construisent progressivement un ordinateur a partir de la porte NA
 |:---------|:------------|
 | CPU | Processeur complet A32 |
 
+### Projet 6 : CPU Pipeline (Avance)
+
+Ces exercices construisent un CPU pipeline 5 etages avec gestion des aleas.
+
+| Exercice | Description |
+|:---------|:------------|
+| IF_ID_Reg | Registre pipeline IF/ID avec stall et flush |
+| HazardDetect | Detection des aleas load-use |
+| ForwardUnit | Bypass des donnees (forwarding) |
+| CPU_Pipeline | CPU pipeline 5 etages complet |
+
 ---
 
 ## B. Exercices Assembleur A32
@@ -212,6 +223,19 @@ Ces exercices enseignent la programmation en C32.
 | Inverser Tableau | Inverser {1,2,3,4,5} | 35 |
 | Somme Chiffres | digit_sum(12345) | 15 |
 | Palindrome | 12321 + 1221 + 123 | 2 |
+
+### Structures
+
+Les structures permettent de regrouper plusieurs variables liees.
+
+| Exercice | Objectif | Resultat |
+|:---------|:---------|:---------|
+| Definition Struct | struct Point, p.x + p.y | 42 |
+| Pointeur Struct | Utiliser l'operateur -> | 42 |
+| Struct et Fonctions | distance_sq(Point*) | 25 |
+| Structs Imbriquees | Rectangle avec Point | 42 |
+| Tableau de Structs | Point[3], somme des x | 33 |
+| Sizeof Struct | Taille des structures | 16 |
 
 ### Entrees/Sorties
 

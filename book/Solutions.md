@@ -1259,6 +1259,154 @@ end architecture;
 
 ---
 
+### IF_ID_Reg
+
+```vhdl
+-- IF/ID Pipeline Register
+
+entity IF_ID_Reg is
+  port(
+    clk : in bit;
+    reset : in bit;
+    stall : in bit;
+    flush : in bit;
+    if_instr : in bits(31 downto 0);
+    if_pc_plus4 : in bits(31 downto 0);
+    id_instr : out bits(31 downto 0);
+    id_pc_plus4 : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of IF_ID_Reg is
+  signal instr_reg : bits(31 downto 0);
+  signal pc_plus4_reg : bits(31 downto 0);
+begin
+  process(clk)
+  begin
+    if rising_edge(clk) then
+      if (reset = '1') or (flush = '1') then
+        instr_reg <= x"E0000000";  -- NOP
+        pc_plus4_reg <= x"00000000";
+      elsif stall = '0' then
+        instr_reg <= if_instr;
+        pc_plus4_reg <= if_pc_plus4;
+      end if;
+    end if;
+  end process;
+
+  id_instr <= instr_reg;
+  id_pc_plus4 <= pc_plus4_reg;
+end architecture;
+```
+
+---
+
+### HazardDetect
+
+```vhdl
+-- Hazard Detection Unit
+
+entity HazardDetect is
+  port(
+    id_rn : in bits(3 downto 0);
+    id_rm : in bits(3 downto 0);
+    id_rn_used : in bit;
+    id_rm_used : in bit;
+    ex_rd : in bits(3 downto 0);
+    ex_mem_read : in bit;
+    stall : out bit
+  );
+end entity;
+
+architecture rtl of HazardDetect is
+  signal rn_hazard : bit;
+  signal rm_hazard : bit;
+begin
+  -- Hazard if: load in EX AND register used in ID AND same register
+  rn_hazard <= ex_mem_read and id_rn_used and (id_rn = ex_rd);
+  rm_hazard <= ex_mem_read and id_rm_used and (id_rm = ex_rd);
+  stall <= rn_hazard or rm_hazard;
+end architecture;
+```
+
+---
+
+### ForwardUnit
+
+```vhdl
+-- Forwarding Unit
+
+entity ForwardUnit is
+  port(
+    ex_rn : in bits(3 downto 0);
+    ex_rm : in bits(3 downto 0);
+    mem_rd : in bits(3 downto 0);
+    mem_reg_write : in bit;
+    wb_rd : in bits(3 downto 0);
+    wb_reg_write : in bit;
+    forward_a : out bits(1 downto 0);
+    forward_b : out bits(1 downto 0)
+  );
+end entity;
+
+architecture rtl of ForwardUnit is
+  signal mem_fwd_a : bit;
+  signal wb_fwd_a : bit;
+  signal mem_fwd_b : bit;
+  signal wb_fwd_b : bit;
+begin
+  -- Detect forwarding conditions
+  mem_fwd_a <= mem_reg_write and (mem_rd = ex_rn);
+  wb_fwd_a <= wb_reg_write and (wb_rd = ex_rn) and (not mem_fwd_a);
+  mem_fwd_b <= mem_reg_write and (mem_rd = ex_rm);
+  wb_fwd_b <= wb_reg_write and (wb_rd = ex_rm) and (not mem_fwd_b);
+
+  -- Encode output: 00=none, 01=MEM, 10=WB
+  forward_a <= wb_fwd_a & mem_fwd_a;
+  forward_b <= wb_fwd_b & mem_fwd_b;
+end architecture;
+```
+
+---
+
+### CPU_Pipeline
+
+```vhdl
+-- 5-Stage Pipelined CPU
+-- See hdl_lib/05_cpu/CPU_Pipeline.hdl for full implementation
+-- This exercise is a capstone project
+
+entity CPU_Pipeline is
+  port(
+    clk : in bit;
+    reset : in bit;
+    instr_addr : out bits(31 downto 0);
+    instr_data : in bits(31 downto 0);
+    mem_addr : out bits(31 downto 0);
+    mem_wdata : out bits(31 downto 0);
+    mem_rdata : in bits(31 downto 0);
+    mem_read : out bit;
+    mem_write : out bit;
+    halted : out bit
+  );
+end entity;
+
+architecture rtl of CPU_Pipeline is
+begin
+  -- Implementation uses IF_ID_Reg, HazardDetect, ForwardUnit
+  -- and additional pipeline registers EX_MEM, MEM_WB
+  -- See hdl_lib/05_cpu/CPU_Pipeline.hdl for complete code
+  instr_addr <= x"00000000";
+  mem_addr <= x"00000000";
+  mem_wdata <= x"00000000";
+  mem_read <= '0';
+  mem_write <= '0';
+  halted <= '0';
+end architecture;
+```
+
+---
+
 ## B. Solutions Assembleur A32
 
 ### Hello World
@@ -3027,6 +3175,126 @@ int is_palindrome(int n) {
 
 int main() {
     return is_palindrome(12321) + is_palindrome(1221) + is_palindrome(123);
+}
+```
+
+---
+
+### Définition Struct
+
+```c
+// Définition Struct - Solution
+
+struct Point { int x; int y; };
+
+int main() {
+    struct Point p;
+    p.x = 17;
+    p.y = 25;
+    return p.x + p.y;
+}
+```
+
+---
+
+### Pointeur Struct
+
+```c
+// Pointeur Struct - Solution
+
+struct Point { int x; int y; };
+
+int main() {
+    struct Point p;
+    p.x = 10;
+    p.y = 32;
+
+    struct Point *ptr = &p;
+    return ptr->x + ptr->y;
+}
+```
+
+---
+
+### Struct et Fonctions
+
+```c
+// Struct et Fonctions - Solution
+
+struct Point { int x; int y; };
+
+int distance_sq(struct Point *p) {
+    return p->x * p->x + p->y * p->y;
+}
+
+int main() {
+    struct Point p;
+    p.x = 3;
+    p.y = 4;
+    return distance_sq(&p);
+}
+```
+
+---
+
+### Structs Imbriquées
+
+```c
+// Structs Imbriquées - Solution
+
+struct Point { int x; int y; };
+struct Rectangle { struct Point corner; int width; int height; };
+
+int main() {
+    struct Rectangle r;
+    r.corner.x = 0;
+    r.corner.y = 0;
+    r.width = 6;
+    r.height = 7;
+
+    return r.width * r.height;
+}
+```
+
+---
+
+### Tableau de Structs
+
+```c
+// Tableau de Structs - Solution
+
+struct Point { int x; int y; };
+
+int main() {
+    struct Point points[3];
+
+    points[0].x = 10;
+    points[0].y = 2;
+    points[1].x = 15;
+    points[1].y = 5;
+    points[2].x = 8;
+    points[2].y = 2;
+
+    int sum = 0;
+    for (int i = 0; i < 3; i = i + 1) {
+        sum = sum + points[i].x;
+    }
+    return sum;
+}
+```
+
+---
+
+### Sizeof Struct
+
+```c
+// Sizeof Struct - Solution
+
+struct S1 { int a; };
+struct S2 { int x; int y; char c; };
+
+int main() {
+    return sizeof(struct S1) + sizeof(struct S2);
 }
 ```
 
