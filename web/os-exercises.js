@@ -848,9 +848,15 @@ int main() {
 // Résultat: 5 (nombre de touches lues)
 // ============================================
 
-int *SCREEN = (int*)0x00400000;
+char *SCREEN = (char*)0x00400000;
 int *KEYBOARD = (int*)0x00402600;
 int key_count = 0;
+int cursor_x = 0;
+
+// Dessine un octet (8 pixels) à la position (bx, y)
+void draw_byte(int bx, int y, int data) {
+    SCREEN[y * 40 + bx] = data;
+}
 
 int read_key() {
     // Votre code: lire depuis KEYBOARD
@@ -859,7 +865,8 @@ int read_key() {
 
 void show_key(int key) {
     // Votre code: afficher quelque chose à l'écran
-    // quand une touche est pressée
+    // Utiliser draw_byte(cursor_x, ligne, data)
+    // et incrémenter cursor_x
 }
 
 int main() {
@@ -886,96 +893,137 @@ int main() {
 `,
         solution: `// Driver Clavier - Solution Interactive
 // Activez "Capturer clavier" et appuyez sur des touches!
+// Affiche les caractères en grand (police bitmap 8x8)
 
-int *SCREEN = (int*)0x00400000;
+char *SCREEN = (char*)0x00400000;
 int *KEYBOARD = (int*)0x00402600;
+int *OUTPUT = (int*)0xFFFF0000;
 int key_count = 0;
 int cursor_x = 0;
+int last_key = 0;
 
-void set_pixel(int x, int y) {
-    int row_base;
-    int *ptr;
-    int bit_pos;
-    row_base = (y << 3) + (y << 1);
-    ptr = SCREEN + row_base + (x >> 5);
-    bit_pos = ((x >> 3) & 3) * 8 + 7 - (x & 7);
-    *ptr = *ptr | (1 << bit_pos);
+// Police bitmap 8x8 pour caractères courants
+// Retourne les 8 lignes du caractère dans un tableau
+void get_char_lines(int c, int *lines) {
+    // Chiffres 0-9
+    if (c == 48) { lines[0]=0x3C; lines[1]=0x46; lines[2]=0x4A; lines[3]=0x52; lines[4]=0x62; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 49) { lines[0]=0x18; lines[1]=0x38; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 50) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x02; lines[3]=0x1C; lines[4]=0x20; lines[5]=0x7E; lines[6]=0; lines[7]=0; }
+    else if (c == 51) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x0C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 52) { lines[0]=0x04; lines[1]=0x0C; lines[2]=0x14; lines[3]=0x24; lines[4]=0x7E; lines[5]=0x04; lines[6]=0; lines[7]=0; }
+    else if (c == 53) { lines[0]=0x7E; lines[1]=0x40; lines[2]=0x7C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 54) { lines[0]=0x1C; lines[1]=0x20; lines[2]=0x7C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 55) { lines[0]=0x7E; lines[1]=0x02; lines[2]=0x04; lines[3]=0x08; lines[4]=0x10; lines[5]=0x10; lines[6]=0; lines[7]=0; }
+    else if (c == 56) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x3C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 57) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x42; lines[3]=0x3E; lines[4]=0x04; lines[5]=0x38; lines[6]=0; lines[7]=0; }
+    // Lettres A-Z (majuscules, codes 65-90)
+    else if (c == 65) { lines[0]=0x18; lines[1]=0x24; lines[2]=0x42; lines[3]=0x7E; lines[4]=0x42; lines[5]=0x42; lines[6]=0x42; lines[7]=0; } // A
+    else if (c == 66) { lines[0]=0x7C; lines[1]=0x42; lines[2]=0x7C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x7C; lines[6]=0; lines[7]=0; } // B
+    else if (c == 67) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x40; lines[3]=0x40; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // C
+    else if (c == 68) { lines[0]=0x78; lines[1]=0x44; lines[2]=0x42; lines[3]=0x42; lines[4]=0x44; lines[5]=0x78; lines[6]=0; lines[7]=0; } // D
+    else if (c == 69) { lines[0]=0x7E; lines[1]=0x40; lines[2]=0x7C; lines[3]=0x40; lines[4]=0x40; lines[5]=0x7E; lines[6]=0; lines[7]=0; } // E
+    else if (c == 70) { lines[0]=0x7E; lines[1]=0x40; lines[2]=0x7C; lines[3]=0x40; lines[4]=0x40; lines[5]=0x40; lines[6]=0; lines[7]=0; } // F
+    else if (c == 71) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x40; lines[3]=0x4E; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // G
+    else if (c == 72) { lines[0]=0x42; lines[1]=0x42; lines[2]=0x7E; lines[3]=0x42; lines[4]=0x42; lines[5]=0x42; lines[6]=0; lines[7]=0; } // H
+    else if (c == 73) { lines[0]=0x3E; lines[1]=0x08; lines[2]=0x08; lines[3]=0x08; lines[4]=0x08; lines[5]=0x3E; lines[6]=0; lines[7]=0; } // I
+    else if (c == 74) { lines[0]=0x1E; lines[1]=0x04; lines[2]=0x04; lines[3]=0x04; lines[4]=0x44; lines[5]=0x38; lines[6]=0; lines[7]=0; } // J
+    else if (c == 75) { lines[0]=0x42; lines[1]=0x44; lines[2]=0x78; lines[3]=0x48; lines[4]=0x44; lines[5]=0x42; lines[6]=0; lines[7]=0; } // K
+    else if (c == 76) { lines[0]=0x40; lines[1]=0x40; lines[2]=0x40; lines[3]=0x40; lines[4]=0x40; lines[5]=0x7E; lines[6]=0; lines[7]=0; } // L
+    else if (c == 77) { lines[0]=0x42; lines[1]=0x66; lines[2]=0x5A; lines[3]=0x42; lines[4]=0x42; lines[5]=0x42; lines[6]=0; lines[7]=0; } // M
+    else if (c == 78) { lines[0]=0x42; lines[1]=0x62; lines[2]=0x52; lines[3]=0x4A; lines[4]=0x46; lines[5]=0x42; lines[6]=0; lines[7]=0; } // N
+    else if (c == 79) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x42; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // O
+    else if (c == 80) { lines[0]=0x7C; lines[1]=0x42; lines[2]=0x7C; lines[3]=0x40; lines[4]=0x40; lines[5]=0x40; lines[6]=0; lines[7]=0; } // P
+    else if (c == 81) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x42; lines[3]=0x4A; lines[4]=0x44; lines[5]=0x3A; lines[6]=0; lines[7]=0; } // Q
+    else if (c == 82) { lines[0]=0x7C; lines[1]=0x42; lines[2]=0x7C; lines[3]=0x48; lines[4]=0x44; lines[5]=0x42; lines[6]=0; lines[7]=0; } // R
+    else if (c == 83) { lines[0]=0x3C; lines[1]=0x40; lines[2]=0x3C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // S
+    else if (c == 84) { lines[0]=0x7E; lines[1]=0x18; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x18; lines[6]=0; lines[7]=0; } // T
+    else if (c == 85) { lines[0]=0x42; lines[1]=0x42; lines[2]=0x42; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // U
+    else if (c == 86) { lines[0]=0x42; lines[1]=0x42; lines[2]=0x42; lines[3]=0x42; lines[4]=0x24; lines[5]=0x18; lines[6]=0; lines[7]=0; } // V
+    else if (c == 87) { lines[0]=0x42; lines[1]=0x42; lines[2]=0x42; lines[3]=0x5A; lines[4]=0x66; lines[5]=0x42; lines[6]=0; lines[7]=0; } // W
+    else if (c == 88) { lines[0]=0x42; lines[1]=0x24; lines[2]=0x18; lines[3]=0x18; lines[4]=0x24; lines[5]=0x42; lines[6]=0; lines[7]=0; } // X
+    else if (c == 89) { lines[0]=0x42; lines[1]=0x42; lines[2]=0x24; lines[3]=0x18; lines[4]=0x18; lines[5]=0x18; lines[6]=0; lines[7]=0; } // Y
+    else if (c == 90) { lines[0]=0x7E; lines[1]=0x04; lines[2]=0x08; lines[3]=0x10; lines[4]=0x20; lines[5]=0x7E; lines[6]=0; lines[7]=0; } // Z
+    // Lettres a-z (minuscules, codes 97-122)
+    else if (c == 97) { lines[0]=0; lines[1]=0x3C; lines[2]=0x02; lines[3]=0x3E; lines[4]=0x42; lines[5]=0x3E; lines[6]=0; lines[7]=0; } // a
+    else if (c == 98) { lines[0]=0x40; lines[1]=0x40; lines[2]=0x7C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x7C; lines[6]=0; lines[7]=0; } // b
+    else if (c == 99) { lines[0]=0; lines[1]=0x3C; lines[2]=0x40; lines[3]=0x40; lines[4]=0x40; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // c
+    else if (c == 100) { lines[0]=0x02; lines[1]=0x02; lines[2]=0x3E; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3E; lines[6]=0; lines[7]=0; } // d
+    else if (c == 101) { lines[0]=0; lines[1]=0x3C; lines[2]=0x42; lines[3]=0x7E; lines[4]=0x40; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // e
+    else if (c == 102) { lines[0]=0x0C; lines[1]=0x10; lines[2]=0x3C; lines[3]=0x10; lines[4]=0x10; lines[5]=0x10; lines[6]=0; lines[7]=0; } // f
+    else if (c == 103) { lines[0]=0; lines[1]=0x3E; lines[2]=0x42; lines[3]=0x3E; lines[4]=0x02; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // g
+    else if (c == 104) { lines[0]=0x40; lines[1]=0x40; lines[2]=0x7C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x42; lines[6]=0; lines[7]=0; } // h
+    else if (c == 105) { lines[0]=0x18; lines[1]=0; lines[2]=0x38; lines[3]=0x18; lines[4]=0x18; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // i
+    else if (c == 106) { lines[0]=0x04; lines[1]=0; lines[2]=0x04; lines[3]=0x04; lines[4]=0x44; lines[5]=0x38; lines[6]=0; lines[7]=0; } // j
+    else if (c == 107) { lines[0]=0x40; lines[1]=0x44; lines[2]=0x48; lines[3]=0x70; lines[4]=0x48; lines[5]=0x44; lines[6]=0; lines[7]=0; } // k
+    else if (c == 108) { lines[0]=0x38; lines[1]=0x18; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // l
+    else if (c == 109) { lines[0]=0; lines[1]=0x76; lines[2]=0x5A; lines[3]=0x5A; lines[4]=0x42; lines[5]=0x42; lines[6]=0; lines[7]=0; } // m
+    else if (c == 110) { lines[0]=0; lines[1]=0x7C; lines[2]=0x42; lines[3]=0x42; lines[4]=0x42; lines[5]=0x42; lines[6]=0; lines[7]=0; } // n
+    else if (c == 111) { lines[0]=0; lines[1]=0x3C; lines[2]=0x42; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // o
+    else if (c == 112) { lines[0]=0; lines[1]=0x7C; lines[2]=0x42; lines[3]=0x7C; lines[4]=0x40; lines[5]=0x40; lines[6]=0; lines[7]=0; } // p
+    else if (c == 113) { lines[0]=0; lines[1]=0x3E; lines[2]=0x42; lines[3]=0x3E; lines[4]=0x02; lines[5]=0x02; lines[6]=0; lines[7]=0; } // q
+    else if (c == 114) { lines[0]=0; lines[1]=0x5C; lines[2]=0x60; lines[3]=0x40; lines[4]=0x40; lines[5]=0x40; lines[6]=0; lines[7]=0; } // r
+    else if (c == 115) { lines[0]=0; lines[1]=0x3E; lines[2]=0x40; lines[3]=0x3C; lines[4]=0x02; lines[5]=0x7C; lines[6]=0; lines[7]=0; } // s
+    else if (c == 116) { lines[0]=0x10; lines[1]=0x3C; lines[2]=0x10; lines[3]=0x10; lines[4]=0x10; lines[5]=0x0C; lines[6]=0; lines[7]=0; } // t
+    else if (c == 117) { lines[0]=0; lines[1]=0x42; lines[2]=0x42; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3E; lines[6]=0; lines[7]=0; } // u
+    else if (c == 118) { lines[0]=0; lines[1]=0x42; lines[2]=0x42; lines[3]=0x42; lines[4]=0x24; lines[5]=0x18; lines[6]=0; lines[7]=0; } // v
+    else if (c == 119) { lines[0]=0; lines[1]=0x42; lines[2]=0x42; lines[3]=0x5A; lines[4]=0x5A; lines[5]=0x66; lines[6]=0; lines[7]=0; } // w
+    else if (c == 120) { lines[0]=0; lines[1]=0x42; lines[2]=0x24; lines[3]=0x18; lines[4]=0x24; lines[5]=0x42; lines[6]=0; lines[7]=0; } // x
+    else if (c == 121) { lines[0]=0; lines[1]=0x42; lines[2]=0x42; lines[3]=0x3E; lines[4]=0x02; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // y
+    else if (c == 122) { lines[0]=0; lines[1]=0x7E; lines[2]=0x04; lines[3]=0x18; lines[4]=0x20; lines[5]=0x7E; lines[6]=0; lines[7]=0; } // z
+    // Caractere par defaut (carre)
+    else { lines[0]=0xFF; lines[1]=0x81; lines[2]=0x81; lines[3]=0x81; lines[4]=0x81; lines[5]=0x81; lines[6]=0xFF; lines[7]=0; }
 }
 
-void draw_line(int x, int y, int data) {
-    if (data & 0x80) set_pixel(x, y);
-    if (data & 0x40) set_pixel(x + 1, y);
-    if (data & 0x20) set_pixel(x + 2, y);
-    if (data & 0x10) set_pixel(x + 3, y);
-    if (data & 0x08) set_pixel(x + 4, y);
-    if (data & 0x04) set_pixel(x + 5, y);
-    if (data & 0x02) set_pixel(x + 6, y);
-    if (data & 0x01) set_pixel(x + 7, y);
-}
-
-// Dessine un caractère générique (carré avec le code)
-void draw_key(int x, int y, int key) {
-    // Dessiner un petit carré pour indiquer la touche
-    draw_line(x, y, 0xFF);
-    draw_line(x, y + 1, 0x81);
-    draw_line(x, y + 2, 0x81);
-    draw_line(x, y + 3, 0x81);
-    draw_line(x, y + 4, 0x81);
-    draw_line(x, y + 5, 0x81);
-    draw_line(x, y + 6, 0x81);
-    draw_line(x, y + 7, 0xFF);
-    // Afficher une marque au centre basée sur le code
-    if (key & 1) set_pixel(x + 3, y + 3);
-    if (key & 2) set_pixel(x + 4, y + 3);
-    if (key & 4) set_pixel(x + 3, y + 4);
-    if (key & 8) set_pixel(x + 4, y + 4);
-}
-
-int read_key() {
-    return *KEYBOARD;
+// Dessine un caractere 8x8 a la position (bx, py)
+// bx = colonne en octets (0-39), py = ligne en pixels (0-239)
+void draw_char(int bx, int py, int c) {
+    int lines[8];
+    int i;
+    get_char_lines(c, lines);
+    for (i = 0; i < 8; i = i + 1) {
+        SCREEN[(py + i) * 40 + bx] = lines[i];
+    }
 }
 
 int main() {
     int key;
-    int last_key;
-    int timeout;
+    int i;
+    int delay;
 
-    last_key = 0;
-    timeout = 0;
+    *OUTPUT = 'K'; *OUTPUT = 'B'; *OUTPUT = 'D'; *OUTPUT = 10;
 
-    // Afficher 5 indicateurs en haut
-    draw_line(0, 0, 0xFF);
-    draw_line(0, 7, 0xFF);
-    draw_line(10, 0, 0xFF);
-    draw_line(10, 7, 0xFF);
-    draw_line(20, 0, 0xFF);
-    draw_line(20, 7, 0xFF);
-    draw_line(30, 0, 0xFF);
-    draw_line(30, 7, 0xFF);
-    draw_line(40, 0, 0xFF);
-    draw_line(40, 7, 0xFF);
+    // Effacer l'ecran
+    for (i = 0; i < 9600; i = i + 1) SCREEN[i] = 0;
 
-    // Boucle principale: attendre 5 touches (avec timeout)
-    while (key_count < 5 && timeout < 100000) {
-        key = read_key();
+    // Titre "KEYS:" en haut
+    draw_char(0, 0, 75);  // K
+    draw_char(1, 0, 69);  // E
+    draw_char(2, 0, 89);  // Y
+    draw_char(3, 0, 83);  // S
 
-        // Nouvelle touche pressée?
+    // Boucle - affiche les touches pressees
+    while (key_count < 10) {
+        key = *KEYBOARD;
+
         if (key != 0 && key != last_key) {
-            draw_key(cursor_x, 16, key);
-            cursor_x = cursor_x + 10;
-            key_count = key_count + 1;
-            timeout = 0;  // Reset timeout quand touche pressée
-        }
+            *OUTPUT = key; *OUTPUT = 10;
 
+            // Dessiner le caractere
+            draw_char(cursor_x, 16, key);
+            cursor_x = cursor_x + 1;
+            if (cursor_x >= 39) cursor_x = 0;
+            key_count = key_count + 1;
+        }
         last_key = key;
-        timeout = timeout + 1;
+
+        for (delay = 0; delay < 5000; delay = delay + 1) { }
     }
 
-    // Si timeout atteint sans 5 touches, retourner quand même key_count
-    return 0;  // Test visuel uniquement
+    *OUTPUT = 'O'; *OUTPUT = 'K'; *OUTPUT = 10;
+    return key_count;
 }
 `,
-        expectedReturn: 0
+        expectedReturn: 10
     },
 
     'os-shell': {
@@ -997,20 +1045,27 @@ int main() {
 // Résultat: le nombre tapé
 // ============================================
 
-int *SCREEN = (int*)0x00400000;
+char *SCREEN = (char*)0x00400000;
 int *KEYBOARD = (int*)0x00402600;
 int number = 0;
+
+// Dessine un octet à la position (bx, y)
+void draw_byte(int bx, int y, int data) {
+    SCREEN[y * 40 + bx] = data;
+}
 
 int read_key() {
     return *KEYBOARD;
 }
 
 void show_prompt() {
-    // Afficher ">" à l'écran
+    // Afficher ">" à l'écran (colonne 0)
+    // Utiliser draw_byte(0, ligne, data)
 }
 
 void show_digit(int d, int pos) {
     // Afficher le chiffre d à la position pos
+    // Utiliser draw_byte(pos + 2, ligne, data)
 }
 
 int main() {
@@ -1048,134 +1103,90 @@ int main() {
     return number;
 }
 `,
-        solution: `// Shell Interactif - Solution
+        solution: `// Shell Interactif - Solution avec police bitmap
 // Cochez "Capturer clavier" et tapez des chiffres!
+// Structure identique à Driver Clavier
 
-int *SCREEN = (int*)0x00400000;
+char *SCREEN = (char*)0x00400000;
 int *KEYBOARD = (int*)0x00402600;
+int *OUTPUT = (int*)0xFFFF0000;
 int number = 0;
-int cursor_x = 16;
+int cursor_x = 2;
+int last_key = 0;
 
-void set_pixel(int x, int y) {
-    int row_base;
-    int *ptr;
-    int bit_pos;
-    row_base = (y << 3) + (y << 1);
-    ptr = SCREEN + row_base + (x >> 5);
-    bit_pos = ((x >> 3) & 3) * 8 + 7 - (x & 7);
-    *ptr = *ptr | (1 << bit_pos);
+// Police bitmap 8x8 pour caractères courants
+void get_char_lines(int c, int *lines) {
+    // Chiffres 0-9
+    if (c == 48) { lines[0]=0x3C; lines[1]=0x46; lines[2]=0x4A; lines[3]=0x52; lines[4]=0x62; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 49) { lines[0]=0x18; lines[1]=0x38; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 50) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x02; lines[3]=0x1C; lines[4]=0x20; lines[5]=0x7E; lines[6]=0; lines[7]=0; }
+    else if (c == 51) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x0C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 52) { lines[0]=0x04; lines[1]=0x0C; lines[2]=0x14; lines[3]=0x24; lines[4]=0x7E; lines[5]=0x04; lines[6]=0; lines[7]=0; }
+    else if (c == 53) { lines[0]=0x7E; lines[1]=0x40; lines[2]=0x7C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 54) { lines[0]=0x1C; lines[1]=0x20; lines[2]=0x7C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 55) { lines[0]=0x7E; lines[1]=0x02; lines[2]=0x04; lines[3]=0x08; lines[4]=0x10; lines[5]=0x10; lines[6]=0; lines[7]=0; }
+    else if (c == 56) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x3C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 57) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x42; lines[3]=0x3E; lines[4]=0x04; lines[5]=0x38; lines[6]=0; lines[7]=0; }
+    // Symbole > (code 62)
+    else if (c == 62) { lines[0]=0x40; lines[1]=0x20; lines[2]=0x10; lines[3]=0x08; lines[4]=0x10; lines[5]=0x20; lines[6]=0x40; lines[7]=0; }
+    // Espace (code 32)
+    else if (c == 32) { lines[0]=0; lines[1]=0; lines[2]=0; lines[3]=0; lines[4]=0; lines[5]=0; lines[6]=0; lines[7]=0; }
+    // Caractere par defaut (carre)
+    else { lines[0]=0xFF; lines[1]=0x81; lines[2]=0x81; lines[3]=0x81; lines[4]=0x81; lines[5]=0x81; lines[6]=0xFF; lines[7]=0; }
 }
 
-void draw_line(int x, int y, int data) {
-    if (data & 0x80) set_pixel(x, y);
-    if (data & 0x40) set_pixel(x + 1, y);
-    if (data & 0x20) set_pixel(x + 2, y);
-    if (data & 0x10) set_pixel(x + 3, y);
-    if (data & 0x08) set_pixel(x + 4, y);
-    if (data & 0x04) set_pixel(x + 5, y);
-    if (data & 0x02) set_pixel(x + 6, y);
-    if (data & 0x01) set_pixel(x + 7, y);
-}
-
-// Dessine ">" prompt
-void show_prompt() {
-    draw_line(0, 0, 0x40);
-    draw_line(0, 1, 0x20);
-    draw_line(0, 2, 0x10);
-    draw_line(0, 3, 0x20);
-    draw_line(0, 4, 0x40);
-}
-
-// Dessine un chiffre simplifié
-void draw_digit(int x, int d) {
-    if (d == 0) {
-        draw_line(x, 0, 0x3C); draw_line(x, 1, 0x42);
-        draw_line(x, 2, 0x42); draw_line(x, 3, 0x42);
-        draw_line(x, 4, 0x42); draw_line(x, 5, 0x3C);
+// Dessine un caractere 8x8 a la position (bx, py)
+void draw_char(int bx, int py, int c) {
+    int lines[8];
+    int i;
+    get_char_lines(c, lines);
+    for (i = 0; i < 8; i = i + 1) {
+        SCREEN[(py + i) * 40 + bx] = lines[i];
     }
-    if (d == 1) {
-        draw_line(x, 0, 0x18); draw_line(x, 1, 0x38);
-        draw_line(x, 2, 0x18); draw_line(x, 3, 0x18);
-        draw_line(x, 4, 0x18); draw_line(x, 5, 0x3C);
-    }
-    if (d == 2) {
-        draw_line(x, 0, 0x3C); draw_line(x, 1, 0x42);
-        draw_line(x, 2, 0x04); draw_line(x, 3, 0x18);
-        draw_line(x, 4, 0x20); draw_line(x, 5, 0x7E);
-    }
-    if (d == 3) {
-        draw_line(x, 0, 0x3C); draw_line(x, 1, 0x42);
-        draw_line(x, 2, 0x0C); draw_line(x, 3, 0x02);
-        draw_line(x, 4, 0x42); draw_line(x, 5, 0x3C);
-    }
-    if (d == 4) {
-        draw_line(x, 0, 0x04); draw_line(x, 1, 0x0C);
-        draw_line(x, 2, 0x14); draw_line(x, 3, 0x24);
-        draw_line(x, 4, 0x7E); draw_line(x, 5, 0x04);
-    }
-    if (d == 5) {
-        draw_line(x, 0, 0x7E); draw_line(x, 1, 0x40);
-        draw_line(x, 2, 0x7C); draw_line(x, 3, 0x02);
-        draw_line(x, 4, 0x42); draw_line(x, 5, 0x3C);
-    }
-    if (d == 6) {
-        draw_line(x, 0, 0x1C); draw_line(x, 1, 0x20);
-        draw_line(x, 2, 0x7C); draw_line(x, 3, 0x42);
-        draw_line(x, 4, 0x42); draw_line(x, 5, 0x3C);
-    }
-    if (d == 7) {
-        draw_line(x, 0, 0x7E); draw_line(x, 1, 0x02);
-        draw_line(x, 2, 0x04); draw_line(x, 3, 0x08);
-        draw_line(x, 4, 0x10); draw_line(x, 5, 0x10);
-    }
-    if (d == 8) {
-        draw_line(x, 0, 0x3C); draw_line(x, 1, 0x42);
-        draw_line(x, 2, 0x3C); draw_line(x, 3, 0x42);
-        draw_line(x, 4, 0x42); draw_line(x, 5, 0x3C);
-    }
-    if (d == 9) {
-        draw_line(x, 0, 0x3C); draw_line(x, 1, 0x42);
-        draw_line(x, 2, 0x42); draw_line(x, 3, 0x3E);
-        draw_line(x, 4, 0x04); draw_line(x, 5, 0x38);
-    }
-}
-
-int read_key() {
-    return *KEYBOARD;
 }
 
 int main() {
     int key;
-    int last_key;
-    int timeout;
+    int i;
+    int delay;
 
-    last_key = 0;
-    timeout = 0;
+    *OUTPUT = '>'; *OUTPUT = ' ';
 
-    show_prompt();
+    // Effacer l'ecran
+    for (i = 0; i < 9600; i = i + 1) SCREEN[i] = 0;
 
-    while (timeout < 50000) {
-        key = read_key();
+    // Afficher le prompt ">"
+    draw_char(0, 0, 62);
 
-        if (key != last_key && key != 0) {
+    // Boucle - lit les chiffres tapés
+    while (1) {
+        key = *KEYBOARD;
+
+        if (key != 0 && key != last_key) {
             // Esc (27) = quitter
             if (key == 27) {
+                *OUTPUT = 10;
                 return number;
             }
             // Enter (13) = terminer
             if (key == 13) {
+                *OUTPUT = 10;
                 return number;
             }
             // Chiffres 0-9 (48-57)
             if (key >= 48 && key <= 57) {
-                draw_digit(cursor_x, key - 48);
-                cursor_x = cursor_x + 10;
+                *OUTPUT = key;
+
+                // Dessiner le chiffre
+                draw_char(cursor_x, 0, key);
+                cursor_x = cursor_x + 1;
+                if (cursor_x >= 39) cursor_x = 2;
                 number = number * 10 + (key - 48);
-                timeout = 0;
             }
         }
         last_key = key;
-        timeout = timeout + 1;
+
+        for (delay = 0; delay < 5000; delay = delay + 1) { }
     }
 
     return number;
@@ -1234,73 +1245,107 @@ int main() {
     return 0;
 }
 `,
-        solution: `// Calculatrice Interactive - Solution
+        solution: `// Calculatrice Interactive - Solution avec police bitmap
 // Cochez "Capturer clavier", tapez: 3+5 Enter
 
-int *SCREEN = (int*)0x00400000;
+char *SCREEN = (char*)0x00400000;
 int *KEYBOARD = (int*)0x00402600;
-int cursor_x = 4;
+int *OUTPUT = (int*)0xFFFF0000;
+int cursor_x = 0;
+int last_key = 0;
 
-void set_pixel(int x, int y) {
-    int *ptr;
-    int bit_pos;
-    ptr = SCREEN + (y << 3) + (y << 1) + (x >> 5);
-    bit_pos = ((x >> 3) & 3) * 8 + 7 - (x & 7);
-    *ptr = *ptr | (1 << bit_pos);
+// Police bitmap 8x8
+void get_char_lines(int c, int *lines) {
+    // Chiffres 0-9
+    if (c == 48) { lines[0]=0x3C; lines[1]=0x46; lines[2]=0x4A; lines[3]=0x52; lines[4]=0x62; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 49) { lines[0]=0x18; lines[1]=0x38; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 50) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x02; lines[3]=0x1C; lines[4]=0x20; lines[5]=0x7E; lines[6]=0; lines[7]=0; }
+    else if (c == 51) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x0C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 52) { lines[0]=0x04; lines[1]=0x0C; lines[2]=0x14; lines[3]=0x24; lines[4]=0x7E; lines[5]=0x04; lines[6]=0; lines[7]=0; }
+    else if (c == 53) { lines[0]=0x7E; lines[1]=0x40; lines[2]=0x7C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 54) { lines[0]=0x1C; lines[1]=0x20; lines[2]=0x7C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 55) { lines[0]=0x7E; lines[1]=0x02; lines[2]=0x04; lines[3]=0x08; lines[4]=0x10; lines[5]=0x10; lines[6]=0; lines[7]=0; }
+    else if (c == 56) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x3C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 57) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x42; lines[3]=0x3E; lines[4]=0x04; lines[5]=0x38; lines[6]=0; lines[7]=0; }
+    // + (43)
+    else if (c == 43) { lines[0]=0; lines[1]=0x18; lines[2]=0x18; lines[3]=0x7E; lines[4]=0x18; lines[5]=0x18; lines[6]=0; lines[7]=0; }
+    // - (45)
+    else if (c == 45) { lines[0]=0; lines[1]=0; lines[2]=0; lines[3]=0x7E; lines[4]=0; lines[5]=0; lines[6]=0; lines[7]=0; }
+    // * (42)
+    else if (c == 42) { lines[0]=0; lines[1]=0x24; lines[2]=0x18; lines[3]=0x7E; lines[4]=0x18; lines[5]=0x24; lines[6]=0; lines[7]=0; }
+    // = (61)
+    else if (c == 61) { lines[0]=0; lines[1]=0x7E; lines[2]=0; lines[3]=0x7E; lines[4]=0; lines[5]=0; lines[6]=0; lines[7]=0; }
+    // Majuscules C, A, L pour titre
+    else if (c == 65) { lines[0]=0x18; lines[1]=0x24; lines[2]=0x42; lines[3]=0x7E; lines[4]=0x42; lines[5]=0x42; lines[6]=0; lines[7]=0; } // A
+    else if (c == 67) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x40; lines[3]=0x40; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // C
+    else if (c == 76) { lines[0]=0x40; lines[1]=0x40; lines[2]=0x40; lines[3]=0x40; lines[4]=0x40; lines[5]=0x7E; lines[6]=0; lines[7]=0; } // L
+    // Default
+    else { lines[0]=0xFF; lines[1]=0x81; lines[2]=0x81; lines[3]=0x81; lines[4]=0x81; lines[5]=0x81; lines[6]=0xFF; lines[7]=0; }
 }
 
-// Chiffre 3x5 pixels
-void draw_digit(int x, int y, int d) {
-    if (d != 1 && d != 4) { set_pixel(x, y); set_pixel(x+1, y); set_pixel(x+2, y); }
-    if (d == 0 || d == 4 || d == 5 || d == 6 || d == 8 || d == 9) { set_pixel(x, y+1); }
-    if (d != 5 && d != 6) { set_pixel(x+2, y+1); }
-    if (d != 0 && d != 1 && d != 7) { set_pixel(x, y+2); set_pixel(x+1, y+2); set_pixel(x+2, y+2); }
-    if (d == 0 || d == 2 || d == 6 || d == 8) { set_pixel(x, y+3); }
-    if (d != 2) { set_pixel(x+2, y+3); }
-    if (d != 1 && d != 4 && d != 7) { set_pixel(x, y+4); set_pixel(x+1, y+4); set_pixel(x+2, y+4); }
-    if (d == 1) { set_pixel(x+1, y); set_pixel(x+1, y+1); set_pixel(x+1, y+2); set_pixel(x+1, y+3); set_pixel(x+1, y+4); }
-    if (d == 7) { set_pixel(x, y); set_pixel(x+1, y); set_pixel(x+2, y); }
+void draw_char(int bx, int py, int c) {
+    int lines[8];
+    int i;
+    get_char_lines(c, lines);
+    for (i = 0; i < 8; i = i + 1) {
+        SCREEN[(py + i) * 40 + bx] = lines[i];
+    }
 }
-
-void draw_plus(int x, int y) {
-    set_pixel(x+1, y); set_pixel(x+1, y+1); set_pixel(x+1, y+2);
-    set_pixel(x, y+1); set_pixel(x+2, y+1);
-}
-void draw_minus(int x, int y) { set_pixel(x, y+1); set_pixel(x+1, y+1); set_pixel(x+2, y+1); }
-void draw_times(int x, int y) { set_pixel(x,y); set_pixel(x+2,y); set_pixel(x+1,y+1); set_pixel(x,y+2); set_pixel(x+2,y+2); }
-void draw_equal(int x, int y) { set_pixel(x,y); set_pixel(x+1,y); set_pixel(x+2,y); set_pixel(x,y+2); set_pixel(x+1,y+2); set_pixel(x+2,y+2); }
 
 int main() {
-    int key; int lk; int a; int b; int op; int st; int r; int t; int tens; int u;
-    a = 0; b = 0; op = 0; st = 0; lk = 0; t = 0;
+    int key;
+    int i;
+    int delay;
+    int a; int b; int op; int st; int r; int tens; int u;
 
-    while (t < 50000) {
+    a = 0; b = 0; op = 0; st = 0;
+
+    *OUTPUT = 'C'; *OUTPUT = 'A'; *OUTPUT = 'L'; *OUTPUT = 'C'; *OUTPUT = 10;
+
+    // Effacer l'ecran
+    for (i = 0; i < 9600; i = i + 1) SCREEN[i] = 0;
+
+    // Titre "CALC"
+    draw_char(0, 0, 67); draw_char(1, 0, 65); draw_char(2, 0, 76); draw_char(3, 0, 67);
+
+    // Boucle principale
+    while (1) {
         key = *KEYBOARD;
-        if (key != 0 && key != lk) {
-            t = 0;
+
+        if (key != 0 && key != last_key) {
+            *OUTPUT = key;
+
+            // Enter = calculer
             if (key == 13 && st == 2) {
+                *OUTPUT = 10;
                 if (op == 1) r = a + b;
                 if (op == 2) r = a - b;
                 if (op == 3) r = a * b;
-                draw_equal(cursor_x, 10); cursor_x = cursor_x + 5;
+                draw_char(cursor_x, 16, 61); cursor_x = cursor_x + 1;
+                // Afficher resultat (max 2 chiffres)
                 tens = 0; u = r;
                 while (u >= 10) { u = u - 10; tens = tens + 1; }
-                if (tens > 0) { draw_digit(cursor_x, 10, tens); cursor_x = cursor_x + 5; }
-                draw_digit(cursor_x, 10, u);
+                if (tens > 0) { draw_char(cursor_x, 16, 48 + tens); cursor_x = cursor_x + 1; }
+                draw_char(cursor_x, 16, 48 + u);
                 return r;
             }
+            // Chiffre
             if (key >= 48 && key <= 57) {
-                draw_digit(cursor_x, 10, key - 48);
-                cursor_x = cursor_x + 5;
+                draw_char(cursor_x, 16, key);
+                cursor_x = cursor_x + 1;
                 if (st == 0) { a = key - 48; st = 1; }
                 else if (st == 2) { b = key - 48; }
             }
-            if (key == 43 && st == 1) { draw_plus(cursor_x, 10); cursor_x = cursor_x + 5; op = 1; st = 2; }
-            if (key == 45 && st == 1) { draw_minus(cursor_x, 10); cursor_x = cursor_x + 5; op = 2; st = 2; }
-            if (key == 42 && st == 1) { draw_times(cursor_x, 10); cursor_x = cursor_x + 5; op = 3; st = 2; }
+            // Operateurs
+            if (key == 43 && st == 1) { draw_char(cursor_x, 16, 43); cursor_x = cursor_x + 1; op = 1; st = 2; }
+            if (key == 45 && st == 1) { draw_char(cursor_x, 16, 45); cursor_x = cursor_x + 1; op = 2; st = 2; }
+            if (key == 42 && st == 1) { draw_char(cursor_x, 16, 42); cursor_x = cursor_x + 1; op = 3; st = 2; }
         }
-        lk = key; t = t + 1;
+        last_key = key;
+
+        for (delay = 0; delay < 5000; delay = delay + 1) { }
     }
+
     return 0;
 }
 `,
@@ -1345,50 +1390,78 @@ int main() {
     return 0;
 }
 `,
-        solution: `// Variables Shell Interactive - Solution
+        solution: `// Variables Shell Interactive - Solution avec police bitmap
 // Cochez "Capturer clavier", tapez: a=5 b=3 Enter
 
-int *SCREEN = (int*)0x00400000;
+char *SCREEN = (char*)0x00400000;
 int *KEYBOARD = (int*)0x00402600;
-int cursor_x = 4;
+int *OUTPUT = (int*)0xFFFF0000;
+int cursor_x = 0;
+int last_key = 0;
 
 int var_names[8];
 int var_values[8];
 int var_count = 0;
 
-void set_pixel(int x, int y) {
-    int *ptr;
-    int bit_pos;
-    ptr = SCREEN + (y << 3) + (y << 1) + (x >> 5);
-    bit_pos = ((x >> 3) & 3) * 8 + 7 - (x & 7);
-    *ptr = *ptr | (1 << bit_pos);
+// Police bitmap 8x8
+void get_char_lines(int c, int *lines) {
+    // Chiffres 0-9
+    if (c == 48) { lines[0]=0x3C; lines[1]=0x46; lines[2]=0x4A; lines[3]=0x52; lines[4]=0x62; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 49) { lines[0]=0x18; lines[1]=0x38; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 50) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x02; lines[3]=0x1C; lines[4]=0x20; lines[5]=0x7E; lines[6]=0; lines[7]=0; }
+    else if (c == 51) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x0C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 52) { lines[0]=0x04; lines[1]=0x0C; lines[2]=0x14; lines[3]=0x24; lines[4]=0x7E; lines[5]=0x04; lines[6]=0; lines[7]=0; }
+    else if (c == 53) { lines[0]=0x7E; lines[1]=0x40; lines[2]=0x7C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 54) { lines[0]=0x1C; lines[1]=0x20; lines[2]=0x7C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 55) { lines[0]=0x7E; lines[1]=0x02; lines[2]=0x04; lines[3]=0x08; lines[4]=0x10; lines[5]=0x10; lines[6]=0; lines[7]=0; }
+    else if (c == 56) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x3C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 57) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x42; lines[3]=0x3E; lines[4]=0x04; lines[5]=0x38; lines[6]=0; lines[7]=0; }
+    // = (61)
+    else if (c == 61) { lines[0]=0; lines[1]=0x7E; lines[2]=0; lines[3]=0x7E; lines[4]=0; lines[5]=0; lines[6]=0; lines[7]=0; }
+    // + (43)
+    else if (c == 43) { lines[0]=0; lines[1]=0x18; lines[2]=0x18; lines[3]=0x7E; lines[4]=0x18; lines[5]=0x18; lines[6]=0; lines[7]=0; }
+    // Lettres a-z (minuscules)
+    else if (c == 97) { lines[0]=0; lines[1]=0x3C; lines[2]=0x02; lines[3]=0x3E; lines[4]=0x42; lines[5]=0x3E; lines[6]=0; lines[7]=0; } // a
+    else if (c == 98) { lines[0]=0x40; lines[1]=0x40; lines[2]=0x7C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x7C; lines[6]=0; lines[7]=0; } // b
+    else if (c == 99) { lines[0]=0; lines[1]=0x3C; lines[2]=0x40; lines[3]=0x40; lines[4]=0x40; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // c
+    else if (c == 100) { lines[0]=0x02; lines[1]=0x02; lines[2]=0x3E; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3E; lines[6]=0; lines[7]=0; } // d
+    else if (c == 101) { lines[0]=0; lines[1]=0x3C; lines[2]=0x42; lines[3]=0x7E; lines[4]=0x40; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // e
+    else if (c == 102) { lines[0]=0x0C; lines[1]=0x10; lines[2]=0x3C; lines[3]=0x10; lines[4]=0x10; lines[5]=0x10; lines[6]=0; lines[7]=0; } // f
+    else if (c == 103) { lines[0]=0; lines[1]=0x3E; lines[2]=0x42; lines[3]=0x3E; lines[4]=0x02; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // g
+    else if (c == 104) { lines[0]=0x40; lines[1]=0x40; lines[2]=0x7C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x42; lines[6]=0; lines[7]=0; } // h
+    else if (c == 105) { lines[0]=0x18; lines[1]=0; lines[2]=0x38; lines[3]=0x18; lines[4]=0x18; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // i
+    else if (c == 106) { lines[0]=0x04; lines[1]=0; lines[2]=0x04; lines[3]=0x04; lines[4]=0x44; lines[5]=0x38; lines[6]=0; lines[7]=0; } // j
+    else if (c == 107) { lines[0]=0x40; lines[1]=0x44; lines[2]=0x48; lines[3]=0x70; lines[4]=0x48; lines[5]=0x44; lines[6]=0; lines[7]=0; } // k
+    else if (c == 108) { lines[0]=0x38; lines[1]=0x18; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // l
+    else if (c == 109) { lines[0]=0; lines[1]=0x76; lines[2]=0x5A; lines[3]=0x5A; lines[4]=0x42; lines[5]=0x42; lines[6]=0; lines[7]=0; } // m
+    else if (c == 110) { lines[0]=0; lines[1]=0x7C; lines[2]=0x42; lines[3]=0x42; lines[4]=0x42; lines[5]=0x42; lines[6]=0; lines[7]=0; } // n
+    else if (c == 111) { lines[0]=0; lines[1]=0x3C; lines[2]=0x42; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // o
+    else if (c == 112) { lines[0]=0; lines[1]=0x7C; lines[2]=0x42; lines[3]=0x7C; lines[4]=0x40; lines[5]=0x40; lines[6]=0; lines[7]=0; } // p
+    else if (c == 113) { lines[0]=0; lines[1]=0x3E; lines[2]=0x42; lines[3]=0x3E; lines[4]=0x02; lines[5]=0x02; lines[6]=0; lines[7]=0; } // q
+    else if (c == 114) { lines[0]=0; lines[1]=0x5C; lines[2]=0x60; lines[3]=0x40; lines[4]=0x40; lines[5]=0x40; lines[6]=0; lines[7]=0; } // r
+    else if (c == 115) { lines[0]=0; lines[1]=0x3E; lines[2]=0x40; lines[3]=0x3C; lines[4]=0x02; lines[5]=0x7C; lines[6]=0; lines[7]=0; } // s
+    else if (c == 116) { lines[0]=0x10; lines[1]=0x3C; lines[2]=0x10; lines[3]=0x10; lines[4]=0x10; lines[5]=0x0C; lines[6]=0; lines[7]=0; } // t
+    else if (c == 117) { lines[0]=0; lines[1]=0x42; lines[2]=0x42; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3E; lines[6]=0; lines[7]=0; } // u
+    else if (c == 118) { lines[0]=0; lines[1]=0x42; lines[2]=0x42; lines[3]=0x42; lines[4]=0x24; lines[5]=0x18; lines[6]=0; lines[7]=0; } // v
+    else if (c == 119) { lines[0]=0; lines[1]=0x42; lines[2]=0x42; lines[3]=0x5A; lines[4]=0x5A; lines[5]=0x66; lines[6]=0; lines[7]=0; } // w
+    else if (c == 120) { lines[0]=0; lines[1]=0x42; lines[2]=0x24; lines[3]=0x18; lines[4]=0x24; lines[5]=0x42; lines[6]=0; lines[7]=0; } // x
+    else if (c == 121) { lines[0]=0; lines[1]=0x42; lines[2]=0x42; lines[3]=0x3E; lines[4]=0x02; lines[5]=0x3C; lines[6]=0; lines[7]=0; } // y
+    else if (c == 122) { lines[0]=0; lines[1]=0x7E; lines[2]=0x04; lines[3]=0x18; lines[4]=0x20; lines[5]=0x7E; lines[6]=0; lines[7]=0; } // z
+    // Majuscules V, A, R
+    else if (c == 65) { lines[0]=0x18; lines[1]=0x24; lines[2]=0x42; lines[3]=0x7E; lines[4]=0x42; lines[5]=0x42; lines[6]=0; lines[7]=0; } // A
+    else if (c == 82) { lines[0]=0x7C; lines[1]=0x42; lines[2]=0x7C; lines[3]=0x48; lines[4]=0x44; lines[5]=0x42; lines[6]=0; lines[7]=0; } // R
+    else if (c == 86) { lines[0]=0x42; lines[1]=0x42; lines[2]=0x42; lines[3]=0x42; lines[4]=0x24; lines[5]=0x18; lines[6]=0; lines[7]=0; } // V
+    // Default
+    else { lines[0]=0xFF; lines[1]=0x81; lines[2]=0x81; lines[3]=0x81; lines[4]=0x81; lines[5]=0x81; lines[6]=0xFF; lines[7]=0; }
 }
 
-void draw_char(int x, int y, int c) {
+void draw_char(int bx, int py, int c) {
+    int lines[8];
     int i;
-    // Lettre = ligne verticale + petit trait
-    if (c >= 97 && c <= 122) {
-        for (i = 0; i < 5; i = i + 1) { set_pixel(x, y + i); }
-        set_pixel(x + 1, y + 2);
-        set_pixel(x + 2, y + (c - 97) % 3);
+    get_char_lines(c, lines);
+    for (i = 0; i < 8; i = i + 1) {
+        SCREEN[(py + i) * 40 + bx] = lines[i];
     }
-    // Chiffre 3x5
-    if (c >= 48 && c <= 57) {
-        int d;
-        d = c - 48;
-        if (d != 1 && d != 4) { set_pixel(x, y); set_pixel(x+1, y); set_pixel(x+2, y); }
-        if (d == 0 || d == 4 || d == 5 || d == 6 || d == 8 || d == 9) { set_pixel(x, y+1); }
-        if (d != 5 && d != 6) { set_pixel(x+2, y+1); }
-        if (d != 0 && d != 1 && d != 7) { set_pixel(x, y+2); set_pixel(x+1, y+2); set_pixel(x+2, y+2); }
-        if (d == 0 || d == 2 || d == 6 || d == 8) { set_pixel(x, y+3); }
-        if (d != 2) { set_pixel(x+2, y+3); }
-        if (d != 1 && d != 4 && d != 7) { set_pixel(x, y+4); set_pixel(x+1, y+4); set_pixel(x+2, y+4); }
-        if (d == 1) { set_pixel(x+1, y); set_pixel(x+1, y+1); set_pixel(x+1, y+2); set_pixel(x+1, y+3); set_pixel(x+1, y+4); }
-    }
-    // = sign
-    if (c == 61) { set_pixel(x,y+1); set_pixel(x+1,y+1); set_pixel(x+2,y+1); set_pixel(x,y+3); set_pixel(x+1,y+3); set_pixel(x+2,y+3); }
-    // + sign
-    if (c == 43) { set_pixel(x+1,y); set_pixel(x+1,y+1); set_pixel(x+1,y+2); set_pixel(x,y+1); set_pixel(x+2,y+1); }
 }
 
 int find_var(int name) {
@@ -1418,43 +1491,62 @@ int get_var(int name) {
 }
 
 int main() {
-    int key; int lk; int t; int st; int cur_name; int result;
-    lk = 0; t = 0; st = 0; cur_name = 0; result = 0;
+    int key;
+    int i;
+    int delay;
+    int st; int cur_name; int result;
 
-    while (t < 50000) {
+    st = 0; cur_name = 0; result = 0;
+
+    *OUTPUT = 'V'; *OUTPUT = 'A'; *OUTPUT = 'R'; *OUTPUT = 10;
+
+    // Effacer l'ecran
+    for (i = 0; i < 9600; i = i + 1) SCREEN[i] = 0;
+
+    // Titre "VAR"
+    draw_char(0, 0, 86); draw_char(1, 0, 65); draw_char(2, 0, 82);
+
+    // Boucle principale
+    while (1) {
         key = *KEYBOARD;
-        if (key != 0 && key != lk) {
-            t = 0;
-            // Enter = calculer résultat
+
+        if (key != 0 && key != last_key) {
+            *OUTPUT = key;
+
+            // Enter = calculer resultat
             if (key == 13) {
+                *OUTPUT = 10;
                 if (var_count >= 2) {
                     result = var_values[0] + var_values[1];
-                    draw_char(cursor_x, 10, 61); cursor_x = cursor_x + 5;
-                    draw_char(cursor_x, 10, 48 + result); cursor_x = cursor_x + 5;
+                    draw_char(cursor_x, 16, 61); cursor_x = cursor_x + 1;
+                    draw_char(cursor_x, 16, 48 + result);
                 }
                 return result;
             }
             // Lettre a-z
             if (key >= 97 && key <= 122 && st == 0) {
-                draw_char(cursor_x, 10, key); cursor_x = cursor_x + 5;
+                draw_char(cursor_x, 16, key); cursor_x = cursor_x + 1;
                 cur_name = key;
                 st = 1;
             }
-            // = après lettre
+            // = apres lettre
             if (key == 61 && st == 1) {
-                draw_char(cursor_x, 10, 61); cursor_x = cursor_x + 5;
+                draw_char(cursor_x, 16, 61); cursor_x = cursor_x + 1;
                 st = 2;
             }
-            // Chiffre après =
+            // Chiffre apres =
             if (key >= 48 && key <= 57 && st == 2) {
-                draw_char(cursor_x, 10, key); cursor_x = cursor_x + 5;
+                draw_char(cursor_x, 16, key); cursor_x = cursor_x + 1;
                 set_var(cur_name, key - 48);
                 st = 0;
-                cursor_x = cursor_x + 3; // espace
+                cursor_x = cursor_x + 1; // espace
             }
         }
-        lk = key; t = t + 1;
+        last_key = key;
+
+        for (delay = 0; delay < 5000; delay = delay + 1) { }
     }
+
     return 0;
 }
 `,
@@ -1495,126 +1587,106 @@ int main() {
     return 0;
 }
 `,
-        solution: `// Compte à Rebours Interactif - Solution
-// Cochez "Capturer clavier", tapez 3 pour 3 secondes
+        solution: `// Compte à Rebours - Solution avec police bitmap
+// Cochez "Capturer clavier", tapez 1-9 pour lancer
 
-int *SCREEN = (int*)0x00400000;
+char *SCREEN = (char*)0x00400000;
 int *KEYBOARD = (int*)0x00402600;
+int *OUTPUT = (int*)0xFFFF0000;
+int last_key = 0;
 
-void set_pixel(int x, int y) {
-    int *ptr;
-    int bit_pos;
-    ptr = SCREEN + (y << 3) + (y << 1) + (x >> 5);
-    bit_pos = ((x >> 3) & 3) * 8 + 7 - (x & 7);
-    *ptr = *ptr | (1 << bit_pos);
+void get_char_lines(int c, int *lines) {
+    if (c == 48) { lines[0]=0x3C; lines[1]=0x46; lines[2]=0x4A; lines[3]=0x52; lines[4]=0x62; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 49) { lines[0]=0x18; lines[1]=0x38; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 50) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x02; lines[3]=0x1C; lines[4]=0x20; lines[5]=0x7E; lines[6]=0; lines[7]=0; }
+    else if (c == 51) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x0C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 52) { lines[0]=0x04; lines[1]=0x0C; lines[2]=0x14; lines[3]=0x24; lines[4]=0x7E; lines[5]=0x04; lines[6]=0; lines[7]=0; }
+    else if (c == 53) { lines[0]=0x7E; lines[1]=0x40; lines[2]=0x7C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 54) { lines[0]=0x1C; lines[1]=0x20; lines[2]=0x7C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 55) { lines[0]=0x7E; lines[1]=0x02; lines[2]=0x04; lines[3]=0x08; lines[4]=0x10; lines[5]=0x10; lines[6]=0; lines[7]=0; }
+    else if (c == 56) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x3C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 57) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x42; lines[3]=0x3E; lines[4]=0x04; lines[5]=0x38; lines[6]=0; lines[7]=0; }
+    else if (c == 84) { lines[0]=0x7E; lines[1]=0x18; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x18; lines[6]=0; lines[7]=0; }
+    else if (c == 73) { lines[0]=0x3E; lines[1]=0x08; lines[2]=0x08; lines[3]=0x08; lines[4]=0x08; lines[5]=0x3E; lines[6]=0; lines[7]=0; }
+    else if (c == 77) { lines[0]=0x42; lines[1]=0x66; lines[2]=0x5A; lines[3]=0x42; lines[4]=0x42; lines[5]=0x42; lines[6]=0; lines[7]=0; }
+    else if (c == 69) { lines[0]=0x7E; lines[1]=0x40; lines[2]=0x7C; lines[3]=0x40; lines[4]=0x40; lines[5]=0x7E; lines[6]=0; lines[7]=0; }
+    else if (c == 82) { lines[0]=0x7C; lines[1]=0x42; lines[2]=0x7C; lines[3]=0x48; lines[4]=0x44; lines[5]=0x42; lines[6]=0; lines[7]=0; }
+    else { lines[0]=0xFF; lines[1]=0x81; lines[2]=0x81; lines[3]=0x81; lines[4]=0x81; lines[5]=0x81; lines[6]=0xFF; lines[7]=0; }
 }
 
-// Dessine chiffre 3x5
-void draw_digit(int x, int y, int d, int on) {
-    int i; int j; int *ptr; int bit_pos; int px; int py;
-    // Efface d'abord la zone
-    for (i = 0; i < 4; i = i + 1) {
-        for (j = 0; j < 6; j = j + 1) {
-            px = x + i; py = y + j;
-            ptr = SCREEN + (py << 3) + (py << 1) + (px >> 5);
-            bit_pos = ((px >> 3) & 3) * 8 + 7 - (px & 7);
-            *ptr = *ptr & (0xFFFFFFFF ^ (1 << bit_pos));
-        }
-    }
-    if (on == 0) return;
-    // Dessine le chiffre
-    if (d != 1 && d != 4) { set_pixel(x, y); set_pixel(x+1, y); set_pixel(x+2, y); }
-    if (d == 0 || d == 4 || d == 5 || d == 6 || d == 8 || d == 9) { set_pixel(x, y+1); }
-    if (d != 5 && d != 6) { set_pixel(x+2, y+1); }
-    if (d != 0 && d != 1 && d != 7) { set_pixel(x, y+2); set_pixel(x+1, y+2); set_pixel(x+2, y+2); }
-    if (d == 0 || d == 2 || d == 6 || d == 8) { set_pixel(x, y+3); }
-    if (d != 2) { set_pixel(x+2, y+3); }
-    if (d != 1 && d != 4 && d != 7) { set_pixel(x, y+4); set_pixel(x+1, y+4); set_pixel(x+2, y+4); }
-    if (d == 1) { set_pixel(x+1, y); set_pixel(x+1, y+1); set_pixel(x+1, y+2); set_pixel(x+1, y+3); set_pixel(x+1, y+4); }
+void draw_char(int bx, int py, int c) {
+    int lines[8]; int i;
+    get_char_lines(c, lines);
+    for (i = 0; i < 8; i = i + 1) SCREEN[(py + i) * 40 + bx] = lines[i];
 }
 
-// Dessine barre horizontale
-void draw_hbar(int x, int y, int w) {
-    int i; int j;
-    for (i = 0; i < w; i = i + 1) {
-        for (j = 0; j < 4; j = j + 1) {
-            set_pixel(x + i, y + j);
-        }
+void draw_bar(int width) {
+    int i;
+    for (i = 0; i < width; i = i + 1) {
+        SCREEN[24 * 40 + i] = 0xFF;
+        SCREEN[25 * 40 + i] = 0xFF;
+        SCREEN[26 * 40 + i] = 0xFF;
+        SCREEN[27 * 40 + i] = 0xFF;
     }
 }
 
-// Efface colonne de barre (XOR avec 0xFFFFFFFF au lieu de ~)
-void clear_col(int x, int y) {
-    int j; int *ptr; int bit_pos; int py;
-    for (j = 0; j < 4; j = j + 1) {
-        py = y + j;
-        ptr = SCREEN + (py << 3) + (py << 1) + (x >> 5);
-        bit_pos = ((x >> 3) & 3) * 8 + 7 - (x & 7);
-        *ptr = *ptr & (0xFFFFFFFF ^ (1 << bit_pos));
-    }
+void clear_bar_col(int bx) {
+    SCREEN[24 * 40 + bx] = 0;
+    SCREEN[25 * 40 + bx] = 0;
+    SCREEN[26 * 40 + bx] = 0;
+    SCREEN[27 * 40 + bx] = 0;
 }
 
-// Flash rectangle
-void flash(int x, int y, int w, int h) {
-    int i; int j;
-    for (i = 0; i < w; i = i + 1) {
-        for (j = 0; j < h; j = j + 1) {
-            set_pixel(x + i, y + j);
-        }
-    }
+void flash_screen() {
+    int i;
+    for (i = 0; i < 9600; i = i + 1) SCREEN[i] = 0xFF;
 }
 
 int state = 0;
 int secs = 0;
-int bar_x = 0;
-int step = 0;
-int tick = 0;
+int bar_w = 0;
+int tick_count = 0;
 
 int main() {
-    int key; int lk; int t; int bar_w;
-    lk = 0; t = 0;
+    int key; int i; int delay;
 
-    while (t < 500000) {
+    *OUTPUT = 'T'; *OUTPUT = 'I'; *OUTPUT = 'M'; *OUTPUT = 'E'; *OUTPUT = 'R'; *OUTPUT = 10;
+    for (i = 0; i < 9600; i = i + 1) SCREEN[i] = 0;
+    draw_char(0, 0, 84); draw_char(1, 0, 73); draw_char(2, 0, 77); draw_char(3, 0, 69); draw_char(4, 0, 82);
+
+    while (1) {
         key = *KEYBOARD;
-
         if (state == 0) {
-            if (key >= 49 && key <= 57 && key != lk) {
+            if (key >= 49 && key <= 57 && key != last_key) {
                 secs = key - 48;
-                draw_digit(4, 4, secs, 1);
-                bar_w = secs << 3;
-                draw_hbar(4, 15, bar_w);
-                bar_x = 3 + bar_w;
-                step = 0;
-                tick = 0;
+                *OUTPUT = key; *OUTPUT = 10;
+                draw_char(5, 12, key);
+                bar_w = secs * 3;
+                draw_bar(bar_w);
+                tick_count = 0;
                 state = 1;
             }
         }
-
         if (state == 1) {
-            tick = tick + 1;
-            if (tick >= 800) {
-                tick = 0;
-                clear_col(bar_x, 15);
-                bar_x = bar_x - 1;
-                step = step + 1;
-                if (step >= 8) {
-                    step = 0;
+            tick_count = tick_count + 1;
+            if (tick_count >= 2000) {
+                tick_count = 0;
+                bar_w = bar_w - 1;
+                clear_bar_col(bar_w);
+                if (bar_w % 3 == 0) {
                     secs = secs - 1;
-                    draw_digit(4, 4, secs, 1);
-                    if (secs <= 0) {
-                        state = 2;
-                    }
+                    draw_char(5, 12, 48 + secs);
                 }
+                if (bar_w <= 0) state = 2;
             }
         }
-
         if (state == 2) {
-            flash(4, 4, 60, 20);
+            flash_screen();
+            *OUTPUT = 'D'; *OUTPUT = 'O'; *OUTPUT = 'N'; *OUTPUT = 'E'; *OUTPUT = 10;
             return 1;
         }
-
-        lk = key;
-        t = t + 1;
+        last_key = key;
+        for (delay = 0; delay < 100; delay = delay + 1) { }
     }
     return 0;
 }
@@ -1654,129 +1726,116 @@ int main() {
     return 0;
 }
 `,
-        solution: `// Interruptions Visuelles - Solution
+        solution: `// Interruptions - Solution avec police bitmap
 // Cochez "Capturer clavier", appuyez T/K/S puis Enter
 
-int *SCREEN = (int*)0x00400000;
+char *SCREEN = (char*)0x00400000;
 int *KEYBOARD = (int*)0x00402600;
-
+int *OUTPUT = (int*)0xFFFF0000;
+int last_key = 0;
 int irq_count[3];
 
-void set_pixel(int x, int y) {
-    int *ptr; int bit_pos;
-    ptr = SCREEN + (y << 3) + (y << 1) + (x >> 5);
-    bit_pos = ((x >> 3) & 3) * 8 + 7 - (x & 7);
-    *ptr = *ptr | (1 << bit_pos);
+void get_char_lines(int c, int *lines) {
+    if (c == 48) { lines[0]=0x3C; lines[1]=0x46; lines[2]=0x4A; lines[3]=0x52; lines[4]=0x62; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 49) { lines[0]=0x18; lines[1]=0x38; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 50) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x02; lines[3]=0x1C; lines[4]=0x20; lines[5]=0x7E; lines[6]=0; lines[7]=0; }
+    else if (c == 51) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x0C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 52) { lines[0]=0x04; lines[1]=0x0C; lines[2]=0x14; lines[3]=0x24; lines[4]=0x7E; lines[5]=0x04; lines[6]=0; lines[7]=0; }
+    else if (c == 53) { lines[0]=0x7E; lines[1]=0x40; lines[2]=0x7C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 54) { lines[0]=0x1C; lines[1]=0x20; lines[2]=0x7C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 55) { lines[0]=0x7E; lines[1]=0x02; lines[2]=0x04; lines[3]=0x08; lines[4]=0x10; lines[5]=0x10; lines[6]=0; lines[7]=0; }
+    else if (c == 56) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x3C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 57) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x42; lines[3]=0x3E; lines[4]=0x04; lines[5]=0x38; lines[6]=0; lines[7]=0; }
+    else if (c == 84) { lines[0]=0x7E; lines[1]=0x18; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x18; lines[6]=0; lines[7]=0; }
+    else if (c == 75) { lines[0]=0x42; lines[1]=0x44; lines[2]=0x78; lines[3]=0x48; lines[4]=0x44; lines[5]=0x42; lines[6]=0; lines[7]=0; }
+    else if (c == 83) { lines[0]=0x3C; lines[1]=0x40; lines[2]=0x3C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 73) { lines[0]=0x3E; lines[1]=0x08; lines[2]=0x08; lines[3]=0x08; lines[4]=0x08; lines[5]=0x3E; lines[6]=0; lines[7]=0; }
+    else if (c == 82) { lines[0]=0x7C; lines[1]=0x42; lines[2]=0x7C; lines[3]=0x48; lines[4]=0x44; lines[5]=0x42; lines[6]=0; lines[7]=0; }
+    else if (c == 81) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x42; lines[3]=0x4A; lines[4]=0x44; lines[5]=0x3A; lines[6]=0; lines[7]=0; }
+    else { lines[0]=0xFF; lines[1]=0x81; lines[2]=0x81; lines[3]=0x81; lines[4]=0x81; lines[5]=0x81; lines[6]=0xFF; lines[7]=0; }
 }
 
-void clear_rect(int x, int y, int w, int h) {
-    int i; int j; int px; int py; int *ptr; int bit_pos;
-    for (i = 0; i < w; i = i + 1) {
-        for (j = 0; j < h; j = j + 1) {
-            px = x + i; py = y + j;
-            ptr = SCREEN + (py << 3) + (py << 1) + (px >> 5);
-            bit_pos = ((px >> 3) & 3) * 8 + 7 - (px & 7);
-            *ptr = *ptr & (0xFFFFFFFF ^ (1 << bit_pos));
-        }
-    }
+void draw_char(int bx, int py, int c) {
+    int lines[8]; int i;
+    get_char_lines(c, lines);
+    for (i = 0; i < 8; i = i + 1) SCREEN[(py + i) * 40 + bx] = lines[i];
 }
 
-void fill_rect(int x, int y, int w, int h) {
-    int i; int j;
-    for (i = 0; i < w; i = i + 1) {
-        for (j = 0; j < h; j = j + 1) {
-            set_pixel(x + i, y + j);
-        }
-    }
-}
-
-void draw_box(int x, int y, int w, int h) {
+void draw_box(int bx, int py, int w, int h) {
     int i;
-    for (i = 0; i < w; i = i + 1) { set_pixel(x + i, y); set_pixel(x + i, y + h - 1); }
-    for (i = 0; i < h; i = i + 1) { set_pixel(x, y + i); set_pixel(x + w - 1, y + i); }
+    for (i = 0; i < w; i = i + 1) { SCREEN[py * 40 + bx + i] = 0xFF; SCREEN[(py + h - 1) * 40 + bx + i] = 0xFF; }
+    for (i = 0; i < h; i = i + 1) { SCREEN[(py + i) * 40 + bx] = 0xFF; SCREEN[(py + i) * 40 + bx + w - 1] = 0xFF; }
 }
 
-void draw_digit(int x, int y, int d) {
-    clear_rect(x, y, 4, 6);
-    if (d != 1 && d != 4) { set_pixel(x, y); set_pixel(x+1, y); set_pixel(x+2, y); }
-    if (d == 0 || d == 4 || d == 5 || d == 6 || d == 8 || d == 9) set_pixel(x, y+1);
-    if (d != 5 && d != 6) set_pixel(x+2, y+1);
-    if (d != 0 && d != 1 && d != 7) { set_pixel(x, y+2); set_pixel(x+1, y+2); set_pixel(x+2, y+2); }
-    if (d == 0 || d == 2 || d == 6 || d == 8) set_pixel(x, y+3);
-    if (d != 2) set_pixel(x+2, y+3);
-    if (d != 1 && d != 4 && d != 7) { set_pixel(x, y+4); set_pixel(x+1, y+4); set_pixel(x+2, y+4); }
-    if (d == 1) { set_pixel(x+1, y); set_pixel(x+1, y+1); set_pixel(x+1, y+2); set_pixel(x+1, y+3); set_pixel(x+1, y+4); }
+void fill_box(int bx, int py, int w, int h) {
+    int i; int j;
+    for (j = 0; j < h; j = j + 1) {
+        for (i = 0; i < w; i = i + 1) {
+            SCREEN[(py + j) * 40 + bx + i] = 0xFF;
+        }
+    }
 }
 
-// Dessine lettre T, K ou S
-void draw_letter(int x, int y, int c) {
-    if (c == 84) { // T
-        set_pixel(x,y); set_pixel(x+1,y); set_pixel(x+2,y);
-        set_pixel(x+1,y+1); set_pixel(x+1,y+2); set_pixel(x+1,y+3); set_pixel(x+1,y+4);
-    }
-    if (c == 75) { // K
-        set_pixel(x,y); set_pixel(x,y+1); set_pixel(x,y+2); set_pixel(x,y+3); set_pixel(x,y+4);
-        set_pixel(x+2,y); set_pixel(x+1,y+1); set_pixel(x+1,y+3); set_pixel(x+2,y+4);
-        set_pixel(x+1,y+2);
-    }
-    if (c == 83) { // S
-        set_pixel(x,y); set_pixel(x+1,y); set_pixel(x+2,y);
-        set_pixel(x,y+1);
-        set_pixel(x,y+2); set_pixel(x+1,y+2); set_pixel(x+2,y+2);
-        set_pixel(x+2,y+3);
-        set_pixel(x,y+4); set_pixel(x+1,y+4); set_pixel(x+2,y+4);
+void clear_box(int bx, int py, int w, int h) {
+    int i; int j;
+    for (j = 0; j < h; j = j + 1) {
+        for (i = 0; i < w; i = i + 1) {
+            SCREEN[(py + j) * 40 + bx + i] = 0;
+        }
     }
 }
 
 void draw_device(int idx) {
-    int x;
-    x = idx * 25 + 4;
-    draw_box(x, 4, 20, 15);
-    if (idx == 0) draw_letter(x + 8, 6, 84);
-    if (idx == 1) draw_letter(x + 8, 6, 75);
-    if (idx == 2) draw_letter(x + 8, 6, 83);
-    draw_digit(x + 8, 13, irq_count[idx]);
+    int bx;
+    bx = idx * 10 + 2;
+    clear_box(bx, 8, 8, 24);
+    draw_box(bx, 8, 8, 24);
+    if (idx == 0) draw_char(bx + 3, 10, 84);
+    if (idx == 1) draw_char(bx + 3, 10, 75);
+    if (idx == 2) draw_char(bx + 3, 10, 83);
+    draw_char(bx + 3, 22, 48 + irq_count[idx]);
 }
 
 void flash_device(int idx) {
-    int x; int i;
-    x = idx * 25 + 4;
-    fill_rect(x + 1, 5, 18, 13);
-    // Petit delai
-    for (i = 0; i < 500; i = i + 1) { }
+    int bx; int i;
+    bx = idx * 10 + 2;
+    fill_box(bx + 1, 9, 6, 22);
+    for (i = 0; i < 1000; i = i + 1) { }
 }
 
 void irq_handler(int type) {
     if (type >= 0 && type < 3) {
         irq_count[type] = irq_count[type] + 1;
+        if (irq_count[type] > 9) irq_count[type] = 9;
         flash_device(type);
         draw_device(type);
     }
 }
 
 int main() {
-    int key; int lk; int t; int total;
-    lk = 0; t = 0;
+    int key; int i; int delay; int total;
+
+    *OUTPUT = 'I'; *OUTPUT = 'R'; *OUTPUT = 'Q'; *OUTPUT = 10;
+    for (i = 0; i < 9600; i = i + 1) SCREEN[i] = 0;
     irq_count[0] = 0; irq_count[1] = 0; irq_count[2] = 0;
 
-    draw_device(0);
-    draw_device(1);
-    draw_device(2);
+    draw_char(0, 0, 73); draw_char(1, 0, 82); draw_char(2, 0, 81);
+    draw_device(0); draw_device(1); draw_device(2);
 
-    while (t < 100000) {
+    while (1) {
         key = *KEYBOARD;
-        if (key != 0 && key != lk) {
-            t = 0;
+        if (key != 0 && key != last_key) {
             if (key == 13) {
                 total = irq_count[0] + irq_count[1] + irq_count[2];
+                *OUTPUT = 10;
                 return total;
             }
-            if (key == 116 || key == 84) irq_handler(0);
-            if (key == 107 || key == 75) irq_handler(1);
-            if (key == 115 || key == 83) irq_handler(2);
+            if (key == 116 || key == 84) { *OUTPUT = 'T'; irq_handler(0); }
+            if (key == 107 || key == 75) { *OUTPUT = 'K'; irq_handler(1); }
+            if (key == 115 || key == 83) { *OUTPUT = 'S'; irq_handler(2); }
         }
-        lk = key;
-        t = t + 1;
+        last_key = key;
+        for (delay = 0; delay < 1000; delay = delay + 1) { }
     }
     return 0;
 }
@@ -1823,129 +1882,87 @@ int main() {
     return 0;
 }
 `,
-        solution: `// Coroutines Visuelles - Solution
-// Cochez "Capturer clavier", appuyez Espace pour chaque step
+        solution: `// Coroutines - Solution avec police bitmap
+// Cochez "Capturer clavier", Espace pour step
 
-int *SCREEN = (int*)0x00400000;
+char *SCREEN = (char*)0x00400000;
 int *KEYBOARD = (int*)0x00402600;
-
+int *OUTPUT = (int*)0xFFFF0000;
+int last_key = 0;
 int current_task = 0;
 int task_a_val = 0;
 int task_b_val = 0;
 int steps = 0;
 
-void set_pixel(int x, int y) {
-    int *ptr; int bit_pos;
-    ptr = SCREEN + (y << 3) + (y << 1) + (x >> 5);
-    bit_pos = ((x >> 3) & 3) * 8 + 7 - (x & 7);
-    *ptr = *ptr | (1 << bit_pos);
+void get_char_lines(int c, int *lines) {
+    if (c == 48) { lines[0]=0x3C; lines[1]=0x46; lines[2]=0x4A; lines[3]=0x52; lines[4]=0x62; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 49) { lines[0]=0x18; lines[1]=0x38; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 50) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x02; lines[3]=0x1C; lines[4]=0x20; lines[5]=0x7E; lines[6]=0; lines[7]=0; }
+    else if (c == 51) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x0C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 52) { lines[0]=0x04; lines[1]=0x0C; lines[2]=0x14; lines[3]=0x24; lines[4]=0x7E; lines[5]=0x04; lines[6]=0; lines[7]=0; }
+    else if (c == 65) { lines[0]=0x18; lines[1]=0x24; lines[2]=0x42; lines[3]=0x7E; lines[4]=0x42; lines[5]=0x42; lines[6]=0; lines[7]=0; }
+    else if (c == 66) { lines[0]=0x7C; lines[1]=0x42; lines[2]=0x7C; lines[3]=0x42; lines[4]=0x42; lines[5]=0x7C; lines[6]=0; lines[7]=0; }
+    else if (c == 67) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x40; lines[3]=0x40; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 79) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x42; lines[3]=0x42; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 82) { lines[0]=0x7C; lines[1]=0x42; lines[2]=0x7C; lines[3]=0x48; lines[4]=0x44; lines[5]=0x42; lines[6]=0; lines[7]=0; }
+    else if (c == 62) { lines[0]=0x40; lines[1]=0x20; lines[2]=0x10; lines[3]=0x08; lines[4]=0x10; lines[5]=0x20; lines[6]=0x40; lines[7]=0; }
+    else if (c == 60) { lines[0]=0x02; lines[1]=0x04; lines[2]=0x08; lines[3]=0x10; lines[4]=0x08; lines[5]=0x04; lines[6]=0x02; lines[7]=0; }
+    else { lines[0]=0xFF; lines[1]=0x81; lines[2]=0x81; lines[3]=0x81; lines[4]=0x81; lines[5]=0x81; lines[6]=0xFF; lines[7]=0; }
 }
 
-void clear_rect(int x, int y, int w, int h) {
-    int i; int j; int px; int py; int *ptr; int bit_pos;
-    for (i = 0; i < w; i = i + 1) {
-        for (j = 0; j < h; j = j + 1) {
-            px = x + i; py = y + j;
-            ptr = SCREEN + (py << 3) + (py << 1) + (px >> 5);
-            bit_pos = ((px >> 3) & 3) * 8 + 7 - (px & 7);
-            *ptr = *ptr & (0xFFFFFFFF ^ (1 << bit_pos));
-        }
-    }
+void draw_char(int bx, int py, int c) {
+    int lines[8]; int i;
+    get_char_lines(c, lines);
+    for (i = 0; i < 8; i = i + 1) SCREEN[(py + i) * 40 + bx] = lines[i];
 }
 
-void fill_rect(int x, int y, int w, int h) {
+void clear_box(int bx, int py, int w, int h) {
     int i; int j;
-    for (i = 0; i < w; i = i + 1) {
-        for (j = 0; j < h; j = j + 1) {
-            set_pixel(x + i, y + j);
-        }
-    }
+    for (j = 0; j < h; j = j + 1)
+        for (i = 0; i < w; i = i + 1)
+            SCREEN[(py + j) * 40 + bx + i] = 0;
 }
 
-void draw_box(int x, int y, int w, int h) {
+void fill_box(int bx, int py, int w, int h) {
+    int i; int j;
+    for (j = 0; j < h; j = j + 1)
+        for (i = 0; i < w; i = i + 1)
+            SCREEN[(py + j) * 40 + bx + i] = 0xFF;
+}
+
+void draw_box(int bx, int py, int w, int h) {
     int i;
-    for (i = 0; i < w; i = i + 1) { set_pixel(x + i, y); set_pixel(x + i, y + h - 1); }
-    for (i = 0; i < h; i = i + 1) { set_pixel(x, y + i); set_pixel(x + w - 1, y + i); }
-}
-
-void draw_digit(int x, int y, int d) {
-    clear_rect(x, y, 4, 6);
-    if (d != 1 && d != 4) { set_pixel(x, y); set_pixel(x+1, y); set_pixel(x+2, y); }
-    if (d == 0 || d == 4 || d == 5 || d == 6 || d == 8 || d == 9) set_pixel(x, y+1);
-    if (d != 5 && d != 6) set_pixel(x+2, y+1);
-    if (d != 0 && d != 1 && d != 7) { set_pixel(x, y+2); set_pixel(x+1, y+2); set_pixel(x+2, y+2); }
-    if (d == 0 || d == 2 || d == 6 || d == 8) set_pixel(x, y+3);
-    if (d != 2) set_pixel(x+2, y+3);
-    if (d != 1 && d != 4 && d != 7) { set_pixel(x, y+4); set_pixel(x+1, y+4); set_pixel(x+2, y+4); }
-    if (d == 1) { set_pixel(x+1, y); set_pixel(x+1, y+1); set_pixel(x+1, y+2); set_pixel(x+1, y+3); set_pixel(x+1, y+4); }
-}
-
-void draw_letter_A(int x, int y) {
-    set_pixel(x+1, y);
-    set_pixel(x, y+1); set_pixel(x+2, y+1);
-    set_pixel(x, y+2); set_pixel(x+1, y+2); set_pixel(x+2, y+2);
-    set_pixel(x, y+3); set_pixel(x+2, y+3);
-    set_pixel(x, y+4); set_pixel(x+2, y+4);
-}
-
-void draw_letter_B(int x, int y) {
-    set_pixel(x, y); set_pixel(x+1, y);
-    set_pixel(x, y+1); set_pixel(x+2, y+1);
-    set_pixel(x, y+2); set_pixel(x+1, y+2);
-    set_pixel(x, y+3); set_pixel(x+2, y+3);
-    set_pixel(x, y+4); set_pixel(x+1, y+4);
-}
-
-void draw_arrow(int x, int y) {
-    set_pixel(x, y+2);
-    set_pixel(x+1, y+1); set_pixel(x+1, y+2); set_pixel(x+1, y+3);
-    set_pixel(x+2, y); set_pixel(x+2, y+2); set_pixel(x+2, y+4);
-    set_pixel(x+3, y+1); set_pixel(x+3, y+2); set_pixel(x+3, y+3);
-    set_pixel(x+4, y+2);
+    for (i = 0; i < w; i = i + 1) { SCREEN[py * 40 + bx + i] = 0xFF; SCREEN[(py + h - 1) * 40 + bx + i] = 0xFF; }
+    for (i = 1; i < h - 1; i = i + 1) { SCREEN[(py + i) * 40 + bx] = 0xFF; SCREEN[(py + i) * 40 + bx + w - 1] = 0xFF; }
 }
 
 void draw_task(int idx, int active) {
-    int x;
-    x = idx * 35 + 4;
-    clear_rect(x, 4, 30, 20);
+    int bx;
+    bx = idx * 12 + 2;
+    clear_box(bx, 8, 10, 24);
     if (active) {
-        fill_rect(x, 4, 30, 20);
-        // Dessiner en inverse (effacer les pixels pour la lettre/chiffre)
-        clear_rect(x + 12, 7, 6, 6);
-        clear_rect(x + 12, 15, 5, 6);
+        fill_box(bx, 8, 10, 24);
     } else {
-        draw_box(x, 4, 30, 20);
+        draw_box(bx, 8, 10, 24);
     }
     if (idx == 0) {
-        if (active) clear_rect(x + 13, 7, 4, 5);
-        else draw_letter_A(x + 13, 7);
-        draw_digit(x + 13, 15, task_a_val);
+        draw_char(bx + 4, 10, 65);
+        draw_char(bx + 4, 22, 48 + task_a_val);
     } else {
-        if (active) clear_rect(x + 13, 7, 4, 5);
-        else draw_letter_B(x + 13, 7);
-        draw_digit(x + 13, 15, task_b_val);
+        draw_char(bx + 4, 10, 66);
+        draw_char(bx + 4, 22, 48 + task_b_val);
     }
 }
 
 void draw_all() {
     draw_task(0, current_task == 0);
     draw_task(1, current_task == 1);
-    // Fleche entre les taches
-    if (current_task == 0) {
-        clear_rect(32, 12, 8, 6);
-        draw_arrow(32, 12);
-    } else {
-        clear_rect(32, 12, 8, 6);
-        // Fleche inversee
-        set_pixel(36, 14);
-        set_pixel(35, 13); set_pixel(35, 14); set_pixel(35, 15);
-        set_pixel(34, 12); set_pixel(34, 14); set_pixel(34, 16);
-        set_pixel(33, 13); set_pixel(33, 14); set_pixel(33, 15);
-        set_pixel(32, 14);
-    }
+    clear_box(13, 16, 2, 8);
+    if (current_task == 0) draw_char(13, 16, 62);
+    else draw_char(13, 16, 60);
 }
 
-int step() {
+int do_step() {
     if (current_task == 0) {
         task_a_val = task_a_val + 1;
         if (task_a_val > 3) return 0;
@@ -1960,28 +1977,32 @@ int step() {
 }
 
 int main() {
-    int key; int lk; int t; int running;
-    lk = 0; t = 0; running = 1;
+    int key; int i; int delay; int running;
+    running = 1;
 
+    *OUTPUT = 'C'; *OUTPUT = 'O'; *OUTPUT = 'R'; *OUTPUT = 'O'; *OUTPUT = 10;
+    for (i = 0; i < 9600; i = i + 1) SCREEN[i] = 0;
+    draw_char(0, 0, 67); draw_char(1, 0, 79); draw_char(2, 0, 82); draw_char(3, 0, 79);
     draw_all();
 
-    while (t < 100000 && running) {
+    while (running) {
         key = *KEYBOARD;
-        if (key != 0 && key != lk) {
-            t = 0;
+        if (key != 0 && key != last_key) {
             if (key == 32) {
-                running = step();
+                *OUTPUT = '.';
+                running = do_step();
                 draw_all();
             }
             if (key == 13) {
+                *OUTPUT = 10;
                 return steps;
             }
         }
-        lk = key;
-        t = t + 1;
+        last_key = key;
+        for (delay = 0; delay < 1000; delay = delay + 1) { }
     }
-    // Flash final
-    fill_rect(0, 0, 80, 30);
+    fill_box(0, 0, 30, 40);
+    *OUTPUT = 10;
     return steps;
 }
 `,
@@ -2033,12 +2054,13 @@ int main() {
     return 0;
 }
 `,
-        solution: `// Scheduler Round-Robin Visuel - Solution
-// Cochez "Capturer clavier", Espace pour chaque tick
+        solution: `// Scheduler - Solution avec police bitmap
+// Cochez "Capturer clavier", Espace pour tick
 
-int *SCREEN = (int*)0x00400000;
+char *SCREEN = (char*)0x00400000;
 int *KEYBOARD = (int*)0x00402600;
-
+int *OUTPUT = (int*)0xFFFF0000;
+int last_key = 0;
 int proc_time[3];
 int proc_state[3];
 int current_proc = 0;
@@ -2046,133 +2068,62 @@ int quantum_left = 2;
 int switches = 0;
 int ticks = 0;
 
-void set_pixel(int x, int y) {
-    int *ptr; int bit_pos;
-    ptr = SCREEN + (y << 3) + (y << 1) + (x >> 5);
-    bit_pos = ((x >> 3) & 3) * 8 + 7 - (x & 7);
-    *ptr = *ptr | (1 << bit_pos);
+void get_char_lines(int c, int *lines) {
+    if (c == 48) { lines[0]=0x3C; lines[1]=0x46; lines[2]=0x4A; lines[3]=0x52; lines[4]=0x62; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 49) { lines[0]=0x18; lines[1]=0x38; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 50) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x02; lines[3]=0x1C; lines[4]=0x20; lines[5]=0x7E; lines[6]=0; lines[7]=0; }
+    else if (c == 51) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x0C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 52) { lines[0]=0x04; lines[1]=0x0C; lines[2]=0x14; lines[3]=0x24; lines[4]=0x7E; lines[5]=0x04; lines[6]=0; lines[7]=0; }
+    else if (c == 80) { lines[0]=0x7C; lines[1]=0x42; lines[2]=0x7C; lines[3]=0x40; lines[4]=0x40; lines[5]=0x40; lines[6]=0; lines[7]=0; }
+    else if (c == 81) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x42; lines[3]=0x4A; lines[4]=0x44; lines[5]=0x3A; lines[6]=0; lines[7]=0; }
+    else if (c == 83) { lines[0]=0x3C; lines[1]=0x40; lines[2]=0x3C; lines[3]=0x02; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 67) { lines[0]=0x3C; lines[1]=0x42; lines[2]=0x40; lines[3]=0x40; lines[4]=0x42; lines[5]=0x3C; lines[6]=0; lines[7]=0; }
+    else if (c == 72) { lines[0]=0x42; lines[1]=0x42; lines[2]=0x7E; lines[3]=0x42; lines[4]=0x42; lines[5]=0x42; lines[6]=0; lines[7]=0; }
+    else if (c == 88) { lines[0]=0x42; lines[1]=0x24; lines[2]=0x18; lines[3]=0x18; lines[4]=0x24; lines[5]=0x42; lines[6]=0; lines[7]=0; }
+    else { lines[0]=0xFF; lines[1]=0x81; lines[2]=0x81; lines[3]=0x81; lines[4]=0x81; lines[5]=0x81; lines[6]=0xFF; lines[7]=0; }
 }
 
-void clear_rect(int x, int y, int w, int h) {
-    int i; int j; int px; int py; int *ptr; int bit_pos;
-    for (i = 0; i < w; i = i + 1) {
-        for (j = 0; j < h; j = j + 1) {
-            px = x + i; py = y + j;
-            ptr = SCREEN + (py << 3) + (py << 1) + (px >> 5);
-            bit_pos = ((px >> 3) & 3) * 8 + 7 - (px & 7);
-            *ptr = *ptr & (0xFFFFFFFF ^ (1 << bit_pos));
-        }
-    }
+void draw_char(int bx, int py, int c) {
+    int lines[8]; int i;
+    get_char_lines(c, lines);
+    for (i = 0; i < 8; i = i + 1) SCREEN[(py + i) * 40 + bx] = lines[i];
 }
 
-void fill_rect(int x, int y, int w, int h) {
+void clear_box(int bx, int py, int w, int h) {
     int i; int j;
-    for (i = 0; i < w; i = i + 1) {
-        for (j = 0; j < h; j = j + 1) {
-            set_pixel(x + i, y + j);
-        }
-    }
+    for (j = 0; j < h; j = j + 1) for (i = 0; i < w; i = i + 1) SCREEN[(py + j) * 40 + bx + i] = 0;
 }
 
-void draw_box(int x, int y, int w, int h) {
+void fill_box(int bx, int py, int w, int h) {
+    int i; int j;
+    for (j = 0; j < h; j = j + 1) for (i = 0; i < w; i = i + 1) SCREEN[(py + j) * 40 + bx + i] = 0xFF;
+}
+
+void draw_box(int bx, int py, int w, int h) {
     int i;
-    for (i = 0; i < w; i = i + 1) { set_pixel(x + i, y); set_pixel(x + i, y + h - 1); }
-    for (i = 0; i < h; i = i + 1) { set_pixel(x, y + i); set_pixel(x + w - 1, y + i); }
-}
-
-void draw_digit(int x, int y, int d) {
-    clear_rect(x, y, 4, 6);
-    if (d != 1 && d != 4) { set_pixel(x, y); set_pixel(x+1, y); set_pixel(x+2, y); }
-    if (d == 0 || d == 4 || d == 5 || d == 6 || d == 8 || d == 9) set_pixel(x, y+1);
-    if (d != 5 && d != 6) set_pixel(x+2, y+1);
-    if (d != 0 && d != 1 && d != 7) { set_pixel(x, y+2); set_pixel(x+1, y+2); set_pixel(x+2, y+2); }
-    if (d == 0 || d == 2 || d == 6 || d == 8) set_pixel(x, y+3);
-    if (d != 2) set_pixel(x+2, y+3);
-    if (d != 1 && d != 4 && d != 7) { set_pixel(x, y+4); set_pixel(x+1, y+4); set_pixel(x+2, y+4); }
-    if (d == 1) { set_pixel(x+1, y); set_pixel(x+1, y+1); set_pixel(x+1, y+2); set_pixel(x+1, y+3); set_pixel(x+1, y+4); }
-}
-
-void draw_P(int x, int y) {
-    set_pixel(x, y); set_pixel(x+1, y); set_pixel(x+2, y);
-    set_pixel(x, y+1); set_pixel(x+2, y+1);
-    set_pixel(x, y+2); set_pixel(x+1, y+2);
-    set_pixel(x, y+3); set_pixel(x, y+4);
+    for (i = 0; i < w; i = i + 1) { SCREEN[py * 40 + bx + i] = 0xFF; SCREEN[(py + h - 1) * 40 + bx + i] = 0xFF; }
+    for (i = 1; i < h - 1; i = i + 1) { SCREEN[(py + i) * 40 + bx] = 0xFF; SCREEN[(py + i) * 40 + bx + w - 1] = 0xFF; }
 }
 
 void draw_proc(int idx, int active) {
-    int x; int y; int t; int i;
-    x = idx * 32 + 4;
-    y = 4;
-
-    clear_rect(x, y, 28, 24);
-
-    if (active) {
-        fill_rect(x, y, 28, 24);
-        clear_rect(x + 2, y + 2, 24, 20);
-    } else {
-        draw_box(x, y, 28, 24);
-    }
-
-    // P et numero
-    draw_P(x + 4, y + 4);
-    draw_digit(x + 10, y + 4, idx);
-
-    // Barre de temps restant
+    int bx; int t; int i;
+    bx = idx * 10 + 2;
+    clear_box(bx, 8, 8, 32);
+    if (active) fill_box(bx, 8, 8, 32);
+    else draw_box(bx, 8, 8, 32);
+    draw_char(bx + 3, 10, 80);
+    draw_char(bx + 3, 18, 48 + idx);
     t = proc_time[idx];
-    if (t > 0) {
-        for (i = 0; i < t; i = i + 1) {
-            fill_rect(x + 4 + i * 5, y + 14, 4, 6);
-        }
-    }
-
-    // X si termine
-    if (proc_state[idx] == 2) {
-        set_pixel(x + 8, y + 14); set_pixel(x + 12, y + 14);
-        set_pixel(x + 9, y + 15); set_pixel(x + 11, y + 15);
-        set_pixel(x + 10, y + 16);
-        set_pixel(x + 9, y + 17); set_pixel(x + 11, y + 17);
-        set_pixel(x + 8, y + 18); set_pixel(x + 12, y + 18);
-    }
+    for (i = 0; i < t; i = i + 1) SCREEN[(28 + i) * 40 + bx + 3] = 0xFF;
+    if (proc_state[idx] == 2) draw_char(bx + 3, 30, 88);
 }
 
 void draw_all() {
     int i;
-    for (i = 0; i < 3; i = i + 1) {
-        draw_proc(i, i == current_proc && proc_state[i] != 2);
-    }
-
-    // Quantum: Q=N
-    clear_rect(4, 32, 20, 6);
-    // Q
-    set_pixel(5, 32); set_pixel(6, 32); set_pixel(7, 32);
-    set_pixel(4, 33); set_pixel(8, 33);
-    set_pixel(4, 34); set_pixel(8, 34);
-    set_pixel(4, 35); set_pixel(6, 35); set_pixel(8, 35);
-    set_pixel(5, 36); set_pixel(6, 36); set_pixel(8, 36);
-    draw_digit(12, 32, quantum_left);
-
-    // Switches: SW=N
-    clear_rect(30, 32, 30, 6);
-    // S
-    set_pixel(31, 32); set_pixel(32, 32); set_pixel(33, 32);
-    set_pixel(30, 33);
-    set_pixel(31, 34); set_pixel(32, 34);
-    set_pixel(33, 35);
-    set_pixel(30, 36); set_pixel(31, 36); set_pixel(32, 36);
-    // W
-    set_pixel(36, 32); set_pixel(40, 32);
-    set_pixel(36, 33); set_pixel(40, 33);
-    set_pixel(36, 34); set_pixel(38, 34); set_pixel(40, 34);
-    set_pixel(36, 35); set_pixel(38, 35); set_pixel(40, 35);
-    set_pixel(37, 36); set_pixel(39, 36);
-    draw_digit(44, 32, switches);
-
-    // Ticks: T=N
-    clear_rect(60, 32, 20, 6);
-    // T
-    set_pixel(60, 32); set_pixel(61, 32); set_pixel(62, 32);
-    set_pixel(61, 33); set_pixel(61, 34); set_pixel(61, 35); set_pixel(61, 36);
-    draw_digit(66, 32, ticks);
+    for (i = 0; i < 3; i = i + 1) draw_proc(i, i == current_proc && proc_state[i] != 2);
+    clear_box(0, 44, 30, 8);
+    draw_char(0, 44, 81); draw_char(1, 44, 48 + quantum_left);
+    draw_char(4, 44, 83); draw_char(5, 44, 48 + switches % 10);
 }
 
 int find_next(int from) {
@@ -2184,67 +2135,46 @@ int find_next(int from) {
     return from;
 }
 
-int tick() {
+int do_tick() {
     int next; int all_done;
-
-    // Verifier si tous termines
     all_done = 1;
     if (proc_state[0] != 2) all_done = 0;
     if (proc_state[1] != 2) all_done = 0;
     if (proc_state[2] != 2) all_done = 0;
     if (all_done) return 0;
-
     ticks = ticks + 1;
-
-    // Executer processus courant
     if (proc_time[current_proc] > 0) {
         proc_time[current_proc] = proc_time[current_proc] - 1;
         quantum_left = quantum_left - 1;
-
-        if (proc_time[current_proc] == 0) {
-            proc_state[current_proc] = 2;
-            quantum_left = 0;
-        }
+        if (proc_time[current_proc] == 0) { proc_state[current_proc] = 2; quantum_left = 0; }
     }
-
-    // Context switch si quantum epuise
     if (quantum_left <= 0) {
         next = find_next(current_proc);
-        if (next != current_proc) {
-            current_proc = next;
-            switches = switches + 1;
-        }
+        if (next != current_proc) { current_proc = next; switches = switches + 1; }
         quantum_left = 2;
     }
-
     return 1;
 }
 
 int main() {
-    int key; int lk; int t; int running;
+    int key; int i; int delay;
 
+    *OUTPUT = 'S'; *OUTPUT = 'C'; *OUTPUT = 'H'; *OUTPUT = 10;
+    for (i = 0; i < 9600; i = i + 1) SCREEN[i] = 0;
     proc_time[0] = 3; proc_time[1] = 2; proc_time[2] = 4;
     proc_state[0] = 0; proc_state[1] = 0; proc_state[2] = 0;
-
-    lk = 0; t = 0; running = 1;
+    draw_char(0, 0, 83); draw_char(1, 0, 67); draw_char(2, 0, 72);
     draw_all();
 
-    while (t < 100000) {
+    while (1) {
         key = *KEYBOARD;
-        if (key != 0 && key != lk) {
-            t = 0;
-            if (key == 32) {
-                running = tick();
-                draw_all();
-            }
-            if (key == 13) {
-                return switches;
-            }
+        if (key != 0 && key != last_key) {
+            if (key == 32) { *OUTPUT = '.'; do_tick(); draw_all(); }
+            if (key == 13) { *OUTPUT = 10; return switches; }
         }
-        lk = key;
-        t = t + 1;
+        last_key = key;
+        for (delay = 0; delay < 1000; delay = delay + 1) { }
     }
-
     return switches;
 }
 `,
@@ -2308,218 +2238,153 @@ int main() {
     return 0;
 }
 `,
-        solution: `// Mini-OS Shell - Solution
+        solution: `// Mini-OS Shell - Solution avec polices bitmap
 // Cochez "Capturer clavier"
 
-int *SCREEN = (int*)0x00400000;
+char *SCREEN = (char*)0x00400000;
 int *KEYBOARD = (int*)0x00402600;
+int last_key = 0;
 
-void set_pixel(int x, int y) {
-    int *ptr; int bit_pos;
-    ptr = SCREEN + (y << 3) + (y << 1) + (x >> 5);
-    bit_pos = ((x >> 3) & 3) * 8 + 7 - (x & 7);
-    *ptr = *ptr | (1 << bit_pos);
+void get_char_lines(int c, int *lines) {
+    if (c == 48) { lines[0]=0x3C; lines[1]=0x46; lines[2]=0x4A; lines[3]=0x52; lines[4]=0x62; lines[5]=0x62; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 49) { lines[0]=0x18; lines[1]=0x38; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x18; lines[6]=0x7E; lines[7]=0x00; }
+    else if (c == 50) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x06; lines[3]=0x0C; lines[4]=0x18; lines[5]=0x30; lines[6]=0x7E; lines[7]=0x00; }
+    else if (c == 51) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x06; lines[3]=0x1C; lines[4]=0x06; lines[5]=0x66; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 52) { lines[0]=0x0C; lines[1]=0x1C; lines[2]=0x2C; lines[3]=0x4C; lines[4]=0x7E; lines[5]=0x0C; lines[6]=0x0C; lines[7]=0x00; }
+    else if (c == 53) { lines[0]=0x7E; lines[1]=0x60; lines[2]=0x7C; lines[3]=0x06; lines[4]=0x06; lines[5]=0x66; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 54) { lines[0]=0x1C; lines[1]=0x30; lines[2]=0x60; lines[3]=0x7C; lines[4]=0x66; lines[5]=0x66; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 55) { lines[0]=0x7E; lines[1]=0x06; lines[2]=0x0C; lines[3]=0x18; lines[4]=0x18; lines[5]=0x18; lines[6]=0x18; lines[7]=0x00; }
+    else if (c == 56) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x66; lines[3]=0x3C; lines[4]=0x66; lines[5]=0x66; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 57) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x66; lines[3]=0x3E; lines[4]=0x06; lines[5]=0x0C; lines[6]=0x38; lines[7]=0x00; }
+    else if (c == 43) { lines[0]=0x00; lines[1]=0x18; lines[2]=0x18; lines[3]=0x7E; lines[4]=0x18; lines[5]=0x18; lines[6]=0x00; lines[7]=0x00; }
+    else if (c == 61) { lines[0]=0x00; lines[1]=0x00; lines[2]=0x7E; lines[3]=0x00; lines[4]=0x7E; lines[5]=0x00; lines[6]=0x00; lines[7]=0x00; }
+    else if (c == 77) { lines[0]=0xC6; lines[1]=0xEE; lines[2]=0xFE; lines[3]=0xD6; lines[4]=0xC6; lines[5]=0xC6; lines[6]=0xC6; lines[7]=0x00; }
+    else if (c == 69) { lines[0]=0x7E; lines[1]=0x60; lines[2]=0x60; lines[3]=0x7C; lines[4]=0x60; lines[5]=0x60; lines[6]=0x7E; lines[7]=0x00; }
+    else if (c == 78) { lines[0]=0x63; lines[1]=0x73; lines[2]=0x7B; lines[3]=0x6F; lines[4]=0x67; lines[5]=0x63; lines[6]=0x63; lines[7]=0x00; }
+    else if (c == 85) { lines[0]=0x66; lines[1]=0x66; lines[2]=0x66; lines[3]=0x66; lines[4]=0x66; lines[5]=0x66; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 67) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x60; lines[3]=0x60; lines[4]=0x60; lines[5]=0x66; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 65) { lines[0]=0x18; lines[1]=0x3C; lines[2]=0x66; lines[3]=0x66; lines[4]=0x7E; lines[5]=0x66; lines[6]=0x66; lines[7]=0x00; }
+    else if (c == 76) { lines[0]=0x60; lines[1]=0x60; lines[2]=0x60; lines[3]=0x60; lines[4]=0x60; lines[5]=0x60; lines[6]=0x7E; lines[7]=0x00; }
+    else if (c == 79) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x66; lines[3]=0x66; lines[4]=0x66; lines[5]=0x66; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 84) { lines[0]=0x7E; lines[1]=0x18; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x18; lines[6]=0x18; lines[7]=0x00; }
+    else if (c == 35) { lines[0]=0x24; lines[1]=0x24; lines[2]=0x7E; lines[3]=0x24; lines[4]=0x7E; lines[5]=0x24; lines[6]=0x24; lines[7]=0x00; }
+    else if (c == 72) { lines[0]=0x66; lines[1]=0x66; lines[2]=0x66; lines[3]=0x7E; lines[4]=0x66; lines[5]=0x66; lines[6]=0x66; lines[7]=0x00; }
+    else if (c == 73) { lines[0]=0x3C; lines[1]=0x18; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x18; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 83) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x60; lines[3]=0x3C; lines[4]=0x06; lines[5]=0x66; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 71) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x60; lines[3]=0x6E; lines[4]=0x66; lines[5]=0x66; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 81) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x66; lines[3]=0x66; lines[4]=0x6A; lines[5]=0x6C; lines[6]=0x36; lines[7]=0x00; }
+    else if (c == 88) { lines[0]=0x66; lines[1]=0x66; lines[2]=0x3C; lines[3]=0x18; lines[4]=0x3C; lines[5]=0x66; lines[6]=0x66; lines[7]=0x00; }
+    else { lines[0]=0xFF; lines[1]=0x81; lines[2]=0x81; lines[3]=0x81; lines[4]=0x81; lines[5]=0x81; lines[6]=0xFF; lines[7]=0x00; }
 }
 
-void clear_screen() {
-    int i; int *ptr;
-    ptr = SCREEN;
-    for (i = 0; i < 2400; i = i + 1) {
-        *ptr = 0;
-        ptr = ptr + 1;
+void draw_char(int bx, int py, int c) {
+    int lines[8]; int i;
+    get_char_lines(c, lines);
+    for (i = 0; i < 8; i = i + 1) {
+        SCREEN[(py + i) * 40 + bx] = lines[i];
     }
 }
 
-void draw_digit(int x, int y, int d) {
-    if (d != 1 && d != 4) { set_pixel(x, y); set_pixel(x+1, y); set_pixel(x+2, y); }
-    if (d == 0 || d == 4 || d == 5 || d == 6 || d == 8 || d == 9) set_pixel(x, y+1);
-    if (d != 5 && d != 6) set_pixel(x+2, y+1);
-    if (d != 0 && d != 1 && d != 7) { set_pixel(x, y+2); set_pixel(x+1, y+2); set_pixel(x+2, y+2); }
-    if (d == 0 || d == 2 || d == 6 || d == 8) set_pixel(x, y+3);
-    if (d != 2) set_pixel(x+2, y+3);
-    if (d != 1 && d != 4 && d != 7) { set_pixel(x, y+4); set_pixel(x+1, y+4); set_pixel(x+2, y+4); }
-    if (d == 1) { set_pixel(x+1, y); set_pixel(x+1, y+1); set_pixel(x+1, y+2); set_pixel(x+1, y+3); set_pixel(x+1, y+4); }
-}
-
-void draw_plus(int x, int y) {
-    set_pixel(x+1, y); set_pixel(x, y+1); set_pixel(x+1, y+1); set_pixel(x+2, y+1); set_pixel(x+1, y+2);
-}
-
-void draw_equal(int x, int y) {
-    set_pixel(x, y); set_pixel(x+1, y); set_pixel(x+2, y);
-    set_pixel(x, y+2); set_pixel(x+1, y+2); set_pixel(x+2, y+2);
-}
-
-void draw_H(int x, int y) {
-    set_pixel(x, y); set_pixel(x, y+1); set_pixel(x, y+2); set_pixel(x, y+3); set_pixel(x, y+4);
-    set_pixel(x+1, y+2);
-    set_pixel(x+2, y); set_pixel(x+2, y+1); set_pixel(x+2, y+2); set_pixel(x+2, y+3); set_pixel(x+2, y+4);
-}
-
-void draw_I(int x, int y) {
-    set_pixel(x, y); set_pixel(x+1, y); set_pixel(x+2, y);
-    set_pixel(x+1, y+1); set_pixel(x+1, y+2); set_pixel(x+1, y+3);
-    set_pixel(x, y+4); set_pixel(x+1, y+4); set_pixel(x+2, y+4);
-}
-
-void draw_box(int x, int y, int w, int h) {
+void draw_string(int bx, int py, char *s) {
     int i;
-    for (i = 0; i < w; i = i + 1) { set_pixel(x + i, y); set_pixel(x + i, y + h - 1); }
-    for (i = 0; i < h; i = i + 1) { set_pixel(x, y + i); set_pixel(x + w - 1, y + i); }
+    for (i = 0; s[i] != 0; i = i + 1) {
+        draw_char(bx + i, py, s[i]);
+    }
+}
+
+void clear_screen() {
+    int i;
+    for (i = 0; i < 9600; i = i + 1) {
+        SCREEN[i] = 0;
+    }
+}
+
+void draw_box(int bx1, int py1, int bx2, int py2) {
+    int i;
+    for (i = bx1; i <= bx2; i = i + 1) {
+        SCREEN[py1 * 40 + i] = 0xFF;
+        SCREEN[py2 * 40 + i] = 0xFF;
+    }
+    for (i = py1; i <= py2; i = i + 1) {
+        SCREEN[i * 40 + bx1] = SCREEN[i * 40 + bx1] | 0x80;
+        SCREEN[i * 40 + bx2] = SCREEN[i * 40 + bx2] | 0x01;
+    }
 }
 
 void draw_menu() {
-    // Titre: MENU
-    // M
-    set_pixel(4, 4); set_pixel(4, 5); set_pixel(4, 6); set_pixel(4, 7); set_pixel(4, 8);
-    set_pixel(5, 5); set_pixel(6, 6); set_pixel(7, 5);
-    set_pixel(8, 4); set_pixel(8, 5); set_pixel(8, 6); set_pixel(8, 7); set_pixel(8, 8);
-    // E
-    set_pixel(11, 4); set_pixel(12, 4); set_pixel(13, 4);
-    set_pixel(11, 5); set_pixel(11, 6); set_pixel(12, 6); set_pixel(11, 7);
-    set_pixel(11, 8); set_pixel(12, 8); set_pixel(13, 8);
-    // N
-    set_pixel(16, 4); set_pixel(16, 5); set_pixel(16, 6); set_pixel(16, 7); set_pixel(16, 8);
-    set_pixel(17, 5); set_pixel(18, 6); set_pixel(19, 7);
-    set_pixel(20, 4); set_pixel(20, 5); set_pixel(20, 6); set_pixel(20, 7); set_pixel(20, 8);
-    // U
-    set_pixel(23, 4); set_pixel(23, 5); set_pixel(23, 6); set_pixel(23, 7);
-    set_pixel(24, 8); set_pixel(25, 8);
-    set_pixel(26, 4); set_pixel(26, 5); set_pixel(26, 6); set_pixel(26, 7);
+    // Titre MENU
+    draw_string(2, 8, "MENU");
 
     // Option 1: CALC
-    draw_box(4, 14, 30, 12);
-    draw_digit(8, 17, 1);
-    // C
-    set_pixel(15, 17); set_pixel(16, 17); set_pixel(17, 17);
-    set_pixel(14, 18); set_pixel(14, 19); set_pixel(14, 20);
-    set_pixel(15, 21); set_pixel(16, 21); set_pixel(17, 21);
+    draw_box(1, 24, 10, 40);
+    draw_char(2, 28, 49);
+    draw_string(4, 28, "CALC");
 
     // Option 2: COUNT
-    draw_box(4, 28, 30, 12);
-    draw_digit(8, 31, 2);
-    // #
-    set_pixel(15, 31); set_pixel(17, 31);
-    set_pixel(14, 32); set_pixel(15, 32); set_pixel(16, 32); set_pixel(17, 32); set_pixel(18, 32);
-    set_pixel(15, 33); set_pixel(17, 33);
-    set_pixel(14, 34); set_pixel(15, 34); set_pixel(16, 34); set_pixel(17, 34); set_pixel(18, 34);
-    set_pixel(15, 35); set_pixel(17, 35);
+    draw_box(1, 48, 10, 64);
+    draw_char(2, 52, 50);
+    draw_string(4, 52, "#");
 
     // Option 3: MSG
-    draw_box(4, 42, 30, 12);
-    draw_digit(8, 45, 3);
-    draw_H(15, 45);
-    draw_I(20, 45);
+    draw_box(1, 72, 10, 88);
+    draw_char(2, 76, 51);
+    draw_string(4, 76, "HI");
 
     // Option 0: QUIT
-    draw_box(4, 56, 30, 12);
-    draw_digit(8, 59, 0);
-    // X
-    set_pixel(15, 59); set_pixel(19, 59);
-    set_pixel(16, 60); set_pixel(18, 60);
-    set_pixel(17, 61);
-    set_pixel(16, 62); set_pixel(18, 62);
-    set_pixel(15, 63); set_pixel(19, 63);
+    draw_box(1, 96, 10, 112);
+    draw_char(2, 100, 48);
+    draw_string(4, 100, "X");
 }
 
-void delay() {
+void delay_loop() {
     int i;
     for (i = 0; i < 50000; i = i + 1) { }
 }
 
 void wait_key() {
-    int k;
+    int k; int lk;
+    lk = 0;
     while (1) {
         k = *KEYBOARD;
-        if (k != 0) return;
+        if (k != 0 && k != lk) return;
+        lk = k;
     }
 }
 
 void app_calc() {
     clear_screen();
-    // Titre
-    // C
-    set_pixel(5, 4); set_pixel(6, 4); set_pixel(7, 4);
-    set_pixel(4, 5); set_pixel(4, 6); set_pixel(4, 7);
-    set_pixel(5, 8); set_pixel(6, 8); set_pixel(7, 8);
-    // A
-    set_pixel(11, 4); set_pixel(10, 5); set_pixel(12, 5);
-    set_pixel(10, 6); set_pixel(11, 6); set_pixel(12, 6);
-    set_pixel(10, 7); set_pixel(12, 7); set_pixel(10, 8); set_pixel(12, 8);
-    // L
-    set_pixel(15, 4); set_pixel(15, 5); set_pixel(15, 6); set_pixel(15, 7);
-    set_pixel(15, 8); set_pixel(16, 8); set_pixel(17, 8);
-    // C
-    set_pixel(21, 4); set_pixel(22, 4); set_pixel(23, 4);
-    set_pixel(20, 5); set_pixel(20, 6); set_pixel(20, 7);
-    set_pixel(21, 8); set_pixel(22, 8); set_pixel(23, 8);
-
+    draw_string(2, 8, "CALC");
     // 3 + 5 = 8
-    draw_digit(10, 20, 3);
-    draw_plus(16, 20);
-    draw_digit(22, 20, 5);
-    draw_equal(28, 20);
-    draw_digit(34, 20, 8);
-
+    draw_char(4, 40, 51);
+    draw_char(6, 40, 43);
+    draw_char(8, 40, 53);
+    draw_char(10, 40, 61);
+    draw_char(12, 40, 56);
     wait_key();
 }
 
 void app_count() {
     int i;
     clear_screen();
-    // Titre: COUNT
-    // #
-    set_pixel(5, 4); set_pixel(7, 4);
-    set_pixel(4, 5); set_pixel(5, 5); set_pixel(6, 5); set_pixel(7, 5); set_pixel(8, 5);
-    set_pixel(5, 6); set_pixel(7, 6);
-    set_pixel(4, 7); set_pixel(5, 7); set_pixel(6, 7); set_pixel(7, 7); set_pixel(8, 7);
-    set_pixel(5, 8); set_pixel(7, 8);
-
+    draw_string(2, 8, "COUNT");
     for (i = 0; i < 6; i = i + 1) {
-        draw_digit(10 + i * 6, 20, i);
-        delay();
+        draw_char(4 + i * 2, 40, 48 + i);
+        delay_loop();
     }
-
     wait_key();
 }
 
 void app_msg() {
     clear_screen();
-    // Titre: MSG
-    // M
-    set_pixel(4, 4); set_pixel(4, 5); set_pixel(4, 6); set_pixel(4, 7); set_pixel(4, 8);
-    set_pixel(5, 5); set_pixel(6, 6); set_pixel(7, 5);
-    set_pixel(8, 4); set_pixel(8, 5); set_pixel(8, 6); set_pixel(8, 7); set_pixel(8, 8);
-    // S
-    set_pixel(12, 4); set_pixel(13, 4); set_pixel(11, 5);
-    set_pixel(12, 6); set_pixel(13, 7);
-    set_pixel(11, 8); set_pixel(12, 8);
-    // G
-    set_pixel(17, 4); set_pixel(18, 4); set_pixel(19, 4);
-    set_pixel(16, 5); set_pixel(16, 6); set_pixel(18, 6); set_pixel(19, 6);
-    set_pixel(16, 7); set_pixel(19, 7);
-    set_pixel(17, 8); set_pixel(18, 8); set_pixel(19, 8);
-
-    // Grand HI
-    // H
-    set_pixel(10, 18); set_pixel(10, 19); set_pixel(10, 20); set_pixel(10, 21); set_pixel(10, 22);
-    set_pixel(10, 23); set_pixel(10, 24); set_pixel(10, 25); set_pixel(10, 26); set_pixel(10, 27);
-    set_pixel(11, 22); set_pixel(12, 22); set_pixel(13, 22);
-    set_pixel(14, 18); set_pixel(14, 19); set_pixel(14, 20); set_pixel(14, 21); set_pixel(14, 22);
-    set_pixel(14, 23); set_pixel(14, 24); set_pixel(14, 25); set_pixel(14, 26); set_pixel(14, 27);
-    // I
-    set_pixel(18, 18); set_pixel(19, 18); set_pixel(20, 18); set_pixel(21, 18); set_pixel(22, 18);
-    set_pixel(20, 19); set_pixel(20, 20); set_pixel(20, 21); set_pixel(20, 22);
-    set_pixel(20, 23); set_pixel(20, 24); set_pixel(20, 25); set_pixel(20, 26);
-    set_pixel(18, 27); set_pixel(19, 27); set_pixel(20, 27); set_pixel(21, 27); set_pixel(22, 27);
-
+    draw_string(2, 8, "MSG");
+    // Grand HI au centre
+    draw_string(6, 56, "HI");
     wait_key();
 }
 
 int main() {
-    int key; int lk; int running;
+    int key; int running; int delay;
     running = 1;
-    lk = 0;
 
     while (running) {
         clear_screen();
@@ -2527,13 +2392,14 @@ int main() {
 
         while (1) {
             key = *KEYBOARD;
-            if (key != 0 && key != lk) {
+            if (key != 0 && key != last_key) {
                 if (key == 49) { app_calc(); break; }
                 if (key == 50) { app_count(); break; }
                 if (key == 51) { app_msg(); break; }
                 if (key == 48) { running = 0; break; }
             }
-            lk = key;
+            last_key = key;
+            for (delay = 0; delay < 1000; delay = delay + 1) { }
         }
     }
 
@@ -2592,11 +2458,12 @@ int main() {
     return 0;
 }
 `,
-        solution: `// Gestionnaire de Tâches - Solution
+        solution: `// Gestionnaire de Tâches - Solution avec polices bitmap
 // Cochez "Capturer clavier"
 
-int *SCREEN = (int*)0x00400000;
+char *SCREEN = (char*)0x00400000;
 int *KEYBOARD = (int*)0x00402600;
+int last_key = 0;
 
 int proc_work[4];
 int proc_state[4];
@@ -2607,134 +2474,132 @@ int switches = 0;
 int ticks = 0;
 int auto_run = 0;
 
-void set_pixel(int x, int y) {
-    int *ptr; int bit_pos;
-    ptr = SCREEN + (y << 3) + (y << 1) + (x >> 5);
-    bit_pos = ((x >> 3) & 3) * 8 + 7 - (x & 7);
-    *ptr = *ptr | (1 << bit_pos);
+void get_char_lines(int c, int *lines) {
+    if (c == 48) { lines[0]=0x3C; lines[1]=0x46; lines[2]=0x4A; lines[3]=0x52; lines[4]=0x62; lines[5]=0x62; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 49) { lines[0]=0x18; lines[1]=0x38; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x18; lines[6]=0x7E; lines[7]=0x00; }
+    else if (c == 50) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x06; lines[3]=0x0C; lines[4]=0x18; lines[5]=0x30; lines[6]=0x7E; lines[7]=0x00; }
+    else if (c == 51) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x06; lines[3]=0x1C; lines[4]=0x06; lines[5]=0x66; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 52) { lines[0]=0x0C; lines[1]=0x1C; lines[2]=0x2C; lines[3]=0x4C; lines[4]=0x7E; lines[5]=0x0C; lines[6]=0x0C; lines[7]=0x00; }
+    else if (c == 53) { lines[0]=0x7E; lines[1]=0x60; lines[2]=0x7C; lines[3]=0x06; lines[4]=0x06; lines[5]=0x66; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 54) { lines[0]=0x1C; lines[1]=0x30; lines[2]=0x60; lines[3]=0x7C; lines[4]=0x66; lines[5]=0x66; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 55) { lines[0]=0x7E; lines[1]=0x06; lines[2]=0x0C; lines[3]=0x18; lines[4]=0x18; lines[5]=0x18; lines[6]=0x18; lines[7]=0x00; }
+    else if (c == 56) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x66; lines[3]=0x3C; lines[4]=0x66; lines[5]=0x66; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 57) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x66; lines[3]=0x3E; lines[4]=0x06; lines[5]=0x0C; lines[6]=0x38; lines[7]=0x00; }
+    else if (c == 80) { lines[0]=0x7C; lines[1]=0x66; lines[2]=0x66; lines[3]=0x7C; lines[4]=0x60; lines[5]=0x60; lines[6]=0x60; lines[7]=0x00; }
+    else if (c == 82) { lines[0]=0x7C; lines[1]=0x66; lines[2]=0x66; lines[3]=0x7C; lines[4]=0x6C; lines[5]=0x66; lines[6]=0x66; lines[7]=0x00; }
+    else if (c == 66) { lines[0]=0x7C; lines[1]=0x66; lines[2]=0x66; lines[3]=0x7C; lines[4]=0x66; lines[5]=0x66; lines[6]=0x7C; lines[7]=0x00; }
+    else if (c == 88) { lines[0]=0x66; lines[1]=0x66; lines[2]=0x3C; lines[3]=0x18; lines[4]=0x3C; lines[5]=0x66; lines[6]=0x66; lines[7]=0x00; }
+    else if (c == 42) { lines[0]=0x00; lines[1]=0x66; lines[2]=0x3C; lines[3]=0xFF; lines[4]=0x3C; lines[5]=0x66; lines[6]=0x00; lines[7]=0x00; }
+    else if (c == 81) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x66; lines[3]=0x66; lines[4]=0x6A; lines[5]=0x6C; lines[6]=0x36; lines[7]=0x00; }
+    else if (c == 83) { lines[0]=0x3C; lines[1]=0x66; lines[2]=0x60; lines[3]=0x3C; lines[4]=0x06; lines[5]=0x66; lines[6]=0x3C; lines[7]=0x00; }
+    else if (c == 84) { lines[0]=0x7E; lines[1]=0x18; lines[2]=0x18; lines[3]=0x18; lines[4]=0x18; lines[5]=0x18; lines[6]=0x18; lines[7]=0x00; }
+    else if (c == 65) { lines[0]=0x18; lines[1]=0x3C; lines[2]=0x66; lines[3]=0x66; lines[4]=0x7E; lines[5]=0x66; lines[6]=0x66; lines[7]=0x00; }
+    else if (c == 58) { lines[0]=0x00; lines[1]=0x18; lines[2]=0x18; lines[3]=0x00; lines[4]=0x00; lines[5]=0x18; lines[6]=0x18; lines[7]=0x00; }
+    else { lines[0]=0xFF; lines[1]=0x81; lines[2]=0x81; lines[3]=0x81; lines[4]=0x81; lines[5]=0x81; lines[6]=0xFF; lines[7]=0x00; }
 }
 
-void clear_rect(int x, int y, int w, int h) {
-    int i; int j; int px; int py; int *ptr; int bit_pos;
-    for (i = 0; i < w; i = i + 1) {
-        for (j = 0; j < h; j = j + 1) {
-            px = x + i; py = y + j;
-            ptr = SCREEN + (py << 3) + (py << 1) + (px >> 5);
-            bit_pos = ((px >> 3) & 3) * 8 + 7 - (px & 7);
-            *ptr = *ptr & (0xFFFFFFFF ^ (1 << bit_pos));
+void draw_char(int bx, int py, int c) {
+    int lines[8]; int i;
+    get_char_lines(c, lines);
+    for (i = 0; i < 8; i = i + 1) {
+        SCREEN[(py + i) * 40 + bx] = lines[i];
+    }
+}
+
+void clear_box(int bx1, int py1, int bx2, int py2) {
+    int bx; int py;
+    for (py = py1; py <= py2; py = py + 1) {
+        for (bx = bx1; bx <= bx2; bx = bx + 1) {
+            SCREEN[py * 40 + bx] = 0;
         }
     }
 }
 
-void fill_rect(int x, int y, int w, int h) {
-    int i; int j;
-    for (i = 0; i < w; i = i + 1) {
-        for (j = 0; j < h; j = j + 1) {
-            set_pixel(x + i, y + j);
+void fill_box(int bx1, int py1, int bx2, int py2) {
+    int bx; int py;
+    for (py = py1; py <= py2; py = py + 1) {
+        for (bx = bx1; bx <= bx2; bx = bx + 1) {
+            SCREEN[py * 40 + bx] = 0xFF;
         }
     }
 }
 
-void draw_box(int x, int y, int w, int h) {
-    int i;
-    for (i = 0; i < w; i = i + 1) { set_pixel(x + i, y); set_pixel(x + i, y + h - 1); }
-    for (i = 0; i < h; i = i + 1) { set_pixel(x, y + i); set_pixel(x + w - 1, y + i); }
-}
-
-void draw_digit(int x, int y, int d) {
-    clear_rect(x, y, 4, 6);
-    if (d != 1 && d != 4) { set_pixel(x, y); set_pixel(x+1, y); set_pixel(x+2, y); }
-    if (d == 0 || d == 4 || d == 5 || d == 6 || d == 8 || d == 9) set_pixel(x, y+1);
-    if (d != 5 && d != 6) set_pixel(x+2, y+1);
-    if (d != 0 && d != 1 && d != 7) { set_pixel(x, y+2); set_pixel(x+1, y+2); set_pixel(x+2, y+2); }
-    if (d == 0 || d == 2 || d == 6 || d == 8) set_pixel(x, y+3);
-    if (d != 2) set_pixel(x+2, y+3);
-    if (d != 1 && d != 4 && d != 7) { set_pixel(x, y+4); set_pixel(x+1, y+4); set_pixel(x+2, y+4); }
-    if (d == 1) { set_pixel(x+1, y); set_pixel(x+1, y+1); set_pixel(x+1, y+2); set_pixel(x+1, y+3); set_pixel(x+1, y+4); }
+void draw_box(int bx1, int py1, int bx2, int py2) {
+    int bx; int py;
+    for (bx = bx1; bx <= bx2; bx = bx + 1) {
+        SCREEN[py1 * 40 + bx] = 0xFF;
+        SCREEN[py2 * 40 + bx] = 0xFF;
+    }
+    for (py = py1; py <= py2; py = py + 1) {
+        SCREEN[py * 40 + bx1] = SCREEN[py * 40 + bx1] | 0x80;
+        SCREEN[py * 40 + bx2] = SCREEN[py * 40 + bx2] | 0x01;
+    }
 }
 
 void draw_proc(int idx) {
-    int x; int w; int i; int active;
-    x = idx * 40 + 4;
+    int bx; int w; int i; int active;
+    bx = idx * 5;
 
-    clear_rect(x, 4, 36, 55);
+    clear_box(bx, 8, bx + 4, 64);
 
     active = (idx == current && proc_state[idx] == 1);
 
-    // Cadre - double si running
-    draw_box(x, 4, 36, 55);
+    // Cadre
+    draw_box(bx, 8, bx + 4, 64);
     if (active) {
-        draw_box(x + 2, 6, 32, 51);
+        draw_box(bx, 9, bx + 4, 63);
     }
 
-    // P et numero (grand)
-    fill_rect(x + 8, 10, 2, 9);
-    fill_rect(x + 10, 10, 4, 2);
-    fill_rect(x + 14, 10, 2, 5);
-    fill_rect(x + 10, 14, 4, 2);
-
-    draw_digit(x + 20, 12, idx);
+    // P et numero
+    draw_char(bx + 1, 12, 80);
+    draw_char(bx + 3, 12, 48 + idx);
 
     // Etat: R=Ready *=Run B=Block X=Done
-    clear_rect(x + 10, 24, 16, 10);
     if (proc_state[idx] == 0) {
-        // R
-        fill_rect(x + 12, 25, 2, 8);
-        fill_rect(x + 14, 25, 4, 2);
-        fill_rect(x + 18, 25, 2, 4);
-        fill_rect(x + 14, 28, 4, 2);
-        fill_rect(x + 16, 30, 2, 3);
+        draw_char(bx + 2, 24, 82);
     }
     if (proc_state[idx] == 1) {
-        // * etoile
-        fill_rect(x + 14, 26, 2, 6);
-        fill_rect(x + 12, 28, 6, 2);
+        draw_char(bx + 2, 24, 42);
     }
     if (proc_state[idx] == 2) {
-        // B
-        fill_rect(x + 12, 25, 2, 8);
-        fill_rect(x + 14, 25, 4, 2);
-        fill_rect(x + 14, 28, 4, 2);
-        fill_rect(x + 14, 31, 4, 2);
-        fill_rect(x + 18, 26, 2, 2);
-        fill_rect(x + 18, 29, 2, 2);
+        draw_char(bx + 2, 24, 66);
     }
     if (proc_state[idx] == 3) {
-        // X
-        fill_rect(x + 12, 25, 2, 2); fill_rect(x + 18, 25, 2, 2);
-        fill_rect(x + 14, 27, 2, 2); fill_rect(x + 16, 27, 2, 2);
-        fill_rect(x + 14, 29, 4, 2);
-        fill_rect(x + 12, 31, 2, 2); fill_rect(x + 18, 31, 2, 2);
+        draw_char(bx + 2, 24, 88);
     }
 
     // Barre travail restant
     w = proc_work[idx];
     for (i = 0; i < 4; i = i + 1) {
         if (i < w) {
-            fill_rect(x + 6 + i * 7, 38, 5, 6);
+            fill_box(bx + 1, 36 + i * 4, bx + 3, 38 + i * 4);
         } else {
-            draw_box(x + 6 + i * 7, 38, 5, 6);
+            draw_box(bx + 1, 36 + i * 4, bx + 3, 38 + i * 4);
         }
     }
 
     // Compteur
-    draw_digit(x + 15, 50, proc_done[idx] % 10);
+    draw_char(bx + 2, 54, 48 + (proc_done[idx] % 10));
 }
 
 void draw_info() {
-    clear_rect(4, 62, 156, 8);
+    clear_box(0, 72, 19, 80);
     // Q:
-    fill_rect(6, 63, 2, 5); fill_rect(8, 63, 3, 2); fill_rect(11, 63, 2, 5);
-    fill_rect(8, 66, 3, 2); fill_rect(10, 67, 3, 2);
-    draw_digit(16, 63, quantum_left);
+    draw_char(0, 72, 81);
+    draw_char(1, 72, 58);
+    draw_char(2, 72, 48 + quantum_left);
     // S:
-    fill_rect(30, 63, 5, 2); fill_rect(28, 65, 2, 2);
-    fill_rect(30, 66, 3, 2); fill_rect(33, 67, 2, 2);
-    fill_rect(28, 68, 5, 2);
-    draw_digit(38, 63, switches % 10);
+    draw_char(5, 72, 83);
+    draw_char(6, 72, 58);
+    draw_char(7, 72, 48 + (switches % 10));
     // T:
-    fill_rect(52, 63, 7, 2); fill_rect(54, 65, 3, 4);
-    draw_digit(62, 63, ticks % 10);
+    draw_char(10, 72, 84);
+    draw_char(11, 72, 58);
+    draw_char(12, 72, 48 + (ticks % 10));
+    // A:
+    if (auto_run) {
+        draw_char(15, 72, 65);
+    }
 }
 
 int find_next(int from) {
@@ -2797,28 +2662,29 @@ void draw_all() {
 }
 
 int main() {
-    int key; int lk; int delay;
+    int key; int delay;
     proc_work[0] = 3; proc_work[1] = 2; proc_work[2] = 4; proc_work[3] = 3;
     proc_state[0] = 0; proc_state[1] = 0; proc_state[2] = 0; proc_state[3] = 0;
     proc_done[0] = 0; proc_done[1] = 0; proc_done[2] = 0; proc_done[3] = 0;
-    lk = 0; delay = 0;
+    delay = 0;
     draw_all();
     while (1) {
         key = *KEYBOARD;
-        if (key != 0 && key != lk) {
+        if (key != 0 && key != last_key) {
             if (key == 32) { do_tick(); draw_all(); }
-            if (key == 65) { auto_run = 1 - auto_run; }
+            if (key == 65) { auto_run = 1 - auto_run; draw_info(); }
             if (key == 48) { toggle_block(0); draw_all(); }
             if (key == 49) { toggle_block(1); draw_all(); }
             if (key == 50) { toggle_block(2); draw_all(); }
             if (key == 51) { toggle_block(3); draw_all(); }
             if (key == 13) return switches;
         }
-        lk = key;
+        last_key = key;
         if (auto_run) {
             delay = delay + 1;
             if (delay > 3000) { delay = 0; do_tick(); draw_all(); }
         }
+        for (delay = 0; delay < 1000; delay = delay + 1) { }
     }
     return switches;
 }
