@@ -260,13 +260,32 @@ function updateModeSpecificUI() {
     const screenWrapper = document.querySelector('.screen-wrapper');
     const registersSection = document.querySelector('.registers-section');
     const memorySection = document.querySelector('.memory-section');
+    const visualizersSection = document.querySelector('.visualizers-section');
 
     if (state.mode === 'hdl') {
         screenWrapper.style.display = 'none';
         registersSection.querySelector('.section-title').textContent = 'Signals';
+        // Show waveform for HDL
+        if (visualizersSection) {
+            visualizersSection.style.display = 'block';
+            // Switch to waveform tab for HDL mode
+            document.querySelectorAll('.viz-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('.viz-tab[data-viz="waveform"]')?.classList.add('active');
+            document.querySelectorAll('.viz-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('waveform-visualizer')?.classList.add('active');
+        }
     } else {
         screenWrapper.style.display = 'block';
         registersSection.querySelector('.section-title').textContent = 'Registres';
+        // Show memory visualizer for ASM/C
+        if (visualizersSection) {
+            visualizersSection.style.display = 'block';
+            // Switch to memory tab for ASM/C mode
+            document.querySelectorAll('.viz-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('.viz-tab[data-viz="memory"]')?.classList.add('active');
+            document.querySelectorAll('.viz-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('memory-visualizer')?.classList.add('active');
+        }
     }
 
     // Switch output panel based on mode
