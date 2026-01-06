@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="200" height="120">
+  <defs>
+    <style>
+      .gate-body { fill: #e8f4fc; stroke: #2563eb; stroke-width: 2; }
+      .wire { stroke: #374151; stroke-width: 2; fill: none; }
+      .label { font-family: monospace; font-size: 14px; fill: #1f2937; }
+      .gate-label { font-family: sans-serif; font-size: 12px; font-weight: bold; fill: #1e40af; }
+      .sel-label { font-family: monospace; font-size: 12px; fill: #1f2937; }
+    </style>
+  </defs>
+
+  <!-- Input wires -->
+  <line class="wire" x1="20" y1="35" x2="70" y2="35"/>
+  <line class="wire" x1="20" y1="65" x2="70" y2="65"/>
+
+  <!-- Select wire -->
+  <line class="wire" x1="100" y1="110" x2="100" y2="85"/>
+
+  <!-- Trapezoid body for MUX -->
+  <path class="gate-body" d="M 70 20 L 130 35 L 130 75 L 70 90 Z"/>
+
+  <!-- Output wire -->
+  <line class="wire" x1="130" y1="55" x2="180" y2="55"/>
+
+  <!-- Labels -->
+  <text class="label" x="10" y="39">a</text>
+  <text class="label" x="10" y="69">b</text>
+  <text class="label" x="165" y="59">out</text>
+  <text class="sel-label" x="90" y="108">sel</text>
+  <text class="gate-label" x="85" y="59">MUX</text>
+</svg>

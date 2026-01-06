@@ -205,19 +205,7 @@ C'est pour cela que nous avons construit XOR et AND au Chapitre 1 !
 
 ### Schéma du circuit
 
-```
-         ┌─────┐
-    a ───┤     │
-         │ XOR ├────── sum
-    b ───┤     │
-         └─────┘
-
-         ┌─────┐
-    a ───┤     │
-         │ AND ├────── carry
-    b ───┤     │
-         └─────┘
-```
+![Demi-additionneur](images/half-adder.svg)
 
 ### Limitation
 
@@ -231,15 +219,7 @@ Pour additionner des nombres de plusieurs bits, chaque colonne (sauf la premièr
 
 ### Interface
 
-```
-         cin (retenue entrante)
-          │
-      ┌───┴───────┐
-a ────┤           ├──── sum
-      │ Full Adder│
-b ────┤           ├──── cout (retenue sortante)
-      └───────────┘
-```
+![Additionneur complet](images/full-adder.svg)
 
 ### Table de vérité
 
@@ -262,20 +242,7 @@ Un Full Adder peut être construit avec **deux Half Adders et une porte OR** :
 2. Le second Half Adder additionne le résultat avec `cin`
 3. Si l'un des deux Half Adders produit une retenue, on a une retenue finale
 
-```
-          ┌──────────┐          ┌──────────┐
-    a ────┤          │   s1     │          ├──── sum
-          │ HalfAdder├──────────┤ HalfAdder│
-    b ────┤          │          │          │
-          └────┬─────┘     cin ─┤          │
-               │c1              └────┬─────┘
-               │                     │c2
-               │      ┌─────┐        │
-               └──────┤     │────────┘
-                      │ OR  ├──────────────── cout
-                      │     │
-                      └─────┘
-```
+![Construction du Full Adder](images/full-adder-construction.svg)
 
 Formules :
 - `s1 = XOR(a, b)`
@@ -292,18 +259,7 @@ Pour additionner des nombres de 32 bits, nous connectons 32 Full Adders en casca
 
 ### Schéma simplifié
 
-```
-     a[31] b[31]     a[1] b[1]     a[0] b[0]
-       │    │          │    │        │    │
-       ▼    ▼          ▼    ▼        ▼    ▼
-     ┌───────┐       ┌───────┐     ┌───────┐
-cout─┤  FA   │← ··· ─┤  FA   │← ───┤  FA   │← cin(0)
-     │  31   │       │   1   │     │   0   │
-     └───┬───┘       └───┬───┘     └───┬───┘
-         │               │             │
-         ▼               ▼             ▼
-       y[31]           y[1]          y[0]
-```
+![Additionneur 32 bits à propagation de retenue](images/ripple-carry-adder.svg)
 
 **Note** : Le premier Full Adder (position 0) a une retenue d'entrée de 0 pour une addition normale. Mais on peut y injecter un 1 pour implémenter la soustraction (A + NOT(B) + 1).
 
@@ -327,19 +283,7 @@ Plutôt que d'avoir des circuits séparés pour l'addition, la soustraction, le 
 
 ### Interface de l'ALU Codex
 
-```
-         a (32 bits)     b (32 bits)
-              │               │
-              ▼               ▼
-         ┌────────────────────────┐
-         │                        │
-  op ───►│         ALU            ├───► y (32 bits : résultat)
-(4 bits) │                        │
-         │                        ├───► n_flag (Negative)
-         │                        ├───► z_flag (Zero)
-         │                        ├───► c_flag (Carry)
-         └────────────────────────┴───► v_flag (oVerflow)
-```
+![Interface de l'ALU](images/alu-interface.svg)
 
 ### Les Opérations de l'ALU
 

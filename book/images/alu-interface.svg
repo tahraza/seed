@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 200" width="350" height="200">
+  <defs>
+    <style>
+      .alu-body { fill: #e8f4fc; stroke: #2563eb; stroke-width: 2; }
+      .wire { stroke: #374151; stroke-width: 2; fill: none; }
+      .bus { stroke: #374151; stroke-width: 4; fill: none; }
+      .label { font-family: monospace; font-size: 12px; fill: #1f2937; }
+      .alu-label { font-family: sans-serif; font-size: 16px; font-weight: bold; fill: #1e40af; }
+      .flag-label { font-family: monospace; font-size: 10px; fill: #666; }
+    </style>
+  </defs>
+
+  <!-- Input bus a -->
+  <line class="bus" x1="40" y1="40" x2="100" y2="60"/>
+  <text class="label" x="10" y="40">a (32 bits)</text>
+
+  <!-- Input bus b -->
+  <line class="bus" x1="260" y1="40" x2="200" y2="60"/>
+  <text class="label" x="240" y="40">b (32 bits)</text>
+
+  <!-- ALU trapezoid body -->
+  <path class="alu-body" d="M 80 55 L 220 55 L 200 145 L 100 145 Z"/>
+  <text class="alu-label" x="130" y="105">ALU</text>
+
+  <!-- op input -->
+  <line class="wire" x1="20" y1="100" x2="90" y2="100"/>
+  <text class="label" x="10" y="115">op</text>
+  <text class="flag-label" x="10" y="125">(4 bits)</text>
+
+  <!-- Output bus y -->
+  <line class="bus" x1="150" y1="145" x2="150" y2="185"/>
+  <text class="label" x="160" y="175">y (32 bits)</text>
+
+  <!-- Flag outputs -->
+  <line class="wire" x1="200" y1="145" x2="280" y2="160"/>
+  <line class="wire" x1="200" y1="145" x2="280" y2="175"/>
+  <line class="wire" x1="200" y1="145" x2="280" y2="190"/>
+  <line class="wire" x1="200" y1="145" x2="330" y2="190"/>
+
+  <text class="label" x="285" y="163">N (Negative)</text>
+  <text class="label" x="285" y="178">Z (Zero)</text>
+  <text class="label" x="285" y="193">C (Carry)</text>
+  <text class="label" x="285" y="193" dy="15">V (Overflow)</text>
+</svg>

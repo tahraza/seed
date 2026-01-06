@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 100" width="180" height="100">
+  <defs>
+    <style>
+      .box { fill: #e8f4fc; stroke: #2563eb; stroke-width: 2; }
+      .wire { stroke: #374151; stroke-width: 2; fill: none; }
+      .label { font-family: monospace; font-size: 14px; fill: #1f2937; }
+      .box-label { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e40af; }
+      .clock-symbol { stroke: #2563eb; stroke-width: 1.5; fill: none; }
+    </style>
+  </defs>
+
+  <!-- Input wire d -->
+  <line class="wire" x1="20" y1="40" x2="55" y2="40"/>
+
+  <!-- Clock wire -->
+  <line class="wire" x1="20" y1="70" x2="55" y2="70"/>
+
+  <!-- DFF box -->
+  <rect class="box" x="55" y="20" width="70" height="60" rx="4"/>
+
+  <!-- Clock triangle symbol -->
+  <path class="clock-symbol" d="M 55 65 L 65 70 L 55 75"/>
+
+  <!-- Output wire q -->
+  <line class="wire" x1="125" y1="40" x2="160" y2="40"/>
+
+  <!-- Labels -->
+  <text class="label" x="10" y="44">d</text>
+  <text class="label" x="10" y="74">clk</text>
+  <text class="label" x="145" y="44">q</text>
+  <text class="box-label" x="77" y="50">DFF</text>
+</svg>

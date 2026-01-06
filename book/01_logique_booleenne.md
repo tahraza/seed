@@ -100,15 +100,9 @@ Le nom "NAND" vient de "Not-AND" : c'est l'inverse exact d'une porte AND.
 
 ### Symbole graphique
 
-```
-       ┌───────┐
- A ────┤       │
-       │ NAND  ├○── Y
- B ────┤       │
-       └───────┘
+![Porte NAND](images/nand.svg)
 
-Le petit cercle (○) indique l'inversion
-```
+*Le petit cercle (○) indique l'inversion*
 
 ---
 
@@ -130,13 +124,7 @@ Votre mission dans ce chapitre est de construire les portes suivantes, en utilis
 
 **L'astuce** : Connectez le même signal aux deux entrées !
 
-```
-         ┌───────┐
- in ─────┤       │
-         │ NAND  ├──── out
- in ─────┤       │
-         └───────┘
-```
+![NOT construit à partir de NAND](images/not-from-nand.svg)
 
 Vérifions avec la table de vérité :
 - Si `in = 0` : NAND(0, 0) = 1 ✓
@@ -165,13 +153,7 @@ C'est exactement le comportement NOT !
 
 **L'insight** : Le NAND est un "Not-AND". Si on inverse le résultat d'un NAND... on obtient un AND !
 
-```
-         ┌───────┐      ┌─────┐
- A ──────┤       │      │     │
-         │ NAND  ├──────┤ NOT ├──── out
- B ──────┤       │      │     │
-         └───────┘      └─────┘
-```
+![AND construit à partir de NAND et NOT](images/and-from-nand.svg)
 
 Formule : `AND(A, B) = NOT(NAND(A, B))`
 
@@ -205,17 +187,7 @@ En utilisant uniquement des NAND :
 A OR B = (NOT A) NAND (NOT B)
 ```
 
-```
-         ┌─────┐
- A ──────┤ NOT ├──────┐
-         └─────┘      │    ┌───────┐
-                      ├────┤       │
-                           │ NAND  ├──── out
-                      ├────┤       │
-         ┌─────┐      │    └───────┘
- B ──────┤ NOT ├──────┘
-         └─────┘
-```
+![OR construit à partir de NOT et NAND](images/or-from-nand.svg)
 
 ---
 
@@ -257,15 +229,7 @@ En mots : "A est vrai et B est faux" OU "A est faux et B est vrai".
 - Si `sel == 0` alors `out = a`
 - Si `sel == 1` alors `out = b`
 
-```
-           ┌─────────┐
-     a ────┤         │
-           │   MUX   ├──── out
-     b ────┤         │
-           └────┬────┘
-                │
-              sel
-```
+![Multiplexeur](images/mux.svg)
 
 **L'insight** : On peut voir le Mux comme : "soit (a ET non-sel) soit (b ET sel)".
 
@@ -294,15 +258,7 @@ Chacun de ces choix est implémenté par un multiplexeur !
 - Si `sel == 0` alors `a = in, b = 0`
 - Si `sel == 1` alors `a = 0, b = in`
 
-```
-              ┌─────────┐
-              │         ├──── a
-     in ──────┤  DMUX   │
-              │         ├──── b
-              └────┬────┘
-                   │
-                 sel
-```
+![Démultiplexeur](images/dmux.svg)
 
 ---
 

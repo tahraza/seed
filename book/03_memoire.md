@@ -83,12 +83,7 @@ Dans un circuit combinatoire, les signaux se propagent à travers les portes ave
 
 L'horloge est un signal qui oscille perpétuellement entre 0 et 1 à une fréquence fixe :
 
-```
-      ┌───┐   ┌───┐   ┌───┐   ┌───┐
-clk ──┘   └───┘   └───┘   └───┘   └──
-      │       │       │       │
-      └─ Cycle 1 ─┘   └─ Cycle 2 ─┘
-```
+![Signal d'horloge](images/clock-signal.svg)
 
 ### Front montant (Rising Edge)
 
@@ -116,13 +111,7 @@ La **DFF** (Data Flip-Flop) est l'atome de la mémoire. C'est le plus petit circ
 
 ### Interface
 
-```
-         ┌───────┐
-    d ───┤       │
-         │  DFF  ├─── q
-   clk ──┤       │
-         └───────┘
-```
+![Bascule D (DFF)](images/dff.svg)
 
 - `d` : La donnée à mémoriser (entrée)
 - `q` : La donnée mémorisée (sortie)
@@ -174,21 +163,7 @@ On utilise un **Mux** pour choisir entre :
 - L'ancienne valeur (sortie de la DFF)
 - La nouvelle valeur (`in`)
 
-```
-                 ┌───────┐
-         ┌──────►│ sel=0 │
-         │       │       │      ┌─────┐
-         │ out ──┤  MUX  ├─────►│     │
-         │       │       │      │ DFF ├───┬──► out
-     in ─────────┤ sel=1 │      │     │   │
-                 └───┬───┘      └─────┘   │
-                     │                    │
-                   load                   │
-                                          │
-         ┌────────────────────────────────┘
-         │        (boucle de rétroaction)
-         └───────────────────────────────────►
-```
+![Registre 1-bit avec rétroaction](images/bit-register.svg)
 
 **Fonctionnement** :
 - Si `load = 0` : Le Mux sélectionne la sortie de la DFF. La DFF ré-enregistre sa propre valeur. La valeur est **maintenue**.
@@ -243,16 +218,7 @@ Un registre stocke UN mot de 32 bits. Pour stocker des millions de mots, nous co
 
 ### Interface de la RAM
 
-```
-              ┌─────────────────────────┐
-   in[31:0] ──┤                         │
-              │                         ├──── out[31:0]
-address[n:0] ─┤         RAM             │
-              │                         │
-    load ─────┤                         │
-     clk ─────┤                         │
-              └─────────────────────────┘
-```
+![Interface de la RAM](images/ram-interface.svg)
 
 - `in` : La donnée à écrire
 - `address` : L'adresse de la cellule à lire/écrire
@@ -330,27 +296,7 @@ Après chaque instruction, le PC doit passer à l'instruction suivante. Mais par
 
 ### Schéma simplifié
 
-```
-              ┌───────┐
-    0 ────────┤       │
-              │       │     ┌──────────┐
-   in ────────┤  MUX  ├────►│          │
-              │       │     │ Register ├────┬────► out (PC)
-PC+1 ─────────┤       │     │          │    │
-              └───┬───┘     └──────────┘    │
-                  │                         │
-           (contrôle)                       │
-        reset/load/inc                      │
-                                            │
-                    ┌───────────────────────┘
-                    │
-                    ▼
-              ┌──────────┐
-              │  Add 1   │ (Incrémenteur)
-              └──────────┘
-                    │
-                    └─────────────────────────► PC+1
-```
+![Compteur de programme (PC)](images/pc-register.svg)
 
 ### Le lien avec l'exécution du programme
 
@@ -368,19 +314,7 @@ C'est le cœur battant de l'ordinateur !
 
 Dans un vrai ordinateur, il y a plusieurs niveaux de mémoire :
 
-```
-        Rapidité        ┌─────────────┐
-            ▲           │  Registres  │  16 × 32 bits = 64 octets
-            │           ├─────────────┤
-            │           │   Cache L1  │  32 Ko
-            │           ├─────────────┤
-            │           │   Cache L2  │  256 Ko
-            │           ├─────────────┤
-            │           │     RAM     │  16 Go
-            │           ├─────────────┤
-            ▼           │    Disque   │  1 To
-        Capacité        └─────────────┘
-```
+![Pyramide de la hiérarchie mémoire](images/memory-hierarchy.svg)
 
 Plus on monte dans la pyramide :
 - Plus c'est rapide

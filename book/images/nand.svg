@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" width="200" height="100">
+  <defs>
+    <style>
+      .gate-body { fill: #e8f4fc; stroke: #2563eb; stroke-width: 2; }
+      .wire { stroke: #374151; stroke-width: 2; fill: none; }
+      .label { font-family: monospace; font-size: 14px; fill: #1f2937; }
+      .gate-label { font-family: sans-serif; font-size: 12px; font-weight: bold; fill: #1e40af; }
+      .inversion { fill: #e8f4fc; stroke: #2563eb; stroke-width: 2; }
+    </style>
+  </defs>
+
+  <!-- Input wires -->
+  <line class="wire" x1="20" y1="35" x2="70" y2="35"/>
+  <line class="wire" x1="20" y1="65" x2="70" y2="65"/>
+
+  <!-- Gate body -->
+  <path class="gate-body" d="M 70 20 L 70 80 Q 120 80 130 50 Q 120 20 70 20 Z"/>
+
+  <!-- Inversion bubble -->
+  <circle class="inversion" cx="138" cy="50" r="6"/>
+
+  <!-- Output wire -->
+  <line class="wire" x1="144" y1="50" x2="180" y2="50"/>
+
+  <!-- Labels -->
+  <text class="label" x="10" y="39">A</text>
+  <text class="label" x="10" y="69">B</text>
+  <text class="label" x="170" y="54">Y</text>
+  <text class="gate-label" x="85" y="54">NAND</text>
+</svg>
