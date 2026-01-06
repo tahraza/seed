@@ -3567,11 +3567,8 @@ export function getDependencyLibrary(chipName, chipSources) {
         if (!c) return;
 
         for (const dep of c.dependencies) {
-            // Use user's unlocked version if available, otherwise use solution
             if (chipSources[dep]) {
                 library[dep] = chipSources[dep];
-            } else if (HDL_CHIPS[dep]?.solution) {
-                library[dep] = HDL_CHIPS[dep].solution;
             }
             collectDeps(dep);
         }
