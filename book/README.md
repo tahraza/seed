@@ -1,12 +1,12 @@
 # L'Architecture Codex : Guide de l'Étudiant
 
-Ce livre accompagne le projet **Nand2Tetris-Codex**. Il a pour but de vous guider pas à pas dans la construction d'un ordinateur complet, moderne et 32-bits, à partir de rien.
+Ce livre vous guide pas à pas dans la construction d'un ordinateur complet, moderne et 32-bits, à partir de rien : des portes logiques jusqu'au système d'exploitation.
 
 ## Table des Matières
 
 1.  **[Introduction](00_introduction.md)**
     *   La philosophie du projet.
-    *   Différences avec le Hack (Nand2Tetris original).
+    *   L'architecture Codex A32.
     *   Présentation des outils.
 
 2.  **[Chapitre 1 : Logique Booléenne](01_logique_booleenne.md)**

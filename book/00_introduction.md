@@ -101,11 +101,11 @@ Chaque couche a une propriété remarquable : **elle n'a besoin de connaître qu
 
 Cette séparation des préoccupations est ce qui rend possible la construction de systèmes complexes.
 
-## Codex vs Hack (Nand2Tetris Original)
+## L'Architecture Codex A32
 
-Ce cours est fortement inspiré du légendaire "Nand2Tetris" de Noam Nisan et Shimon Schocken. Cependant, l'ordinateur *Hack* original a été conçu pour une simplicité maximale, parfois au détriment du réalisme moderne.
+L'ordinateur **Codex** est conçu pour être à la fois pédagogique et réaliste. Il s'inspire des architectures ARM modernes tout en restant accessible.
 
-L'ordinateur **Codex** propose une approche différente :
+Comparé aux architectures pédagogiques classiques plus simples (comme Hack), Codex offre :
 
 | Caractéristique | Hack (Original) | Codex (Ce projet) |
 | :--- | :--- | :--- |
