@@ -209,7 +209,7 @@ body {
 
 .main {
     display: grid;
-    grid-template-columns: 1fr 320px 280px;
+    grid-template-columns: 1fr 280px 250px 250px;
     gap: var(--panel-gap);
     padding: var(--panel-gap);
     overflow: hidden;
@@ -997,12 +997,22 @@ kbd {
    Responsive
    ========================================================================== */
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
+    .main {
+        grid-template-columns: 1fr 280px 250px;
+    }
+
+    .progression-panel {
+        display: none;
+    }
+}
+
+@media (max-width: 1100px) {
     .main {
         grid-template-columns: 1fr 280px;
     }
 
-    .progression-panel {
+    .visualizations-panel {
         display: none;
     }
 }

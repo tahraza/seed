@@ -1,6 +1,25 @@
 /* Visualizers Panel Styles */
 
-/* Visualizers section in simulator panel */
+/* Visualizations Panel */
+.visualizations-panel {
+    display: flex;
+    flex-direction: column;
+}
+
+.visualizations-panel .panel-header {
+    flex-shrink: 0;
+}
+
+.visualizations-panel .visualizer-tabs {
+    flex-shrink: 0;
+}
+
+.visualizations-panel .visualizer-panels {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Visualizers section in simulator panel (legacy) */
 .visualizers-section {
     background: #16213e;
     border-radius: 6px;
@@ -45,7 +64,12 @@
 .visualizer-panels {
     position: relative;
     height: 200px;
-    min-height: 200px;
+    min-height: 150px;
+}
+
+.visualizations-panel .visualizer-panels {
+    height: auto;
+    flex: 1;
 }
 
 .viz-panel {
