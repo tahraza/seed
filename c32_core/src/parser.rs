@@ -600,7 +600,10 @@ impl Parser {
                 self.expect(TokenKind::RParen, "expected ')'")?;
                 Ok(expr)
             }
-            _ => Err(self.error_at(self.peek(), "expected expression")),
+            _ => {
+                let msg = format!("attendu une expression, trouvé {}", self.peek().kind);
+                Err(self.error_at(self.peek(), &msg))
+            }
         }
     }
 
@@ -633,7 +636,10 @@ impl Parser {
         let token = self.next();
         let kw = match &token.kind {
             TokenKind::Keyword(text) => text.as_str(),
-            _ => return Err(self.error_at_code(&token, "E2001", "expected type")),
+            _ => {
+                let msg = format!("attendu un type (int, char, void, struct), trouvé {}", token.kind);
+                return Err(self.error_at_code(&token, "E2001", &msg));
+            }
         };
         match kw {
             "int" => Ok(int_type()),
@@ -686,20 +692,31 @@ impl Parser {
         Ok((ty, name))
     }
 
-    fn expect_ident(&mut self, msg: &str) -> Result<String, CError> {
+    fn expect_ident(&mut self, _msg: &str) -> Result<String, CError> {
         let token = self.next();
-        match token.kind {
-            TokenKind::Ident(name) => Ok(name),
-            _ => Err(self.error_at(&token, msg)),
+        match &token.kind {
+            TokenKind::Ident(name) => Ok(name.clone()),
+            _ => {
+                let msg = format!(
+                    "attendu un identifiant, trouvé {}",
+                    token.kind
+                );
+                Err(self.error_at(&token, &msg))
+            }
         }
     }
 
-    fn expect(&mut self, kind: TokenKind, msg: &str) -> Result<(), CError> {
+    fn expect(&mut self, kind: TokenKind, _msg: &str) -> Result<(), CError> {
         let token = self.next();
         if token.kind == kind {
             Ok(())
         } else {
-            Err(self.error_at(&token, msg))
+            let msg = format!(
+                "attendu {}, trouvé {}",
+                kind.expected_name(),
+                token.kind
+            );
+            Err(self.error_at(&token, &msg))
         }
     }
 

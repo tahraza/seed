@@ -1,5 +1,6 @@
 use crate::ast::NumberLit;
 use crate::error::CError;
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TokenKind {
@@ -40,6 +41,95 @@ pub enum TokenKind {
     Dot,
     Arrow,
     Eof,
+}
+
+impl fmt::Display for TokenKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TokenKind::Ident(name) => write!(f, "identifiant '{}'", name),
+            TokenKind::Number(_) => write!(f, "nombre"),
+            TokenKind::Char(_) => write!(f, "caractère"),
+            TokenKind::String(_) => write!(f, "chaîne"),
+            TokenKind::Keyword(kw) => write!(f, "mot-clé '{}'", kw),
+            TokenKind::LParen => write!(f, "'('"),
+            TokenKind::RParen => write!(f, "')'"),
+            TokenKind::LBrace => write!(f, "'{{'"),
+            TokenKind::RBrace => write!(f, "'}}'"),
+            TokenKind::LBracket => write!(f, "'['"),
+            TokenKind::RBracket => write!(f, "']'"),
+            TokenKind::Comma => write!(f, "','"),
+            TokenKind::Semicolon => write!(f, "';'"),
+            TokenKind::Plus => write!(f, "'+'"),
+            TokenKind::Minus => write!(f, "'-'"),
+            TokenKind::Star => write!(f, "'*'"),
+            TokenKind::Slash => write!(f, "'/'"),
+            TokenKind::Percent => write!(f, "'%'"),
+            TokenKind::Amp => write!(f, "'&'"),
+            TokenKind::Pipe => write!(f, "'|'"),
+            TokenKind::Caret => write!(f, "'^'"),
+            TokenKind::Tilde => write!(f, "'~'"),
+            TokenKind::Bang => write!(f, "'!'"),
+            TokenKind::Assign => write!(f, "'='"),
+            TokenKind::EqEq => write!(f, "'=='"),
+            TokenKind::NotEq => write!(f, "'!='"),
+            TokenKind::Lt => write!(f, "'<'"),
+            TokenKind::LtEq => write!(f, "'<='"),
+            TokenKind::Gt => write!(f, "'>'"),
+            TokenKind::GtEq => write!(f, "'>='"),
+            TokenKind::AmpAmp => write!(f, "'&&'"),
+            TokenKind::PipePipe => write!(f, "'||'"),
+            TokenKind::Shl => write!(f, "'<<'"),
+            TokenKind::Shr => write!(f, "'>>'"),
+            TokenKind::Dot => write!(f, "'.'"),
+            TokenKind::Arrow => write!(f, "'->'"),
+            TokenKind::Eof => write!(f, "fin du fichier"),
+        }
+    }
+}
+
+impl TokenKind {
+    /// Get a short description for error messages
+    pub fn expected_name(&self) -> &'static str {
+        match self {
+            TokenKind::Ident(_) => "un identifiant",
+            TokenKind::Number(_) => "un nombre",
+            TokenKind::Char(_) => "un caractère",
+            TokenKind::String(_) => "une chaîne",
+            TokenKind::Keyword(_) => "un mot-clé",
+            TokenKind::LParen => "'('",
+            TokenKind::RParen => "')'",
+            TokenKind::LBrace => "'{'",
+            TokenKind::RBrace => "'}'",
+            TokenKind::LBracket => "'['",
+            TokenKind::RBracket => "']'",
+            TokenKind::Comma => "','",
+            TokenKind::Semicolon => "';'",
+            TokenKind::Plus => "'+'",
+            TokenKind::Minus => "'-'",
+            TokenKind::Star => "'*'",
+            TokenKind::Slash => "'/'",
+            TokenKind::Percent => "'%'",
+            TokenKind::Amp => "'&'",
+            TokenKind::Pipe => "'|'",
+            TokenKind::Caret => "'^'",
+            TokenKind::Tilde => "'~'",
+            TokenKind::Bang => "'!'",
+            TokenKind::Assign => "'='",
+            TokenKind::EqEq => "'=='",
+            TokenKind::NotEq => "'!='",
+            TokenKind::Lt => "'<'",
+            TokenKind::LtEq => "'<='",
+            TokenKind::Gt => "'>'",
+            TokenKind::GtEq => "'>='",
+            TokenKind::AmpAmp => "'&&'",
+            TokenKind::PipePipe => "'||'",
+            TokenKind::Shl => "'<<'",
+            TokenKind::Shr => "'>>'",
+            TokenKind::Dot => "'.'",
+            TokenKind::Arrow => "'->'",
+            TokenKind::Eof => "fin du fichier",
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
