@@ -1,5 +1,59 @@
 use std::fmt;
 
+/// Calculate Levenshtein edit distance between two strings
+pub fn edit_distance(a: &str, b: &str) -> usize {
+    let a_chars: Vec<char> = a.chars().collect();
+    let b_chars: Vec<char> = b.chars().collect();
+    let m = a_chars.len();
+    let n = b_chars.len();
+
+    if m == 0 {
+        return n;
+    }
+    if n == 0 {
+        return m;
+    }
+
+    let mut prev = vec![0usize; n + 1];
+    let mut curr = vec![0usize; n + 1];
+
+    for j in 0..=n {
+        prev[j] = j;
+    }
+
+    for i in 1..=m {
+        curr[0] = i;
+        for j in 1..=n {
+            let cost = if a_chars[i - 1] == b_chars[j - 1] { 0 } else { 1 };
+            curr[j] = (prev[j] + 1)
+                .min(curr[j - 1] + 1)
+                .min(prev[j - 1] + cost);
+        }
+        std::mem::swap(&mut prev, &mut curr);
+    }
+
+    prev[n]
+}
+
+/// Find the best match from a list of candidates
+pub fn find_best_match<'a>(name: &str, candidates: impl Iterator<Item = &'a String>) -> Option<&'a str> {
+    let name_lower = name.to_lowercase();
+    let mut best: Option<(&str, usize)> = None;
+
+    for candidate in candidates {
+        let dist = edit_distance(&name_lower, &candidate.to_lowercase());
+        // Only suggest if reasonably similar (distance <= 3 and < half the length)
+        let max_dist = (name.len() / 2).max(3);
+        if dist <= max_dist {
+            if best.is_none() || dist < best.unwrap().1 {
+                best = Some((candidate.as_str(), dist));
+            }
+        }
+    }
+
+    best.map(|(s, _)| s)
+}
+
 #[derive(Debug, Clone)]
 pub struct CError {
     code: String,

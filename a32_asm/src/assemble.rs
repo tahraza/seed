@@ -1,5 +1,5 @@
 use crate::ast::{Directive, Expr, Instruction, Item, Operand, Program, ShiftKind};
-use crate::error::AsmError;
+use crate::error::{find_best_match, AsmError, VALID_MNEMONICS};
 use crate::parser::parse_program;
 use a32_core::isa::{Cond, Reg};
 use std::collections::{HashMap, HashSet};
@@ -853,7 +853,14 @@ fn encode_instruction(inst: &Instruction, symbols: &HashMap<String, u32>, addr: 
             Ok(encode_system(suffix.cond, 1, 0))
         }
         "SVC" => encode_svc(inst, symbols),
-        _ => Err(AsmError::code("E1001", "unknown mnemonic")),
+        _ => {
+            let suggestion = find_best_match(&inst.mnemonic, VALID_MNEMONICS);
+            let msg = match suggestion {
+                Some(s) => format!("unknown mnemonic '{}'. Did you mean '{}'?", inst.mnemonic, s),
+                None => format!("unknown mnemonic '{}'", inst.mnemonic),
+            };
+            Err(AsmError::code("E1001", msg))
+        }
     }
 }
 
@@ -1082,7 +1089,15 @@ fn alu_op_code(name: &str) -> Result<u32, AsmError> {
         "MVN" => Ok(0b0110),
         "CMP" => Ok(0b0111),
         "TST" => Ok(0b1000),
-        _ => Err(AsmError::code("E1001", "unknown mnemonic")),
+        _ => {
+            let alu_ops = &["AND", "EOR", "SUB", "ADD", "ORR", "MOV", "MVN", "CMP", "TST"];
+            let suggestion = find_best_match(name, alu_ops);
+            let msg = match suggestion {
+                Some(s) => format!("unknown ALU instruction '{}'. Did you mean '{}'?", name, s),
+                None => format!("unknown ALU instruction '{}'", name),
+            };
+            Err(AsmError::code("E1001", msg))
+        }
     }
 }
 

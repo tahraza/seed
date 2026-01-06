@@ -2,7 +2,7 @@ use crate::ast::{
     bool_type, char_type, int_type, uint_type, BaseType, BinaryOp, Expr, Func, Item,
     NumberLit, Program, Stmt, StructDef, Type, UnaryOp,
 };
-use crate::error::CError;
+use crate::error::{find_best_match, CError};
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 
@@ -499,6 +499,73 @@ impl<'a> FuncContext<'a> {
         None
     }
 
+    /// Find a variable or return an error with suggestion
+    fn require_var(&self, name: &str) -> Result<VarInfo, CError> {
+        if let Some(info) = self.find_var(name) {
+            return Ok(info);
+        }
+
+        // Collect all known variable names for suggestions
+        let mut all_names: Vec<String> = Vec::new();
+        for scope in &self.scopes {
+            all_names.extend(scope.keys().cloned());
+        }
+        all_names.extend(self.cg.globals.keys().cloned());
+
+        let suggestion = find_best_match(name, all_names.iter());
+        let msg = match suggestion {
+            Some(s) => format!("undefined identifier '{}'. Did you mean '{}'?", name, s),
+            None => format!("undefined identifier '{}'", name),
+        };
+        Err(CError::new("E2003", msg))
+    }
+
+    /// Find a function or return an error with suggestion
+    fn require_func(&self, name: &str) -> Result<&FuncSymbol, CError> {
+        if let Some(func) = self.cg.funcs.get(name) {
+            return Ok(func);
+        }
+
+        let suggestion = find_best_match(name, self.cg.funcs.keys());
+        let msg = match suggestion {
+            Some(s) => format!("undefined function '{}'. Did you mean '{}'?", name, s),
+            None => format!("undefined function '{}'", name),
+        };
+        Err(CError::new("E2003", msg))
+    }
+
+    /// Find a struct or return an error with suggestion
+    fn require_struct(&self, name: &str) -> Result<&StructDef, CError> {
+        if let Some(s) = self.cg.struct_defs.get(name) {
+            return Ok(s);
+        }
+
+        let suggestion = find_best_match(name, self.cg.struct_defs.keys());
+        let msg = match suggestion {
+            Some(s) => format!("undefined struct '{}'. Did you mean '{}'?", name, s),
+            None => format!("undefined struct '{}'", name),
+        };
+        Err(CError::new("E2003", msg))
+    }
+
+    /// Find a field in a struct or return an error with suggestion
+    fn require_field<'b>(&self, struct_def: &'b StructDef, field_name: &str) -> Result<&'b crate::ast::StructField, CError> {
+        if let Some(f) = struct_def.fields.iter().find(|f| f.name == field_name) {
+            return Ok(f);
+        }
+
+        let field_names: Vec<String> = struct_def.fields.iter().map(|f| f.name.clone()).collect();
+        let suggestion = find_best_match(field_name, field_names.iter());
+        let msg = match suggestion {
+            Some(s) => format!("undefined field '{}' in struct '{}'. Did you mean '{}'?", field_name, struct_def.name, s),
+            None => format!("undefined field '{}' in struct '{}'. Available fields: {}",
+                field_name,
+                struct_def.name,
+                struct_def.fields.iter().map(|f| f.name.as_str()).collect::<Vec<_>>().join(", ")),
+        };
+        Err(CError::new("E2003", msg))
+    }
+
     fn emit_stmt(&mut self, stmt: &Stmt, out: &mut String) -> Result<(), CError> {
         match stmt {
             Stmt::Block(stmts) => {
@@ -678,9 +745,7 @@ impl<'a> FuncContext<'a> {
                 Ok(Type::Pointer(Box::new(char_type())))
             }
             Expr::Var(name) => {
-                let info = self
-                    .find_var(name)
-                    .ok_or_else(|| CError::new("E2003", "undefined identifier"))?;
+                let info = self.require_var(name)?;
                 if info.ty.is_array() {
                     self.emit_addr_of_var(out, &info, "R0")?;
                     if let Type::Array(elem, _) = info.ty {
@@ -1030,12 +1095,7 @@ impl<'a> FuncContext<'a> {
             }
             _ => {}
         }
-        let func = self
-            .cg
-            .funcs
-            .get(name)
-            .ok_or_else(|| CError::new("E2003", "undefined function"))?
-            .clone();
+        let func = self.require_func(name)?.clone();
         if func.params.len() != args.len() {
             return Err(CError::new("E2002", "argument count mismatch"));
         }
@@ -1094,9 +1154,7 @@ impl<'a> FuncContext<'a> {
     fn emit_lvalue_addr(&mut self, expr: &Expr, out: &mut String) -> Result<LValue, CError> {
         match expr {
             Expr::Var(name) => {
-                let info = self
-                    .find_var(name)
-                    .ok_or_else(|| CError::new("E2003", "undefined identifier"))?;
+                let info = self.require_var(name)?;
                 if info.ty.is_array() {
                     self.emit_addr_of_var(out, &info, "R0")?;
                     return Ok(LValue {
@@ -1328,9 +1386,7 @@ impl<'a> FuncContext<'a> {
             Expr::Char(_) => Ok(char_type()),
             Expr::String(_) => Ok(Type::Pointer(Box::new(char_type()))),
             Expr::Var(name) => {
-                let info = self
-                    .find_var(name)
-                    .ok_or_else(|| CError::new("E2003", "undefined identifier"))?;
+                let info = self.require_var(name)?;
                 if decay_arrays {
                     Ok(info.ty.decay())
                 } else {
@@ -1405,11 +1461,7 @@ impl<'a> FuncContext<'a> {
                 Ok(lt)
             }
             Expr::Call { name, .. } => {
-                let func = self
-                    .cg
-                    .funcs
-                    .get(name)
-                    .ok_or_else(|| CError::new("E2003", "undefined function"))?;
+                let func = self.require_func(name)?;
                 Ok(func.ret.clone())
             }
             Expr::Index { base, .. } => {
