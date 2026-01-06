@@ -1317,6 +1317,102 @@ kbd {
     display: none;
 }
 
+/* Chip Diagram */
+.chip-diagram {
+    display: flex;
+    justify-content: center;
+    padding: 16px 8px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #0a0f1a 0%, #0f1520 100%);
+    border-radius: 8px;
+    border: 1px solid rgba(74, 144, 217, 0.2);
+}
+
+.chip-svg {
+    max-width: 100%;
+    height: auto;
+    min-height: 100px;
+}
+
+/* Chip body */
+.chip-svg .chip-body {
+    stroke: #4a90d9;
+    stroke-width: 2;
+}
+
+.chip-svg .chip-border {
+    fill: none;
+    stroke: rgba(74, 144, 217, 0.5);
+    stroke-width: 1;
+}
+
+.chip-svg .chip-notch {
+    fill: #0a0f1a;
+    stroke: #4a90d9;
+    stroke-width: 1.5;
+}
+
+.chip-svg .chip-name-label {
+    fill: #e0e0e0;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    text-anchor: middle;
+    letter-spacing: 1px;
+}
+
+/* Wires */
+.chip-svg .wire {
+    stroke-width: 2;
+    fill: none;
+}
+
+.chip-svg .input-port .wire {
+    stroke: #4ade80;
+}
+
+.chip-svg .output-port .wire {
+    stroke: #f97316;
+}
+
+/* Port connectors on chip */
+.chip-svg .port-connector {
+    stroke-width: 2;
+}
+
+.chip-svg .input-port .port-connector {
+    fill: #1a2a4e;
+    stroke: #4ade80;
+}
+
+.chip-svg .output-port .port-connector {
+    fill: #1a2a4e;
+    stroke: #f97316;
+}
+
+/* Port label boxes */
+.chip-svg .port-label-box {
+    stroke-width: 1.5;
+}
+
+.chip-svg .input-box {
+    fill: url(#inputBoxGrad);
+    stroke: #4ade80;
+}
+
+.chip-svg .output-box {
+    fill: url(#outputBoxGrad);
+    stroke: #f97316;
+}
+
+/* Port labels */
+.chip-svg .port-label {
+    fill: #ffffff;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+}
+
 /* Truth Table */
 .chip-tests {
     margin-bottom: 12px;

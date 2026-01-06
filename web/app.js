@@ -629,6 +629,168 @@ function parseVhdlPorts(vhdlCode) {
 }
 
 /**
+ * Generate SVG diagram for a chip
+ * @param {string} chipName - Name of the chip
+ * @param {Array} inputs - Array of {name, width} objects
+ * @param {Array} outputs - Array of {name, width} objects
+ * @returns {string} SVG markup
+ */
+function generateChipDiagram(chipName, inputs, outputs) {
+    const portHeight = 28;
+    const portSpacing = 6;
+    const boxPadding = 24;
+    const boxWidth = 100;
+    const minBoxHeight = 70;
+    const labelBoxWidth = 50;
+    const labelBoxHeight = 22;
+
+    // Calculate box height based on max ports
+    const maxPorts = Math.max(inputs.length, outputs.length, 1);
+    const boxHeight = Math.max(minBoxHeight, maxPorts * (portHeight + portSpacing) + boxPadding);
+
+    // SVG dimensions
+    const svgWidth = 320;
+    const svgHeight = boxHeight + 50;
+    const boxX = (svgWidth - boxWidth) / 2;
+    const boxY = 25;
+
+    // Format port name with width
+    const formatPort = (port) => {
+        if (port.width > 1) {
+            return `${port.name}[${port.width}]`;
+        }
+        return port.name;
+    };
+
+    // Generate input ports
+    let inputsHtml = '';
+    const inputStartY = boxY + (boxHeight - inputs.length * (portHeight + portSpacing) + portSpacing) / 2;
+    inputs.forEach((input, i) => {
+        const y = inputStartY + i * (portHeight + portSpacing) + portHeight / 2;
+        const label = formatPort(input);
+        const labelX = 15;
+        inputsHtml += `
+            <g class="port-group input-port">
+                <!-- Wire with arrow -->
+                <path d="M ${labelX + labelBoxWidth + 5} ${y} L ${boxX - 8} ${y}"
+                      class="wire" marker-end="url(#inputArrow)"/>
+                <!-- Connection dot on chip -->
+                <circle cx="${boxX}" cy="${y}" r="5" class="port-connector"/>
+                <!-- Label box -->
+                <rect x="${labelX}" y="${y - labelBoxHeight/2}"
+                      width="${labelBoxWidth}" height="${labelBoxHeight}"
+                      rx="4" class="port-label-box input-box"/>
+                <text x="${labelX + labelBoxWidth/2}" y="${y + 4}"
+                      class="port-label" text-anchor="middle">${label}</text>
+            </g>
+        `;
+    });
+
+    // Generate output ports
+    let outputsHtml = '';
+    const outputStartY = boxY + (boxHeight - outputs.length * (portHeight + portSpacing) + portSpacing) / 2;
+    const boxRight = boxX + boxWidth;
+    outputs.forEach((output, i) => {
+        const y = outputStartY + i * (portHeight + portSpacing) + portHeight / 2;
+        const label = formatPort(output);
+        const labelX = svgWidth - labelBoxWidth - 15;
+        outputsHtml += `
+            <g class="port-group output-port">
+                <!-- Wire with arrow -->
+                <path d="M ${boxRight + 8} ${y} L ${labelX - 5} ${y}"
+                      class="wire" marker-end="url(#outputArrow)"/>
+                <!-- Connection dot on chip -->
+                <circle cx="${boxRight}" cy="${y}" r="5" class="port-connector"/>
+                <!-- Label box -->
+                <rect x="${labelX}" y="${y - labelBoxHeight/2}"
+                      width="${labelBoxWidth}" height="${labelBoxHeight}"
+                      rx="4" class="port-label-box output-box"/>
+                <text x="${labelX + labelBoxWidth/2}" y="${y + 4}"
+                      class="port-label" text-anchor="middle">${label}</text>
+            </g>
+        `;
+    });
+
+    return `
+        <svg class="chip-svg" viewBox="0 0 ${svgWidth} ${svgHeight}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <!-- Gradients -->
+                <linearGradient id="chipBodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#2a3a5e"/>
+                    <stop offset="50%" style="stop-color:#1a2a4e"/>
+                    <stop offset="100%" style="stop-color:#0f1a2e"/>
+                </linearGradient>
+                <linearGradient id="inputBoxGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#3d5a40"/>
+                    <stop offset="100%" style="stop-color:#2a4a2e"/>
+                </linearGradient>
+                <linearGradient id="outputBoxGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#5a3d40"/>
+                    <stop offset="100%" style="stop-color:#4a2a2e"/>
+                </linearGradient>
+                <!-- Arrows -->
+                <marker id="inputArrow" markerWidth="8" markerHeight="8"
+                        refX="6" refY="4" orient="auto">
+                    <path d="M 0 0 L 8 4 L 0 8 Z" fill="#4ade80"/>
+                </marker>
+                <marker id="outputArrow" markerWidth="8" markerHeight="8"
+                        refX="6" refY="4" orient="auto">
+                    <path d="M 0 0 L 8 4 L 0 8 Z" fill="#f97316"/>
+                </marker>
+                <!-- Glow filter -->
+                <filter id="chipGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur"/>
+                    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                </filter>
+            </defs>
+
+            <!-- Chip shadow -->
+            <rect x="${boxX + 3}" y="${boxY + 3}" width="${boxWidth}" height="${boxHeight}"
+                  rx="10" ry="10" fill="rgba(0,0,0,0.3)"/>
+
+            <!-- Chip body -->
+            <rect x="${boxX}" y="${boxY}" width="${boxWidth}" height="${boxHeight}"
+                  rx="10" ry="10" class="chip-body" fill="url(#chipBodyGrad)"/>
+
+            <!-- Chip border glow -->
+            <rect x="${boxX}" y="${boxY}" width="${boxWidth}" height="${boxHeight}"
+                  rx="10" ry="10" class="chip-border"/>
+
+            <!-- Pin notch (IC style) -->
+            <circle cx="${boxX + boxWidth/2}" cy="${boxY}" r="6" class="chip-notch"/>
+
+            <!-- Chip name -->
+            <text x="${boxX + boxWidth/2}" y="${boxY + boxHeight/2 + 6}"
+                  class="chip-name-label">${chipName}</text>
+
+            <!-- Input ports -->
+            ${inputsHtml}
+
+            <!-- Output ports -->
+            ${outputsHtml}
+        </svg>
+    `;
+}
+
+/**
+ * Update chip diagram in the UI
+ */
+function updateChipDiagram(chip) {
+    const diagramEl = document.getElementById('chip-diagram');
+    if (!diagramEl) return;
+
+    const vhdlCode = chip?.template || chip?.solution || '';
+    const { inputs, outputs } = parseVhdlPorts(vhdlCode);
+
+    if (inputs.length === 0 && outputs.length === 0) {
+        diagramEl.innerHTML = '';
+        return;
+    }
+
+    diagramEl.innerHTML = generateChipDiagram(chip.name, inputs, outputs);
+}
+
+/**
  * Initialize HDL signals panel based on chip definition
  */
 function initHdlSignals(chipDef) {
@@ -2849,6 +3011,9 @@ function updateChipInfoPanel(chip) {
             depsEl.textContent = '';
         }
     }
+
+    // Update chip diagram
+    updateChipDiagram(chip);
 
     // Update truth table from test script
     const truthTableEl = document.getElementById('truth-table');
