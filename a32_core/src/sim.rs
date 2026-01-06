@@ -52,7 +52,7 @@ impl Default for SimConfig {
         Self {
             ram_size: 0x0010_0000,
             strict_traps: true,
-            max_steps: 1_000_000,
+            max_steps: 100_000_000,
             stack_top: None,
         }
     }
@@ -807,7 +807,13 @@ impl Machine {
                 }
             }
         }
-        Err(SimError::new("E4005", "max steps exceeded"))
+        // Limit reached but program still running - return success (not error)
+        Ok(RunOutcome {
+            exit: None,
+            trap: None,
+            breakpoint_hit: None,
+            steps: self.steps,
+        })
     }
 
     fn exec_alu_reg(&mut self, pc: u32, instr: u32) -> StepOutcome {

@@ -1,0 +1,330 @@
+.text
+  .global putchar
+putchar:
+  SUB SP, SP, #8
+  STR R11, [SP]
+  STR LR, [SP, #4]
+  MOV R11, SP
+  SUB SP, SP, #8
+  STR R0, [R11, #-4]
+  ADD R0, R11, #-8
+  SUB SP, SP, #4
+  STR R0, [SP]
+  MOV R0, #4294901760
+  LDR R1, [SP]
+  ADD SP, SP, #4
+  STR R0, [R1, #0]
+  LDR R0, [R11, #-8]
+  SUB SP, SP, #4
+  STR R0, [SP]
+  LDR R0, [R11, #-4]
+  LDR R1, [SP]
+  ADD SP, SP, #4
+  STR R0, [R1, #0]
+  B .Lret_0
+.Lret_0:
+  MOV SP, R11
+  LDR R11, [SP]
+  LDR LR, [SP, #4]
+  ADD SP, SP, #8
+  MOV PC, LR
+  .ltorg
+
+  .global print
+print:
+  SUB SP, SP, #8
+  STR R11, [SP]
+  STR LR, [SP, #4]
+  MOV R11, SP
+  SUB SP, SP, #4
+  STR R0, [R11, #-4]
+.Lwhile_cond_2:
+  LDR R0, [R11, #-4]
+  LDRB R0, [R0]
+  CMP R0, #0
+  B.EQ .Lwhile_end_3
+  LDR R0, [R11, #-4]
+  LDRB R0, [R0]
+  SUB SP, SP, #4
+  STR R0, [SP]
+  LDR R0, [SP]
+  ADD SP, SP, #4
+  BL putchar
+  ADD R0, R11, #-4
+  SUB SP, SP, #4
+  STR R0, [SP]
+  LDR R0, [R11, #-4]
+  SUB SP, SP, #4
+  STR R0, [SP]
+  MOV R0, #1
+  LDR R1, [SP]
+  ADD SP, SP, #4
+  ADD R0, R1, R0
+  LDR R1, [SP]
+  ADD SP, SP, #4
+  STR R0, [R1, #0]
+  B .Lwhile_cond_2
+.Lwhile_end_3:
+  B .Lret_1
+.Lret_1:
+  MOV SP, R11
+  LDR R11, [SP]
+  LDR LR, [SP, #4]
+  ADD SP, SP, #8
+  MOV PC, LR
+  .ltorg
+
+  .global println
+println:
+  SUB SP, SP, #8
+  STR R11, [SP]
+  STR LR, [SP, #4]
+  MOV R11, SP
+  SUB SP, SP, #4
+  STR R0, [R11, #-4]
+  LDR R0, [R11, #-4]
+  SUB SP, SP, #4
+  STR R0, [SP]
+  LDR R0, [SP]
+  ADD SP, SP, #4
+  BL print
+  MOV R0, #10
+  SUB SP, SP, #4
+  STR R0, [SP]
+  LDR R0, [SP]
+  ADD SP, SP, #4
+  BL putchar
+  B .Lret_4
+.Lret_4:
+  MOV SP, R11
+  LDR R11, [SP]
+  LDR LR, [SP, #4]
+  ADD SP, SP, #8
+  MOV PC, LR
+  .ltorg
+
+  .global main
+main:
+  SUB SP, SP, #8
+  STR R11, [SP]
+  STR LR, [SP, #4]
+  MOV R11, SP
+  LDR R0, =.Lstr_6
+  SUB SP, SP, #4
+  STR R0, [SP]
+  LDR R0, [SP]
+  ADD SP, SP, #4
+  BL println
+  LDR R0, =.Lstr_7
+  SUB SP, SP, #4
+  STR R0, [SP]
+  LDR R0, [SP]
+  ADD SP, SP, #4
+  BL println
+  LDR R0, =.Lstr_8
+  SUB SP, SP, #4
+  STR R0, [SP]
+  LDR R0, [SP]
+  ADD SP, SP, #4
+  BL println
+  LDR R0, =.Lstr_9
+  SUB SP, SP, #4
+  STR R0, [SP]
+  LDR R0, [SP]
+  ADD SP, SP, #4
+  BL println
+  LDR R0, =.Lstr_10
+  SUB SP, SP, #4
+  STR R0, [SP]
+  LDR R0, [SP]
+  ADD SP, SP, #4
+  BL println
+  LDR R0, =.Lstr_11
+  SUB SP, SP, #4
+  STR R0, [SP]
+  LDR R0, [SP]
+  ADD SP, SP, #4
+  BL println
+  LDR R0, =.Lstr_12
+  SUB SP, SP, #4
+  STR R0, [SP]
+  LDR R0, [SP]
+  ADD SP, SP, #4
+  BL println
+  MOV R0, #0
+  B .Lret_5
+.Lret_5:
+  MOV SP, R11
+  LDR R11, [SP]
+  LDR LR, [SP, #4]
+  ADD SP, SP, #8
+  MOV PC, LR
+  .ltorg
+
+  .global __mul_u32
+__mul_u32:
+  MOV R2, #0
+.Lmul_u32_loop:
+  CMP R1, #0
+  B.EQ .Lmul_u32_end
+  AND R3, R1, #1
+  CMP R3, #0
+  B.EQ .Lmul_u32_skip
+  ADD R2, R2, R0
+.Lmul_u32_skip:
+  MOV R0, R0, LSL #1
+  MOV R1, R1, LSR #1
+  B .Lmul_u32_loop
+.Lmul_u32_end:
+  MOV R0, R2
+  MOV PC, LR
+
+  .global __mul_i32
+__mul_i32:
+  MOV R2, #0
+  CMP R0, #0
+  B.GE .Lmul_i32_a_pos
+  MOV R3, #0
+  SUB R0, R3, R0
+  EOR R2, R2, #1
+.Lmul_i32_a_pos:
+  CMP R1, #0
+  B.GE .Lmul_i32_b_pos
+  MOV R3, #0
+  SUB R1, R3, R1
+  EOR R2, R2, #1
+.Lmul_i32_b_pos:
+  MOV R3, #0
+.Lmul_i32_loop:
+  CMP R1, #0
+  B.EQ .Lmul_i32_end
+  AND R12, R1, #1
+  CMP R12, #0
+  B.EQ .Lmul_i32_skip
+  ADD R3, R3, R0
+.Lmul_i32_skip:
+  MOV R0, R0, LSL #1
+  MOV R1, R1, LSR #1
+  B .Lmul_i32_loop
+.Lmul_i32_end:
+  CMP R2, #0
+  B.EQ .Lmul_i32_done
+  MOV R0, #0
+  SUB R3, R0, R3
+.Lmul_i32_done:
+  MOV R0, R3
+  MOV PC, LR
+
+  .global __div_u32
+__div_u32:
+  CMP R1, #0
+  B.NE .Ldiv_u32_cont
+  SVC #1
+.Ldiv_u32_cont:
+  MOV R2, #0
+.Ldiv_u32_loop:
+  CMP R0, R1
+  B.CC .Ldiv_u32_end
+  SUB R0, R0, R1
+  ADD R2, R2, #1
+  B .Ldiv_u32_loop
+.Ldiv_u32_end:
+  MOV R0, R2
+  MOV PC, LR
+
+  .global __mod_u32
+__mod_u32:
+  CMP R1, #0
+  B.NE .Lmod_u32_cont
+  SVC #1
+.Lmod_u32_cont:
+.Lmod_u32_loop:
+  CMP R0, R1
+  B.CC .Lmod_u32_end
+  SUB R0, R0, R1
+  B .Lmod_u32_loop
+.Lmod_u32_end:
+  MOV PC, LR
+
+  .global __div_i32
+__div_i32:
+  CMP R1, #0
+  B.NE .Ldiv_i32_cont
+  SVC #1
+.Ldiv_i32_cont:
+  MOV R2, #0
+  CMP R0, #0
+  B.GE .Ldiv_i32_a_pos
+  MOV R3, #0
+  SUB R0, R3, R0
+  EOR R2, R2, #1
+.Ldiv_i32_a_pos:
+  CMP R1, #0
+  B.GE .Ldiv_i32_b_pos
+  MOV R3, #0
+  SUB R1, R3, R1
+  EOR R2, R2, #1
+.Ldiv_i32_b_pos:
+  MOV R3, #0
+.Ldiv_i32_loop:
+  CMP R0, R1
+  B.CC .Ldiv_i32_end
+  SUB R0, R0, R1
+  ADD R3, R3, #1
+  B .Ldiv_i32_loop
+.Ldiv_i32_end:
+  CMP R2, #0
+  B.EQ .Ldiv_i32_done
+  MOV R0, #0
+  SUB R3, R0, R3
+.Ldiv_i32_done:
+  MOV R0, R3
+  MOV PC, LR
+
+  .global __mod_i32
+__mod_i32:
+  CMP R1, #0
+  B.NE .Lmod_i32_cont
+  SVC #1
+.Lmod_i32_cont:
+  MOV R2, #0
+  CMP R0, #0
+  B.GE .Lmod_i32_a_pos
+  MOV R3, #0
+  SUB R0, R3, R0
+  MOV R2, #1
+.Lmod_i32_a_pos:
+  CMP R1, #0
+  B.GE .Lmod_i32_b_pos
+  MOV R3, #0
+  SUB R1, R3, R1
+.Lmod_i32_b_pos:
+.Lmod_i32_loop:
+  CMP R0, R1
+  B.CC .Lmod_i32_end
+  SUB R0, R0, R1
+  B .Lmod_i32_loop
+.Lmod_i32_end:
+  CMP R2, #0
+  B.EQ .Lmod_i32_done
+  MOV R3, #0
+  SUB R0, R3, R0
+.Lmod_i32_done:
+  MOV PC, LR
+
+
+.rodata
+.Lstr_6:
+  .asciz "Hello, World!"
+.Lstr_7:
+  .asciz "Bienvenue dans A32-Lite!"
+.Lstr_8:
+  .asciz ""
+.Lstr_9:
+  .asciz "Ce programme demontre:"
+.Lstr_10:
+  .asciz "  - L'affichage de texte"
+.Lstr_11:
+  .asciz "  - Les chaines de caracteres"
+.Lstr_12:
+  .asciz "  - Les fonctions"

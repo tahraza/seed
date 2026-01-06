@@ -50,8 +50,8 @@ const state = {
     lastAssembledBytes: null,  // Last assembled binary for download
     files: {
         hdl: { 'main': '' },  // Will be set from progression
-        asm: { 'main': '// Assembly Program\n\n.text\n_start:\n    MOV R0, #0          ; counter\n    MOV R1, #10         ; limit\n\nloop:\n    ADD R0, R0, #1      ; increment\n    CMP R0, R1\n    BLT loop            ; branch if less than\n\n    ; Output result\n    LDR R2, =0xFFFF0004\n    STR R0, [R2]\n\n    ; Halt\nhalt:\n    B halt\n' },
-        c: { 'main': '// C Program\n\nint *OUTPUT = (int*)0xFFFF0004;\n\nint factorial(int n) {\n    if (n <= 1) return 1;\n    return n * factorial(n - 1);\n}\n\nint main() {\n    int result = factorial(5);\n    *OUTPUT = result;\n    return 0;\n}\n' }
+        asm: { 'main': '// Assembly Program\n\n.text\n_start:\n    MOV R0, #0          ; counter\n    MOV R1, #10         ; limit\n\nloop:\n    ADD R0, R0, #1      ; increment\n    CMP R0, R1\n    B.LT loop            ; branch if less than\n\n    ; Output result\n    LDR R2, =0xFFFF0000\n    STR R0, [R2]\n\n    ; Halt\nhalt:\n    B halt\n' },
+        c: { 'main': '// C Program\n\nint *OUTPUT = (int*)0xFFFF0000;\n\nint factorial(int n) {\n    if (n <= 1) return 1;\n    return n * factorial(n - 1);\n}\n\nint main() {\n    int result = factorial(5);\n    *OUTPUT = result;\n    return 0;\n}\n' }
     },
     currentFile: 'main',
     currentChip: 'Inv',    // Current HDL chip being worked on
@@ -469,26 +469,26 @@ function runLoop() {
     if (!state.running || state.paused) return;
     if (!state.asmSim) return;
 
-    const stepsPerFrame = Math.ceil(state.speed / 10) * 100;
+    // Much faster: use run() with many steps instead of step() loop
+    // Speed 1-100 maps to 10000-1000000 steps per frame
+    const stepsPerFrame = Math.ceil(state.speed / 10) * 100000;
 
     try {
-        for (let i = 0; i < stepsPerFrame; i++) {
-            const result = state.asmSim.step();
-            if (result !== 'running') {
-                stop();
-                // Update display after program ends
-                updateRegisters();
-                updateScreen(true);
-                // Get output and display it
-                try {
-                    const output = state.asmSim.output();
-                    if (output) {
-                        log(`Output: ${output}`, 'info');
-                    }
-                } catch (e) {}
-                log(`Program ${result}`, 'info');
-                return;
-            }
+        const result = state.asmSim.run(stepsPerFrame);
+        if (result !== 'running') {
+            stop();
+            // Update display after program ends
+            updateRegisters();
+            updateScreen(true);
+            // Get output and display it
+            try {
+                const output = state.asmSim.output();
+                if (output) {
+                    log(`Output: ${output}`, 'info');
+                }
+            } catch (e) {}
+            log(`Program ${result}`, 'info');
+            return;
         }
 
         updateRegisters();
@@ -918,12 +918,12 @@ const DEMOS = {
 .text
 _start:
     LDR R0, =message
-    LDR R1, =0xFFFF0004    ; OUTPUT port
+    LDR R1, =0xFFFF0000    ; OUTPUT port
 
 print_loop:
     LDRB R2, [R0]
     CMP R2, #0
-    BEQ done
+    B.EQ done
     STR R2, [R1]
     ADD R0, R0, #1
     B print_loop
@@ -939,7 +939,7 @@ message:
     fibonacci: {
         mode: 'c',
         code: `// Fibonacci sequence
-int *OUTPUT = (int*)0xFFFF0004;
+int *OUTPUT = (int*)0xFFFF0000;
 
 void print_int(int n) {
     if (n >= 10) {
@@ -969,74 +969,42 @@ int main() {
     },
     graphics: {
         mode: 'c',
-        code: `// Graphics demo - Draw patterns
-int *SCREEN = (int*)0x00100000;
-
-void set_pixel(int x, int y, int color) {
-    if (x >= 0 && x < 320 && y >= 0 && y < 240) {
-        SCREEN[y * 320 + x] = color;
-    }
-}
-
-void draw_line(int x0, int y0, int x1, int y1, int color) {
-    int dx = x1 - x0;
-    int dy = y1 - y0;
-    int steps;
-
-    if (dx < 0) dx = -dx;
-    if (dy < 0) dy = -dy;
-
-    if (dx > dy) steps = dx;
-    else steps = dy;
-
-    if (steps == 0) {
-        set_pixel(x0, y0, color);
-        return;
-    }
-
-    int xi = ((x1 - x0) << 8) / steps;
-    int yi = ((y1 - y0) << 8) / steps;
-
-    int x = x0 << 8;
-    int y = y0 << 8;
-
-    int i;
-    for (i = 0; i <= steps; i = i + 1) {
-        set_pixel(x >> 8, y >> 8, color);
-        x = x + xi;
-        y = y + yi;
-    }
-}
+        code: `// Graphics demo - 8x8 Checkerboard (monochrome 320x240)
+char *SCREEN = (char*)0x00400000;
+int *OUTPUT = (int*)0xFFFF0000;
 
 int main() {
-    int i;
+    int row;
+    char *p = SCREEN;
 
-    // Clear screen (black)
-    for (i = 0; i < 320 * 240; i = i + 1) {
-        SCREEN[i] = 0x000000;
+    // 8x8 checkerboard: each 8 pixels = 1 byte
+    // Pattern alternates every 8 rows
+    for (row = 0; row < 240; row = row + 1) {
+        int block_row = row / 8;
+        int col;
+        for (col = 0; col < 40; col = col + 1) {
+            // Each byte = 8 horizontal pixels = 1 block
+            if (((block_row + col) & 1) == 0) {
+                *p = 0xFF;  // White block
+            } else {
+                *p = 0x00;  // Black block
+            }
+            p = p + 1;
+        }
     }
 
-    // Draw colorful lines
-    for (i = 0; i < 320; i = i + 10) {
-        draw_line(i, 0, 319 - i, 239, 0xFF0000 + i * 256);
-        draw_line(0, i * 240 / 320, 319, 239 - i * 240 / 320, 0x00FF00 + i);
-    }
-
-    // Draw border
-    draw_line(0, 0, 319, 0, 0xFFFFFF);
-    draw_line(319, 0, 319, 239, 0xFFFFFF);
-    draw_line(319, 239, 0, 239, 0xFFFFFF);
-    draw_line(0, 239, 0, 0, 0xFFFFFF);
-
+    *OUTPUT = 'D'; *OUTPUT = 'o'; *OUTPUT = 'n'; *OUTPUT = 'e'; *OUTPUT = 10;
     return 0;
 }
 `
     },
     snake: {
         mode: 'c',
-        code: `// Snake Game
-int *SCREEN = (int*)0x00100000;
-int *KEYBOARD = (int*)0xFFFF0000;
+        code: `// Snake - ZQSD to move, eat food to grow!
+// Enable "Keyboard Capture" checkbox and click the screen!
+char *SCREEN = (char*)0x00400000;
+int *KEYBOARD = (int*)0x00402600;  // Real-time keyboard
+int *OUTPUT = (int*)0xFFFF0000;
 
 int snake_x[100];
 int snake_y[100];
@@ -1045,23 +1013,25 @@ int dir;  // 0=right, 1=down, 2=left, 3=up
 int food_x;
 int food_y;
 int game_over;
-
-void set_pixel(int x, int y, int color) {
-    if (x >= 0 && x < 320 && y >= 0 && y < 240) {
-        SCREEN[y * 320 + x] = color;
-    }
-}
-
-void draw_block(int x, int y, int color) {
-    int i; int j;
-    for (i = 0; i < 8; i = i + 1) {
-        for (j = 0; j < 8; j = j + 1) {
-            set_pixel(x * 8 + i, y * 8 + j, color);
-        }
-    }
-}
-
+int score;
 int random_seed;
+
+void draw_block(int gx, int gy) {
+    int py = gy * 8;
+    int row;
+    for (row = 0; row < 8; row = row + 1) {
+        SCREEN[(py + row) * 40 + gx] = 0xFF;
+    }
+}
+
+void clear_block(int gx, int gy) {
+    int py = gy * 8;
+    int row;
+    for (row = 0; row < 8; row = row + 1) {
+        SCREEN[(py + row) * 40 + gx] = 0x00;
+    }
+}
+
 int random() {
     random_seed = random_seed * 1103515245 + 12345;
     if (random_seed < 0) random_seed = -random_seed;
@@ -1071,111 +1041,117 @@ int random() {
 void spawn_food() {
     food_x = (random() % 38) + 1;
     food_y = (random() % 28) + 1;
+    draw_block(food_x, food_y);
 }
 
-void init_game() {
-    snake_len = 3;
-    snake_x[0] = 20;
-    snake_y[0] = 15;
-    snake_x[1] = 19;
-    snake_y[1] = 15;
-    snake_x[2] = 18;
-    snake_y[2] = 15;
-    dir = 0;
-    game_over = 0;
-    random_seed = 12345;
-    spawn_food();
-}
-
-void update() {
-    // Read keyboard
-    int key = *KEYBOARD;
-    if (key == 'w' && dir != 1) dir = 3;
-    if (key == 's' && dir != 3) dir = 1;
-    if (key == 'a' && dir != 0) dir = 2;
-    if (key == 'd' && dir != 2) dir = 0;
-
-    // Move snake
-    int new_x = snake_x[0];
-    int new_y = snake_y[0];
-
-    if (dir == 0) new_x = new_x + 1;
-    if (dir == 1) new_y = new_y + 1;
-    if (dir == 2) new_x = new_x - 1;
-    if (dir == 3) new_y = new_y - 1;
-
-    // Check collision with walls
-    if (new_x < 0 || new_x >= 40 || new_y < 0 || new_y >= 30) {
-        game_over = 1;
-        return;
-    }
-
-    // Check collision with self
-    int i;
-    for (i = 0; i < snake_len; i = i + 1) {
-        if (snake_x[i] == new_x && snake_y[i] == new_y) {
-            game_over = 1;
-            return;
-        }
-    }
-
-    // Check food
-    int ate_food = (new_x == food_x && new_y == food_y);
-    if (ate_food) {
-        snake_len = snake_len + 1;
-        spawn_food();
-    }
-
-    // Move body
-    for (i = snake_len - 1; i > 0; i = i - 1) {
-        snake_x[i] = snake_x[i - 1];
-        snake_y[i] = snake_y[i - 1];
-    }
-    snake_x[0] = new_x;
-    snake_y[0] = new_y;
-}
-
-void draw() {
-    // Clear
-    int i;
-    for (i = 0; i < 320 * 240; i = i + 1) {
-        SCREEN[i] = 0x001100;
-    }
-
-    // Draw snake
-    for (i = 0; i < snake_len; i = i + 1) {
-        int color = (i == 0) ? 0x00FF00 : 0x008800;
-        draw_block(snake_x[i], snake_y[i], color);
-    }
-
-    // Draw food
-    draw_block(food_x, food_y, 0xFF0000);
+void print_score() {
+    *OUTPUT = 'S'; *OUTPUT = 'c'; *OUTPUT = 'o'; *OUTPUT = 'r'; *OUTPUT = 'e';
+    *OUTPUT = ':'; *OUTPUT = ' ';
+    if (score >= 10) *OUTPUT = '0' + (score / 10);
+    *OUTPUT = '0' + (score % 10);
+    *OUTPUT = 10;
 }
 
 int main() {
-    init_game();
+    int i;
 
-    while (!game_over) {
-        update();
-        draw();
+    *OUTPUT = 'S'; *OUTPUT = 'N'; *OUTPUT = 'A'; *OUTPUT = 'K'; *OUTPUT = 'E';
+    *OUTPUT = ' '; *OUTPUT = 'Z'; *OUTPUT = 'Q'; *OUTPUT = 'S'; *OUTPUT = 'D';
+    *OUTPUT = 10;
 
-        // Simple delay
-        int j;
-        for (j = 0; j < 100000; j = j + 1) { }
+    // Clear screen
+    for (i = 0; i < 9600; i = i + 1) SCREEN[i] = 0;
+
+    // Init snake (length 5, center of screen)
+    snake_len = 5;
+    for (i = 0; i < snake_len; i = i + 1) {
+        snake_x[i] = 20 - i;
+        snake_y[i] = 15;
+        draw_block(snake_x[i], snake_y[i]);
     }
 
+    dir = 0;
+    game_over = 0;
+    score = 0;
+    random_seed = 12345;
+    spawn_food();
+
+    // Game loop - runs until wall/self collision
+    int delay;
+    while (!game_over) {
+        // Read keyboard (WASD or ZQSD for AZERTY)
+        int key = *KEYBOARD;
+        if ((key == 'w' || key == 'z') && dir != 1) dir = 3;
+        if (key == 's' && dir != 3) dir = 1;
+        if ((key == 'a' || key == 'q') && dir != 0) dir = 2;
+        if (key == 'd' && dir != 2) dir = 0;
+
+        // Delay loop (adjust speed)
+        for (delay = 0; delay < 50000; delay = delay + 1) { }
+
+        // Calculate new head position
+        int new_x = snake_x[0];
+        int new_y = snake_y[0];
+        if (dir == 0) new_x = new_x + 1;
+        if (dir == 1) new_y = new_y + 1;
+        if (dir == 2) new_x = new_x - 1;
+        if (dir == 3) new_y = new_y - 1;
+
+        // Wall collision
+        if (new_x < 0 || new_x >= 40 || new_y < 0 || new_y >= 30) {
+            game_over = 1;
+        }
+
+        // Self collision
+        if (!game_over) {
+            for (i = 0; i < snake_len; i = i + 1) {
+                if (snake_x[i] == new_x && snake_y[i] == new_y) {
+                    game_over = 1;
+                }
+            }
+        }
+
+        if (!game_over) {
+            // Check food
+            int ate = (new_x == food_x && new_y == food_y);
+
+            // Clear tail (unless eating)
+            if (!ate) {
+                clear_block(snake_x[snake_len - 1], snake_y[snake_len - 1]);
+            } else {
+                snake_len = snake_len + 1;
+                score = score + 1;
+                spawn_food();
+            }
+
+            // Move body
+            for (i = snake_len - 1; i > 0; i = i - 1) {
+                snake_x[i] = snake_x[i - 1];
+                snake_y[i] = snake_y[i - 1];
+            }
+            snake_x[0] = new_x;
+            snake_y[0] = new_y;
+            draw_block(new_x, new_y);
+        }
+    }
+
+    *OUTPUT = 'G'; *OUTPUT = 'A'; *OUTPUT = 'M'; *OUTPUT = 'E';
+    *OUTPUT = ' '; *OUTPUT = 'O'; *OUTPUT = 'V'; *OUTPUT = 'E'; *OUTPUT = 'R';
+    *OUTPUT = 10;
+    print_score();
     return 0;
 }
 `
     },
     shell: {
         mode: 'c',
-        code: `// Mini Shell
-int *OUTPUT = (int*)0xFFFF0004;
-int *KEYBOARD = (int*)0xFFFF0000;
+        code: `// Mini Shell - Enable Keyboard Capture and click screen!
+int *OUTPUT = (int*)0xFFFF0000;
+int *KEYBOARD = (int*)0x00402600;  // Real-time keyboard
 
 char buffer[80];
 int buf_pos;
+int last_key;
 
 void print(char *s) {
     while (*s) {
@@ -1186,7 +1162,7 @@ void print(char *s) {
 
 void println(char *s) {
     print(s);
-    *OUTPUT = '\\n';
+    *OUTPUT = 10;
 }
 
 int strcmp(char *a, char *b) {
@@ -1197,19 +1173,31 @@ int strcmp(char *a, char *b) {
     return *a - *b;
 }
 
+int read_key() {
+    // Wait for new key press (not held)
+    int key;
+    // Wait for key release first
+    while (*KEYBOARD != 0) { }
+    // Wait for new key press
+    while ((key = *KEYBOARD) == 0) { }
+    return key;
+}
+
 void read_line() {
     buf_pos = 0;
     while (1) {
-        int c = *KEYBOARD;
-        if (c == 0) continue;
+        int c = read_key();
 
-        if (c == '\\n' || c == '\\r') {
+        if (c == 13 || c == 10) {  // Enter
             buffer[buf_pos] = 0;
-            *OUTPUT = '\\n';
+            *OUTPUT = 10;
             return;
         }
 
-        if (buf_pos < 79) {
+        if (c == 8 && buf_pos > 0) {  // Backspace
+            buf_pos = buf_pos - 1;
+            *OUTPUT = 8; *OUTPUT = ' '; *OUTPUT = 8;
+        } else if (c >= 32 && buf_pos < 79) {
             buffer[buf_pos] = c;
             buf_pos = buf_pos + 1;
             *OUTPUT = c;
@@ -1221,7 +1209,6 @@ void cmd_help() {
     println("Commands:");
     println("  help  - Show this help");
     println("  echo  - Echo text");
-    println("  clear - Clear screen");
     println("  exit  - Exit shell");
 }
 
@@ -1231,12 +1218,14 @@ void cmd_echo() {
         *OUTPUT = buffer[i];
         i = i + 1;
     }
-    *OUTPUT = '\\n';
+    *OUTPUT = 10;
 }
 
 int main() {
     println("Mini Shell v1.0");
-    println("Type 'help' for commands\\n");
+    println("Enable Keyboard Capture, click screen!");
+    println("Type help for commands");
+    *OUTPUT = 10;
 
     while (1) {
         print("> ");
@@ -1262,7 +1251,7 @@ int main() {
     coroutines: {
         mode: 'c',
         code: `// Cooperative Coroutines Demo
-int *OUTPUT = (int*)0xFFFF0004;
+int *OUTPUT = (int*)0xFFFF0000;
 
 struct Task {
     int state;
