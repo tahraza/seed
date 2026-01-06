@@ -594,21 +594,28 @@ function parseVhdlPorts(vhdlCode) {
     const inputs = [];
     const outputs = [];
 
-    // Find port section
-    const portMatch = vhdlCode.match(/port\s*\(([\s\S]*?)\)\s*;/i);
-    if (!portMatch) return { inputs, outputs };
+    // Find port section - look for port(...); followed by end
+    // Use greedy match but look for ); that's followed by 'end' keyword
+    const portMatch = vhdlCode.match(/port\s*\(([\s\S]*?)\)\s*;\s*(?=end)/i);
+    if (!portMatch) {
+        // Fallback: try to find port section ending with ); on its own
+        const fallbackMatch = vhdlCode.match(/port\s*\(([\s\S]*?)\n\s*\)\s*;/i);
+        if (!fallbackMatch) return { inputs, outputs };
+        return parsePortSection(fallbackMatch[1]);
+    }
 
-    const portSection = portMatch[1];
+    return parsePortSection(portMatch[1]);
 
-    // Parse each port line
-    const lines = portSection.split(/[;\n]/);
-    for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
+    function parsePortSection(portSection) {
+        const inputs = [];
+        const outputs = [];
 
-        // Match: name : in/out type
-        const match = trimmed.match(/(\w+)\s*:\s*(in|out)\s+(\w+)(?:\s*\(\s*(\d+)\s+downto\s+(\d+)\s*\))?/i);
-        if (match) {
+        // Match port declarations: name : in/out type or name : in/out type(N downto M)
+        // Handle multi-line declarations separated by ; or newline
+        const portRegex = /(\w+)\s*:\s*(in|out)\s+(bits?)\s*(?:\(\s*(\d+)\s+downto\s+(\d+)\s*\))?/gi;
+        let match;
+
+        while ((match = portRegex.exec(portSection)) !== null) {
             const name = match[1];
             const direction = match[2].toLowerCase();
             const type = match[3];
@@ -623,9 +630,9 @@ function parseVhdlPorts(vhdlCode) {
                 outputs.push({ name, width });
             }
         }
-    }
 
-    return { inputs, outputs };
+        return { inputs, outputs };
+    }
 }
 
 /**
@@ -3104,19 +3111,24 @@ function parseChipInterface(template) {
     const inputs = [];
     const outputs = [];
 
-    // Match port declarations like "a : in bit" or "y : out bit"
-    const portRegex = /(\w+)\s*:\s*(in|out)\s+(bit(?:\s*\(\s*\d+\s+downto\s+\d+\s*\))?)/gi;
+    // Match port declarations like "a : in bit" or "y : out bits(15 downto 0)"
+    const portRegex = /(\w+)\s*:\s*(in|out)\s+(bits?)(?:\s*\(\s*(\d+)\s+downto\s+(\d+)\s*\))?/gi;
     let match;
 
     while ((match = portRegex.exec(template)) !== null) {
         const name = match[1];
         const direction = match[2].toLowerCase();
-        const type = match[3];
+        const high = match[4] ? parseInt(match[4]) : null;
+        const low = match[5] ? parseInt(match[5]) : null;
+        const width = (high !== null && low !== null) ? (high - low + 1) : 1;
+
+        // Format name with width if multi-bit
+        const displayName = width > 1 ? `${name}[${width}]` : name;
 
         if (direction === 'in') {
-            inputs.push(name);
+            inputs.push(displayName);
         } else {
-            outputs.push(name);
+            outputs.push(displayName);
         }
     }
 
