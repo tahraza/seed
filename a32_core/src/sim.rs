@@ -170,6 +170,25 @@ pub struct Machine {
     int_in_handler: bool, // Currently in interrupt handler
     // Cache L1
     cache: Cache,
+    // Memory access tracking for visualization
+    last_mem_access: Option<MemAccess>,
+    // Call stack tracking for visualization
+    last_call_event: Option<CallEvent>,
+}
+
+/// Memory access info for visualization
+#[derive(Clone, Copy, Debug)]
+pub struct MemAccess {
+    pub addr: u32,
+    pub size: u8,      // 1 or 4 bytes
+    pub is_write: bool,
+}
+
+/// Call/Return event for call stack visualization
+#[derive(Clone, Copy, Debug)]
+pub enum CallEvent {
+    Call { target: u32, return_addr: u32 },
+    Return { to_addr: u32 },
 }
 
 impl Machine {
@@ -208,6 +227,10 @@ impl Machine {
             int_in_handler: false,
             // Cache L1
             cache: Cache::new(),
+            // Memory access tracking
+            last_mem_access: None,
+            // Call stack tracking
+            last_call_event: None,
         }
     }
 
@@ -284,6 +307,10 @@ impl Machine {
         // Reset cache
         self.cache.flush();
         self.cache.reset_stats();
+        // Reset memory access tracking
+        self.last_mem_access = None;
+        // Reset call stack tracking
+        self.last_call_event = None;
         Ok(())
     }
 
@@ -507,6 +534,28 @@ impl Machine {
     /// Reset cache statistics
     pub fn reset_cache_stats(&mut self) {
         self.cache.reset_stats();
+    }
+
+    // ========== Memory Access Tracking ==========
+
+    /// Get the last memory access (for visualization)
+    pub fn last_mem_access(&self) -> Option<MemAccess> {
+        self.last_mem_access
+    }
+
+    /// Clear the last memory access
+    pub fn clear_mem_access(&mut self) {
+        self.last_mem_access = None;
+    }
+
+    /// Get the last call/return event (for call stack visualization)
+    pub fn last_call_event(&self) -> Option<CallEvent> {
+        self.last_call_event
+    }
+
+    /// Clear the last call event
+    pub fn clear_call_event(&mut self) {
+        self.last_call_event = None;
     }
 
     // ========== Debugger: Breakpoints ==========
@@ -923,13 +972,23 @@ impl Machine {
 
         if write_result {
             if rd == Reg::PC {
-                self.cpu.set_pc(result & !3);
+                let target = result & !3;
+                // Detect return: PC set to LR value
+                let lr = self.cpu.reg(Reg::LR);
+                if target == lr || target == lr.wrapping_sub(4) {
+                    self.last_call_event = Some(CallEvent::Return { to_addr: target });
+                } else {
+                    self.last_call_event = None;
+                }
+                self.cpu.set_pc(target);
             } else {
                 self.cpu.set_reg(rd, result);
                 self.cpu.set_pc(pc.wrapping_add(4));
+                self.last_call_event = None;
             }
         } else {
             self.cpu.set_pc(pc.wrapping_add(4));
+            self.last_call_event = None;
         }
         StepOutcome::Continue
     }
@@ -994,13 +1053,24 @@ impl Machine {
 
         if l {
             if rd == Reg::PC {
-                self.cpu.set_pc(value & !3);
+                let target = value & !3;
+                // Detect return: loading PC (typically POP {PC})
+                // Check if the loaded value looks like a return address
+                let lr = self.cpu.reg(Reg::LR);
+                if target == lr || (rn == Reg::SP && target != 0) {
+                    self.last_call_event = Some(CallEvent::Return { to_addr: target });
+                } else {
+                    self.last_call_event = None;
+                }
+                self.cpu.set_pc(target);
             } else {
                 self.cpu.set_reg(rd, value);
                 self.cpu.set_pc(pc.wrapping_add(4));
+                self.last_call_event = None;
             }
         } else {
             self.cpu.set_pc(pc.wrapping_add(4));
+            self.last_call_event = None;
         }
 
         if w {
@@ -1021,6 +1091,14 @@ impl Machine {
         let next = pc.wrapping_add(4);
         if link {
             self.cpu.set_reg(Reg::LR, next);
+            // Track function call
+            let target = next.wrapping_add(offset) & !3;
+            self.last_call_event = Some(CallEvent::Call {
+                target,
+                return_addr: next,
+            });
+        } else {
+            self.last_call_event = None;
         }
         let target = next.wrapping_add(offset);
         self.cpu.set_pc(target & !3);
@@ -1103,6 +1181,8 @@ impl Machine {
     }
 
     fn read8(&mut self, addr: u32) -> Result<u8, Trap> {
+        // Track memory access
+        self.last_mem_access = Some(MemAccess { addr, size: 1, is_write: false });
         // MMIO I/O
         if is_mmio_addr(addr) {
             let value = match addr {
@@ -1129,6 +1209,8 @@ impl Machine {
     }
 
     fn read32(&mut self, addr: u32) -> Result<u32, Trap> {
+        // Track memory access
+        self.last_mem_access = Some(MemAccess { addr, size: 4, is_write: false });
         // MMIO I/O
         if is_mmio_addr(addr) {
             let value = match addr {
@@ -1196,6 +1278,8 @@ impl Machine {
     }
 
     fn write8(&mut self, addr: u32, value: u8) -> Result<(), Trap> {
+        // Track memory access
+        self.last_mem_access = Some(MemAccess { addr, size: 1, is_write: true });
         // MMIO I/O
         if is_mmio_addr(addr) {
             match addr {
@@ -1227,6 +1311,8 @@ impl Machine {
     }
 
     fn write32(&mut self, addr: u32, value: u32) -> Result<(), Trap> {
+        // Track memory access
+        self.last_mem_access = Some(MemAccess { addr, size: 4, is_write: true });
         // MMIO I/O
         if is_mmio_addr(addr) {
             match addr {

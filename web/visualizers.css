@@ -1,0 +1,230 @@
+/* Visualizers Panel Styles */
+
+.visualizers-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    background: #1a1a2e;
+    border-radius: 8px;
+    min-width: 200px;
+}
+
+.visualizer-container {
+    background: #16213e;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.visualizer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #0f3460;
+    border-bottom: 1px solid #1a1a2e;
+}
+
+.visualizer-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #e0e0e0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.visualizer-toggle {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 14px;
+}
+
+.visualizer-toggle:hover {
+    color: #fff;
+}
+
+.visualizer-content {
+    height: 200px;
+    transition: height 0.2s ease;
+}
+
+.visualizer-content.collapsed {
+    height: 0;
+    overflow: hidden;
+}
+
+.visualizer-content canvas {
+    width: 100%;
+    height: 100%;
+}
+
+/* Memory Visualizer */
+.memory-visualizer {
+    min-height: 150px;
+}
+
+.memory-visualizer .visualizer-content {
+    height: 180px;
+}
+
+/* Call Stack Visualizer */
+.callstack-visualizer .visualizer-content {
+    height: 150px;
+    overflow-y: auto;
+}
+
+.callstack-frame {
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-bottom: 1px solid #1a1a2e;
+    font-family: monospace;
+    font-size: 11px;
+}
+
+.callstack-frame:hover {
+    background: #1a1a2e;
+}
+
+.callstack-frame.current {
+    background: #0f3460;
+    border-left: 3px solid #00bfff;
+}
+
+.callstack-frame-icon {
+    width: 16px;
+    margin-right: 8px;
+    color: #888;
+}
+
+.callstack-frame-name {
+    flex: 1;
+    color: #e0e0e0;
+}
+
+.callstack-frame-addr {
+    color: #666;
+    font-size: 10px;
+}
+
+.callstack-empty {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+/* Waveform Visualizer */
+.waveform-visualizer .visualizer-content {
+    height: 200px;
+}
+
+.waveform-controls {
+    display: flex;
+    gap: 8px;
+    padding: 6px 10px;
+    background: #12203a;
+    border-top: 1px solid #1a1a2e;
+}
+
+.waveform-controls button {
+    padding: 4px 8px;
+    font-size: 10px;
+    background: #0f3460;
+    border: 1px solid #1a4a7a;
+    color: #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.waveform-controls button:hover {
+    background: #1a5a8a;
+}
+
+.waveform-controls input {
+    flex: 1;
+    padding: 4px 8px;
+    font-size: 10px;
+    background: #0a1628;
+    border: 1px solid #1a4a7a;
+    color: #e0e0e0;
+    border-radius: 3px;
+}
+
+/* ALU Visualizer */
+.alu-visualizer .visualizer-content {
+    height: 250px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.alu-svg {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.alu-svg .wire {
+    stroke: #444;
+    stroke-width: 2;
+    fill: none;
+}
+
+.alu-svg .wire.active-0 {
+    stroke: #4a90d9;
+}
+
+.alu-svg .wire.active-1 {
+    stroke: #f0ad4e;
+}
+
+.alu-svg .gate {
+    fill: #1a1a2e;
+    stroke: #444;
+    stroke-width: 1;
+}
+
+.alu-svg .gate.active {
+    fill: #0f3460;
+    stroke: #4a90d9;
+}
+
+.alu-svg text {
+    fill: #888;
+    font-family: monospace;
+    font-size: 10px;
+}
+
+.alu-svg .value-label {
+    fill: #e0e0e0;
+    font-size: 11px;
+}
+
+/* Animation for data flow */
+@keyframes dataFlow {
+    0% { stroke-dashoffset: 20; }
+    100% { stroke-dashoffset: 0; }
+}
+
+.alu-svg .wire.flowing {
+    stroke-dasharray: 5, 5;
+    animation: dataFlow 0.5s linear infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .visualizers-panel {
+        min-width: 150px;
+    }
+
+    .visualizer-content {
+        height: 150px;
+    }
+
+    .memory-visualizer .visualizer-content {
+        height: 120px;
+    }
+}

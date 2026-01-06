@@ -233,6 +233,27 @@ impl A32Session {
             Ok(None)
         }
     }
+
+    /// Get last memory access: returns (addr, size, is_write) or None
+    pub fn last_mem_access(&self) -> Result<Option<(u32, u8, bool)>, String> {
+        let machine = self.machine.as_ref().ok_or("program not loaded")?;
+        Ok(machine.last_mem_access().map(|a| (a.addr, a.size, a.is_write)))
+    }
+
+    /// Get RAM size
+    pub fn ram_size(&self) -> u32 {
+        self.config.ram_size
+    }
+
+    /// Get last call/return event: returns ("call", target, return_addr) or ("return", to_addr, 0) or None
+    pub fn last_call_event(&self) -> Result<Option<(&'static str, u32, u32)>, String> {
+        use a32_core::CallEvent;
+        let machine = self.machine.as_ref().ok_or("program not loaded")?;
+        Ok(machine.last_call_event().map(|e| match e {
+            CallEvent::Call { target, return_addr } => ("call", target, return_addr),
+            CallEvent::Return { to_addr } => ("return", to_addr, 0),
+        }))
+    }
 }
 
 fn format_outcome(outcome: StepOutcome) -> String {
@@ -513,6 +534,39 @@ mod wasm_api {
                 .program
                 .clone()
                 .ok_or_else(|| js_err("no program loaded".to_string()))
+        }
+
+        /// Get last memory access: returns [addr, size, is_write] or null
+        pub fn last_mem_access(&self) -> Result<JsValue, JsValue> {
+            match self.inner.last_mem_access().map_err(js_err)? {
+                Some((addr, size, is_write)) => {
+                    let arr = js_sys::Array::new();
+                    arr.push(&JsValue::from(addr));
+                    arr.push(&JsValue::from(size as u32));
+                    arr.push(&JsValue::from(is_write));
+                    Ok(arr.into())
+                }
+                None => Ok(JsValue::NULL),
+            }
+        }
+
+        /// Get RAM size
+        pub fn ram_size(&self) -> u32 {
+            self.inner.ram_size()
+        }
+
+        /// Get last call/return event: returns ["call", target, return_addr] or ["return", to_addr, 0] or null
+        pub fn last_call_event(&self) -> Result<JsValue, JsValue> {
+            match self.inner.last_call_event().map_err(js_err)? {
+                Some((kind, addr1, addr2)) => {
+                    let arr = js_sys::Array::new();
+                    arr.push(&JsValue::from(kind));
+                    arr.push(&JsValue::from(addr1));
+                    arr.push(&JsValue::from(addr2));
+                    Ok(arr.into())
+                }
+                None => Ok(JsValue::NULL),
+            }
         }
     }
 
