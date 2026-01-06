@@ -47,6 +47,7 @@ const state = {
     asmSim: null,          // WasmA32 instance
     running: false,
     paused: false,
+    programFinished: false, // True when program has exited or trapped
     speed: CONFIG.DEFAULT_SPEED,
     lastAssembledBytes: null,  // Last assembled binary for download
     files: {
@@ -63,7 +64,9 @@ const state = {
     progress: {},          // General progress
     hdlLibrary: {},        // Unlocked chip sources: { chipName: hdlSource }
     animationFrame: null,
-    visualizers: null      // VisualizerManager instance
+    visualizers: null,     // VisualizerManager instance
+    sourceMap: null,       // PC address → source line mapping
+    currentLineDecoration: []  // Monaco decoration for current line
 };
 
 // ============================================================================
@@ -262,9 +265,12 @@ function updateModeSpecificUI() {
     const memorySection = document.querySelector('.memory-section');
     const visualizersSection = document.querySelector('.visualizers-section');
 
+    const hdlSignalsSection = document.getElementById('hdl-signals');
+
     if (state.mode === 'hdl') {
         screenWrapper.style.display = 'none';
-        registersSection.querySelector('.section-title').textContent = 'Signals';
+        registersSection.style.display = 'none';
+        if (hdlSignalsSection) hdlSignalsSection.style.display = 'block';
         // Show waveform for HDL
         if (visualizersSection) {
             visualizersSection.style.display = 'block';
@@ -276,7 +282,8 @@ function updateModeSpecificUI() {
         }
     } else {
         screenWrapper.style.display = 'block';
-        registersSection.querySelector('.section-title').textContent = 'Registres';
+        registersSection.style.display = 'block';
+        if (hdlSignalsSection) hdlSignalsSection.style.display = 'none';
         // Show memory visualizer for ASM/C
         if (visualizersSection) {
             visualizersSection.style.display = 'block';
@@ -405,44 +412,344 @@ function initScreen() {
 }
 
 function initVisualizers() {
-    // Create visualizer manager
-    state.visualizers = new VisualizerManager();
+    try {
+        // Create visualizer manager
+        state.visualizers = new VisualizerManager();
 
-    // Attach simulator
-    if (state.asmSim) {
-        state.visualizers.attachSimulator(state.asmSim);
+        // Attach simulator
+        if (state.asmSim) {
+            state.visualizers.attachSimulator(state.asmSim);
+        }
+
+        // Initialize memory visualizer if container exists
+        const memContainer = document.getElementById('memory-visualizer');
+        if (memContainer) {
+            state.visualizers.initMemory(memContainer);
+        }
+
+        // Initialize call stack visualizer if container exists
+        const callstackContainer = document.getElementById('callstack-visualizer');
+        if (callstackContainer) {
+            state.visualizers.initCallStack(callstackContainer);
+        }
+
+        // Initialize waveform visualizer if container exists
+        const waveformContainer = document.getElementById('waveform-visualizer');
+        if (waveformContainer) {
+            state.visualizers.initWaveform(waveformContainer);
+        }
+
+        // Initialize ALU visualizer if container exists
+        const aluContainer = document.getElementById('alu-visualizer');
+        if (aluContainer) {
+            state.visualizers.initALU(aluContainer);
+        }
+
+        log('Visualizers initialized', 'info');
+    } catch (e) {
+        console.warn('Failed to initialize visualizers:', e);
+        state.visualizers = null;
     }
-
-    // Initialize memory visualizer if container exists
-    const memContainer = document.getElementById('memory-visualizer');
-    if (memContainer) {
-        state.visualizers.initMemory(memContainer);
-    }
-
-    // Initialize call stack visualizer if container exists
-    const callstackContainer = document.getElementById('callstack-visualizer');
-    if (callstackContainer) {
-        state.visualizers.initCallStack(callstackContainer);
-    }
-
-    // Initialize waveform visualizer if container exists
-    const waveformContainer = document.getElementById('waveform-visualizer');
-    if (waveformContainer) {
-        state.visualizers.initWaveform(waveformContainer);
-    }
-
-    // Initialize ALU visualizer if container exists
-    const aluContainer = document.getElementById('alu-visualizer');
-    if (aluContainer) {
-        state.visualizers.initALU(aluContainer);
-    }
-
-    log('Visualizers initialized', 'info');
 }
 
 function updateVisualizers() {
     if (state.visualizers) {
-        state.visualizers.update();
+        try {
+            state.visualizers.update();
+        } catch (e) {
+            console.warn('Visualizer update error:', e);
+        }
+    }
+}
+
+/**
+ * Build a map from PC addresses to source line numbers
+ * For ASM: parse source to find instruction lines
+ * For C: map to generated ASM lines
+ */
+function buildSourceMap(source) {
+    const map = new Map();
+    const lines = source.split('\n');
+    let addr = 0;
+    let inTextSection = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const trimmed = line.trim();
+
+        // Skip empty lines and comments
+        if (!trimmed || trimmed.startsWith(';') || trimmed.startsWith('//')) {
+            continue;
+        }
+
+        // Track sections
+        if (trimmed === '.text' || trimmed.startsWith('.text')) {
+            inTextSection = true;
+            continue;
+        }
+        if (trimmed === '.data' || trimmed.startsWith('.data')) {
+            inTextSection = false;
+            continue;
+        }
+
+        // Skip directives (except in data section)
+        if (trimmed.startsWith('.')) {
+            continue;
+        }
+
+        // Skip labels (lines ending with : without instruction)
+        if (trimmed.endsWith(':') && !trimmed.includes(' ')) {
+            continue;
+        }
+
+        // This looks like an instruction
+        if (inTextSection || !lines.some(l => l.trim() === '.data')) {
+            // Remove label prefix if present (e.g., "loop: ADD R0, R1")
+            let instruction = trimmed;
+            if (instruction.includes(':')) {
+                instruction = instruction.split(':').pop().trim();
+            }
+
+            if (instruction && !instruction.startsWith('.') && !instruction.startsWith(';')) {
+                map.set(addr, i + 1);  // Line numbers are 1-based
+                addr += 4;  // Each instruction is 4 bytes
+            }
+        }
+    }
+
+    return map;
+}
+
+/**
+ * Highlight the current line in the editor based on PC
+ */
+function highlightCurrentLine(editor, lineNumber) {
+    if (!editor || !lineNumber) return;
+
+    // Clear previous decoration
+    state.currentLineDecoration = editor.deltaDecorations(
+        state.currentLineDecoration,
+        [{
+            range: new monaco.Range(lineNumber, 1, lineNumber, 1),
+            options: {
+                isWholeLine: true,
+                className: 'current-line-highlight',
+                glyphMarginClassName: 'current-line-glyph'
+            }
+        }]
+    );
+
+    // Scroll to make the line visible
+    editor.revealLineInCenter(lineNumber);
+}
+
+/**
+ * Clear line highlighting
+ */
+function clearLineHighlight() {
+    if (state.editor && state.currentLineDecoration.length > 0) {
+        state.currentLineDecoration = state.editor.deltaDecorations(
+            state.currentLineDecoration,
+            []
+        );
+    }
+    // Also clear ASM output editor if in C mode
+    if (state.asmOutputEditor) {
+        state.asmOutputEditor.deltaDecorations(
+            state.asmOutputEditor.getModel()?.getAllDecorations()?.map(d => d.id) || [],
+            []
+        );
+    }
+}
+
+/**
+ * Update line highlighting based on current PC
+ */
+function updateLineHighlight() {
+    if (!state.asmSim || !state.sourceMap) return;
+
+    try {
+        const pc = state.asmSim.reg(15);
+        // PC points to next instruction, so subtract 4 to get current
+        const currentAddr = pc > 0 ? pc - 4 : 0;
+        const lineNumber = state.sourceMap.get(currentAddr);
+
+        if (lineNumber) {
+            // For C mode, highlight in the ASM output editor
+            // For ASM mode, highlight in the main editor
+            const editor = (state.mode === 'c' && state.asmOutputEditor)
+                ? state.asmOutputEditor
+                : state.editor;
+            highlightCurrentLine(editor, lineNumber);
+        }
+    } catch (e) {
+        // Program not loaded or other error
+    }
+}
+
+/**
+ * Parse VHDL entity to extract inputs and outputs
+ */
+function parseVhdlPorts(vhdlCode) {
+    const inputs = [];
+    const outputs = [];
+
+    // Find port section
+    const portMatch = vhdlCode.match(/port\s*\(([\s\S]*?)\)\s*;/i);
+    if (!portMatch) return { inputs, outputs };
+
+    const portSection = portMatch[1];
+
+    // Parse each port line
+    const lines = portSection.split(/[;\n]/);
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        // Match: name : in/out type
+        const match = trimmed.match(/(\w+)\s*:\s*(in|out)\s+(\w+)(?:\s*\(\s*(\d+)\s+downto\s+(\d+)\s*\))?/i);
+        if (match) {
+            const name = match[1];
+            const direction = match[2].toLowerCase();
+            const type = match[3];
+            const high = match[4] ? parseInt(match[4]) : null;
+            const low = match[5] ? parseInt(match[5]) : null;
+
+            const width = (high !== null && low !== null) ? (high - low + 1) : 1;
+
+            if (direction === 'in') {
+                inputs.push({ name, width });
+            } else {
+                outputs.push({ name, width });
+            }
+        }
+    }
+
+    return { inputs, outputs };
+}
+
+/**
+ * Initialize HDL signals panel based on chip definition
+ */
+function initHdlSignals(chipDef) {
+    const inputsList = document.getElementById('hdl-inputs-list');
+    const outputsList = document.getElementById('hdl-outputs-list');
+
+    if (!inputsList || !outputsList) return;
+
+    inputsList.innerHTML = '';
+    outputsList.innerHTML = '';
+
+    // Parse inputs and outputs from VHDL template
+    const vhdlCode = chipDef?.template || chipDef?.solution || '';
+    const { inputs, outputs } = parseVhdlPorts(vhdlCode);
+
+    // Create input controls
+    inputs.forEach(input => {
+        const row = document.createElement('div');
+        row.className = 'signal-row';
+
+        const name = input.name || input;
+        const width = input.width || 1;
+
+        if (width === 1) {
+            // Single bit - use toggle button
+            row.innerHTML = `
+                <span class="signal-name">${name}</span>
+                <button class="signal-toggle" data-signal="${name}" data-value="0"></button>
+            `;
+            const toggle = row.querySelector('.signal-toggle');
+            toggle.addEventListener('click', () => {
+                const newValue = toggle.dataset.value === '0' ? '1' : '0';
+                toggle.dataset.value = newValue;
+                toggle.classList.toggle('active', newValue === '1');
+                setHdlInput(name, newValue);
+            });
+        } else {
+            // Multi-bit - use text input
+            row.innerHTML = `
+                <span class="signal-name">${name}[${width}]</span>
+                <input type="text" class="signal-input" data-signal="${name}" value="0" placeholder="0">
+            `;
+            const input = row.querySelector('.signal-input');
+            input.addEventListener('change', () => {
+                setHdlInput(name, input.value);
+            });
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    setHdlInput(name, input.value);
+                }
+            });
+        }
+
+        inputsList.appendChild(row);
+    });
+
+    // Create output displays
+    outputs.forEach(output => {
+        const row = document.createElement('div');
+        row.className = 'signal-row';
+
+        const name = output.name || output;
+        const width = output.width || 1;
+
+        row.innerHTML = `
+            <span class="signal-name">${name}${width > 1 ? '[' + width + ']' : ''}</span>
+            <span class="signal-value" data-signal="${name}">?</span>
+        `;
+
+        outputsList.appendChild(row);
+    });
+}
+
+/**
+ * Set an HDL input signal value
+ */
+function setHdlInput(name, value) {
+    if (!state.hdlSim) return;
+
+    try {
+        state.hdlSim.set_signal(name, value);
+        log(`Set ${name} = ${value}`, 'info');
+    } catch (e) {
+        log(`Error setting ${name}: ${e}`, 'error');
+    }
+}
+
+/**
+ * Update HDL output displays
+ */
+function updateHdlOutputs() {
+    if (!state.hdlSim) return;
+
+    const outputsList = document.getElementById('hdl-outputs-list');
+    if (!outputsList) return;
+
+    outputsList.querySelectorAll('.signal-value').forEach(el => {
+        const name = el.dataset.signal;
+        try {
+            const value = state.hdlSim.get_signal(name);
+            el.textContent = value;
+            el.classList.remove('error');
+        } catch (e) {
+            el.textContent = '?';
+            el.classList.add('error');
+        }
+    });
+
+    // Also update inputs display (in case they changed)
+    const inputsList = document.getElementById('hdl-inputs-list');
+    if (inputsList) {
+        inputsList.querySelectorAll('.signal-input').forEach(el => {
+            const name = el.dataset.signal;
+            try {
+                const value = state.hdlSim.get_signal(name);
+                // Don't overwrite if user is editing
+                if (document.activeElement !== el) {
+                    el.value = value;
+                }
+            } catch (e) {}
+        });
     }
 }
 
@@ -508,7 +815,8 @@ async function run() {
     try {
         if (state.mode === 'hdl') {
             await assemble();  // Load HDL
-            state.running = true;
+            // Don't set running=true for HDL, so Step button stays enabled
+            state.running = false;
             state.paused = false;
             updateControlButtons();
             log('HDL loaded - use Step to simulate', 'info');
@@ -519,6 +827,7 @@ async function run() {
                 return;
             }
             await assemble();  // Compile/assemble the code
+            state.programFinished = false;
             state.running = true;
             state.paused = false;
             state.lastOutputLen = 0;  // Reset output tracking
@@ -542,6 +851,7 @@ function runLoop() {
     try {
         const result = state.asmSim.run(stepsPerFrame);
         if (result !== 'running') {
+            state.programFinished = true;
             stop();
             // Update display after program ends
             updateRegisters();
@@ -612,40 +922,124 @@ async function step() {
                 log('HDL simulator not initialized', 'warn');
                 return;
             }
-            // HDL: tick/tock cycle
-            state.hdlSim.tick();
-            state.hdlSim.tock();
-            log('HDL: tick-tock', 'info');
+
+            // Helper to save current input values before assemble() resets them
+            function saveInputValues() {
+                const saved = {};
+                document.querySelectorAll('#hdl-inputs-list .signal-toggle').forEach(toggle => {
+                    saved[toggle.dataset.signal] = toggle.dataset.value;
+                });
+                document.querySelectorAll('#hdl-inputs-list .signal-input').forEach(input => {
+                    saved[input.dataset.signal] = input.value;
+                });
+                return saved;
+            }
+
+            // Helper to restore input values after assemble()
+            function restoreInputValues(saved) {
+                for (const [signal, value] of Object.entries(saved)) {
+                    // Find toggle button
+                    const toggle = document.querySelector(`#hdl-inputs-list .signal-toggle[data-signal="${signal}"]`);
+                    if (toggle) {
+                        toggle.dataset.value = value;
+                        toggle.classList.toggle('active', value === '1');
+                        setHdlInput(signal, value);
+                    }
+                    // Find text input
+                    const input = document.querySelector(`#hdl-inputs-list .signal-input[data-signal="${signal}"]`);
+                    if (input) {
+                        input.value = value;
+                        setHdlInput(signal, value);
+                    }
+                }
+            }
+
+            // Try tick/tock for sequential chips, fall back to eval for combinational
+            try {
+                state.hdlSim.tick();
+                state.hdlSim.tock();
+                log('HDL: tick-tock', 'info');
+            } catch (e) {
+                const errStr = e.toString();
+                // Combinational chip (no clock) - just evaluate
+                if (errStr.includes('unknown signal')) {
+                    try {
+                        state.hdlSim.eval();
+                        log('HDL: eval', 'info');
+                    } catch (evalErr) {
+                        // If eval fails because not loaded, load first
+                        if (evalErr.toString().includes('not loaded')) {
+                            const savedInputs = saveInputValues();
+                            await assemble();
+                            restoreInputValues(savedInputs);
+                            state.hdlSim.eval();
+                            log('HDL: eval', 'info');
+                        } else {
+                            log(`HDL eval error: ${evalErr}`, 'error');
+                            return;
+                        }
+                    }
+                } else if (errStr.includes('not loaded')) {
+                    // HDL not loaded yet, load it first
+                    const savedInputs = saveInputValues();
+                    await assemble();
+                    restoreInputValues(savedInputs);
+                    // Try again
+                    try {
+                        state.hdlSim.eval();
+                        log('HDL: eval', 'info');
+                    } catch (e2) {
+                        log(`HDL error: ${e2}`, 'error');
+                        return;
+                    }
+                } else {
+                    log(`HDL step error: ${e}`, 'error');
+                    return;
+                }
+            }
+            // Update outputs display
+            updateHdlOutputs();
         } else {
             if (!state.asmSim) {
                 log('Simulator not initialized - run npm run build:wasm', 'warn');
                 return;
             }
-            try {
-                const result = state.asmSim.step();
-                if (result !== 'running') {
-                    try {
-                        const output = state.asmSim.output();
-                        if (output) log(`Output: ${output}`, 'info');
-                    } catch (e) {}
-                    log(`Program ${result}`, 'info');
+            // Check if we need to assemble first
+            let needsAssemble = state.programFinished;
+            if (!needsAssemble) {
+                try {
+                    // Try to get PC - if this fails, program not loaded
+                    state.asmSim.reg(15);
+                } catch (e) {
+                    needsAssemble = true;
                 }
-            } catch (e) {
-                // If step fails (no program loaded), compile first
-                if (e.toString().includes('not loaded')) {
-                    await assemble();
-                    const result = state.asmSim.step();
-                    if (result !== 'running') {
-                        log(`Program ${result}`, 'info');
-                    }
-                } else {
-                    throw e;
-                }
+            }
+
+            if (needsAssemble) {
+                await assemble();
+                state.programFinished = false;
+            }
+
+            const result = state.asmSim.step();
+            if (result !== 'running') {
+                state.programFinished = true;
+                try {
+                    const output = state.asmSim.output();
+                    if (output) log(`Output: ${output}`, 'info');
+                } catch (e) {}
+                log(`Program ${result}`, 'info');
+            } else {
+                // Show current PC for debugging
+                try {
+                    const pc = state.asmSim.reg(15);
+                    log(`Step: PC = 0x${pc.toString(16).padStart(8, '0')}`, 'info');
+                } catch (e) {}
             }
             updateRegisters();
             updateMemory(0);
             updateScreen();
             updateVisualizers();
+            updateLineHighlight();
         }
     } catch (e) {
         log(`Step error: ${e}`, 'error');
@@ -654,6 +1048,7 @@ async function step() {
 
 function reset() {
     stop();
+    state.programFinished = false;
     if (state.asmSim) {
         try {
             state.asmSim.reset();
@@ -664,6 +1059,7 @@ function reset() {
     }
     updateRegisters();
     initScreen();
+    clearLineHighlight();
     if (state.visualizers) {
         state.visualizers.reset();
     }
@@ -688,9 +1084,23 @@ async function assemble() {
                 chipName = n2tMatch[1];
             }
 
-            // For VHDL designs, we need to load dependencies (like Nand2)
-            // TODO: Load primitive library automatically
-            state.hdlSim.load(chipName, [code]);
+            // Get dependency library (nand2, Inv, And2, etc.)
+            const library = getDependencyLibrary(state.currentChip, state.hdlLibrary);
+            const sources = [code];
+
+            // Add library sources
+            for (const [name, src] of Object.entries(library)) {
+                if (src && typeof src === 'string') {
+                    sources.push(src);
+                }
+            }
+
+            state.hdlSim.load(chipName, sources);
+
+            // Initialize HDL signals panel with chip definition
+            const chipDef = getChip(state.currentChip);
+            initHdlSignals(chipDef);
+
             log(`HDL loaded: ${chipName}`, 'success');
         } catch (e) {
             throw new Error(`HDL error: ${e}`);
@@ -702,6 +1112,9 @@ async function assemble() {
         // Assemble and load directly using WASM
         try {
             state.asmSim.assemble(code);
+            // Build source map for line highlighting
+            state.sourceMap = buildSourceMap(code);
+            clearLineHighlight();
             log('Assembly successful', 'success');
             updateAsmBinaryOutput();
         } catch (e) {
@@ -714,14 +1127,20 @@ async function assemble() {
         // Compile C to ASM first, then assemble
         try {
             // Try to get generated ASM for display
+            let generatedAsm = null;
             try {
-                const generatedAsm = state.asmSim.compile_to_asm(code);
+                generatedAsm = state.asmSim.compile_to_asm(code);
                 updateCOutputPanel(generatedAsm);
             } catch (e) {
                 // compile_to_asm might fail, that's okay
             }
             // Always compile to load the binary
             state.asmSim.compile(code);
+            // Build source map from generated ASM for line highlighting
+            if (generatedAsm) {
+                state.sourceMap = buildSourceMap(generatedAsm);
+            }
+            clearLineHighlight();
             log('C compilation successful', 'success');
         } catch (e) {
             throw new Error(`C compilation error: ${e}`);
@@ -2385,6 +2804,9 @@ function loadChip(chipName) {
     // Update the chip info panel
     updateChipInfoPanel(chip);
 
+    // Initialize HDL signals panel so user can set inputs before running
+    initHdlSignals(chip);
+
     updateHdlProgressUI();
     log(`Loaded chip: ${chipName}`, 'info');
 }
@@ -2706,7 +3128,12 @@ function updateHdlProgressUI() {
             `;
 
             if (canTry) {
-                chipEl.addEventListener('click', () => loadChip(chipName));
+                chipEl.addEventListener('click', () => {
+                    if (state.mode !== 'hdl') {
+                        switchMode('hdl');
+                    }
+                    loadChip(chipName);
+                });
             }
 
             chipList.appendChild(chipEl);

@@ -49,42 +49,71 @@ export class VisualizerManager {
      * Initialise le visualiseur mémoire
      */
     initMemory(container, options = {}) {
-        const viz = createMemoryVisualizer(container, options);
-        this.visualizers.memory = viz;
+        if (!container) return null;
 
-        // Configurer la taille RAM si le simulateur est attaché
-        if (this.simulator) {
-            viz.setRamSize(this.simulator.ram_size());
+        try {
+            const viz = createMemoryVisualizer(container, options);
+            this.visualizers.memory = viz;
+
+            // Configurer la taille RAM si le simulateur est attaché
+            if (this.simulator) {
+                try {
+                    viz.setRamSize(this.simulator.ram_size());
+                } catch (e) {
+                    console.warn('Could not get RAM size:', e);
+                }
+            }
+
+            return viz;
+        } catch (e) {
+            console.warn('Failed to initialize memory visualizer:', e);
+            return null;
         }
-
-        return viz;
     }
 
     /**
      * Initialise le visualiseur de pile d'appels
      */
     initCallStack(container, options = {}) {
-        const viz = createCallStackVisualizer(container, options);
-        this.visualizers.callStack = viz;
-        return viz;
+        if (!container) return null;
+        try {
+            const viz = createCallStackVisualizer(container, options);
+            this.visualizers.callStack = viz;
+            return viz;
+        } catch (e) {
+            console.warn('Failed to initialize callstack visualizer:', e);
+            return null;
+        }
     }
 
     /**
      * Initialise le visualiseur de chronogramme
      */
     initWaveform(container, options = {}) {
-        const viz = createWaveformVisualizer(container, options);
-        this.visualizers.waveform = viz;
-        return viz;
+        if (!container) return null;
+        try {
+            const viz = createWaveformVisualizer(container, options);
+            this.visualizers.waveform = viz;
+            return viz;
+        } catch (e) {
+            console.warn('Failed to initialize waveform visualizer:', e);
+            return null;
+        }
     }
 
     /**
      * Initialise le visualiseur d'ALU
      */
     initALU(container, options = {}) {
-        const viz = createALUVisualizer(container, options);
-        this.visualizers.alu = viz;
-        return viz;
+        if (!container) return null;
+        try {
+            const viz = createALUVisualizer(container, options);
+            this.visualizers.alu = viz;
+            return viz;
+        } catch (e) {
+            console.warn('Failed to initialize ALU visualizer:', e);
+            return null;
+        }
     }
 
     /**
@@ -93,34 +122,50 @@ export class VisualizerManager {
     update() {
         if (!this.enabled || !this.simulator) return;
 
-        try {
-            // Mise à jour mémoire
-            if (this.visualizers.memory) {
+        // Mise à jour mémoire
+        if (this.visualizers.memory) {
+            try {
                 const mem = this.visualizers.memory;
-                mem.updatePC(this.simulator.reg(15)); // R15 = PC
-                mem.updateSP(this.simulator.reg(13)); // R13 = SP
+                // Get PC and SP safely
+                try {
+                    const pc = this.simulator.reg(15);
+                    if (typeof pc === 'number') mem.updatePC(pc);
+                } catch (e) { /* Program not loaded yet */ }
 
-                const access = this.simulator.last_mem_access();
-                if (access) {
-                    mem.addAccess(access[0], access[1], access[2]);
-                }
+                try {
+                    const sp = this.simulator.reg(13);
+                    if (typeof sp === 'number') mem.updateSP(sp);
+                } catch (e) { /* Program not loaded yet */ }
+
+                // Get memory access safely
+                try {
+                    const access = this.simulator.last_mem_access();
+                    if (access && Array.isArray(access)) {
+                        mem.addAccess(access[0], access[1], access[2]);
+                    }
+                } catch (e) { /* last_mem_access might fail */ }
+
                 mem.render();
+            } catch (e) {
+                console.warn('Memory visualizer update error:', e);
             }
+        }
 
-            // Mise à jour pile d'appels
-            if (this.visualizers.callStack) {
+        // Mise à jour pile d'appels
+        if (this.visualizers.callStack) {
+            try {
                 const cs = this.visualizers.callStack;
                 const event = this.simulator.last_call_event();
-                if (event) {
+                if (event && Array.isArray(event)) {
                     if (event[0] === 'call') {
                         cs.onCall(event[1], event[2]);
                     } else if (event[0] === 'return') {
                         cs.onReturn(event[1]);
                     }
                 }
+            } catch (e) {
+                console.warn('CallStack visualizer update error:', e);
             }
-        } catch (e) {
-            console.warn('Visualizer update error:', e);
         }
     }
 
@@ -132,8 +177,12 @@ export class VisualizerManager {
 
         // Mise à jour waveform
         if (this.visualizers.waveform && signals) {
-            this.visualizers.waveform.capture(signals);
-            this.visualizers.waveform.render();
+            try {
+                this.visualizers.waveform.capture(signals);
+                this.visualizers.waveform.render();
+            } catch (e) {
+                console.warn('Waveform visualizer update error:', e);
+            }
         }
     }
 
@@ -142,28 +191,43 @@ export class VisualizerManager {
      */
     async animateALU(a, b, op, result, flags) {
         if (!this.enabled || !this.visualizers.alu) return;
-        await this.visualizers.alu.animate(a, b, op, result, flags);
+        try {
+            await this.visualizers.alu.animate(a, b, op, result, flags);
+        } catch (e) {
+            console.warn('ALU animation error:', e);
+        }
     }
 
     /**
      * Reset tous les visualiseurs
      */
     reset() {
-        if (this.visualizers.memory) {
-            this.visualizers.memory.clearAccesses();
-            this.visualizers.memory.render();
-        }
-        if (this.visualizers.callStack) {
-            this.visualizers.callStack.reset();
-        }
-        if (this.visualizers.waveform) {
-            this.visualizers.waveform.reset();
-            this.visualizers.waveform.render();
-        }
-        if (this.visualizers.alu) {
-            this.visualizers.alu.setInputs(0, 0);
-            this.visualizers.alu.setResult(0, { n: false, z: false, c: false, v: false });
-        }
+        try {
+            if (this.visualizers.memory) {
+                this.visualizers.memory.clearAccesses();
+                this.visualizers.memory.render();
+            }
+        } catch (e) { console.warn('Memory visualizer reset error:', e); }
+
+        try {
+            if (this.visualizers.callStack) {
+                this.visualizers.callStack.reset();
+            }
+        } catch (e) { console.warn('CallStack visualizer reset error:', e); }
+
+        try {
+            if (this.visualizers.waveform) {
+                this.visualizers.waveform.reset();
+                this.visualizers.waveform.render();
+            }
+        } catch (e) { console.warn('Waveform visualizer reset error:', e); }
+
+        try {
+            if (this.visualizers.alu) {
+                this.visualizers.alu.setInputs(0, 0);
+                this.visualizers.alu.setResult(0, { n: false, z: false, c: false, v: false });
+            }
+        } catch (e) { console.warn('ALU visualizer reset error:', e); }
     }
 
     /**
@@ -177,8 +241,12 @@ export class VisualizerManager {
      * Rendu de tous les visualiseurs
      */
     renderAll() {
-        if (this.visualizers.memory) this.visualizers.memory.render();
-        if (this.visualizers.waveform) this.visualizers.waveform.render();
+        try {
+            if (this.visualizers.memory) this.visualizers.memory.render();
+        } catch (e) { console.warn('Memory visualizer render error:', e); }
+        try {
+            if (this.visualizers.waveform) this.visualizers.waveform.render();
+        } catch (e) { console.warn('Waveform visualizer render error:', e); }
     }
 }
 

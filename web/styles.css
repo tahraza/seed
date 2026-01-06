@@ -1655,3 +1655,140 @@ kbd {
 .test-item.failed .test-detail {
     color: var(--error);
 }
+
+
+/* ==========================================================================
+   Current Line Highlighting (for stepping through code)
+   ========================================================================== */
+
+.current-line-highlight {
+    background: rgba(88, 166, 255, 0.15) !important;
+    border-left: 3px solid var(--accent) !important;
+}
+
+.current-line-glyph {
+    background: var(--accent);
+    width: 3px !important;
+    margin-left: 3px;
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .current-line-highlight {
+    background: rgba(9, 105, 218, 0.1) !important;
+}
+
+
+/* ==========================================================================
+   HDL Signals Panel
+   ========================================================================== */
+
+.hdl-signals-section {
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.hdl-signals-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.signal-group-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.signal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.signal-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.signal-name {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-primary);
+    min-width: 60px;
+}
+
+.signal-input {
+    flex: 1;
+    padding: 4px 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    color: var(--text-primary);
+    max-width: 80px;
+}
+
+.signal-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.signal-value {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent);
+    padding: 4px 8px;
+    background: var(--bg-primary);
+    border-radius: 4px;
+    min-width: 60px;
+    text-align: center;
+}
+
+.signal-toggle {
+    width: 36px;
+    height: 20px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 10px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.2s;
+}
+
+.signal-toggle.active {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.signal-toggle::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    top: 1px;
+    left: 1px;
+    transition: transform 0.2s;
+}
+
+.signal-toggle.active::after {
+    transform: translateX(16px);
+}
+
+.hdl-inputs .signal-group-title {
+    color: var(--warning);
+}
+
+.hdl-outputs .signal-group-title {
+    color: var(--success);
+}
