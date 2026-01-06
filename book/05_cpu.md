@@ -42,21 +42,9 @@ Le projet Codex propose **deux implémentations** du CPU A32, chacune avec un ob
 
 Le **simulateur Rust** (`a32_core`) implémente un CPU **mono-cycle** :
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     CPU MONO-CYCLE                               │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│   Cycle 1        Cycle 2        Cycle 3        Cycle 4          │
-│   ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐     │
-│   │ Instr 1 │    │ Instr 2 │    │ Instr 3 │    │ Instr 4 │     │
-│   │ F D E M W│    │ F D E M W│    │ F D E M W│    │ F D E M W│     │
-│   └─────────┘    └─────────┘    └─────────┘    └─────────┘     │
-│                                                                  │
-│   Chaque instruction traverse TOUTES les étapes en UN cycle     │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
+![CPU Mono-cycle](images/cpu-monocycle.svg)
+
+*Chaque instruction traverse TOUTES les étapes en UN cycle*
 
 **Utilisé par :**
 - Le **CPU Visualizer** (interface web)
@@ -70,26 +58,7 @@ Le **simulateur Rust** (`a32_core`) implémente un CPU **mono-cycle** :
 
 Le **CPU en HDL** (`hdl_lib/05_cpu/CPU_Pipeline.hdl`) implémente un vrai **pipeline 5 étages** :
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     CPU PIPELINE 5 ÉTAGES                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│   Cycle 1   Cycle 2   Cycle 3   Cycle 4   Cycle 5   Cycle 6     │
-│   ┌───┐                                                          │
-│   │ F │ ─► ID ─► EX ─► MEM ─► WB     Instr 1                    │
-│   └───┘                                                          │
-│        ┌───┐                                                     │
-│        │ F │ ─► ID ─► EX ─► MEM ─► WB     Instr 2               │
-│        └───┘                                                     │
-│             ┌───┐                                                │
-│             │ F │ ─► ID ─► EX ─► MEM ─► WB     Instr 3          │
-│             └───┘                                                │
-│                                                                  │
-│   Jusqu'à 5 instructions en vol simultanément !                  │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
+![CPU Pipeline 5 étages](images/cpu-pipeline.svg)
 
 **Composants HDL :**
 

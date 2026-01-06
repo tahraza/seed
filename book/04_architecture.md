@@ -99,21 +99,7 @@ En x86 (CISC), on pourrait écrire `ADD [mem], 1` en une seule instruction. Mais
 
 Chaque instruction traverse trois phases :
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                                                                   │
-│   ┌─────────┐      ┌─────────┐      ┌─────────┐                  │
-│   │  FETCH  │ ──── │ DECODE  │ ──── │ EXECUTE │ ←────────────┐   │
-│   │         │      │         │      │         │              │   │
-│   │ Lire    │      │ Décoder │      │ Exécuter│              │   │
-│   │ l'inst. │      │ les bits│      │ l'opér. │              │   │
-│   │ à PC    │      │         │      │         │              │   │
-│   └─────────┘      └─────────┘      └─────────┘              │   │
-│                                           │                   │   │
-│                                           └───────────────────┘   │
-│                                             (cycle suivant)       │
-└──────────────────────────────────────────────────────────────────┘
-```
+![Cycle Fetch-Decode-Execute](images/fetch-decode-execute.svg)
 
 1. **Fetch** (Récupération)
    - Le CPU lit l'instruction à l'adresse contenue dans PC
@@ -136,20 +122,7 @@ Le CPU dispose de **16 registres** de 32 bits, nommés R0 à R15.
 
 ### Vue d'ensemble
 
-```
-┌────────────────────────────────────────────────────────────────┐
-│                    Banc de Registres (32 bits × 16)            │
-├────────┬────────┬────────┬────────┬────────┬────────┬────────┤
-│   R0   │   R1   │   R2   │   R3   │   R4   │   R5   │   R6   │
-│  Arg0  │  Arg1  │  Arg2  │  Arg3  │  Var   │  Var   │  Var   │
-├────────┼────────┼────────┼────────┼────────┼────────┼────────┤
-│   R7   │   R8   │   R9   │  R10   │  R11   │  R12   │  R13   │
-│  Var   │  Var   │  Var   │  Var   │  Var   │  Temp  │   SP   │
-├────────┼────────┴────────┴────────┴────────┴────────┴────────┤
-│  R14   │  R15                                                 │
-│   LR   │   PC (Program Counter)                               │
-└────────┴─────────────────────────────────────────────────────┘
-```
+![Banc de registres](images/register-bank.svg)
 
 ### Rôles des registres
 
@@ -181,27 +154,7 @@ La mémoire est un espace linéaire de 4 Go (2³² octets), mais toutes les adre
 
 ### Organisation de la mémoire Codex
 
-```
-0xFFFFFFFF ┌────────────────────────────────┐
-           │     MMIO (Entrées/Sorties)    │ ← Adresses spéciales (HALT, etc.)
-0xFFFF0000 ├────────────────────────────────┤
-           │                                │
-           │          (Non utilisé)         │
-           │                                │
-0x00402600 ├────────────────────────────────┤
-           │     Clavier (4 octets)        │ ← Lecture de la touche pressée
-0x00402600 ├────────────────────────────────┤
-           │                                │
-           │     Écran (9600 octets)       │ ← 320×240 pixels, 1 bit par pixel
-           │     (320×240/8 × 1 bit)       │   Écrire ici allume des pixels !
-           │                                │
-0x00400000 ├────────────────────────────────┤
-           │                                │
-           │       RAM Système             │ ← Code + Données + Pile
-           │       (4 Mo)                  │
-           │                                │
-0x00000000 └────────────────────────────────┘
-```
+![Carte mémoire Codex](images/memory-map.svg)
 
 ### Le Memory-Mapped I/O (MMIO)
 

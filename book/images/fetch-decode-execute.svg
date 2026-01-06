@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 120" width="450" height="120">
+  <defs>
+    <style>
+      .box { fill: #e8f4fc; stroke: #2563eb; stroke-width: 2; }
+      .arrow { stroke: #374151; stroke-width: 2; fill: none; }
+      .arrow-head { fill: #374151; }
+      .label { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e40af; }
+      .sublabel { font-family: sans-serif; font-size: 10px; fill: #666; }
+      .loop { stroke: #2563eb; stroke-width: 2; fill: none; stroke-dasharray: 5,3; }
+    </style>
+  </defs>
+
+  <!-- FETCH box -->
+  <rect class="box" x="30" y="30" width="100" height="60" rx="5"/>
+  <text class="label" x="58" y="55">FETCH</text>
+  <text class="sublabel" x="45" y="75">Lire l'inst. à PC</text>
+
+  <!-- Arrow FETCH to DECODE -->
+  <line class="arrow" x1="130" y1="60" x2="170" y2="60"/>
+  <polygon class="arrow-head" points="170,56 180,60 170,64"/>
+
+  <!-- DECODE box -->
+  <rect class="box" x="180" y="30" width="100" height="60" rx="5"/>
+  <text class="label" x="200" y="55">DECODE</text>
+  <text class="sublabel" x="193" y="75">Décoder les bits</text>
+
+  <!-- Arrow DECODE to EXECUTE -->
+  <line class="arrow" x1="280" y1="60" x2="320" y2="60"/>
+  <polygon class="arrow-head" points="320,56 330,60 320,64"/>
+
+  <!-- EXECUTE box -->
+  <rect class="box" x="330" y="30" width="100" height="60" rx="5"/>
+  <text class="label" x="345" y="55">EXECUTE</text>
+  <text class="sublabel" x="343" y="75">Exécuter l'opér.</text>
+
+  <!-- Loop back arrow -->
+  <path class="loop" d="M 380 90 L 380 105 L 80 105 L 80 90"/>
+  <polygon class="arrow-head" points="76,90 80,80 84,90" fill="#2563eb"/>
+
+  <!-- Loop label -->
+  <text class="sublabel" x="200" y="115">cycle suivant</text>
+</svg>
