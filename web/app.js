@@ -6,6 +6,7 @@ import { ASM_EXERCISES, getAsmExercise, getAsmExerciseIds } from './asm-exercise
 import { C_EXERCISES, getCExercise, getCExerciseIds } from './c-exercises.js';
 import { OS_EXERCISES, getOsExercise, getOsExerciseIds } from './os-exercises.js';
 import { COMPILER_EXERCISES, getCompilerExercise, getCompilerExerciseIds } from './compiler-exercises.js';
+import { VisualizerManager } from './visualizers.js';
 
 // ============================================================================
 // Hide solution buttons unless --solutions flag was used
@@ -61,7 +62,8 @@ const state = {
     currentCompilerExercise: 'cc-lexer-digit',  // Current compiler exercise
     progress: {},          // General progress
     hdlLibrary: {},        // Unlocked chip sources: { chipName: hdlSource }
-    animationFrame: null
+    animationFrame: null,
+    visualizers: null      // VisualizerManager instance
 };
 
 // ============================================================================
@@ -335,6 +337,9 @@ async function initSimulator() {
             state.hdlSim = new module.WasmHdl();
             state.asmSim = new module.WasmA32();
 
+            // Initialize visualizers
+            initVisualizers();
+
             log('Simulator ready', 'success');
         } else {
             log('WASM not built - run: npm run build:wasm', 'warn');
@@ -378,6 +383,48 @@ function initScreen() {
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, CONFIG.SCREEN_WIDTH, CONFIG.SCREEN_HEIGHT);
+}
+
+function initVisualizers() {
+    // Create visualizer manager
+    state.visualizers = new VisualizerManager();
+
+    // Attach simulator
+    if (state.asmSim) {
+        state.visualizers.attachSimulator(state.asmSim);
+    }
+
+    // Initialize memory visualizer if container exists
+    const memContainer = document.getElementById('memory-visualizer');
+    if (memContainer) {
+        state.visualizers.initMemory(memContainer);
+    }
+
+    // Initialize call stack visualizer if container exists
+    const callstackContainer = document.getElementById('callstack-visualizer');
+    if (callstackContainer) {
+        state.visualizers.initCallStack(callstackContainer);
+    }
+
+    // Initialize waveform visualizer if container exists
+    const waveformContainer = document.getElementById('waveform-visualizer');
+    if (waveformContainer) {
+        state.visualizers.initWaveform(waveformContainer);
+    }
+
+    // Initialize ALU visualizer if container exists
+    const aluContainer = document.getElementById('alu-visualizer');
+    if (aluContainer) {
+        state.visualizers.initALU(aluContainer);
+    }
+
+    log('Visualizers initialized', 'info');
+}
+
+function updateVisualizers() {
+    if (state.visualizers) {
+        state.visualizers.update();
+    }
 }
 
 function updateRegisters() {
@@ -579,6 +626,7 @@ async function step() {
             updateRegisters();
             updateMemory(0);
             updateScreen();
+            updateVisualizers();
         }
     } catch (e) {
         log(`Step error: ${e}`, 'error');
@@ -597,6 +645,9 @@ function reset() {
     }
     updateRegisters();
     initScreen();
+    if (state.visualizers) {
+        state.visualizers.reset();
+    }
 }
 
 async function assemble() {
@@ -3054,6 +3105,26 @@ function setupEventListeners() {
     document.getElementById('btn-mem-go').addEventListener('click', () => {
         const addr = parseInt(document.getElementById('mem-addr').value, 16) || 0;
         updateMemory(addr);
+    });
+
+    // Visualizer tabs
+    document.querySelectorAll('.viz-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const vizType = tab.dataset.viz;
+
+            // Update tab states
+            document.querySelectorAll('.viz-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            // Update panel states
+            document.querySelectorAll('.viz-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(`${vizType}-visualizer`)?.classList.add('active');
+
+            // Trigger render for the newly visible panel
+            if (state.visualizers) {
+                state.visualizers.renderAll();
+            }
+        });
     });
 
     // Keyboard capture

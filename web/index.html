@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>nand2tetris-codex - IDE Pédagogique</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="visualizers.css">
 </head>
 <body>
     <div id="app">
@@ -201,6 +202,23 @@
                         <button class="small-btn" id="btn-mem-go">Go</button>
                     </div>
                     <div class="memory-grid" id="memory-view"></div>
+                </details>
+
+                <!-- Visualizers -->
+                <details class="visualizers-section" open>
+                    <summary>Visualisations</summary>
+                    <div class="visualizer-tabs">
+                        <button class="viz-tab active" data-viz="memory">Mémoire</button>
+                        <button class="viz-tab" data-viz="callstack">Pile</button>
+                        <button class="viz-tab" data-viz="waveform">Signaux</button>
+                        <button class="viz-tab" data-viz="alu">ALU</button>
+                    </div>
+                    <div class="visualizer-panels">
+                        <div class="viz-panel active" id="memory-visualizer"></div>
+                        <div class="viz-panel" id="callstack-visualizer"></div>
+                        <div class="viz-panel" id="waveform-visualizer"></div>
+                        <div class="viz-panel" id="alu-visualizer"></div>
+                    </div>
                 </details>
             </section>
 
