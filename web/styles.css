@@ -1830,12 +1830,20 @@ kbd {
     border: 1px solid var(--border-primary);
     border-radius: 4px;
     color: var(--text-primary);
-    max-width: 80px;
+    min-width: 70px;
+    max-width: 100px;
 }
 
 .signal-input:focus {
     outline: none;
     border-color: var(--accent);
+}
+
+.signal-format-hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-left: 4px;
 }
 
 .signal-value {

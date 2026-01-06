@@ -835,10 +835,13 @@ function initHdlSignals(chipDef) {
                 setHdlInput(name, newValue);
             });
         } else {
-            // Multi-bit - use text input
+            // Multi-bit - use text input with format hint
+            const hexDigits = Math.ceil(width / 4);
+            const defaultValue = '0x' + '0'.repeat(hexDigits);
             row.innerHTML = `
                 <span class="signal-name">${name}[${width}]</span>
-                <input type="text" class="signal-input" data-signal="${name}" value="0" placeholder="0">
+                <input type="text" class="signal-input" data-signal="${name}" value="${defaultValue}" placeholder="${defaultValue}">
+                <span class="signal-format-hint">${width}b</span>
             `;
             const input = row.querySelector('.signal-input');
             input.addEventListener('change', () => {
@@ -847,6 +850,7 @@ function initHdlSignals(chipDef) {
             input.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     setHdlInput(name, input.value);
+                    input.blur();
                 }
             });
         }
