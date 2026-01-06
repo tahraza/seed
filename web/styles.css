@@ -332,6 +332,7 @@ body {
 .simulator-panel {
     padding: 12px;
     gap: 12px;
+    overflow-y: auto;
 }
 
 .controls-bar {
