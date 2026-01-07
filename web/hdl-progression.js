@@ -5233,13 +5233,17 @@ entity ROM32K is
   );
 end entity;
 
--- ROM is a simulator primitive - no architecture needed
--- The content is loaded from a .bin file before simulation
+architecture rtl of ROM32K is
+  -- rom is a simulator primitive (like nand2, dff, ram)
+  component rom
+    port(addr : in bits(14 downto 0); dout : out bits(15 downto 0));
+  end component;
+begin
+  -- Instantiate the ROM primitive
+  u_rom: rom port map (addr => addr, dout => dout);
+end architecture;
 `,
         solution: `-- ROM32K: Program Memory (32K x 16-bit)
--- This is a simulator primitive.
--- The content is loaded from a binary file before simulation.
---
 -- 🎮 Think of it like a Game Boy cartridge:
 -- - The cartridge contains your game (program)
 -- - You insert it into the console (computer)
@@ -5253,8 +5257,15 @@ entity ROM32K is
   );
 end entity;
 
--- ROM is a simulator primitive like NAND, DFF, RAM
--- The architecture is built into the simulator
+architecture rtl of ROM32K is
+  -- rom is a simulator primitive (like nand2, dff, ram)
+  component rom
+    port(addr : in bits(14 downto 0); dout : out bits(15 downto 0));
+  end component;
+begin
+  -- Instantiate the ROM primitive
+  u_rom: rom port map (addr => addr, dout => dout);
+end architecture;
 `,
         test: `// Test ROM32K with pre-loaded program data
 // ROM content is loaded via romload command
