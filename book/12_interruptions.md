@@ -226,9 +226,9 @@ irq_handler:
 
     ; Dispatcher vers le bon handler
     TST R1, #0x01                 ; IRQ0 (Timer) ?
-    BNE timer_handler
+    B.NE timer_handler
     TST R1, #0x02                 ; IRQ1 (Keyboard) ?
-    BNE keyboard_handler
+    B.NE keyboard_handler
     ; ...
 
     B irq_done

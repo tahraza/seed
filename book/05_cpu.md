@@ -317,9 +317,9 @@ L'instruction `LDR R0, [R1, #8]` :
 
 6. **Writeback** : `Rd = R0` reçoit la valeur lue
 
-### Exemple Détaillé : BEQ label
+### Exemple Détaillé : B.EQ label
 
-L'instruction `BEQ label` (avec offset de 10 instructions) :
+L'instruction `B.EQ label` (avec offset de 10 instructions) :
 
 ```
 0000 101 0 000000000000000000001010
@@ -1002,7 +1002,7 @@ Instr 3  │         │         │   IF    │  STALL  │   ID    │   EX   
 Les branchements posent un autre problème :
 
 ```assembly
-BEQ label         ; Si égal, sauter à label
+B.EQ label         ; Si égal, sauter à label
 ADD R1, R2, R3    ; Cette instruction est-elle exécutée?
 SUB R4, R5, R6    ; Et celle-ci?
 label:
@@ -1012,12 +1012,12 @@ MOV R7, #42
 ```
          │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │
 ─────────┼─────────┼─────────┼─────────┼─────────┤
-BEQ      │   IF    │   ID    │   EX ←── On sait si on branche
+B.EQ      │   IF    │   ID    │   EX ←── On sait si on branche
 ADD      │         │   IF    │   ID    │  ???    │
 SUB      │         │         │   IF    │  ???    │
 ```
 
-**Problème** : Quand on exécute BEQ, on a déjà commencé à chercher les instructions suivantes ! Si le branchement est pris, ADD et SUB n'auraient jamais dû être exécutées.
+**Problème** : Quand on exécute B.EQ, on a déjà commencé à chercher les instructions suivantes ! Si le branchement est pris, ADD et SUB n'auraient jamais dû être exécutées.
 
 **Solution** : Le **Flush**
 
@@ -1026,7 +1026,7 @@ Si le branchement est pris, on **annule** les instructions qui n'auraient pas d�
 ```
          │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │
 ─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
-BEQ      │   IF    │   ID    │   EX    │   MEM   │   WB    │
+B.EQ      │   IF    │   ID    │   EX    │   MEM   │   WB    │
 ADD      │         │   IF    │   ID    │  FLUSH  │         │
 SUB      │         │         │   IF    │  FLUSH  │         │
 MOV R7   │         │         │         │   IF    │   ID    │...

@@ -27,7 +27,7 @@ MOV R0, #0                          int sum = 0;
 MOV R1, #1                          for (int i = 1; i <= 10; i = i + 1) {
 loop:                                   sum = sum + i;
   CMP R1, #10                       }
-  BGT done
+  B.GT done
   ADD R0, R0, R1
   ADD R1, R1, #1
   B loop

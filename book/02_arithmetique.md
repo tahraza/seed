@@ -308,9 +308,9 @@ Les drapeaux sont des informations supplémentaires sur le résultat :
 
 Ils permettent au CPU de prendre des décisions :
 
-- `BEQ` (Branch if Equal) teste si Z = 1
-- `BLT` (Branch if Less Than) teste une combinaison de N et V
-- `BCS` (Branch if Carry Set) teste si C = 1
+- `B.EQ` (Branch if Equal) teste si Z = 1
+- `B.LT` (Branch if Less Than) teste une combinaison de N et V
+- `B.CS` (Branch if Carry Set) teste si C = 1
 
 Sans les drapeaux, il serait impossible d'implémenter les conditions `if`, les boucles `while`, etc. !
 
@@ -374,39 +374,39 @@ Donc : `a < b` ⟺ (N = 1 et V = 0) OU (N = 0 et V = 1) ⟺ **N ≠ V**
 
 | Instruction | Signification | Flags testés | Signé/Non-signé |
 |-------------|---------------|--------------|-----------------|
-| BEQ | Equal | Z = 1 | Les deux |
-| BNE | Not Equal | Z = 0 | Les deux |
-| BCS/BHS | Carry Set / Higher or Same | C = 1 | Non-signé |
-| BCC/BLO | Carry Clear / Lower | C = 0 | Non-signé |
-| BHI | Higher | C = 1 et Z = 0 | Non-signé |
-| BLS | Lower or Same | C = 0 ou Z = 1 | Non-signé |
-| BGE | Greater or Equal | N = V | Signé |
-| BLT | Less Than | N ≠ V | Signé |
-| BGT | Greater Than | Z = 0 et N = V | Signé |
-| BLE | Less or Equal | Z = 1 ou N ≠ V | Signé |
-| BMI | Minus (negative) | N = 1 | — |
-| BPL | Plus (positive/zero) | N = 0 | — |
-| BVS | Overflow Set | V = 1 | — |
-| BVC | Overflow Clear | V = 0 | — |
+| B.EQ | Equal | Z = 1 | Les deux |
+| B.NE | Not Equal | Z = 0 | Les deux |
+| B.CS/B.HS | Carry Set / Higher or Same | C = 1 | Non-signé |
+| B.CC/B.LO | Carry Clear / Lower | C = 0 | Non-signé |
+| B.HI | Higher | C = 1 et Z = 0 | Non-signé |
+| B.LS | Lower or Same | C = 0 ou Z = 1 | Non-signé |
+| B.GE | Greater or Equal | N = V | Signé |
+| B.LT | Less Than | N ≠ V | Signé |
+| B.GT | Greater Than | Z = 0 et N = V | Signé |
+| B.LE | Less or Equal | Z = 1 ou N ≠ V | Signé |
+| B.MI | Minus (negative) | N = 1 | — |
+| B.PL | Plus (positive/zero) | N = 0 | — |
+| B.VS | Overflow Set | V = 1 | — |
+| B.VC | Overflow Clear | V = 0 | — |
 
 #### Exemple Pratique : Comparaison
 
 ```asm
 ; Comparer deux nombres signés
     CMP R0, R1      ; Calcule R0 - R1, met à jour les flags
-    BLT moins       ; Si R0 < R1 (signé), sauter
+    B.LT moins      ; Si R0 < R1 (signé), sauter
 
 ; Comparer deux nombres non-signés
     CMP R2, R3      ; Calcule R2 - R3, met à jour les flags
-    BLO moins_u     ; Si R2 < R3 (non-signé), sauter
+    B.LO moins_u    ; Si R2 < R3 (non-signé), sauter
 ```
 
-**Attention** : Utiliser BLT pour du non-signé ou BLO pour du signé donne des résultats incorrects !
+**Attention** : Utiliser B.LT pour du non-signé ou B.LO pour du signé donne des résultats incorrects !
 
 ```
 Exemple : R0 = 0xFFFFFFFF, R1 = 0x00000001
-- En non-signé : 4294967295 > 1 → BHI pris, BLO non pris ✓
-- En signé : -1 < 1 → BLT pris, BGE non pris ✓
+- En non-signé : 4294967295 > 1 → B.HI pris, B.LO non pris ✓
+- En signé : -1 < 1 → B.LT pris, B.GE non pris ✓
 ```
 
 ---
@@ -501,7 +501,7 @@ L'ALU que vous venez de construire sera utilisée à CHAQUE cycle d'horloge du C
 | `LDR R1, [R2]` | Calcule l'adresse mémoire (R2 + offset) |
 | `B label` | Calcule la nouvelle adresse (PC + offset) |
 
-Même les sauts conditionnels (`BEQ`, `BNE`, etc.) dépendent des drapeaux produits par l'ALU !
+Même les sauts conditionnels (`B.EQ`, `B.NE`, etc.) dépendent des drapeaux produits par l'ALU !
 
 ---
 

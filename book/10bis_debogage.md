@@ -158,7 +158,7 @@ my_func:
     MOV R0, #0
 loop:
     CMP R0, #10
-    BEQ done         ; BEQ : si R0 == 10, sauter
+    B.EQ done         ; B.EQ : si R0 == 10, sauter
     ; ... corps de la boucle ...
     ADD R0, R0, #1
     B loop
@@ -410,7 +410,7 @@ Avant de chercher un bug complexe, vérifiez ces points simples :
 loop:
     LDRB R2, [R0]
     CMP R2, #0
-    BEQ done
+    B.EQ done
     STR R2, [R1]
     ADD R0, R0, #1
     B done            ; <-- Bug ici !

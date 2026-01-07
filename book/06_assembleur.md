@@ -191,7 +191,7 @@ start:
     MOV R0, #0
 loop:
     CMP R0, #10
-    BEQ end
+    B.EQ end
     ADD R0, R0, #1
     B loop
 end:

@@ -1094,9 +1094,9 @@ R3</a></li>
 id="toc-exemple-détaillé-ldr-r0-r1-8"><span
 class="toc-section-number">7.6.4</span> Exemple Détaillé : LDR R0, [R1,
 #8]</a></li>
-<li><a href="#exemple-détaillé-beq-label"
-id="toc-exemple-détaillé-beq-label"><span
-class="toc-section-number">7.6.5</span> Exemple Détaillé : BEQ
+<li><a href="#exemple-détaillé-b.eq-label"
+id="toc-exemple-détaillé-b.eq-label"><span
+class="toc-section-number">7.6.5</span> Exemple Détaillé : B.EQ
 label</a></li>
 <li><a href="#schéma-récapitulatif" id="toc-schéma-récapitulatif"><span
 class="toc-section-number">7.6.6</span> Schéma Récapitulatif</a></li>
@@ -4571,10 +4571,10 @@ non-signé)</td>
 <p><strong>À quoi servent ces drapeaux ?</strong></p>
 <p>Ils permettent au CPU de prendre des décisions :</p>
 <ul>
-<li><code>BEQ</code> (Branch if Equal) teste si Z = 1</li>
-<li><code>BLT</code> (Branch if Less Than) teste une combinaison de N et
-V</li>
-<li><code>BCS</code> (Branch if Carry Set) teste si C = 1</li>
+<li><code>B.EQ</code> (Branch if Equal) teste si Z = 1</li>
+<li><code>B.LT</code> (Branch if Less Than) teste une combinaison de N
+et V</li>
+<li><code>B.CS</code> (Branch if Carry Set) teste si C = 1</li>
 </ul>
 <p>Sans les drapeaux, il serait impossible d’implémenter les conditions
 <code>if</code>, les boucles <code>while</code>, etc. !</p>
@@ -4730,85 +4730,85 @@ Branchements</h4>
 </thead>
 <tbody>
 <tr class="odd">
-<td>BEQ</td>
+<td>B.EQ</td>
 <td>Equal</td>
 <td>Z = 1</td>
 <td>Les deux</td>
 </tr>
 <tr class="even">
-<td>BNE</td>
+<td>B.NE</td>
 <td>Not Equal</td>
 <td>Z = 0</td>
 <td>Les deux</td>
 </tr>
 <tr class="odd">
-<td>BCS/BHS</td>
+<td>B.CS/B.HS</td>
 <td>Carry Set / Higher or Same</td>
 <td>C = 1</td>
 <td>Non-signé</td>
 </tr>
 <tr class="even">
-<td>BCC/BLO</td>
+<td>B.CC/B.LO</td>
 <td>Carry Clear / Lower</td>
 <td>C = 0</td>
 <td>Non-signé</td>
 </tr>
 <tr class="odd">
-<td>BHI</td>
+<td>B.HI</td>
 <td>Higher</td>
 <td>C = 1 et Z = 0</td>
 <td>Non-signé</td>
 </tr>
 <tr class="even">
-<td>BLS</td>
+<td>B.LS</td>
 <td>Lower or Same</td>
 <td>C = 0 ou Z = 1</td>
 <td>Non-signé</td>
 </tr>
 <tr class="odd">
-<td>BGE</td>
+<td>B.GE</td>
 <td>Greater or Equal</td>
 <td>N = V</td>
 <td>Signé</td>
 </tr>
 <tr class="even">
-<td>BLT</td>
+<td>B.LT</td>
 <td>Less Than</td>
 <td>N ≠ V</td>
 <td>Signé</td>
 </tr>
 <tr class="odd">
-<td>BGT</td>
+<td>B.GT</td>
 <td>Greater Than</td>
 <td>Z = 0 et N = V</td>
 <td>Signé</td>
 </tr>
 <tr class="even">
-<td>BLE</td>
+<td>B.LE</td>
 <td>Less or Equal</td>
 <td>Z = 1 ou N ≠ V</td>
 <td>Signé</td>
 </tr>
 <tr class="odd">
-<td>BMI</td>
+<td>B.MI</td>
 <td>Minus (negative)</td>
 <td>N = 1</td>
 <td>—</td>
 </tr>
 <tr class="even">
-<td>BPL</td>
+<td>B.PL</td>
 <td>Plus (positive/zero)</td>
 <td>N = 0</td>
 <td>—</td>
 </tr>
 <tr class="odd">
-<td>BVS</td>
+<td>B.VS</td>
 <td>Overflow Set</td>
 <td>V = 1</td>
 <td>—</td>
 </tr>
 <tr class="even">
-<td>BVC</td>
+<td>B.VC</td>
 <td>Overflow Clear</td>
 <td>V = 0</td>
 <td>—</td>
@@ -4821,16 +4821,16 @@ Comparaison</h4>
 <div class="sourceCode" id="cb26"><pre
 class="sourceCode asm"><code class="sourceCode fasm"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">; Comparer deux nombres signés</span></span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> R1      <span class="co">; Calcule R0 - R1, met à jour les flags</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    BLT moins       <span class="co">; Si R0 &lt; R1 (signé), sauter</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    B<span class="op">.</span>LT moins      <span class="co">; Si R0 &lt; R1 (signé), sauter</span></span>
 <span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="co">; Comparer deux nombres non-signés</span></span>
 <span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R2<span class="op">,</span> R3      <span class="co">; Calcule R2 - R3, met à jour les flags</span></span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    BLO moins_u     <span class="co">; Si R2 &lt; R3 (non-signé), sauter</span></span></code></pre></div>
-<p><strong>Attention</strong> : Utiliser BLT pour du non-signé ou BLO
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    B<span class="op">.</span>LO moins_u    <span class="co">; Si R2 &lt; R3 (non-signé), sauter</span></span></code></pre></div>
+<p><strong>Attention</strong> : Utiliser B.LT pour du non-signé ou B.LO
 pour du signé donne des résultats incorrects !</p>
 <pre><code>Exemple : R0 = 0xFFFFFFFF, R1 = 0x00000001
-- En non-signé : 4294967295 &gt; 1 → BHI pris, BLO non pris ✓
-- En signé : -1 &lt; 1 → BLT pris, BGE non pris ✓</code></pre>
+- En non-signé : 4294967295 &gt; 1 → B.HI pris, B.LO non pris ✓
+- En signé : -1 &lt; 1 → B.LT pris, B.GE non pris ✓</code></pre>
 <hr />
 <h2 data-number="4.9" id="architecture-de-lalu"><span
 class="header-section-number">4.9</span> Architecture de l’ALU</h2>
@@ -4981,7 +4981,7 @@ offset)</td>
 </tr>
 </tbody>
 </table>
-<p>Même les sauts conditionnels (<code>BEQ</code>, <code>BNE</code>,
+<p>Même les sauts conditionnels (<code>B.EQ</code>, <code>B.NE</code>,
 etc.) dépendent des drapeaux produits par l’ALU !</p>
 <hr />
 <h2 data-number="4.13" id="ce-quil-faut-retenir-1"><span
@@ -5986,7 +5986,7 @@ instruction peut être conditionnelle !</p>
 <p>Au lieu de :</p>
 <div class="sourceCode" id="cb38"><pre
 class="sourceCode asm"><code class="sourceCode fasm"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="bu">CMP</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">0</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>BNE skip</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>B<span class="op">.</span>NE skip</span>
 <span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="bu">MOV</span> R1<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
 <span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="fu">skip:</span></span></code></pre></div>
 <p>On peut écrire :</p>
@@ -6325,7 +6325,7 @@ class="sourceCode asm"><code class="sourceCode fasm"><span id="cb45-1"><a href="
 <span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a><span class="fu">loop:</span></span>
 <span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R1<span class="op">,</span> <span class="op">#</span><span class="dv">10</span></span>
-<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>    BGT done         <span class="co">; si i &gt; 10, sortir</span></span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a>    B<span class="op">.</span>GT done         <span class="co">; si i &gt; 10, sortir</span></span>
 <span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> R1   <span class="co">; sum += i</span></span>
 <span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R1<span class="op">,</span> R1<span class="op">,</span> <span class="op">#</span><span class="dv">1</span>   <span class="co">; i++</span></span>
 <span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a>    B loop</span>
@@ -7189,11 +7189,11 @@ effective</p></li>
 <li><p><strong>Writeback</strong> : <code>Rd = R0</code> reçoit la
 valeur lue</p></li>
 </ol>
-<h3 data-number="7.6.5" id="exemple-détaillé-beq-label"><span
-class="header-section-number">7.6.5</span> Exemple Détaillé : BEQ
+<h3 data-number="7.6.5" id="exemple-détaillé-b.eq-label"><span
+class="header-section-number">7.6.5</span> Exemple Détaillé : B.EQ
 label</h3>
-<p>L’instruction <code>BEQ label</code> (avec offset de 10 instructions)
-:</p>
+<p>L’instruction <code>B.EQ label</code> (avec offset de 10
+instructions) :</p>
 <pre><code>0000 101 0 000000000000000000001010
 │    │   │ │
 │    │   │ └── offset = 10 (en nombre d&#39;instructions)
@@ -7997,17 +7997,17 @@ Instr 3  │         │         │   IF    │  STALL  │   ID    │   EX   
 class="header-section-number">7.12.5.4</span> Aléa de Contrôle (Control
 Hazard)</h4>
 <p>Les branchements posent un autre problème :</p>
-<pre class="assembly"><code>BEQ label         ; Si égal, sauter à label
+<pre class="assembly"><code>B.EQ label         ; Si égal, sauter à label
 ADD R1, R2, R3    ; Cette instruction est-elle exécutée?
 SUB R4, R5, R6    ; Et celle-ci?
 label:
 MOV R7, #42</code></pre>
 <pre><code>         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │
 ─────────┼─────────┼─────────┼─────────┼─────────┤
-BEQ      │   IF    │   ID    │   EX ←── On sait si on branche
+B.EQ      │   IF    │   ID    │   EX ←── On sait si on branche
 ADD      │         │   IF    │   ID    │  ???    │
 SUB      │         │         │   IF    │  ???    │</code></pre>
-<p><strong>Problème</strong> : Quand on exécute BEQ, on a déjà commencé
+<p><strong>Problème</strong> : Quand on exécute B.EQ, on a déjà commencé
 à chercher les instructions suivantes ! Si le branchement est pris, ADD
 et SUB n’auraient jamais dû être exécutées.</p>
 <p><strong>Solution</strong> : Le <strong>Flush</strong></p>
@@ -8015,7 +8015,7 @@ et SUB n’auraient jamais dû être exécutées.</p>
 instructions qui n’auraient pas dû être chargées :</p>
 <pre><code>         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │
 ─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
-BEQ      │   IF    │   ID    │   EX    │   MEM   │   WB    │
+B.EQ      │   IF    │   ID    │   EX    │   MEM   │   WB    │
 ADD      │         │   IF    │   ID    │  FLUSH  │         │
 SUB      │         │         │   IF    │  FLUSH  │         │
 MOV R7   │         │         │         │   IF    │   ID    │...</code></pre>
@@ -8627,7 +8627,7 @@ class="sourceCode asm"><code class="sourceCode fasm"><span id="cb98-1"><a href="
 <span id="cb98-3"><a href="#cb98-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">0</span></span>
 <span id="cb98-4"><a href="#cb98-4" aria-hidden="true" tabindex="-1"></a><span class="fu">loop:</span></span>
 <span id="cb98-5"><a href="#cb98-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">10</span></span>
-<span id="cb98-6"><a href="#cb98-6" aria-hidden="true" tabindex="-1"></a>    BEQ end</span>
+<span id="cb98-6"><a href="#cb98-6" aria-hidden="true" tabindex="-1"></a>    B<span class="op">.</span>EQ end</span>
 <span id="cb98-7"><a href="#cb98-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
 <span id="cb98-8"><a href="#cb98-8" aria-hidden="true" tabindex="-1"></a>    B loop</span>
 <span id="cb98-9"><a href="#cb98-9" aria-hidden="true" tabindex="-1"></a><span class="fu">end:</span></span>
@@ -8856,7 +8856,7 @@ class="sourceCode c"><code class="sourceCode c"><span id="cb109-1"><a href="#cb1
 <div class="sourceCode" id="cb110"><pre
 class="sourceCode asm"><code class="sourceCode fasm"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a>    LDR R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span>x_offset<span class="op">]</span></span>
 <span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">0</span></span>
-<span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a>    BLE else_label</span>
+<span id="cb110-3"><a href="#cb110-3" aria-hidden="true" tabindex="-1"></a>    B<span class="op">.</span>LE else_label</span>
 <span id="cb110-4"><a href="#cb110-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb110-5"><a href="#cb110-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Then branch</span></span>
 <span id="cb110-6"><a href="#cb110-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
@@ -8879,7 +8879,7 @@ class="sourceCode c"><code class="sourceCode c"><span id="cb111-1"><a href="#cb1
 class="sourceCode asm"><code class="sourceCode fasm"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="fu">while_start:</span></span>
 <span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>    LDR R0<span class="op">,</span> <span class="op">[</span><span class="kw">SP</span><span class="op">,</span> <span class="op">#</span>i_offset<span class="op">]</span></span>
 <span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">10</span></span>
-<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a>    BGE while_end</span>
+<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a>    B<span class="op">.</span>GE while_end</span>
 <span id="cb112-5"><a href="#cb112-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb112-6"><a href="#cb112-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Corps de la boucle</span></span>
 <span id="cb112-7"><a href="#cb112-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
@@ -9579,7 +9579,7 @@ MOV R0, #0                          int sum = 0;
 MOV R1, #1                          for (int i = 1; i &lt;= 10; i = i + 1) {
 loop:                                   sum = sum + i;
   CMP R1, #10                       }
-  BGT done
+  B.GT done
   ADD R0, R0, R1
   ADD R1, R1, #1
   B loop
@@ -12414,7 +12414,7 @@ class="sourceCode asm"><code class="sourceCode fasm"><span id="cb179-1"><a href=
 <span id="cb179-2"><a href="#cb179-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">MOV</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">0</span></span>
 <span id="cb179-3"><a href="#cb179-3" aria-hidden="true" tabindex="-1"></a><span class="fu">loop:</span></span>
 <span id="cb179-4"><a href="#cb179-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">10</span></span>
-<span id="cb179-5"><a href="#cb179-5" aria-hidden="true" tabindex="-1"></a>    BEQ done         <span class="co">; BEQ : si R0 == 10, sauter</span></span>
+<span id="cb179-5"><a href="#cb179-5" aria-hidden="true" tabindex="-1"></a>    B<span class="op">.</span>EQ done         <span class="co">; B.EQ : si R0 == 10, sauter</span></span>
 <span id="cb179-6"><a href="#cb179-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">; ... corps de la boucle ...</span></span>
 <span id="cb179-7"><a href="#cb179-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
 <span id="cb179-8"><a href="#cb179-8" aria-hidden="true" tabindex="-1"></a>    B loop</span>
@@ -12699,7 +12699,7 @@ class="sourceCode asm"><code class="sourceCode fasm"><span id="cb189-1"><a href=
 <span id="cb189-4"><a href="#cb189-4" aria-hidden="true" tabindex="-1"></a><span class="fu">loop:</span></span>
 <span id="cb189-5"><a href="#cb189-5" aria-hidden="true" tabindex="-1"></a>    LDRB R2<span class="op">,</span> <span class="op">[</span>R0<span class="op">]</span></span>
 <span id="cb189-6"><a href="#cb189-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R2<span class="op">,</span> <span class="op">#</span><span class="dv">0</span></span>
-<span id="cb189-7"><a href="#cb189-7" aria-hidden="true" tabindex="-1"></a>    BEQ done</span>
+<span id="cb189-7"><a href="#cb189-7" aria-hidden="true" tabindex="-1"></a>    B<span class="op">.</span>EQ done</span>
 <span id="cb189-8"><a href="#cb189-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">STR</span> R2<span class="op">,</span> <span class="op">[</span>R1<span class="op">]</span></span>
 <span id="cb189-9"><a href="#cb189-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">ADD</span> R0<span class="op">,</span> R0<span class="op">,</span> <span class="op">#</span><span class="dv">1</span></span>
 <span id="cb189-10"><a href="#cb189-10" aria-hidden="true" tabindex="-1"></a>    B done            <span class="co">; &lt;-- Bug ici !</span></span>
@@ -13896,9 +13896,9 @@ class="sourceCode asm"><code class="sourceCode fasm"><span id="cb220-1"><a href=
 <span id="cb220-8"><a href="#cb220-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb220-9"><a href="#cb220-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Dispatcher vers le bon handler</span></span>
 <span id="cb220-10"><a href="#cb220-10" aria-hidden="true" tabindex="-1"></a>    TST R1<span class="op">,</span> <span class="op">#</span><span class="bn">0x01</span>                 <span class="co">; IRQ0 (Timer) ?</span></span>
-<span id="cb220-11"><a href="#cb220-11" aria-hidden="true" tabindex="-1"></a>    BNE timer_handler</span>
+<span id="cb220-11"><a href="#cb220-11" aria-hidden="true" tabindex="-1"></a>    B<span class="op">.</span>NE timer_handler</span>
 <span id="cb220-12"><a href="#cb220-12" aria-hidden="true" tabindex="-1"></a>    TST R1<span class="op">,</span> <span class="op">#</span><span class="bn">0x02</span>                 <span class="co">; IRQ1 (Keyboard) ?</span></span>
-<span id="cb220-13"><a href="#cb220-13" aria-hidden="true" tabindex="-1"></a>    BNE keyboard_handler</span>
+<span id="cb220-13"><a href="#cb220-13" aria-hidden="true" tabindex="-1"></a>    B<span class="op">.</span>NE keyboard_handler</span>
 <span id="cb220-14"><a href="#cb220-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">; ...</span></span>
 <span id="cb220-15"><a href="#cb220-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb220-16"><a href="#cb220-16" aria-hidden="true" tabindex="-1"></a>    B irq_done</span>
@@ -14891,10 +14891,10 @@ class="sourceCode asm"><code class="sourceCode fasm"><span id="cb254-1"><a href=
 <span id="cb254-5"><a href="#cb254-5" aria-hidden="true" tabindex="-1"></a><span class="fu">spin:</span></span>
 <span id="cb254-6"><a href="#cb254-6" aria-hidden="true" tabindex="-1"></a>    LDREX R2<span class="op">,</span> <span class="op">[</span>R0<span class="op">]</span>        <span class="co">; Load Exclusive</span></span>
 <span id="cb254-7"><a href="#cb254-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R2<span class="op">,</span> <span class="op">#</span><span class="dv">0</span>            <span class="co">; Lock libre ?</span></span>
-<span id="cb254-8"><a href="#cb254-8" aria-hidden="true" tabindex="-1"></a>    BNE spin              <span class="co">; Non, réessayer</span></span>
+<span id="cb254-8"><a href="#cb254-8" aria-hidden="true" tabindex="-1"></a>    B<span class="op">.</span>NE spin              <span class="co">; Non, réessayer</span></span>
 <span id="cb254-9"><a href="#cb254-9" aria-hidden="true" tabindex="-1"></a>    STREX R3<span class="op">,</span> R1<span class="op">,</span> <span class="op">[</span>R0<span class="op">]</span>    <span class="co">; Store Exclusive</span></span>
 <span id="cb254-10"><a href="#cb254-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">CMP</span> R3<span class="op">,</span> <span class="op">#</span><span class="dv">0</span>            <span class="co">; Succès ?</span></span>
-<span id="cb254-11"><a href="#cb254-11" aria-hidden="true" tabindex="-1"></a>    BNE spin              <span class="co">; Non, quelqu&#39;un d&#39;autre a gagné</span></span>
+<span id="cb254-11"><a href="#cb254-11" aria-hidden="true" tabindex="-1"></a>    B<span class="op">.</span>NE spin              <span class="co">; Non, quelqu&#39;un d&#39;autre a gagné</span></span>
 <span id="cb254-12"><a href="#cb254-12" aria-hidden="true" tabindex="-1"></a>    DMB                   <span class="co">; Memory barrier</span></span>
 <span id="cb254-13"><a href="#cb254-13" aria-hidden="true" tabindex="-1"></a>    BX LR</span>
 <span id="cb254-14"><a href="#cb254-14" aria-hidden="true" tabindex="-1"></a></span>

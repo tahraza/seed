@@ -139,7 +139,7 @@ if (x > 0) {
 ```asm
     LDR R0, [SP, #x_offset]
     CMP R0, #0
-    BLE else_label
+    B.LE else_label
 
     ; Then branch
     MOV R0, #1
@@ -166,7 +166,7 @@ while (i < 10) {
 while_start:
     LDR R0, [SP, #i_offset]
     CMP R0, #10
-    BGE while_end
+    B.GE while_end
 
     ; Corps de la boucle
     ADD R0, R0, #1

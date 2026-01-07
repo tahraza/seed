@@ -842,6 +842,7 @@ fn encode_instruction(inst: &Instruction, symbols: &HashMap<String, u32>, addr: 
         "ADD" | "SUB" | "AND" | "ORR" | "EOR" => encode_alu(inst, symbols, addr),
         "MOV" | "MVN" => encode_mov(inst, symbols, addr),
         "CMP" | "TST" => encode_cmp(inst, symbols, addr),
+        "MUL" => encode_mul(inst),
         "LDR" | "STR" | "LDRB" | "STRB" => encode_load_store(inst, symbols, addr),
         "B" | "BL" => Err(AsmError::code("E1002", "branch handled separately")),
         "NOP" => {
@@ -1018,6 +1019,29 @@ fn encode_svc(inst: &Instruction, symbols: &HashMap<String, u32>) -> Result<u32,
         return Err(AsmError::code("E1004", "immediate out of range"));
     }
     Ok(encode_system(suffix.cond, 2, imm as u32))
+}
+
+fn encode_mul(inst: &Instruction) -> Result<u32, AsmError> {
+    let suffix = parse_suffixes(&inst.suffixes, true, false)?;
+    if inst.operands.len() != 3 {
+        return Err(AsmError::code("E1002", "MUL requires 3 operands: MUL Rd, Rn, Rm"));
+    }
+    let rd = expect_reg(&inst.operands[0])?;
+    let rn = expect_reg(&inst.operands[1])?;
+    let rm = expect_reg(&inst.operands[2])?;
+    Ok(encode_mul_instr(suffix.cond, suffix.set_flags, rd, rn, rm))
+}
+
+fn encode_mul_instr(cond: Cond, s: bool, rd: Reg, rn: Reg, rm: Reg) -> u32 {
+    // MUL encoding: class 101, Rd = Rn * Rm
+    // [31:28] cond, [27:25] = 101, [24:21] = 0000, [20] = S
+    // [19:16] = Rd, [15:12] = 0000, [11:8] = Rm, [7:4] = 0000, [3:0] = Rn
+    (cond.to_u4() as u32) << 28
+        | 0b101 << 25
+        | ((s as u32) << 20)
+        | ((rd.to_u8() as u32) << 16)
+        | ((rm.to_u8() as u32) << 8)
+        | (rn.to_u8() as u32)
 }
 
 fn encode_alu_reg(cond: Cond, op: u32, s: bool, rd: Reg, rn: Reg, rm: Reg, shift: u32) -> u32 {

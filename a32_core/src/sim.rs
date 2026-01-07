@@ -826,6 +826,7 @@ impl Machine {
             0b010 => self.exec_load_store(pc, instr),
             0b011 => self.exec_branch(pc, instr),
             0b100 => self.exec_system(pc, instr),
+            0b101 => self.exec_mul(pc, instr),
             _ => self.handle_illegal(pc, instr),
         };
 
@@ -1151,6 +1152,31 @@ impl Machine {
             }
             _ => self.handle_illegal(pc, instr),
         }
+    }
+
+    fn exec_mul(&mut self, pc: u32, instr: u32) -> StepOutcome {
+        // MUL encoding: [31:28] cond, [27:25] = 101, [20] = S
+        // [19:16] = Rd, [11:8] = Rm, [3:0] = Rn
+        // Rd = Rn * Rm
+        let s = ((instr >> 20) & 1) != 0;
+        let rd = Reg::from_u8(((instr >> 16) & 0xF) as u8).unwrap();
+        let rm = Reg::from_u8(((instr >> 8) & 0xF) as u8).unwrap();
+        let rn = Reg::from_u8((instr & 0xF) as u8).unwrap();
+
+        let val_rn = self.read_reg(rn);
+        let val_rm = self.read_reg(rm);
+        let result = val_rn.wrapping_mul(val_rm);
+
+        self.cpu.set_reg(rd, result);
+
+        if s {
+            // MUL affects N and Z, leaves C and V unchanged
+            self.cpu.flags_mut().n = (result & 0x8000_0000) != 0;
+            self.cpu.flags_mut().z = result == 0;
+        }
+
+        self.cpu.set_pc(pc.wrapping_add(4));
+        StepOutcome::Continue
     }
 
     fn read_reg(&self, reg: Reg) -> u32 {

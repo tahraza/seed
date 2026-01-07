@@ -600,10 +600,10 @@ acquire_lock:
 spin:
     LDREX R2, [R0]        ; Load Exclusive
     CMP R2, #0            ; Lock libre ?
-    BNE spin              ; Non, réessayer
+    B.NE spin              ; Non, réessayer
     STREX R3, R1, [R0]    ; Store Exclusive
     CMP R3, #0            ; Succès ?
-    BNE spin              ; Non, quelqu'un d'autre a gagné
+    B.NE spin              ; Non, quelqu'un d'autre a gagné
     DMB                   ; Memory barrier
     BX LR
 

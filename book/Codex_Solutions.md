@@ -213,9 +213,9 @@ Parce que chaque instruction occupe **4 octets** (32 bits). La mémoire est adre
 ### Q4. Quel composant décide si un branchement conditionnel doit être pris ?
 
 L'**unité de contrôle** utilise les **flags de l'ALU** (Z, N, C, V) pour décider. Par exemple :
-- BEQ (Branch if Equal) vérifie si Z = 1
-- BNE (Branch if Not Equal) vérifie si Z = 0
-- BGT (Branch if Greater Than) vérifie si Z = 0 ET N = V
+- B.EQ (Branch if Equal) vérifie si Z = 1
+- B.NE (Branch if Not Equal) vérifie si Z = 0
+- B.GT (Branch if Greater Than) vérifie si Z = 0 ET N = V
 
 ### Q5. Quelle est la différence entre les instructions LDR et STR ?
 
@@ -286,7 +286,7 @@ C'est nécessaire car le PC-relative offset est limité (±4KB). Si les constant
     MOV R1, #3
 loop:
     SUBS R0, R0, R1
-    BPL loop
+    B.PL loop
 ```
 
 Trace :
@@ -655,7 +655,7 @@ timer_handler:
 
     ; Vérifier si 1000 ticks
     CMP R1, #1000
-    BLT .store_ticks
+    B.LT .store_ticks
 
     ; Reset ticks et incrémenter seconds
     MOV R1, #0

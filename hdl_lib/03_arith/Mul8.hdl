@@ -1,0 +1,106 @@
+-- 8-bit Unsigned Multiplier
+-- y = a * b (8-bit inputs, 16-bit output)
+--
+-- This is an array multiplier implementation using
+-- partial products and ripple-carry addition.
+--
+-- For each bit of b, we generate a partial product:
+--   pp_i = a & {8{b[i]}} shifted left by i positions
+-- Then we sum all partial products.
+
+entity Mul8 is
+  port(
+    a : in bits(7 downto 0);
+    b : in bits(7 downto 0);
+    y : out bits(15 downto 0)
+  );
+end entity;
+
+architecture rtl of Mul8 is
+  component And8
+    port(a : in bits(7 downto 0); b : in bit; y : out bits(7 downto 0));
+  end component;
+
+  component Add16
+    port(a : in bits(15 downto 0); b : in bits(15 downto 0); cin : in bit;
+         y : out bits(15 downto 0); cout : out bit);
+  end component;
+
+  -- Partial products (each row is a[7:0] AND b[i], shifted)
+  signal pp0, pp1, pp2, pp3, pp4, pp5, pp6, pp7 : bits(7 downto 0);
+
+  -- Extended partial products for addition (16 bits each)
+  signal ext_pp0, ext_pp1, ext_pp2, ext_pp3 : bits(15 downto 0);
+  signal ext_pp4, ext_pp5, ext_pp6, ext_pp7 : bits(15 downto 0);
+
+  -- Intermediate sums
+  signal sum01, sum23, sum45, sum67 : bits(15 downto 0);
+  signal sum0123, sum4567 : bits(15 downto 0);
+  signal c1, c2, c3, c4, c5, c6, c7 : bit;
+
+begin
+  -- Generate partial products: pp_i = a AND b[i]
+  and0: And8 port map (a => a, b => b(0), y => pp0);
+  and1: And8 port map (a => a, b => b(1), y => pp1);
+  and2: And8 port map (a => a, b => b(2), y => pp2);
+  and3: And8 port map (a => a, b => b(3), y => pp3);
+  and4: And8 port map (a => a, b => b(4), y => pp4);
+  and5: And8 port map (a => a, b => b(5), y => pp5);
+  and6: And8 port map (a => a, b => b(6), y => pp6);
+  and7: And8 port map (a => a, b => b(7), y => pp7);
+
+  -- Extend and shift partial products to 16 bits
+  -- pp0: bits [7:0], no shift
+  ext_pp0(7 downto 0) <= pp0;
+  ext_pp0(15 downto 8) <= x"00";
+
+  -- pp1: bits [8:1], shift left by 1
+  ext_pp1(0) <= '0';
+  ext_pp1(8 downto 1) <= pp1;
+  ext_pp1(15 downto 9) <= "0000000";
+
+  -- pp2: bits [9:2], shift left by 2
+  ext_pp2(1 downto 0) <= "00";
+  ext_pp2(9 downto 2) <= pp2;
+  ext_pp2(15 downto 10) <= "000000";
+
+  -- pp3: bits [10:3], shift left by 3
+  ext_pp3(2 downto 0) <= "000";
+  ext_pp3(10 downto 3) <= pp3;
+  ext_pp3(15 downto 11) <= "00000";
+
+  -- pp4: bits [11:4], shift left by 4
+  ext_pp4(3 downto 0) <= x"0";
+  ext_pp4(11 downto 4) <= pp4;
+  ext_pp4(15 downto 12) <= x"0";
+
+  -- pp5: bits [12:5], shift left by 5
+  ext_pp5(4 downto 0) <= "00000";
+  ext_pp5(12 downto 5) <= pp5;
+  ext_pp5(15 downto 13) <= "000";
+
+  -- pp6: bits [13:6], shift left by 6
+  ext_pp6(5 downto 0) <= "000000";
+  ext_pp6(13 downto 6) <= pp6;
+  ext_pp6(15 downto 14) <= "00";
+
+  -- pp7: bits [14:7], shift left by 7
+  ext_pp7(6 downto 0) <= "0000000";
+  ext_pp7(14 downto 7) <= pp7;
+  ext_pp7(15) <= '0';
+
+  -- Sum partial products in a tree structure
+  -- Level 1: 4 adders
+  add01: Add16 port map (a => ext_pp0, b => ext_pp1, cin => '0', y => sum01, cout => c1);
+  add23: Add16 port map (a => ext_pp2, b => ext_pp3, cin => '0', y => sum23, cout => c2);
+  add45: Add16 port map (a => ext_pp4, b => ext_pp5, cin => '0', y => sum45, cout => c3);
+  add67: Add16 port map (a => ext_pp6, b => ext_pp7, cin => '0', y => sum67, cout => c4);
+
+  -- Level 2: 2 adders
+  add0123: Add16 port map (a => sum01, b => sum23, cin => '0', y => sum0123, cout => c5);
+  add4567: Add16 port map (a => sum45, b => sum67, cin => '0', y => sum4567, cout => c6);
+
+  -- Level 3: final adder
+  add_final: Add16 port map (a => sum0123, b => sum4567, cin => '0', y => y, cout => c7);
+
+end architecture;

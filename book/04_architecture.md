@@ -185,7 +185,7 @@ Chaque instruction est encodée sur **32 bits**. La structure générale :
 Au lieu de :
 ```asm
 CMP R0, #0
-BNE skip
+B.NE skip
 MOV R1, #1
 skip:
 ```
@@ -348,7 +348,7 @@ _start:
 
 loop:
     CMP R1, #10
-    BGT done         ; si i > 10, sortir
+    B.GT done         ; si i > 10, sortir
     ADD R0, R0, R1   ; sum += i
     ADD R1, R1, #1   ; i++
     B loop

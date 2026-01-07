@@ -77,9 +77,12 @@
 
 | Instruction | Syntaxe | Description |
 |-------------|---------|-------------|
-| B | B label | PC = label |
+| B | B label | Saut inconditionnel |
+| B.cond | B.EQ label | Saut conditionnel (voir conditions) |
 | BL | BL label | LR = PC+4; PC = label |
 | BX | BX Rm | PC = Rm |
+
+*Exemples : B.EQ, B.NE, B.LT, B.GE, B.GT, B.LE, B.HI, B.LO*
 
 ## Instructions Système
 

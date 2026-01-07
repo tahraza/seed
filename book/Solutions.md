@@ -4840,10 +4840,10 @@ void emit_label(char* buf, char* prefix, int num) {
 
 void emit_branch(char* buf, int cond, char* prefix, int num) {
     if (cond == 0) append(buf, "B .L");
-    else if (cond == 1) append(buf, "BEQ .L");
-    else if (cond == 2) append(buf, "BNE .L");
-    else if (cond == 3) append(buf, "BLT .L");
-    else if (cond == 4) append(buf, "BGE .L");
+    else if (cond == 1) append(buf, "B.EQ .L");
+    else if (cond == 2) append(buf, "B.NE .L");
+    else if (cond == 3) append(buf, "B.LT .L");
+    else if (cond == 4) append(buf, "B.GE .L");
     append(buf, prefix);
     append(buf, "_");
     append_num(buf, num);
@@ -4870,11 +4870,11 @@ int main() {
 
     buf[0] = 0;
     emit_branch(buf, 1, "else", 3);
-    if (check(buf, "BEQ .Lelse_3\\n")) score = score + 1;
+    if (check(buf, "B.EQ .Lelse_3\\n")) score = score + 1;
 
     buf[0] = 0;
     emit_branch(buf, 3, "loop", 0);
-    if (check(buf, "BLT .Lloop_0\\n")) score = score + 1;
+    if (check(buf, "B.LT .Lloop_0\\n")) score = score + 1;
 
     return score;
 }
@@ -4962,7 +4962,7 @@ void emit_label(char* buf, char* prefix, int num) {
 }
 void emit_branch(char* buf, int cond, char* prefix, int num) {
     if (cond == 0) append(buf, "B .L");
-    else if (cond == 4) append(buf, "BGE .L");
+    else if (cond == 4) append(buf, "B.GE .L");
     append(buf, prefix); append(buf, "_");
     append_num(buf, num); append(buf, "\\n");
 }
@@ -4999,7 +4999,7 @@ int main() {
     codegen_if(buf, 1);
 
     if (contains(buf, "CMP R0, R1")) score = score + 1;
-    if (contains(buf, "BGE .Lelse_1")) score = score + 1;
+    if (contains(buf, "B.GE .Lelse_1")) score = score + 1;
     if (contains(buf, "B .Lend_1")) score = score + 1;
     if (contains(buf, ".Lelse_1:")) score = score + 1;
     if (contains(buf, ".Lend_1:")) score = score + 1;
@@ -5034,7 +5034,7 @@ void emit_label(char* buf, char* prefix, int num) {
 }
 void emit_branch(char* buf, int cond, char* prefix, int num) {
     if (cond == 0) append(buf, "B .L");
-    else if (cond == 4) append(buf, "BGE .L");
+    else if (cond == 4) append(buf, "B.GE .L");
     append(buf, prefix); append(buf, "_");
     append_num(buf, num); append(buf, "\\n");
 }
@@ -5072,7 +5072,7 @@ int main() {
 
     if (contains(buf, ".Lwhile_2:")) score = score + 1;
     if (contains(buf, "CMP R0, R1")) score = score + 1;
-    if (contains(buf, "BGE .Lend_2")) score = score + 1;
+    if (contains(buf, "B.GE .Lend_2")) score = score + 1;
     if (contains(buf, "B .Lwhile_2")) score = score + 1;
     if (contains(buf, ".Lend_2:")) score = score + 1;
 
