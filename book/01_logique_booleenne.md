@@ -509,3 +509,96 @@ Construisez un Mux qui choisit parmi 4 entrées (`a`, `b`, `c`, `d`) avec 2 bits
 ---
 
 **Conseil** : Ne passez pas au chapitre suivant avant d'avoir réussi tous les exercices de ce chapitre. Chaque porte que vous construisez sera réutilisée dans les chapitres suivants !
+
+---
+
+## Auto-évaluation
+
+Testez votre compréhension avant de passer au chapitre suivant.
+
+### Questions de compréhension
+
+**Q1.** Pourquoi les ordinateurs utilisent-ils le binaire plutôt que le décimal ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+Trois raisons principales :
+1. **Fiabilité** : Distinguer 2 états (haut/bas) est plus robuste que 10 niveaux
+2. **Simplicité** : Les transistors fonctionnent naturellement comme des interrupteurs on/off
+3. **Universalité** : Toute logique peut s'exprimer avec Vrai/Faux (algèbre de Boole)
+</details>
+
+**Q2.** Pourquoi dit-on que NAND est une porte "universelle" ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+Parce que **toutes les autres portes** (NOT, AND, OR, XOR, MUX, etc.) peuvent être construites uniquement à partir de portes NAND. C'est notre "axiome" de départ — tout le reste en découle.
+</details>
+
+**Q3.** Quelle est la sortie de `XOR(1, 1)` ? Et de `XOR(0, 1)` ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+- `XOR(1, 1) = 0` (les entrées sont identiques)
+- `XOR(0, 1) = 1` (les entrées sont différentes)
+
+XOR vaut 1 **si et seulement si** les entrées sont différentes.
+</details>
+
+**Q4.** Un multiplexeur (MUX) a 2 entrées de données `a` et `b`, et un signal de sélection `sel`. Si `sel = 1`, quelle entrée est transmise en sortie ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+Si `sel = 1`, la sortie est `b`.
+Si `sel = 0`, la sortie est `a`.
+
+Le MUX "choisit" entre ses entrées selon le signal de sélection.
+</details>
+
+**Q5.** Combien de portes NAND faut-il au minimum pour construire un inverseur (NOT) ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+**Une seule** porte NAND suffit : `NOT(a) = NAND(a, a)`
+
+Quand les deux entrées du NAND sont identiques, on obtient l'inverse.
+</details>
+
+### Mini-défi pratique
+
+Complétez cette table de vérité pour la fonction `F(a, b) = AND(OR(a, b), NOT(a))` :
+
+| a | b | OR(a,b) | NOT(a) | F |
+|---|---|---------|--------|---|
+| 0 | 0 | ? | ? | ? |
+| 0 | 1 | ? | ? | ? |
+| 1 | 0 | ? | ? | ? |
+| 1 | 1 | ? | ? | ? |
+
+<details>
+<summary>Voir la solution</summary>
+
+| a | b | OR(a,b) | NOT(a) | F |
+|---|---|---------|--------|---|
+| 0 | 0 | 0 | 1 | 0 |
+| 0 | 1 | 1 | 1 | 1 |
+| 1 | 0 | 1 | 0 | 0 |
+| 1 | 1 | 1 | 0 | 0 |
+
+Cette fonction est équivalente à `AND(NOT(a), b)`, soit "b ET NON a".
+</details>
+
+### Checklist de validation
+
+Avant de passer au chapitre 2, assurez-vous de pouvoir :
+
+- [ ] Expliquer pourquoi NAND est universel
+- [ ] Construire NOT, AND, OR à partir de NAND
+- [ ] Lire et écrire une table de vérité
+- [ ] Comprendre le rôle du MUX (sélection) et du DMUX (routage)
+- [ ] Écrire du code HDL simple avec `port map`

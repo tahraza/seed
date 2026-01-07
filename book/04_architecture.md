@@ -464,3 +464,107 @@ cargo run -p a32_runner -- mon_prog.bin
 ---
 
 **Conseil** : Passez du temps sur le simulateur web à écrire des programmes en assembleur. Comprendre l'assembleur vous aidera énormément à comprendre le compilateur plus tard !
+
+---
+
+## Auto-évaluation
+
+Testez votre compréhension avant de passer au chapitre suivant.
+
+### Questions de compréhension
+
+**Q1.** Qu'est-ce qu'une architecture RISC et pourquoi A32 en est une ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+**RISC** (Reduced Instruction Set Computer) signifie :
+- Instructions simples et de taille fixe (32 bits)
+- Architecture **Load/Store** : seules LDR/STR accèdent à la mémoire
+- Les calculs se font uniquement entre registres
+
+A32 est RISC car : `ADD R1, R2, R3` additionne des registres, pas de la mémoire directement.
+</details>
+
+**Q2.** Pourquoi y a-t-il 16 registres (R0-R15) et pas 8 ou 32 ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+C'est un **compromis** :
+- **Plus de registres** = moins d'accès mémoire (rapide) mais encodage plus grand
+- **Moins de registres** = encodage compact mais plus de spilling vers la mémoire
+
+16 registres = 4 bits pour encoder un registre → bon équilibre dans une instruction 32 bits.
+</details>
+
+**Q3.** Que font les registres spéciaux R13, R14, R15 ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+- **R13 (SP)** : Stack Pointer — pointe vers le sommet de la pile
+- **R14 (LR)** : Link Register — sauvegarde l'adresse de retour lors d'un `BL`
+- **R15 (PC)** : Program Counter — adresse de l'instruction en cours
+
+Ces conventions permettent les appels de fonction et la gestion de la pile.
+</details>
+
+**Q4.** Comment fonctionne l'exécution conditionnelle (ex: `ADD.EQ`) ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+Chaque instruction peut être conditionnelle grâce au suffixe (EQ, NE, GT, etc.) :
+1. L'instruction précédente (souvent `CMP`) met à jour les drapeaux NZCV
+2. L'instruction conditionnelle vérifie les drapeaux
+3. Si la condition est vraie → exécution normale
+4. Si fausse → l'instruction est "sautée" (NOP)
+
+Avantage : évite des branchements coûteux pour de petits `if`.
+</details>
+
+**Q5.** Qu'est-ce que le Memory-Mapped I/O (MMIO) ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+Les périphériques (écran, clavier) sont accessibles comme de la **mémoire ordinaire** :
+- Écrire à l'adresse `0xFFFF0000` → envoie un caractère à la sortie
+- Lire l'adresse `0xFFFF0004` → récupère une touche du clavier
+
+Avantage : pas besoin d'instructions spéciales IN/OUT, on utilise `LDR`/`STR` standard.
+</details>
+
+### Mini-défi pratique
+
+Écrivez un programme assembleur qui :
+1. Met 10 dans R0
+2. Met 3 dans R1
+3. Calcule R0 - R1 et stocke dans R2
+4. Si le résultat est positif, met 1 dans R3, sinon 0
+
+<details>
+<summary>Voir la solution</summary>
+
+```asm
+    MOV R0, #10      ; R0 = 10
+    MOV R1, #3       ; R1 = 3
+    SUBS R2, R0, R1  ; R2 = R0 - R1, met à jour les drapeaux
+    MOV R3, #0       ; R3 = 0 par défaut
+    MOV.GT R3, #1    ; Si R2 > 0 (GT = Greater Than), R3 = 1
+    SVC #0           ; Fin
+```
+
+Note : `SUBS` (avec S) met à jour les drapeaux. Sans le S, `MOV.GT` ne fonctionnerait pas !
+</details>
+
+### Checklist de validation
+
+Avant de passer au chapitre 5, assurez-vous de pouvoir :
+
+- [ ] Expliquer la différence entre RISC et CISC
+- [ ] Décrire le rôle de chaque registre spécial (SP, LR, PC)
+- [ ] Écrire un programme simple en assembleur A32
+- [ ] Utiliser les conditions (EQ, NE, GT, LT, etc.)
+- [ ] Expliquer le cycle Fetch-Decode-Execute

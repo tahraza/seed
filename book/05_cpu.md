@@ -1147,3 +1147,127 @@ Chapitre 6-9 : LOGICIEL
 ---
 
 **Conseil** : Si vous avez réussi le CPU, vous avez accompli quelque chose de remarquable. Prenez le temps de savourer : vous avez construit un ordinateur complet, de la porte NAND au processeur fonctionnel !
+
+---
+
+## Auto-évaluation
+
+Testez votre compréhension avant de passer au chapitre suivant.
+
+### Questions de compréhension
+
+**Q1.** Quelles sont les 5 étapes du cycle d'exécution d'une instruction ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+1. **Fetch** : Lire l'instruction depuis la mémoire à l'adresse PC
+2. **Decode** : Analyser les bits pour déterminer l'opération et les opérandes
+3. **Execute** : Effectuer le calcul dans l'ALU
+4. **Memory** : Accéder à la mémoire (pour LDR/STR)
+5. **Writeback** : Écrire le résultat dans le registre destination
+
+En single-cycle, tout se fait en un seul cycle d'horloge.
+</details>
+
+**Q2.** Quel est le rôle du décodeur d'instructions ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+Le décodeur analyse les 32 bits de l'instruction pour extraire :
+- **L'opcode** : Quelle opération (ADD, SUB, LDR, B, etc.)
+- **Les registres** : Rd (destination), Rn, Rm (sources)
+- **L'immédiat** : Valeur constante si présente
+- **La condition** : EQ, NE, GT, etc.
+
+Ces informations sont envoyées à l'unité de contrôle.
+</details>
+
+**Q3.** Pourquoi les branchements conditionnels dépendent-ils des drapeaux NZCV ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+Les drapeaux capturent le **résultat de l'opération précédente** :
+- `BEQ` (Branch if Equal) saute si Z=1 (résultat était 0)
+- `BNE` (Branch if Not Equal) saute si Z=0
+- `BGT` (Branch if Greater Than) teste une combinaison de N, Z, V
+
+Sans drapeaux, il faudrait recalculer la condition à chaque branchement.
+</details>
+
+**Q4.** Dans un CPU pipeline 5 étages, qu'est-ce qu'un hazard de données ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+Un **hazard de données** survient quand une instruction a besoin du résultat d'une instruction précédente qui n'est pas encore terminée.
+
+Exemple :
+```asm
+ADD R1, R2, R3   ; R1 est calculé
+SUB R4, R1, R5   ; Besoin de R1, mais pas encore écrit !
+```
+
+Solutions : **forwarding** (bypass) ou **stall** (attendre).
+</details>
+
+**Q5.** Quelle est la différence entre un CPU single-cycle et un CPU pipeliné ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+| Single-cycle | Pipeline |
+|-------------|----------|
+| 1 instruction par cycle | Plusieurs instructions en parallèle |
+| Cycle long (étape la plus lente) | Cycle court (1 étape par cycle) |
+| Simple à concevoir | Complexe (hazards, forwarding) |
+| Throughput faible | Throughput élevé |
+
+Le pipeline est comme une chaîne de montage : chaque étage travaille sur une instruction différente.
+</details>
+
+### Mini-défi pratique
+
+Tracez l'exécution de cette instruction dans le CPU :
+```asm
+ADD R1, R2, R3
+```
+
+Décrivez ce qui se passe à chaque étape (Fetch, Decode, Execute, Memory, Writeback).
+
+<details>
+<summary>Voir la solution</summary>
+
+1. **Fetch** :
+   - PC envoie son adresse à la mémoire d'instructions
+   - L'instruction `ADD R1, R2, R3` (32 bits) est lue
+   - PC ← PC + 4
+
+2. **Decode** :
+   - Le décodeur extrait : opcode=ADD, Rd=R1, Rn=R2, Rm=R3
+   - Le banc de registres lit R2 et R3
+   - L'unité de contrôle génère : ALU_op=ADD, RegWrite=1
+
+3. **Execute** :
+   - L'ALU calcule R2 + R3
+   - Les drapeaux sont mis à jour (si ADDS)
+
+4. **Memory** :
+   - Pas d'accès mémoire pour ADD (cette étape est un "pass-through")
+
+5. **Writeback** :
+   - Le résultat de l'ALU est écrit dans R1
+   - RegWrite=1 active l'écriture
+</details>
+
+### Checklist de validation
+
+Avant de passer au chapitre 6, assurez-vous de pouvoir :
+
+- [ ] Décrire les 5 étapes d'exécution d'une instruction
+- [ ] Expliquer le rôle du décodeur et de l'unité de contrôle
+- [ ] Tracer le chemin des données pour ADD, LDR, et B
+- [ ] Comprendre pourquoi les MUX sont essentiels (choix des sources)
+- [ ] Expliquer le concept de pipeline et ses avantages

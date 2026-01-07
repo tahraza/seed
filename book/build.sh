@@ -22,7 +22,16 @@ CHAPTERS=(
     08_langage.md
     09_os.md
     10_exercices.md
+    10bis_debogage.md
     11_cache.md
+)
+
+# Liste des cartes de référence
+REFERENCE_CARDS=(
+    references/carte_isa_a32.md
+    references/carte_hdl.md
+    references/carte_c32.md
+    references/carte_erreurs.md
 )
 
 # Vérification de la présence de pandoc
@@ -46,7 +55,7 @@ echo "========================================"
 echo ""
 
 # Génération du PDF
-echo "[1/2] Génération du PDF..."
+echo "[1/3] Génération du PDF..."
 
 if [ "$EISVOGEL_INSTALLED" = true ]; then
     pandoc metadata-eisvogel.yaml \
@@ -107,7 +116,7 @@ fi
 
 # Génération du HTML
 echo ""
-echo "[2/2] Génération du HTML..."
+echo "[2/3] Génération du HTML..."
 
 pandoc metadata-eisvogel.yaml \
     "${CHAPTERS[@]}" \
@@ -125,6 +134,32 @@ if [ $? -eq 0 ]; then
     echo "  ✓ HTML créé: $HTML_OUTPUT ($(du -h "$HTML_OUTPUT" | cut -f1))"
 else
     echo "  ✗ Échec de la génération HTML"
+fi
+
+# Génération des cartes de référence (PDF compact)
+echo ""
+echo "[3/3] Génération des cartes de référence..."
+
+# Créer le dossier de sortie si nécessaire
+mkdir -p references
+
+REFCARD_OUTPUT="references/Cartes_Reference.pdf"
+
+pandoc "${REFERENCE_CARDS[@]}" \
+    -o "$REFCARD_OUTPUT" \
+    --from markdown \
+    --pdf-engine=xelatex \
+    --variable geometry:margin=1.5cm \
+    --variable fontsize=10pt \
+    --variable documentclass=article \
+    --highlight-style breezedark \
+    --table-of-contents \
+    --toc-depth 2 2>&1
+
+if [ $? -eq 0 ]; then
+    echo "  ✓ Cartes de référence: $REFCARD_OUTPUT ($(du -h "$REFCARD_OUTPUT" | cut -f1))"
+else
+    echo "  ✗ Échec de la génération des cartes de référence"
 fi
 
 echo ""

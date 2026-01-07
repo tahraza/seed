@@ -436,3 +436,142 @@ Pour rester simple et pédagogique, le C32 a quelques limites :
 ---
 
 **Conseil** : Le C32 est proche du C. Si vous voulez aller plus loin, apprenez le C — c'est le langage de base de Linux, Windows, et de presque tous les systèmes embarqués !
+
+---
+
+## Auto-évaluation
+
+Testez votre compréhension avant de passer au chapitre suivant.
+
+### Questions de compréhension
+
+**Q1.** Quelle est la différence entre `int` et `uint` en C32 ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+- **`int`** : Entier **signé** sur 32 bits (−2³¹ à 2³¹−1)
+- **`uint`** : Entier **non-signé** sur 32 bits (0 à 2³²−1)
+
+La différence affecte les comparaisons (`<`, `>`) et la division. Les bits sont les mêmes, seule l'interprétation change.
+</details>
+
+**Q2.** Qu'est-ce qu'un pointeur et comment l'utilise-t-on ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+Un **pointeur** est une variable qui contient une **adresse mémoire**.
+
+```c
+int x = 42;
+int *p = &x;     // p contient l'adresse de x
+int y = *p;      // y = 42 (déréférencement)
+*p = 100;        // x vaut maintenant 100
+```
+
+- `&x` : "adresse de x"
+- `*p` : "valeur pointée par p"
+</details>
+
+**Q3.** Comment accède-t-on à l'écran en C32 ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+L'écran est mappé en mémoire (MMIO) à l'adresse `0x00400000` :
+
+```c
+uint *screen = (uint*)0x00400000;
+screen[0] = 0xFFFFFFFF;  // Première ligne blanche (32 pixels)
+```
+
+L'écran fait 320×240 pixels, 1 bit par pixel. Chaque `uint` représente 32 pixels horizontaux.
+</details>
+
+**Q4.** Quelle est la syntaxe d'une boucle `for` en C32 ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+```c
+for (initialisation; condition; incrément) {
+    // corps de la boucle
+}
+```
+
+Exemple :
+```c
+for (int i = 0; i < 10; i = i + 1) {
+    putc('0' + i);  // Affiche 0123456789
+}
+```
+
+Note : C32 n'a pas `i++`, utilisez `i = i + 1`.
+</details>
+
+**Q5.** Comment définit-on et utilise-t-on un tableau en C32 ?
+
+<details>
+<summary>Voir la réponse</summary>
+
+```c
+int tab[5];           // Tableau de 5 entiers
+tab[0] = 10;          // Premier élément
+tab[4] = 50;          // Dernier élément
+
+// Parcours
+for (int i = 0; i < 5; i = i + 1) {
+    tab[i] = i * 2;
+}
+```
+
+`tab[i]` est équivalent à `*(tab + i)` — arithmétique de pointeurs.
+</details>
+
+### Mini-défi pratique
+
+Écrivez une fonction C32 qui calcule la somme des éléments d'un tableau :
+
+```c
+int sum(int *arr, int len) {
+    // À compléter
+}
+```
+
+<details>
+<summary>Voir la solution</summary>
+
+```c
+int sum(int *arr, int len) {
+    int total = 0;
+    for (int i = 0; i < len; i = i + 1) {
+        total = total + arr[i];
+    }
+    return total;
+}
+```
+
+Alternative avec pointeurs :
+```c
+int sum(int *arr, int len) {
+    int total = 0;
+    int *end = arr + len;
+    while (arr < end) {
+        total = total + *arr;
+        arr = arr + 1;
+    }
+    return total;
+}
+```
+</details>
+
+### Checklist de validation
+
+Avant de passer au chapitre 9, assurez-vous de pouvoir :
+
+- [ ] Utiliser les types de base : `int`, `uint`, `char`, `bool`
+- [ ] Déclarer et utiliser des pointeurs
+- [ ] Accéder à la mémoire mappée (écran, clavier)
+- [ ] Écrire des boucles `for` et `while`
+- [ ] Manipuler des tableaux et des chaînes de caractères
