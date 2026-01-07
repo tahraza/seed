@@ -786,12 +786,12 @@ architecture rtl of Mul8 is
 
   signal pp0, pp1, pp2, pp3, pp4, pp5, pp6, pp7 : bits(7 downto 0);
   signal ext0, ext1, ext2, ext3, ext4, ext5, ext6, ext7 : bits(15 downto 0);
-  signal sum01, sum23, sum45, sum67 : bits(15 downto 0);
-  signal sum0123, sum4567 : bits(15 downto 0);
+  signal s01, s23, s45, s67 : bits(15 downto 0);
+  signal s0123, s4567 : bits(15 downto 0);
   signal c1, c2, c3, c4, c5, c6, c7 : bit;
 
 begin
-  -- Générer les produits partiels
+  -- Generate partial products
   and0: And8 port map (a => a, b => b(0), y => pp0);
   and1: And8 port map (a => a, b => b(1), y => pp1);
   and2: And8 port map (a => a, b => b(2), y => pp2);
@@ -801,48 +801,26 @@ begin
   and6: And8 port map (a => a, b => b(6), y => pp6);
   and7: And8 port map (a => a, b => b(7), y => pp7);
 
-  -- Étendre et décaler les produits partiels
-  ext0(7 downto 0) <= pp0;
-  ext0(15 downto 8) <= x"00";
-
-  ext1(0) <= '0';
-  ext1(8 downto 1) <= pp1;
-  ext1(15 downto 9) <= "0000000";
-
-  ext2(1 downto 0) <= "00";
-  ext2(9 downto 2) <= pp2;
-  ext2(15 downto 10) <= "000000";
-
-  ext3(2 downto 0) <= "000";
-  ext3(10 downto 3) <= pp3;
-  ext3(15 downto 11) <= "00000";
-
-  ext4(3 downto 0) <= x"0";
-  ext4(11 downto 4) <= pp4;
-  ext4(15 downto 12) <= x"0";
-
-  ext5(4 downto 0) <= "00000";
-  ext5(12 downto 5) <= pp5;
-  ext5(15 downto 13) <= "000";
-
-  ext6(5 downto 0) <= "000000";
-  ext6(13 downto 6) <= pp6;
-  ext6(15 downto 14) <= "00";
-
-  ext7(6 downto 0) <= "0000000";
-  ext7(14 downto 7) <= pp7;
-  ext7(15) <= '0';
+  -- Extend and shift partial products using concatenation
+  ext0 <= x"00" & pp0;
+  ext1 <= b"0000000" & pp1 & '0';
+  ext2 <= b"000000" & pp2 & b"00";
+  ext3 <= b"00000" & pp3 & b"000";
+  ext4 <= x"0" & pp4 & x"0";
+  ext5 <= b"000" & pp5 & b"00000";
+  ext6 <= b"00" & pp6 & b"000000";
+  ext7 <= '0' & pp7 & b"0000000";
 
   -- Addition en arbre (3 niveaux)
-  add01: Add16 port map (a => ext0, b => ext1, cin => '0', sum => sum01, cout => c1);
-  add23: Add16 port map (a => ext2, b => ext3, cin => '0', sum => sum23, cout => c2);
-  add45: Add16 port map (a => ext4, b => ext5, cin => '0', sum => sum45, cout => c3);
-  add67: Add16 port map (a => ext6, b => ext7, cin => '0', sum => sum67, cout => c4);
+  add01: Add16 port map (a => ext0, b => ext1, cin => '0', sum => s01, cout => c1);
+  add23: Add16 port map (a => ext2, b => ext3, cin => '0', sum => s23, cout => c2);
+  add45: Add16 port map (a => ext4, b => ext5, cin => '0', sum => s45, cout => c3);
+  add67: Add16 port map (a => ext6, b => ext7, cin => '0', sum => s67, cout => c4);
 
-  add0123: Add16 port map (a => sum01, b => sum23, cin => '0', sum => sum0123, cout => c5);
-  add4567: Add16 port map (a => sum45, b => sum67, cin => '0', sum => sum4567, cout => c6);
+  add0123: Add16 port map (a => s01, b => s23, cin => '0', sum => s0123, cout => c5);
+  add4567: Add16 port map (a => s45, b => s67, cin => '0', sum => s4567, cout => c6);
 
-  add_final: Add16 port map (a => sum0123, b => sum4567, cin => '0', sum => y, cout => c7);
+  add_final: Add16 port map (a => s0123, b => s4567, cin => '0', sum => y, cout => c7);
 end architecture;
 ```
 

@@ -49,45 +49,15 @@ begin
   and6: And8 port map (a => a, b => b(6), y => pp6);
   and7: And8 port map (a => a, b => b(7), y => pp7);
 
-  -- Extend and shift partial products to 16 bits
-  -- pp0: bits [7:0], no shift
-  ext_pp0(7 downto 0) <= pp0;
-  ext_pp0(15 downto 8) <= x"00";
-
-  -- pp1: bits [8:1], shift left by 1
-  ext_pp1(0) <= '0';
-  ext_pp1(8 downto 1) <= pp1;
-  ext_pp1(15 downto 9) <= "0000000";
-
-  -- pp2: bits [9:2], shift left by 2
-  ext_pp2(1 downto 0) <= "00";
-  ext_pp2(9 downto 2) <= pp2;
-  ext_pp2(15 downto 10) <= "000000";
-
-  -- pp3: bits [10:3], shift left by 3
-  ext_pp3(2 downto 0) <= "000";
-  ext_pp3(10 downto 3) <= pp3;
-  ext_pp3(15 downto 11) <= "00000";
-
-  -- pp4: bits [11:4], shift left by 4
-  ext_pp4(3 downto 0) <= x"0";
-  ext_pp4(11 downto 4) <= pp4;
-  ext_pp4(15 downto 12) <= x"0";
-
-  -- pp5: bits [12:5], shift left by 5
-  ext_pp5(4 downto 0) <= "00000";
-  ext_pp5(12 downto 5) <= pp5;
-  ext_pp5(15 downto 13) <= "000";
-
-  -- pp6: bits [13:6], shift left by 6
-  ext_pp6(5 downto 0) <= "000000";
-  ext_pp6(13 downto 6) <= pp6;
-  ext_pp6(15 downto 14) <= "00";
-
-  -- pp7: bits [14:7], shift left by 7
-  ext_pp7(6 downto 0) <= "0000000";
-  ext_pp7(14 downto 7) <= pp7;
-  ext_pp7(15) <= '0';
+  -- Extend and shift partial products using concatenation
+  ext_pp0 <= x"00" & pp0;                      -- pp0 at bits [7:0]
+  ext_pp1 <= b"0000000" & pp1 & '0';           -- pp1 at bits [8:1]
+  ext_pp2 <= b"000000" & pp2 & b"00";          -- pp2 at bits [9:2]
+  ext_pp3 <= b"00000" & pp3 & b"000";          -- pp3 at bits [10:3]
+  ext_pp4 <= x"0" & pp4 & x"0";                -- pp4 at bits [11:4]
+  ext_pp5 <= b"000" & pp5 & b"00000";          -- pp5 at bits [12:5]
+  ext_pp6 <= b"00" & pp6 & b"000000";          -- pp6 at bits [13:6]
+  ext_pp7 <= '0' & pp7 & b"0000000";           -- pp7 at bits [14:7]
 
   -- Sum partial products in a tree structure
   -- Level 1: 4 adders
