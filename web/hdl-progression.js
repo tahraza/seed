@@ -5188,6 +5188,287 @@ expect state 0b00
 expect fill_line 1
 `,
     },
+
+    // =========================================================================
+    // Project 8: Capstone - Complete Computer
+    // =========================================================================
+    // 🎮 The culmination: from NAND gates to a working computer!
+    // ROM is like a Game Boy cartridge - plug in your program and play!
+
+    'ROM32K': {
+        project: 8,
+        name: 'ROM32K',
+        description: 'Read-Only Memory (32K x 16-bit)',
+        dependencies: [],
+        template: `-- ============================================
+-- ROM32K: Mémoire Programme (32K x 16 bits)
+-- ============================================
+-- La ROM (Read-Only Memory) est la mémoire qui contient
+-- votre programme. C'est l'équivalent de la cartouche
+-- de jeu qu'on insère dans une Game Boy !
+--
+-- 🎮 Analogie avec la Game Boy:
+-- - La cartouche contient le jeu (le programme)
+-- - On l'insère dans la console (l'ordinateur)
+-- - La console lit les instructions de la cartouche
+-- - Elle exécute le jeu !
+--
+-- Interface:
+-- - addr (15 bits): adresse de l'instruction à lire
+-- - dout (16 bits): l'instruction à cette adresse
+--
+-- La ROM est purement combinatoire: dès qu'on change
+-- l'adresse, la donnée correspondante apparaît en sortie.
+-- Pas besoin de clock !
+--
+-- C'est une primitive du simulateur (comme NAND).
+-- Vous n'avez rien à implémenter ici, mais vous devez
+-- comprendre comment l'utiliser dans le chip Computer.
+-- ============================================
+
+entity ROM32K is
+  port(
+    addr : in bits(14 downto 0);   -- 15 bits = 32K addresses
+    dout : out bits(15 downto 0)   -- 16-bit instruction output
+  );
+end entity;
+
+-- ROM is a simulator primitive - no architecture needed
+-- The content is loaded from a .bin file before simulation
+`,
+        solution: `-- ROM32K: Program Memory (32K x 16-bit)
+-- This is a simulator primitive.
+-- The content is loaded from a binary file before simulation.
+--
+-- 🎮 Think of it like a Game Boy cartridge:
+-- - The cartridge contains your game (program)
+-- - You insert it into the console (computer)
+-- - The console reads instructions from the cartridge
+-- - The game runs!
+
+entity ROM32K is
+  port(
+    addr : in bits(14 downto 0);   -- 15 bits = 32K addresses
+    dout : out bits(15 downto 0)   -- 16-bit instruction output
+  );
+end entity;
+
+-- ROM is a simulator primitive like NAND, DFF, RAM
+-- The architecture is built into the simulator
+`,
+        test: `// Test ROM32K with pre-loaded program data
+// ROM content is loaded via romload command
+
+load ROM32K
+
+// Load a simple test program into ROM
+// Format: hex values, one per word
+romload 0x1234 0x5678 0xABCD 0x0001 0xFFFF
+
+// Read address 0
+set addr 0b000000000000000
+eval
+expect dout 0x1234
+
+// Read address 1
+set addr 0b000000000000001
+eval
+expect dout 0x5678
+
+// Read address 2
+set addr 0b000000000000010
+eval
+expect dout 0xABCD
+
+// Read address 3
+set addr 0b000000000000011
+eval
+expect dout 0x0001
+
+// Read address 4
+set addr 0b000000000000100
+eval
+expect dout 0xFFFF
+`,
+    },
+
+    'Computer': {
+        project: 8,
+        name: 'Computer',
+        description: 'Complete Computer (ROM + CPU + RAM)',
+        dependencies: ['ROM32K', 'CPU', 'RAM64'],
+        template: `-- ============================================
+-- Computer: L'Ordinateur Complet 🖥️
+-- ============================================
+-- C'est l'aboutissement du projet Nand2Tetris !
+-- Vous allez assembler les pièces que vous avez construites:
+--
+--   ┌─────────────────────────────────────────┐
+--   │              COMPUTER                    │
+--   │  ┌────────┐   ┌─────┐   ┌────────┐     │
+--   │  │ ROM32K │──▶│ CPU │◀─▶│ RAM64  │     │
+--   │  │(program)│  └─────┘   │(data)  │     │
+--   │  └────────┘      │      └────────┘     │
+--   │       ▲          │                      │
+--   │       │          ▼                      │
+--   │    🎮         outputs                   │
+--   │  Cartouche                              │
+--   └─────────────────────────────────────────┘
+--
+-- Architecture Harvard:
+-- - ROM32K: contient le programme (lecture seule)
+-- - RAM64: contient les données (lecture/écriture)
+-- - CPU: exécute les instructions, lit/écrit la RAM
+--
+-- Connexions:
+-- 1. ROM.addr ← CPU.pc_out (PC dit quelle instruction lire)
+-- 2. CPU.instr ← ROM.dout (ROM fournit l'instruction)
+-- 3. RAM.addr ← CPU.mem_addr (CPU dit où accéder)
+-- 4. RAM.din ← CPU.mem_out (CPU envoie données à écrire)
+-- 5. CPU.mem_in ← RAM.dout (RAM renvoie données lues)
+-- 6. RAM.we ← CPU.mem_we (CPU contrôle écriture)
+--
+-- C'est le cycle fetch-execute en action !
+-- ============================================
+
+entity Computer is
+  port(
+    clk   : in bit;
+    reset : in bit
+  );
+end entity;
+
+architecture rtl of Computer is
+  -- Components
+  component ROM32K
+    port(addr : in bits(14 downto 0); dout : out bits(15 downto 0));
+  end component;
+
+  component CPU
+    port(clk, reset : in bit;
+         instr, mem_in : in bits(15 downto 0);
+         mem_out, mem_addr, pc_out : out bits(15 downto 0);
+         mem_we : out bit);
+  end component;
+
+  component RAM64
+    port(clk : in bit; din : in bits(15 downto 0);
+         addr : in bits(5 downto 0); we : in bit;
+         dout : out bits(15 downto 0));
+  end component;
+
+  -- Internal signals
+  signal instruction : bits(15 downto 0);
+  signal pc : bits(15 downto 0);
+  signal mem_addr : bits(15 downto 0);
+  signal mem_out : bits(15 downto 0);
+  signal mem_in : bits(15 downto 0);
+  signal mem_we : bit;
+begin
+  -- YOUR CODE HERE
+  -- Instantiate and connect: rom, cpu, ram
+end architecture;
+`,
+        solution: `-- Computer: The Complete Computer 🖥️
+-- The culmination of Nand2Tetris!
+--
+-- 🎮 Like a Game Boy with its cartridge inserted:
+-- - ROM32K = The game cartridge (your program)
+-- - CPU = The processor (executes instructions)
+-- - RAM64 = Working memory (game state, variables)
+
+entity Computer is
+  port(
+    clk   : in bit;
+    reset : in bit
+  );
+end entity;
+
+architecture rtl of Computer is
+  component ROM32K
+    port(addr : in bits(14 downto 0); dout : out bits(15 downto 0));
+  end component;
+
+  component CPU
+    port(clk, reset : in bit;
+         instr, mem_in : in bits(15 downto 0);
+         mem_out, mem_addr, pc_out : out bits(15 downto 0);
+         mem_we : out bit);
+  end component;
+
+  component RAM64
+    port(clk : in bit; din : in bits(15 downto 0);
+         addr : in bits(5 downto 0); we : in bit;
+         dout : out bits(15 downto 0));
+  end component;
+
+  signal instruction : bits(15 downto 0);
+  signal pc : bits(15 downto 0);
+  signal mem_addr : bits(15 downto 0);
+  signal mem_out : bits(15 downto 0);
+  signal mem_in : bits(15 downto 0);
+  signal mem_we : bit;
+begin
+  -- Program Memory (The Cartridge!)
+  rom: ROM32K port map(
+    addr => pc(14 downto 0),
+    dout => instruction
+  );
+
+  -- Central Processing Unit
+  cpu: CPU port map(
+    clk => clk,
+    reset => reset,
+    instr => instruction,
+    mem_in => mem_in,
+    mem_out => mem_out,
+    mem_addr => mem_addr,
+    mem_we => mem_we,
+    pc_out => pc
+  );
+
+  -- Data Memory
+  ram: RAM64 port map(
+    clk => clk,
+    din => mem_out,
+    addr => mem_addr(5 downto 0),
+    we => mem_we,
+    dout => mem_in
+  );
+end architecture;
+`,
+        test: `// Test Computer with a simple program
+// This program: adds 2 + 3 and stores result in RAM[0]
+
+load Computer
+
+// Load program into ROM
+// This is a simplified instruction set example
+// In reality, you'd compile C code to machine code
+romload 0x2002 0x3003 0x4000
+
+// Reset computer
+set reset 1
+tick
+tock
+set reset 0
+
+// Execute first instruction (load 2)
+tick
+tock
+
+// Execute second instruction (add 3)
+tick
+tock
+
+// Execute third instruction (store to RAM)
+tick
+tock
+
+// The exact expectations depend on your CPU's instruction encoding
+// This test verifies the computer can execute multiple cycles
+`,
+    },
 };
 
 // Project order for display
@@ -5199,6 +5480,7 @@ export const PROJECTS = [
     { id: 5, name: 'CPU', chips: ['Decoder', 'CondCheck', 'Control', 'CPU'] },
     { id: 6, name: 'CPU Pipeline', chips: ['IF_ID_Reg', 'HazardDetect', 'ForwardUnit', 'CPU_Pipeline'] },
     { id: 7, name: 'Cache L1', chips: ['CacheLine', 'TagCompare', 'WordSelect', 'CacheController'] },
+    { id: 8, name: 'Capstone: Ordinateur Complet', chips: ['ROM32K', 'Computer'] },
 ];
 
 // Get chip info

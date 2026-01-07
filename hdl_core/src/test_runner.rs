@@ -75,6 +75,10 @@ enum TestCmd {
     Tick,
     Tock,
     Expect { signal: String, value: String },
+    /// Load hex data into ROM (rom_index, hex_data)
+    RomLoad { rom_index: usize, hex_data: String },
+    /// Repeat commands N times
+    Repeat { count: usize, commands: Vec<(usize, TestCmd)> },
 }
 
 /// Parse un script de test
@@ -123,6 +127,28 @@ fn parse_test_script(script: &str) -> Result<(String, Vec<(usize, TestCmd)>), Er
                         signal: parts[1].to_string(),
                         value: parts[2].to_string(),
                     }));
+                }
+            }
+            "romload" => {
+                // romload <rom_index> <hex_values...>
+                // or romload <hex_values...> (defaults to rom 0)
+                if parts.len() >= 2 {
+                    let (rom_index, hex_start) = if parts[1].parse::<usize>().is_ok() && parts.len() > 2 {
+                        (parts[1].parse::<usize>().unwrap_or(0), 2)
+                    } else {
+                        (0, 1)
+                    };
+                    let hex_data = parts[hex_start..].join("\n");
+                    commands.push((line_number, TestCmd::RomLoad { rom_index, hex_data }));
+                }
+            }
+            "repeat" => {
+                // repeat <count> { commands... }
+                // For simplicity, just parse "repeat N" and execute next commands N times
+                if parts.len() >= 2 {
+                    if let Ok(count) = parts[1].parse::<usize>() {
+                        commands.push((line_number, TestCmd::Repeat { count, commands: Vec::new() }));
+                    }
                 }
             }
             _ => {
@@ -226,6 +252,16 @@ pub fn run_test(hdl: &str, test_script: &str, library: &HashMap<String, String>)
                     };
                     errors.push(failure.format());
                     failures.push(failure);
+                }
+            }
+            TestCmd::RomLoad { rom_index, hex_data } => {
+                sim.load_rom_hex(rom_index, &hex_data)?;
+            }
+            TestCmd::Repeat { count, .. } => {
+                // For now, repeat just does N tick-tock cycles
+                for _ in 0..count {
+                    sim.tick()?;
+                    sim.tock()?;
                 }
             }
         }

@@ -1778,6 +1778,123 @@ end architecture;
 
 ---
 
+### Projet 8 : Capstone - L'Ordinateur Complet 🎮
+
+### ROM32K
+
+```vhdl
+-- ROM32K: Program Memory (32K x 16-bit)
+-- This is a simulator primitive.
+-- The content is loaded from a binary file before simulation.
+--
+-- 🎮 Think of it like a Game Boy cartridge:
+-- - The cartridge contains your game (program)
+-- - You insert it into the console (computer)
+-- - The console reads instructions from the cartridge
+-- - The game runs!
+
+entity ROM32K is
+  port(
+    addr : in bits(14 downto 0);   -- 15 bits = 32K addresses
+    dout : out bits(15 downto 0)   -- 16-bit instruction output
+  );
+end entity;
+
+-- ROM is a simulator primitive like NAND, DFF, RAM
+-- The architecture is built into the simulator
+```
+
+---
+
+### Computer
+
+```vhdl
+-- Computer: The Complete Computer 🖥️
+-- The culmination of Nand2Tetris!
+--
+-- 🎮 Like a Game Boy with its cartridge inserted:
+-- - ROM32K = The game cartridge (your program)
+-- - CPU = The processor (executes instructions)
+-- - RAM64 = Working memory (game state, variables)
+
+entity Computer is
+  port(
+    clk   : in bit;
+    reset : in bit
+  );
+end entity;
+
+architecture rtl of Computer is
+  component ROM32K
+    port(addr : in bits(14 downto 0); dout : out bits(15 downto 0));
+  end component;
+
+  component CPU
+    port(clk, reset : in bit;
+         instr, mem_in : in bits(15 downto 0);
+         mem_out, mem_addr, pc_out : out bits(15 downto 0);
+         mem_we : out bit);
+  end component;
+
+  component RAM64
+    port(clk : in bit; din : in bits(15 downto 0);
+         addr : in bits(5 downto 0); we : in bit;
+         dout : out bits(15 downto 0));
+  end component;
+
+  signal instruction : bits(15 downto 0);
+  signal pc : bits(15 downto 0);
+  signal mem_addr : bits(15 downto 0);
+  signal mem_out : bits(15 downto 0);
+  signal mem_in : bits(15 downto 0);
+  signal mem_we : bit;
+begin
+  -- Program Memory (The Cartridge!)
+  rom: ROM32K port map(
+    addr => pc(14 downto 0),
+    dout => instruction
+  );
+
+  -- Central Processing Unit
+  cpu: CPU port map(
+    clk => clk,
+    reset => reset,
+    instr => instruction,
+    mem_in => mem_in,
+    mem_out => mem_out,
+    mem_addr => mem_addr,
+    mem_we => mem_we,
+    pc_out => pc
+  );
+
+  -- Data Memory
+  ram: RAM64 port map(
+    clk => clk,
+    din => mem_out,
+    addr => mem_addr(5 downto 0),
+    we => mem_we,
+    dout => mem_in
+  );
+end architecture;
+```
+
+**Comment charger un programme dans la ROM :**
+
+1. Écrivez votre code en C ou assembleur
+2. Compilez-le en fichier binaire `.bin`
+3. Utilisez la commande `romload` dans le test :
+   ```
+   load Computer
+   romload 0x1234 0x5678 0xABCD  // Charge 3 instructions
+   set reset 1
+   tick
+   tock
+   set reset 0
+   // ... exécution du programme
+   ```
+
+---
+
 ## B. Solutions Assembleur A32
 
 ### Hello World

@@ -87,6 +87,15 @@ pub enum PrimitiveNet {
         addr_width: usize,
         data_width: usize,
     },
+    /// Read-only memory - combinatorial read, content loaded externally
+    Rom {
+        addr: ExprRef,
+        dout: TargetRef,
+        addr_width: usize,
+        data_width: usize,
+        /// Index into the simulator's ROM state array
+        rom_index: usize,
+    },
 }
 
 #[derive(Clone, Debug)]
@@ -96,6 +105,8 @@ pub struct Netlist {
     pub processes: Vec<ProcessNet>,
     pub primitives: Vec<PrimitiveNet>,
     pub name_to_id: HashMap<String, usize>,
+    /// Number of ROM primitives (for indexing ROM state in simulator)
+    pub rom_count: usize,
 }
 
 pub fn elaborate(design: &Design, top: &str) -> Result<Netlist, Error> {
@@ -106,6 +117,7 @@ pub fn elaborate(design: &Design, top: &str) -> Result<Netlist, Error> {
         processes: Vec::new(),
         primitives: Vec::new(),
         name_to_id: HashMap::new(),
+        rom_count: 0,
     };
     let mut drivers: HashMap<usize, usize> = HashMap::new();
     lib.elaborate_entity(top, None, None, &mut netlist, &mut drivers)?;
@@ -662,7 +674,7 @@ fn register_driver(
 }
 
 fn is_primitive_name(name: &str) -> bool {
-    matches!(name, "nand2" | "not1" | "and2" | "or2" | "xor2" | "mux2" | "dff" | "ram")
+    matches!(name, "nand2" | "not1" | "and2" | "or2" | "xor2" | "mux2" | "dff" | "ram" | "rom")
 }
 
 fn ensure_exact_ports(assoc_map: &HashMap<String, &Assoc>, required: &[&str]) -> Result<(), Error> {
@@ -842,6 +854,30 @@ fn elaborate_primitive(
                 dout,
                 addr_width: addr_w,
                 data_width: din_w,
+            });
+        }
+        "rom" => {
+            // ROM primitive: read-only memory with combinatorial output
+            // Ports: addr (input), dout (output)
+            ensure_exact_ports(&assoc_map, &["addr", "dout"])?;
+            let addr_expr = &assoc_map["addr"].expr;
+            let dout_target = assoc_target_no_sel(assoc_map["dout"])?;
+            let addr_w = expr_width(addr_expr, parent_map, netlist)?;
+            let dout_w = target_width(dout_target, parent_map, netlist)?;
+            if addr_w == 0 {
+                return Err(Error::new("rom addr width must be > 0"));
+            }
+            let addr = convert_expr(addr_expr, parent_map)?;
+            let dout = convert_target(dout_target, parent_map)?;
+            register_driver(&dout, in_ports, drivers)?;
+            let rom_index = netlist.rom_count;
+            netlist.rom_count += 1;
+            netlist.primitives.push(PrimitiveNet::Rom {
+                addr,
+                dout,
+                addr_width: addr_w,
+                data_width: dout_w,
+                rom_index,
             });
         }
         _ => return Err(Error::new("unknown primitive")),

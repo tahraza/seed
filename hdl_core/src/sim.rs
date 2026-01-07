@@ -9,38 +9,106 @@ struct RamState {
     data_width: usize,
 }
 
+struct RomState {
+    mem: Vec<BitVec>,
+    data_width: usize,
+    addr_width: usize,
+}
+
 pub struct Simulator {
     netlist: Netlist,
     max_comb_iters: usize,
     ram_state: Vec<RamState>,
+    rom_state: Vec<RomState>,
 }
 
 impl Simulator {
     pub fn new(netlist: Netlist) -> Self {
         let mut ram_state = Vec::new();
+        let mut rom_state = Vec::new();
         for prim in &netlist.primitives {
-            if let PrimitiveNet::Ram {
-                addr_width,
-                data_width,
-                ..
-            } = prim
-            {
-                let depth = 1usize << (*addr_width as u32);
-                let mut mem = Vec::with_capacity(depth);
-                for _ in 0..depth {
-                    mem.push(BitVec::new(*data_width, 0));
+            match prim {
+                PrimitiveNet::Ram {
+                    addr_width,
+                    data_width,
+                    ..
+                } => {
+                    let depth = 1usize << (*addr_width as u32);
+                    let mut mem = Vec::with_capacity(depth);
+                    for _ in 0..depth {
+                        mem.push(BitVec::new(*data_width, 0));
+                    }
+                    ram_state.push(RamState {
+                        mem,
+                        data_width: *data_width,
+                    });
                 }
-                ram_state.push(RamState {
-                    mem,
-                    data_width: *data_width,
-                });
+                PrimitiveNet::Rom {
+                    addr_width,
+                    data_width,
+                    ..
+                } => {
+                    let depth = 1usize << (*addr_width as u32);
+                    let mut mem = Vec::with_capacity(depth);
+                    for _ in 0..depth {
+                        mem.push(BitVec::new(*data_width, 0));
+                    }
+                    rom_state.push(RomState {
+                        mem,
+                        data_width: *data_width,
+                        addr_width: *addr_width,
+                    });
+                }
+                _ => {}
             }
         }
         Self {
             netlist,
             max_comb_iters: 100,
             ram_state,
+            rom_state,
         }
+    }
+
+    /// Load binary data into ROM at the given index
+    /// Data is loaded as 16-bit words (little-endian)
+    pub fn load_rom(&mut self, rom_index: usize, data: &[u8]) -> Result<(), Error> {
+        let state = self.rom_state.get_mut(rom_index)
+            .ok_or_else(|| Error::new(format!("ROM index {} out of range", rom_index)))?;
+
+        // Load data as words
+        let word_size = (state.data_width + 7) / 8;
+        for (i, chunk) in data.chunks(word_size).enumerate() {
+            if i >= state.mem.len() {
+                break; // ROM is full
+            }
+            let mut val: u64 = 0;
+            for (j, &byte) in chunk.iter().enumerate() {
+                val |= (byte as u64) << (j * 8);
+            }
+            state.mem[i] = BitVec::from_i64(state.data_width, val as i64);
+        }
+        Ok(())
+    }
+
+    /// Load hex string into ROM (each line is one word)
+    pub fn load_rom_hex(&mut self, rom_index: usize, hex: &str) -> Result<(), Error> {
+        let state = self.rom_state.get_mut(rom_index)
+            .ok_or_else(|| Error::new(format!("ROM index {} out of range", rom_index)))?;
+
+        for (i, line) in hex.lines().enumerate() {
+            let trimmed = line.trim();
+            if trimmed.is_empty() || trimmed.starts_with("//") {
+                continue;
+            }
+            if i >= state.mem.len() {
+                break;
+            }
+            let val = u64::from_str_radix(trimmed.trim_start_matches("0x"), 16)
+                .map_err(|e| Error::new(format!("invalid hex at line {}: {}", i, e)))?;
+            state.mem[i] = BitVec::from_i64(state.data_width, val as i64);
+        }
+        Ok(())
     }
 
     pub fn set_max_comb_iters(&mut self, max: usize) {
@@ -107,6 +175,7 @@ impl Simulator {
             }
             let primitives = self.netlist.primitives.clone();
             let mut ram_idx = 0usize;
+            let mut rom_idx = 0usize;
             for prim in primitives {
                 match prim {
                     PrimitiveNet::Nand2 { a, b, y } => {
@@ -207,9 +276,43 @@ impl Simulator {
                         }
                         ram_idx += 1;
                     }
+                    PrimitiveNet::Rom {
+                        addr,
+                        dout,
+                        addr_width,
+                        rom_index,
+                        ..
+                    } => {
+                        // ROM is purely combinatorial - read only
+                        let addr_v = self.eval_expr(&addr)?;
+                        let addr_bits = addr_v.bits.resize_zero(addr_width);
+                        let idx = addr_bits.to_u64_trunc() as usize;
+                        let data = {
+                            let state = self
+                                .rom_state
+                                .get(rom_index)
+                                .ok_or_else(|| Error::new("rom state missing"))?;
+                            if idx >= state.mem.len() {
+                                // Return 0 for out-of-range addresses
+                                BitVec::new(state.data_width, 0)
+                            } else {
+                                state.mem[idx].clone()
+                            }
+                        };
+                        let value = Value {
+                            bits: data,
+                            kind: ValueKind::Bitwise,
+                        };
+                        if self.apply_target(&dout, value)? {
+                            changed = true;
+                        }
+                        rom_idx += 1;
+                    }
                     PrimitiveNet::Dff { .. } => {}
                 }
             }
+            // Silence unused variable warning
+            let _ = rom_idx;
             if !changed {
                 return Ok(());
             }

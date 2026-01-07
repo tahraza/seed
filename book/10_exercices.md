@@ -68,6 +68,30 @@ Ces exercices implementent un cache memoire direct-mapped.
 | WordSelect | Selecteur de mot dans une ligne de 128 bits |
 | CacheController | Machine a etats (IDLE, FETCH, WRITEBACK) |
 
+### Projet 8 : Capstone - L'Ordinateur Complet 🎮
+
+C'est l'aboutissement du projet Nand2Tetris ! Assemblez toutes les pieces construites depuis le debut.
+
+| Exercice | Description |
+|:---------|:------------|
+| ROM32K | Memoire programme (comme une cartouche Game Boy !) |
+| Computer | L'ordinateur complet : ROM + CPU + RAM connectes |
+
+**🎮 L'analogie de la Game Boy :**
+
+La ROM32K est comme une cartouche de jeu qu'on insere dans une console :
+- La **cartouche** (ROM) contient votre programme compile
+- La **console** (CPU) lit et execute les instructions
+- La **memoire de travail** (RAM) stocke les donnees du jeu
+
+**Comment ca fonctionne :**
+
+1. **Compiler** votre code C en fichier binaire `.bin`
+2. **Charger** le binaire dans la ROM avec `romload`
+3. **Executer** : le CPU lit les instructions de la ROM et les execute
+
+C'est le cycle **fetch-execute** en action, construit a partir de simples portes NAND !
+
 ---
 
 ## B. Exercices Assembleur A32
