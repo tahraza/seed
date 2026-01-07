@@ -3,8 +3,8 @@
 
 load DMux4Way
 
-// in=0: all outputs should be 0
-set in 0
+// x=0: all outputs should be 0
+set x 0
 set sel 0b00
 eval
 expect a 0
@@ -33,8 +33,8 @@ expect b 0
 expect c 0
 expect d 0
 
-// in=1: only selected output should be 1
-set in 1
+// x=1: only selected output should be 1
+set x 1
 set sel 0b00
 eval
 expect a 1

@@ -1,46 +1,64 @@
 // Test file for Decoder (Instruction Decoder)
-// Decodes instruction fields for CPU control
+// Decodes 4-bit opcode into control signals
 
 load Decoder
 
-// Test R-type instruction (ADD R1, R2, R3)
-// Format: [cond:4][op:4][rd:4][rn:4][rm:4][shift:12]
-set instr 0xE0812003
+// Opcode 0x0: ALU ADD
+set opcode 0x0
 eval
-expect rd 0x1
-expect rn 0x2
-expect rm 0x3
-expect imm_flag 0
+expect alu_op 0b00
+expect reg_write 1
+expect mem_read 0
+expect mem_write 0
+expect branch 0
 
-// Test I-type instruction (MOV R0, #0xFF)
-set instr 0xE3A000FF
+// Opcode 0x1: ALU SUB
+set opcode 0x1
 eval
-expect rd 0x0
-expect imm_flag 1
+expect alu_op 0b01
+expect reg_write 1
+expect mem_read 0
+expect mem_write 0
+expect branch 0
 
-// Test Load instruction (LDR R4, [R5])
-set instr 0xE5954000
+// Opcode 0x2: ALU AND
+set opcode 0x2
 eval
-expect rd 0x4
-expect rn 0x5
+expect alu_op 0b10
+expect reg_write 1
+expect mem_read 0
+expect mem_write 0
+expect branch 0
+
+// Opcode 0x3: ALU OR
+set opcode 0x3
+eval
+expect alu_op 0b11
+expect reg_write 1
+expect mem_read 0
+expect mem_write 0
+expect branch 0
+
+// Opcode 0x4: LOAD
+set opcode 0x4
+eval
+expect reg_write 1
 expect mem_read 1
 expect mem_write 0
+expect branch 0
 
-// Test Store instruction (STR R6, [R7])
-set instr 0xE5876000
+// Opcode 0x5: STORE
+set opcode 0x5
 eval
-expect rd 0x6
-expect rn 0x7
+expect reg_write 0
 expect mem_read 0
 expect mem_write 1
+expect branch 0
 
-// Test Branch instruction (B label)
-set instr 0xEA000010
+// Opcode 0x6: BRANCH
+set opcode 0x6
 eval
-expect branch 1
-
-// Test conditional instruction (BNE)
-set instr 0x1A000005
-eval
-expect cond 0x1
+expect reg_write 0
+expect mem_read 0
+expect mem_write 0
 expect branch 1

@@ -4,118 +4,118 @@
 load RAM8
 
 // Write to address 0
-set in 0x1111
-set address 0b000
-set load 1
+set din 0x1111
+set addr 0b000
+set we 1
 tick
 tock
-expect out 0x1111
+expect dout 0x1111
 
 // Write to address 1
-set in 0x2222
-set address 0b001
-set load 1
+set din 0x2222
+set addr 0b001
+set we 1
 tick
 tock
-expect out 0x2222
+expect dout 0x2222
 
 // Write to address 7
-set in 0x7777
-set address 0b111
-set load 1
+set din 0x7777
+set addr 0b111
+set we 1
 tick
 tock
-expect out 0x7777
+expect dout 0x7777
 
 // Read back address 0 (no write)
-set load 0
-set address 0b000
+set we 0
+set addr 0b000
 tick
 tock
-expect out 0x1111
+expect dout 0x1111
 
 // Read back address 1
-set address 0b001
+set addr 0b001
 tick
 tock
-expect out 0x2222
+expect dout 0x2222
 
 // Read back address 7
-set address 0b111
+set addr 0b111
 tick
 tock
-expect out 0x7777
+expect dout 0x7777
 
 // Write to all addresses
-set load 1
-set in 0xAAAA
-set address 0b010
+set we 1
+set din 0xAAAA
+set addr 0b010
 tick
 tock
-expect out 0xAAAA
+expect dout 0xAAAA
 
-set in 0xBBBB
-set address 0b011
+set din 0xBBBB
+set addr 0b011
 tick
 tock
-expect out 0xBBBB
+expect dout 0xBBBB
 
-set in 0xCCCC
-set address 0b100
+set din 0xCCCC
+set addr 0b100
 tick
 tock
-expect out 0xCCCC
+expect dout 0xCCCC
 
-set in 0xDDDD
-set address 0b101
+set din 0xDDDD
+set addr 0b101
 tick
 tock
-expect out 0xDDDD
+expect dout 0xDDDD
 
-set in 0xEEEE
-set address 0b110
+set din 0xEEEE
+set addr 0b110
 tick
 tock
-expect out 0xEEEE
+expect dout 0xEEEE
 
 // Verify all values preserved
-set load 0
-set address 0b000
+set we 0
+set addr 0b000
 tick
 tock
-expect out 0x1111
+expect dout 0x1111
 
-set address 0b001
+set addr 0b001
 tick
 tock
-expect out 0x2222
+expect dout 0x2222
 
-set address 0b010
+set addr 0b010
 tick
 tock
-expect out 0xAAAA
+expect dout 0xAAAA
 
-set address 0b011
+set addr 0b011
 tick
 tock
-expect out 0xBBBB
+expect dout 0xBBBB
 
-set address 0b100
+set addr 0b100
 tick
 tock
-expect out 0xCCCC
+expect dout 0xCCCC
 
-set address 0b101
+set addr 0b101
 tick
 tock
-expect out 0xDDDD
+expect dout 0xDDDD
 
-set address 0b110
+set addr 0b110
 tick
 tock
-expect out 0xEEEE
+expect dout 0xEEEE
 
-set address 0b111
+set addr 0b111
 tick
 tock
-expect out 0x7777
+expect dout 0x7777

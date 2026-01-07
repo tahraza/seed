@@ -55,4 +55,4 @@ expect y 0x0034
 set a 0xABCD
 set b 0x1357
 eval
-expect y 0x0145
+expect y 0x0345

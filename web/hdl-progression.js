@@ -749,7 +749,7 @@ expect y 0x0034
 set a 0xABCD
 set b 0x1357
 eval
-expect y 0x0145`,
+expect y 0x0345`,
     },
 
     'Or16': {
@@ -1031,56 +1031,56 @@ end architecture;
 load Or8Way
 
 // All zeros
-set in 0x00
+set a 0x00
 eval
-expect out 0
+expect y 0
 
 // All ones
-set in 0xFF
+set a 0xFF
 eval
-expect out 1
+expect y 1
 
 // Single bit set (each position)
-set in 0x01
+set a 0x01
 eval
-expect out 1
+expect y 1
 
-set in 0x02
+set a 0x02
 eval
-expect out 1
+expect y 1
 
-set in 0x04
+set a 0x04
 eval
-expect out 1
+expect y 1
 
-set in 0x08
+set a 0x08
 eval
-expect out 1
+expect y 1
 
-set in 0x10
+set a 0x10
 eval
-expect out 1
+expect y 1
 
-set in 0x20
+set a 0x20
 eval
-expect out 1
+expect y 1
 
-set in 0x40
+set a 0x40
 eval
-expect out 1
+expect y 1
 
-set in 0x80
+set a 0x80
 eval
-expect out 1
+expect y 1
 
 // Multiple bits
-set in 0xAA
+set a 0xAA
 eval
-expect out 1
+expect y 1
 
-set in 0x55
+set a 0x55
 eval
-expect out 1`,
+expect y 1`,
     },
 
     'Mux4Way16': {
@@ -1329,8 +1329,8 @@ end architecture;
 
 load DMux4Way
 
-// in=0: all outputs should be 0
-set in 0
+// x=0: all outputs should be 0
+set x 0
 set sel 0b00
 eval
 expect a 0
@@ -1359,8 +1359,8 @@ expect b 0
 expect c 0
 expect d 0
 
-// in=1: only selected output should be 1
-set in 1
+// x=1: only selected output should be 1
+set x 1
 set sel 0b00
 eval
 expect a 1
@@ -1851,49 +1851,49 @@ end architecture;
 load Inc16
 
 // 0 + 1 = 1
-set in 0x0000
+set a 0x0000
 eval
-expect out 0x0001
+expect y 0x0001
 
 // 1 + 1 = 2
-set in 0x0001
+set a 0x0001
 eval
-expect out 0x0002
+expect y 0x0002
 
 // Carry propagation
-set in 0x00FF
+set a 0x00FF
 eval
-expect out 0x0100
+expect y 0x0100
 
-set in 0x0FFF
+set a 0x0FFF
 eval
-expect out 0x1000
+expect y 0x1000
 
 // Large number
-set in 0x1234
+set a 0x1234
 eval
-expect out 0x1235
+expect y 0x1235
 
 // Max value wraps to 0
-set in 0xFFFF
+set a 0xFFFF
 eval
-expect out 0x0000
+expect y 0x0000
 
 // Near max
-set in 0xFFFE
+set a 0xFFFE
 eval
-expect out 0xFFFF
+expect y 0xFFFF
 
 // Negative number in two's complement
 // -1 + 1 = 0
-set in 0xFFFF
+set a 0xFFFF
 eval
-expect out 0x0000
+expect y 0x0000
 
 // -2 + 1 = -1
-set in 0xFFFE
+set a 0xFFFE
 eval
-expect out 0xFFFF`,
+expect y 0xFFFF`,
     },
 
     'Sub16': {
@@ -2601,65 +2601,65 @@ end architecture;
 load BitReg
 
 // Initial state
-set in 0
+set d 0
 set load 0
 tick
 tock
-expect out 0
+expect q 0
 
 // Try to load 1 without load enable
-set in 1
+set d 1
 set load 0
 tick
 tock
-expect out 0
+expect q 0
 
 // Load 1 with load enable
-set in 1
+set d 1
 set load 1
 tick
 tock
-expect out 1
+expect q 1
 
 // Hold value (load disabled)
-set in 0
+set d 0
 set load 0
 tick
 tock
-expect out 1
+expect q 1
 
 // Still holding
-set in 0
+set d 0
 set load 0
 tick
 tock
-expect out 1
+expect q 1
 
 // Load 0
-set in 0
+set d 0
 set load 1
 tick
 tock
-expect out 0
+expect q 0
 
 // Load sequence
-set in 1
+set d 1
 set load 1
 tick
 tock
-expect out 1
+expect q 1
 
-set in 0
+set d 0
 set load 1
 tick
 tock
-expect out 0
+expect q 0
 
-set in 1
+set d 1
 set load 1
 tick
 tock
-expect out 1`,
+expect q 1`,
     },
 
     'Register16': {
@@ -2725,74 +2725,74 @@ end architecture;
 load Register16
 
 // Initial state
-set in 0x0000
+set d 0x0000
 set load 0
 tick
 tock
-expect out 0x0000
+expect q 0x0000
 
 // Try to change without load
-set in 0x1234
+set d 0x1234
 set load 0
 tick
 tock
-expect out 0x0000
+expect q 0x0000
 
 // Load a value
-set in 0x1234
+set d 0x1234
 set load 1
 tick
 tock
-expect out 0x1234
+expect q 0x1234
 
 // Hold value
-set in 0x5678
+set d 0x5678
 set load 0
 tick
 tock
-expect out 0x1234
+expect q 0x1234
 
 // Load new value
-set in 0x5678
+set d 0x5678
 set load 1
 tick
 tock
-expect out 0x5678
+expect q 0x5678
 
 // Load all ones
-set in 0xFFFF
+set d 0xFFFF
 set load 1
 tick
 tock
-expect out 0xFFFF
+expect q 0xFFFF
 
 // Load all zeros
-set in 0x0000
+set d 0x0000
 set load 1
 tick
 tock
-expect out 0x0000
+expect q 0x0000
 
 // Alternating pattern
-set in 0xAAAA
+set d 0xAAAA
 set load 1
 tick
 tock
-expect out 0xAAAA
+expect q 0xAAAA
 
 // Hold
-set in 0x5555
+set d 0x5555
 set load 0
 tick
 tock
-expect out 0xAAAA
+expect q 0xAAAA
 
 // Finally load the new pattern
-set in 0x5555
+set d 0x5555
 set load 1
 tick
 tock
-expect out 0x5555`,
+expect q 0x5555`,
     },
 
     'PC': {
@@ -2883,13 +2883,13 @@ end architecture;
 load PC
 
 // Initial state (reset)
-set in 0x0000
+set d 0x0000
 set load 0
 set inc 0
 set reset 1
 tick
 tock
-expect out 0x0000
+expect q 0x0000
 
 // Increment
 set reset 0
@@ -2897,56 +2897,56 @@ set load 0
 set inc 1
 tick
 tock
-expect out 0x0001
+expect q 0x0001
 
 // Keep incrementing
 set inc 1
 tick
 tock
-expect out 0x0002
+expect q 0x0002
 
 set inc 1
 tick
 tock
-expect out 0x0003
+expect q 0x0003
 
 // Hold (no operation)
 set inc 0
 tick
 tock
-expect out 0x0003
+expect q 0x0003
 
 // Load a value
-set in 0x1000
+set d 0x1000
 set load 1
 set inc 0
 tick
 tock
-expect out 0x1000
+expect q 0x1000
 
 // Increment from loaded value
 set load 0
 set inc 1
 tick
 tock
-expect out 0x1001
+expect q 0x1001
 
 // Load has priority over inc
-set in 0x2000
+set d 0x2000
 set load 1
 set inc 1
 tick
 tock
-expect out 0x2000
+expect q 0x2000
 
 // Reset has priority over all
-set in 0x3000
+set d 0x3000
 set reset 1
 set load 1
 set inc 1
 tick
 tock
-expect out 0x0000
+expect q 0x0000
 
 // Back to normal increment
 set reset 0
@@ -2954,21 +2954,21 @@ set load 0
 set inc 1
 tick
 tock
-expect out 0x0001
+expect q 0x0001
 
 // Test overflow (wrap around)
-set in 0xFFFF
+set d 0xFFFF
 set load 1
 set inc 0
 tick
 tock
-expect out 0xFFFF
+expect q 0xFFFF
 
 set load 0
 set inc 1
 tick
 tock
-expect out 0x0000`,
+expect q 0x0000`,
     },
 
     'RAM8': {
@@ -3046,121 +3046,121 @@ end architecture;
 load RAM8
 
 // Write to address 0
-set in 0x1111
-set address 0b000
-set load 1
+set din 0x1111
+set addr 0b000
+set we 1
 tick
 tock
-expect out 0x1111
+expect dout 0x1111
 
 // Write to address 1
-set in 0x2222
-set address 0b001
-set load 1
+set din 0x2222
+set addr 0b001
+set we 1
 tick
 tock
-expect out 0x2222
+expect dout 0x2222
 
 // Write to address 7
-set in 0x7777
-set address 0b111
-set load 1
+set din 0x7777
+set addr 0b111
+set we 1
 tick
 tock
-expect out 0x7777
+expect dout 0x7777
 
 // Read back address 0 (no write)
-set load 0
-set address 0b000
+set we 0
+set addr 0b000
 tick
 tock
-expect out 0x1111
+expect dout 0x1111
 
 // Read back address 1
-set address 0b001
+set addr 0b001
 tick
 tock
-expect out 0x2222
+expect dout 0x2222
 
 // Read back address 7
-set address 0b111
+set addr 0b111
 tick
 tock
-expect out 0x7777
+expect dout 0x7777
 
 // Write to all addresses
-set load 1
-set in 0xAAAA
-set address 0b010
+set we 1
+set din 0xAAAA
+set addr 0b010
 tick
 tock
-expect out 0xAAAA
+expect dout 0xAAAA
 
-set in 0xBBBB
-set address 0b011
+set din 0xBBBB
+set addr 0b011
 tick
 tock
-expect out 0xBBBB
+expect dout 0xBBBB
 
-set in 0xCCCC
-set address 0b100
+set din 0xCCCC
+set addr 0b100
 tick
 tock
-expect out 0xCCCC
+expect dout 0xCCCC
 
-set in 0xDDDD
-set address 0b101
+set din 0xDDDD
+set addr 0b101
 tick
 tock
-expect out 0xDDDD
+expect dout 0xDDDD
 
-set in 0xEEEE
-set address 0b110
+set din 0xEEEE
+set addr 0b110
 tick
 tock
-expect out 0xEEEE
+expect dout 0xEEEE
 
 // Verify all values preserved
-set load 0
-set address 0b000
+set we 0
+set addr 0b000
 tick
 tock
-expect out 0x1111
+expect dout 0x1111
 
-set address 0b001
+set addr 0b001
 tick
 tock
-expect out 0x2222
+expect dout 0x2222
 
-set address 0b010
+set addr 0b010
 tick
 tock
-expect out 0xAAAA
+expect dout 0xAAAA
 
-set address 0b011
+set addr 0b011
 tick
 tock
-expect out 0xBBBB
+expect dout 0xBBBB
 
-set address 0b100
+set addr 0b100
 tick
 tock
-expect out 0xCCCC
+expect dout 0xCCCC
 
-set address 0b101
+set addr 0b101
 tick
 tock
-expect out 0xDDDD
+expect dout 0xDDDD
 
-set address 0b110
+set addr 0b110
 tick
 tock
-expect out 0xEEEE
+expect dout 0xEEEE
 
-set address 0b111
+set addr 0b111
 tick
 tock
-expect out 0x7777`,
+expect dout 0x7777`,
     },
 
     'RAM64': {
@@ -3466,50 +3466,68 @@ begin
 end architecture;
 `,
         test: `// Test file for Decoder (Instruction Decoder)
-// Decodes instruction fields for CPU control
+// Decodes 4-bit opcode into control signals
 
 load Decoder
 
-// Test R-type instruction (ADD R1, R2, R3)
-// Format: [cond:4][op:4][rd:4][rn:4][rm:4][shift:12]
-set instr 0xE0812003
+// Opcode 0x0: ALU ADD
+set opcode 0x0
 eval
-expect rd 0x1
-expect rn 0x2
-expect rm 0x3
-expect imm_flag 0
+expect alu_op 0b00
+expect reg_write 1
+expect mem_read 0
+expect mem_write 0
+expect branch 0
 
-// Test I-type instruction (MOV R0, #0xFF)
-set instr 0xE3A000FF
+// Opcode 0x1: ALU SUB
+set opcode 0x1
 eval
-expect rd 0x0
-expect imm_flag 1
+expect alu_op 0b01
+expect reg_write 1
+expect mem_read 0
+expect mem_write 0
+expect branch 0
 
-// Test Load instruction (LDR R4, [R5])
-set instr 0xE5954000
+// Opcode 0x2: ALU AND
+set opcode 0x2
 eval
-expect rd 0x4
-expect rn 0x5
+expect alu_op 0b10
+expect reg_write 1
+expect mem_read 0
+expect mem_write 0
+expect branch 0
+
+// Opcode 0x3: ALU OR
+set opcode 0x3
+eval
+expect alu_op 0b11
+expect reg_write 1
+expect mem_read 0
+expect mem_write 0
+expect branch 0
+
+// Opcode 0x4: LOAD
+set opcode 0x4
+eval
+expect reg_write 1
 expect mem_read 1
 expect mem_write 0
+expect branch 0
 
-// Test Store instruction (STR R6, [R7])
-set instr 0xE5876000
+// Opcode 0x5: STORE
+set opcode 0x5
 eval
-expect rd 0x6
-expect rn 0x7
+expect reg_write 0
 expect mem_read 0
 expect mem_write 1
+expect branch 0
 
-// Test Branch instruction (B label)
-set instr 0xEA000010
+// Opcode 0x6: BRANCH
+set opcode 0x6
 eval
-expect branch 1
-
-// Test conditional instruction (BNE)
-set instr 0x1A000005
-eval
-expect cond 0x1
+expect reg_write 0
+expect mem_read 0
+expect mem_write 0
 expect branch 1`,
     },
 

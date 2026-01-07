@@ -4,46 +4,46 @@
 load Inc16
 
 // 0 + 1 = 1
-set in 0x0000
+set a 0x0000
 eval
-expect out 0x0001
+expect y 0x0001
 
 // 1 + 1 = 2
-set in 0x0001
+set a 0x0001
 eval
-expect out 0x0002
+expect y 0x0002
 
 // Carry propagation
-set in 0x00FF
+set a 0x00FF
 eval
-expect out 0x0100
+expect y 0x0100
 
-set in 0x0FFF
+set a 0x0FFF
 eval
-expect out 0x1000
+expect y 0x1000
 
 // Large number
-set in 0x1234
+set a 0x1234
 eval
-expect out 0x1235
+expect y 0x1235
 
 // Max value wraps to 0
-set in 0xFFFF
+set a 0xFFFF
 eval
-expect out 0x0000
+expect y 0x0000
 
 // Near max
-set in 0xFFFE
+set a 0xFFFE
 eval
-expect out 0xFFFF
+expect y 0xFFFF
 
 // Negative number in two's complement
 // -1 + 1 = 0
-set in 0xFFFF
+set a 0xFFFF
 eval
-expect out 0x0000
+expect y 0x0000
 
 // -2 + 1 = -1
-set in 0xFFFE
+set a 0xFFFE
 eval
-expect out 0xFFFF
+expect y 0xFFFF
