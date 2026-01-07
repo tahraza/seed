@@ -16,7 +16,7 @@
 
 .visualizations-panel .visualizer-panels {
     flex: 1;
-    min-height: 0;
+    min-height: 200px;
 }
 
 /* Visualizers section in simulator panel (legacy) */
@@ -74,11 +74,6 @@ body.mode-hdl .viz-tab.hdl-only {
     position: relative;
     height: 200px;
     min-height: 150px;
-}
-
-.visualizations-panel .visualizer-panels {
-    height: auto;
-    flex: 1;
 }
 
 .viz-panel {
