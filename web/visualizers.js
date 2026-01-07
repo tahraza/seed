@@ -291,6 +291,12 @@ export class VisualizerManager {
         try {
             if (this.visualizers.waveform) this.visualizers.waveform.render();
         } catch (e) { console.warn('Waveform visualizer render error:', e); }
+        try {
+            if (this.visualizers.callStack) this.visualizers.callStack.render();
+        } catch (e) { console.warn('CallStack visualizer render error:', e); }
+        try {
+            if (this.visualizers.alu) this.visualizers.alu.render();
+        } catch (e) { console.warn('ALU visualizer render error:', e); }
     }
 }
 

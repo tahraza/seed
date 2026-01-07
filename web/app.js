@@ -356,6 +356,9 @@ async function initSimulator() {
     initMemoryDisplay();
     initScreen();
 
+    // Initialize visualizers (works even without WASM)
+    initVisualizers();
+
     // Try to load the WASM module dynamically
     const wasmPath = './pkg/web_sim.js';
 
@@ -371,8 +374,10 @@ async function initSimulator() {
             state.hdlSim = new module.WasmHdl();
             state.asmSim = new module.WasmA32();
 
-            // Initialize visualizers
-            initVisualizers();
+            // Attach simulator to visualizers
+            if (state.visualizers && state.asmSim) {
+                state.visualizers.attachSimulator(state.asmSim);
+            }
 
             log('Simulator ready', 'success');
         } else {
@@ -452,6 +457,9 @@ function initVisualizers() {
         if (aluContainer) {
             state.visualizers.initALU(aluContainer);
         }
+
+        // Render all visualizers initially
+        state.visualizers.renderAll();
 
         log('Visualizers initialized', 'info');
     } catch (e) {
