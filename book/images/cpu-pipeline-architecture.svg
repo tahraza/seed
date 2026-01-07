@@ -1,91 +1,374 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 280" width="750" height="280">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 520" width="950" height="520">
   <defs>
     <style>
       .stage { stroke: #374151; stroke-width: 2; rx: 6; }
       .reg { stroke: #9333ea; stroke-width: 2; fill: #f3e8ff; rx: 3; }
       .unit { stroke: #059669; stroke-width: 1.5; fill: #d1fae5; rx: 4; }
+      .component { stroke: #374151; stroke-width: 1.5; fill: #ffffff; rx: 3; }
+      .mux { stroke: #374151; stroke-width: 1.5; fill: #fef3c7; }
       .wire { stroke: #374151; stroke-width: 1.5; fill: none; }
+      .data-wire { stroke: #2563eb; stroke-width: 1.5; fill: none; }
+      .ctrl-wire { stroke: #dc2626; stroke-width: 1; fill: none; stroke-dasharray: 3,2; }
+      .fwd-wire { stroke: #059669; stroke-width: 1.5; fill: none; }
+      .wb-wire { stroke: #7c3aed; stroke-width: 1.5; fill: none; }
       .label { font-family: sans-serif; font-size: 10px; fill: #1f2937; font-weight: bold; }
       .sublabel { font-family: sans-serif; font-size: 8px; fill: #6b7280; }
+      .tiny { font-family: sans-serif; font-size: 7px; fill: #6b7280; }
       .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e3a8a; }
+      .stage-title { font-family: sans-serif; font-size: 11px; font-weight: bold; fill: #1f2937; }
     </style>
     <marker id="arr" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
       <polygon points="0 0, 6 2.5, 0 5" fill="#374151"/>
     </marker>
+    <marker id="arr-blue" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 6 2.5, 0 5" fill="#2563eb"/>
+    </marker>
+    <marker id="arr-green" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 6 2.5, 0 5" fill="#059669"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 6 2.5, 0 5" fill="#7c3aed"/>
+    </marker>
+    <marker id="arr-red" markerWidth="5" markerHeight="4" refX="5" refY="2" orient="auto">
+      <polygon points="0 0, 5 2, 0 4" fill="#dc2626"/>
+    </marker>
   </defs>
 
   <!-- Title -->
-  <text class="title" x="375" y="25" text-anchor="middle">Architecture CPU Pipeline 5 Etages</text>
+  <text class="title" x="475" y="22" text-anchor="middle">Architecture CPU Pipeline 5 Etages - Vue Detaillee</text>
 
-  <!-- Stage boxes -->
-  <rect x="30" y="50" width="90" height="120" fill="#fef3c7" class="stage"/>
-  <text class="label" x="75" y="75" text-anchor="middle">IF</text>
-  <text class="sublabel" x="75" y="95" text-anchor="middle">Fetch</text>
+  <!-- ==================== STAGE IF (Instruction Fetch) ==================== -->
+  <rect x="20" y="40" width="140" height="200" fill="#fef3c7" class="stage"/>
+  <text class="stage-title" x="90" y="58" text-anchor="middle">IF - Fetch</text>
 
-  <rect x="170" y="50" width="90" height="120" fill="#dcfce7" class="stage"/>
-  <text class="label" x="215" y="75" text-anchor="middle">ID</text>
-  <text class="sublabel" x="215" y="95" text-anchor="middle">Decode</text>
+  <!-- PC -->
+  <rect x="30" y="70" width="50" height="30" class="component"/>
+  <text class="sublabel" x="55" y="89" text-anchor="middle">PC</text>
 
-  <rect x="310" y="50" width="90" height="120" fill="#dbeafe" class="stage"/>
-  <text class="label" x="355" y="75" text-anchor="middle">EX</text>
-  <text class="sublabel" x="355" y="95" text-anchor="middle">Execute</text>
+  <!-- PC+4 Adder -->
+  <rect x="95" y="70" width="55" height="25" class="component"/>
+  <text class="tiny" x="122" y="86" text-anchor="middle">PC + 4</text>
 
-  <rect x="450" y="50" width="90" height="120" fill="#e0e7ff" class="stage"/>
-  <text class="label" x="495" y="75" text-anchor="middle">MEM</text>
-  <text class="sublabel" x="495" y="95" text-anchor="middle">Memory</text>
+  <!-- MUX for PC source -->
+  <polygon points="30,120 50,110 50,130" class="mux"/>
+  <text class="tiny" x="40" y="123" text-anchor="middle">M</text>
 
-  <rect x="590" y="50" width="90" height="120" fill="#fce7f3" class="stage"/>
-  <text class="label" x="635" y="75" text-anchor="middle">WB</text>
-  <text class="sublabel" x="635" y="95" text-anchor="middle">Writeback</text>
+  <!-- Instruction Memory -->
+  <rect x="35" y="145" width="70" height="45" class="component"/>
+  <text class="sublabel" x="70" y="165" text-anchor="middle">Instr</text>
+  <text class="sublabel" x="70" y="177" text-anchor="middle">Memory</text>
 
-  <!-- Pipeline registers -->
-  <rect x="130" y="55" width="30" height="110" class="reg"/>
-  <text class="sublabel" x="145" y="115" text-anchor="middle" transform="rotate(-90,145,115)">IF/ID</text>
+  <!-- PC to Instr Mem -->
+  <line class="data-wire" x1="55" y1="100" x2="55" y2="145" marker-end="url(#arr-blue)"/>
 
-  <rect x="270" y="55" width="30" height="110" class="reg"/>
-  <text class="sublabel" x="285" y="115" text-anchor="middle" transform="rotate(-90,285,115)">ID/EX</text>
+  <!-- PC+4 feedback -->
+  <path class="data-wire" d="M 122 95 L 122 105 L 20 105 L 20 125 L 30 125"/>
 
-  <rect x="410" y="55" width="30" height="110" class="reg"/>
-  <text class="sublabel" x="425" y="115" text-anchor="middle" transform="rotate(-90,425,115)">EX/MEM</text>
+  <!-- Branch target input (from ID) -->
+  <path class="data-wire" d="M 15 115 L 30 115" marker-end="url(#arr-blue)"/>
+  <text class="tiny" x="10" y="112" text-anchor="end">BrTarget</text>
 
-  <rect x="550" y="55" width="30" height="110" class="reg"/>
-  <text class="sublabel" x="565" y="115" text-anchor="middle" transform="rotate(-90,565,115)">MEM/WB</text>
+  <!-- ==================== Pipeline Register IF/ID ==================== -->
+  <rect x="170" y="45" width="25" height="190" class="reg"/>
+  <text class="tiny" x="182" y="145" text-anchor="middle" transform="rotate(-90,182,145)">IF/ID</text>
 
-  <!-- Arrows between stages -->
-  <line class="wire" x1="120" y1="110" x2="130" y2="110" marker-end="url(#arr)"/>
-  <line class="wire" x1="160" y1="110" x2="170" y2="110" marker-end="url(#arr)"/>
-  <line class="wire" x1="260" y1="110" x2="270" y2="110" marker-end="url(#arr)"/>
-  <line class="wire" x1="300" y1="110" x2="310" y2="110" marker-end="url(#arr)"/>
-  <line class="wire" x1="400" y1="110" x2="410" y2="110" marker-end="url(#arr)"/>
-  <line class="wire" x1="440" y1="110" x2="450" y2="110" marker-end="url(#arr)"/>
-  <line class="wire" x1="540" y1="110" x2="550" y2="110" marker-end="url(#arr)"/>
-  <line class="wire" x1="580" y1="110" x2="590" y2="110" marker-end="url(#arr)"/>
+  <!-- IF to IF/ID -->
+  <line class="data-wire" x1="105" y1="167" x2="170" y2="167" marker-end="url(#arr-blue)"/>
+  <text class="tiny" x="140" y="162">instr[31:0]</text>
+  <line class="data-wire" x1="150" y1="85" x2="170" y2="85" marker-end="url(#arr-blue)"/>
+  <text class="tiny" x="152" y="80">PC+4</text>
 
-  <!-- Control units -->
-  <rect x="185" y="195" width="90" height="35" class="unit"/>
-  <text class="sublabel" x="230" y="210" text-anchor="middle">Hazard</text>
-  <text class="sublabel" x="230" y="222" text-anchor="middle">Detect</text>
+  <!-- ==================== STAGE ID (Instruction Decode) ==================== -->
+  <rect x="205" y="40" width="140" height="200" fill="#dcfce7" class="stage"/>
+  <text class="stage-title" x="275" y="58" text-anchor="middle">ID - Decode</text>
 
-  <rect x="325" y="195" width="90" height="35" class="unit"/>
-  <text class="sublabel" x="370" y="210" text-anchor="middle">Forward</text>
-  <text class="sublabel" x="370" y="222" text-anchor="middle">Unit</text>
+  <!-- Control Unit -->
+  <rect x="215" y="65" width="55" height="30" class="unit"/>
+  <text class="tiny" x="242" y="78" text-anchor="middle">Control</text>
+  <text class="tiny" x="242" y="88" text-anchor="middle">Unit</text>
 
-  <!-- Stall signal -->
-  <line class="wire" x1="185" y1="212" x2="75" y2="212" stroke="#dc2626"/>
-  <line class="wire" x1="75" y1="212" x2="75" y2="170" stroke="#dc2626" marker-end="url(#arr)"/>
-  <text class="sublabel" x="110" y="208" fill="#dc2626">stall</text>
+  <!-- Register File -->
+  <rect x="215" y="105" width="70" height="50" class="component"/>
+  <text class="sublabel" x="250" y="125" text-anchor="middle">Register</text>
+  <text class="sublabel" x="250" y="137" text-anchor="middle">File (32)</text>
 
-  <!-- Flush signal -->
-  <path class="wire" d="M 75 250 L 75 175 L 145 175" stroke="#f59e0b" stroke-dasharray="4,2"/>
-  <text class="sublabel" x="90" y="248" fill="#f59e0b">flush (branch)</text>
+  <!-- Sign Extend -->
+  <rect x="215" y="165" width="55" height="25" class="component"/>
+  <text class="tiny" x="242" y="181" text-anchor="middle">Sign Ext</text>
 
-  <!-- Forward paths -->
-  <path class="wire" d="M 370 195 L 370 185 L 355 185 L 355 170" stroke="#059669" marker-end="url(#arr)"/>
-  <text class="sublabel" x="380" y="182" fill="#059669">forward</text>
+  <!-- Hazard Detection -->
+  <rect x="280" y="65" width="55" height="30" class="unit"/>
+  <text class="tiny" x="307" y="78" text-anchor="middle">Hazard</text>
+  <text class="tiny" x="307" y="88" text-anchor="middle">Detect</text>
 
-  <!-- Legend -->
-  <rect x="30" y="250" width="15" height="10" fill="#f3e8ff" stroke="#9333ea" stroke-width="1"/>
-  <text class="sublabel" x="50" y="258">Registres Pipeline</text>
-  <rect x="140" y="250" width="15" height="10" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
-  <text class="sublabel" x="160" y="258">Unites de Controle</text>
+  <!-- Branch Compare -->
+  <rect x="295" y="115" width="40" height="25" class="component"/>
+  <text class="tiny" x="315" y="131" text-anchor="middle">Cmp</text>
+
+  <!-- rs1, rs2 labels -->
+  <text class="tiny" x="210" y="118" text-anchor="end">rs1</text>
+  <text class="tiny" x="210" y="148" text-anchor="end">rs2</text>
+
+  <!-- Read data outputs -->
+  <line class="data-wire" x1="285" y1="120" x2="295" y2="120"/>
+  <line class="data-wire" x1="285" y1="135" x2="295" y2="135"/>
+
+  <!-- IF/ID to ID -->
+  <line class="data-wire" x1="195" y1="167" x2="215" y2="167" marker-end="url(#arr-blue)"/>
+  <line class="data-wire" x1="195" y1="80" x2="215" y2="80" marker-end="url(#arr-blue)"/>
+
+  <!-- ==================== Pipeline Register ID/EX ==================== -->
+  <rect x="355" y="45" width="25" height="190" class="reg"/>
+  <text class="tiny" x="367" y="145" text-anchor="middle" transform="rotate(-90,367,145)">ID/EX</text>
+
+  <!-- ID to ID/EX -->
+  <line class="data-wire" x1="285" y1="120" x2="355" y2="120" marker-end="url(#arr-blue)"/>
+  <text class="tiny" x="320" y="115">RD1</text>
+  <line class="data-wire" x1="285" y1="140" x2="355" y2="140" marker-end="url(#arr-blue)"/>
+  <text class="tiny" x="320" y="150">RD2</text>
+  <line class="data-wire" x1="270" y1="190" x2="355" y2="190" marker-end="url(#arr-blue)"/>
+  <text class="tiny" x="300" y="200">imm</text>
+
+  <!-- Control signals propagation -->
+  <line class="ctrl-wire" x1="270" y1="80" x2="355" y2="60" marker-end="url(#arr-red)"/>
+  <text class="tiny" x="310" y="65" fill="#dc2626">ctrl</text>
+
+  <!-- ==================== STAGE EX (Execute) ==================== -->
+  <rect x="390" y="40" width="140" height="200" fill="#dbeafe" class="stage"/>
+  <text class="stage-title" x="460" y="58" text-anchor="middle">EX - Execute</text>
+
+  <!-- Forward MUX A -->
+  <polygon points="405,100 425,90 425,110" class="mux"/>
+  <text class="tiny" x="415" y="103" text-anchor="middle">A</text>
+
+  <!-- Forward MUX B -->
+  <polygon points="405,140 425,130 425,150" class="mux"/>
+  <text class="tiny" x="415" y="143" text-anchor="middle">B</text>
+
+  <!-- ALU Src MUX -->
+  <polygon points="445,140 465,130 465,150" class="mux"/>
+  <text class="tiny" x="455" y="143" text-anchor="middle">S</text>
+
+  <!-- ALU -->
+  <polygon points="475,95 520,110 520,150 475,165 475,95" class="component"/>
+  <text class="sublabel" x="497" y="135" text-anchor="middle">ALU</text>
+
+  <!-- ALU Control -->
+  <rect x="440" y="175" width="50" height="22" class="unit"/>
+  <text class="tiny" x="465" y="189" text-anchor="middle">ALU Ctrl</text>
+
+  <!-- Branch Target Adder -->
+  <rect x="400" y="175" width="35" height="22" class="component"/>
+  <text class="tiny" x="417" y="189" text-anchor="middle">+Br</text>
+
+  <!-- ID/EX to EX -->
+  <line class="data-wire" x1="380" y1="120" x2="405" y2="100" marker-end="url(#arr-blue)"/>
+  <line class="data-wire" x1="380" y1="140" x2="405" y2="140" marker-end="url(#arr-blue)"/>
+  <line class="data-wire" x1="380" y1="190" x2="400" y2="186"/>
+
+  <!-- MUX outputs to ALU -->
+  <line class="data-wire" x1="425" y1="100" x2="475" y2="115" marker-end="url(#arr-blue)"/>
+  <line class="data-wire" x1="465" y1="140" x2="475" y2="140" marker-end="url(#arr-blue)"/>
+
+  <!-- MUX B to ALU Src MUX -->
+  <line class="data-wire" x1="425" y1="140" x2="445" y2="140"/>
+
+  <!-- Imm to ALU Src MUX -->
+  <path class="data-wire" d="M 380 190 L 435 190 L 435 145 L 445 145"/>
+
+  <!-- Forward Unit -->
+  <rect x="395" y="65" width="55" height="25" class="unit"/>
+  <text class="tiny" x="422" y="81" text-anchor="middle">Forward</text>
+
+  <!-- ==================== Pipeline Register EX/MEM ==================== -->
+  <rect x="540" y="45" width="25" height="190" class="reg"/>
+  <text class="tiny" x="552" y="145" text-anchor="middle" transform="rotate(-90,552,145)">EX/MEM</text>
+
+  <!-- EX to EX/MEM -->
+  <line class="data-wire" x1="520" y1="130" x2="540" y2="130" marker-end="url(#arr-blue)"/>
+  <text class="tiny" x="522" y="125">Result</text>
+  <path class="data-wire" d="M 425 150 L 435 160 L 540 160" marker-end="url(#arr-blue)"/>
+  <text class="tiny" x="480" y="168">WrData</text>
+
+  <!-- Control signals -->
+  <line class="ctrl-wire" x1="380" y1="60" x2="540" y2="55" marker-end="url(#arr-red)"/>
+
+  <!-- ==================== STAGE MEM (Memory Access) ==================== -->
+  <rect x="575" y="40" width="140" height="200" fill="#e0e7ff" class="stage"/>
+  <text class="stage-title" x="645" y="58" text-anchor="middle">MEM - Memory</text>
+
+  <!-- Data Memory -->
+  <rect x="590" y="90" width="75" height="60" class="component"/>
+  <text class="sublabel" x="627" y="115" text-anchor="middle">Data</text>
+  <text class="sublabel" x="627" y="130" text-anchor="middle">Memory</text>
+
+  <!-- Memory control signals -->
+  <text class="tiny" x="588" y="98" text-anchor="end">Addr</text>
+  <text class="tiny" x="588" y="140" text-anchor="end">WrD</text>
+  <text class="tiny" x="670" y="115">RdD</text>
+
+  <!-- Branch Logic -->
+  <rect x="590" y="165" width="55" height="25" class="unit"/>
+  <text class="tiny" x="617" y="181" text-anchor="middle">Branch</text>
+
+  <!-- MemRead/MemWrite signals -->
+  <text class="tiny" x="627" y="82" text-anchor="middle" fill="#dc2626">MemR/W</text>
+
+  <!-- EX/MEM to MEM -->
+  <line class="data-wire" x1="565" y1="130" x2="590" y2="100" marker-end="url(#arr-blue)"/>
+  <line class="data-wire" x1="565" y1="160" x2="590" y2="140" marker-end="url(#arr-blue)"/>
+
+  <!-- Memory read output -->
+  <line class="data-wire" x1="665" y1="120" x2="700" y2="120"/>
+
+  <!-- Control -->
+  <line class="ctrl-wire" x1="565" y1="55" x2="645" y2="75" marker-end="url(#arr-red)"/>
+
+  <!-- ==================== Pipeline Register MEM/WB ==================== -->
+  <rect x="725" y="45" width="25" height="190" class="reg"/>
+  <text class="tiny" x="737" y="145" text-anchor="middle" transform="rotate(-90,737,145)">MEM/WB</text>
+
+  <!-- MEM to MEM/WB -->
+  <line class="data-wire" x1="700" y1="120" x2="725" y2="120" marker-end="url(#arr-blue)"/>
+  <text class="tiny" x="702" y="115">MemD</text>
+  <line class="data-wire" x1="700" y1="150" x2="725" y2="150" marker-end="url(#arr-blue)"/>
+  <text class="tiny" x="702" y="160">ALU</text>
+
+  <!-- Pass-through ALU result -->
+  <path class="data-wire" d="M 565 130 L 575 130 L 575 150 L 700 150"/>
+
+  <!-- Control -->
+  <line class="ctrl-wire" x1="645" y1="75" x2="737" y2="60" marker-end="url(#arr-red)"/>
+
+  <!-- ==================== STAGE WB (Write Back) ==================== -->
+  <rect x="760" y="40" width="110" height="200" fill="#fce7f3" class="stage"/>
+  <text class="stage-title" x="815" y="58" text-anchor="middle">WB - Writeback</text>
+
+  <!-- WB MUX -->
+  <polygon points="780,125 810,110 810,140" class="mux"/>
+  <text class="tiny" x="795" y="128" text-anchor="middle">WB</text>
+
+  <!-- Result register -->
+  <rect x="820" y="115" width="40" height="25" class="component"/>
+  <text class="tiny" x="840" y="131" text-anchor="middle">Result</text>
+
+  <!-- MemToReg signal -->
+  <text class="tiny" x="795" y="105" text-anchor="middle" fill="#dc2626">MemToReg</text>
+
+  <!-- MEM/WB to WB -->
+  <line class="data-wire" x1="750" y1="120" x2="780" y2="120" marker-end="url(#arr-blue)"/>
+  <path class="data-wire" d="M 750 150 L 770 150 L 770 135 L 780 135" marker-end="url(#arr-blue)"/>
+
+  <!-- MUX to Result -->
+  <line class="data-wire" x1="810" y1="125" x2="820" y2="125" marker-end="url(#arr-blue)"/>
+
+  <!-- ==================== Write-Back Path (to Register File) ==================== -->
+  <path class="wb-wire" d="M 840 140 L 840 260 L 250 260 L 250 155" marker-end="url(#arr-purple)"/>
+  <text class="tiny" x="545" y="255" fill="#7c3aed">Write-Back to Register File (rd)</text>
+
+  <!-- RegWrite signal on WB path -->
+  <text class="tiny" x="250" y="245" text-anchor="middle" fill="#7c3aed">RegWr</text>
+
+  <!-- ==================== Forwarding Paths ==================== -->
+  <!-- Forward from EX/MEM -->
+  <path class="fwd-wire" d="M 552 170 L 552 280 L 415 280 L 415 110" marker-end="url(#arr-green)"/>
+  <text class="tiny" x="480" y="290" fill="#059669">Forward EX/MEM</text>
+
+  <!-- Forward from MEM/WB -->
+  <path class="fwd-wire" d="M 737 180 L 737 300 L 410 300 L 410 150" marker-end="url(#arr-green)"/>
+  <text class="tiny" x="570" y="310" fill="#059669">Forward MEM/WB</text>
+
+  <!-- ==================== Hazard/Stall Signals ==================== -->
+  <!-- Stall signal from Hazard Detect to IF -->
+  <path class="ctrl-wire" d="M 280 80 L 55 80 L 55 70" stroke="#dc2626" marker-end="url(#arr-red)"/>
+  <text class="tiny" x="150" y="75" fill="#dc2626">PCWrite (stall)</text>
+
+  <!-- Stall to IF/ID -->
+  <path class="ctrl-wire" d="M 280 90 L 182 90 L 182 45" stroke="#dc2626" marker-end="url(#arr-red)"/>
+  <text class="tiny" x="220" y="48" fill="#dc2626">IF/ID.Write</text>
+
+  <!-- ==================== Branch Resolution ==================== -->
+  <!-- Branch decision back to IF -->
+  <path class="fwd-wire" d="M 617 165 L 617 320 L 15 320 L 15 115" stroke="#f59e0b" marker-end="url(#arr)"/>
+  <text class="tiny" x="300" y="330" fill="#f59e0b">PCSrc (branch taken)</text>
+
+  <!-- ==================== Control Signals Legend ==================== -->
+  <rect x="20" y="350" width="910" height="165" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" rx="5"/>
+  <text class="label" x="475" y="368" text-anchor="middle">Signaux de Controle par Etage</text>
+
+  <!-- IF Stage signals -->
+  <rect x="30" y="380" width="130" height="55" fill="#fef3c7" stroke="#374151" stroke-width="1" rx="3"/>
+  <text class="sublabel" x="95" y="395" text-anchor="middle" font-weight="bold">IF</text>
+  <text class="tiny" x="35" y="410">PCWrite: MAJ du PC</text>
+  <text class="tiny" x="35" y="422">PCSrc: PC+4 ou Branch</text>
+
+  <!-- ID Stage signals -->
+  <rect x="170" y="380" width="130" height="55" fill="#dcfce7" stroke="#374151" stroke-width="1" rx="3"/>
+  <text class="sublabel" x="235" y="395" text-anchor="middle" font-weight="bold">ID</text>
+  <text class="tiny" x="175" y="410">RegWrite: Ecriture reg</text>
+  <text class="tiny" x="175" y="422">Branch: Instr branchmt</text>
+
+  <!-- EX Stage signals -->
+  <rect x="310" y="380" width="140" height="55" fill="#dbeafe" stroke="#374151" stroke-width="1" rx="3"/>
+  <text class="sublabel" x="380" y="395" text-anchor="middle" font-weight="bold">EX</text>
+  <text class="tiny" x="315" y="410">ALUSrc: Reg ou Imm</text>
+  <text class="tiny" x="315" y="422">ALUOp: Operation ALU</text>
+  <text class="tiny" x="315" y="434">ForwardA/B: Source</text>
+
+  <!-- MEM Stage signals -->
+  <rect x="460" y="380" width="130" height="55" fill="#e0e7ff" stroke="#374151" stroke-width="1" rx="3"/>
+  <text class="sublabel" x="525" y="395" text-anchor="middle" font-weight="bold">MEM</text>
+  <text class="tiny" x="465" y="410">MemRead: Lecture mem</text>
+  <text class="tiny" x="465" y="422">MemWrite: Ecriture mem</text>
+
+  <!-- WB Stage signals -->
+  <rect x="600" y="380" width="130" height="55" fill="#fce7f3" stroke="#374151" stroke-width="1" rx="3"/>
+  <text class="sublabel" x="665" y="395" text-anchor="middle" font-weight="bold">WB</text>
+  <text class="tiny" x="605" y="410">MemToReg: Mem ou ALU</text>
+  <text class="tiny" x="605" y="422">RegWrite: Valider ecr</text>
+
+  <!-- Hazard signals -->
+  <rect x="740" y="380" width="180" height="55" fill="#d1fae5" stroke="#059669" stroke-width="1" rx="3"/>
+  <text class="sublabel" x="830" y="395" text-anchor="middle" font-weight="bold">Hazard/Forward</text>
+  <text class="tiny" x="745" y="410">Stall: Gel du pipeline</text>
+  <text class="tiny" x="745" y="422">Flush: Annulation instr</text>
+  <text class="tiny" x="745" y="434">Forward: Bypass donnees</text>
+
+  <!-- ==================== Legend ==================== -->
+  <rect x="30" y="445" width="900" height="65" fill="none"/>
+  <text class="label" x="475" y="462" text-anchor="middle">Legende</text>
+
+  <!-- Data path -->
+  <line x1="50" y1="478" x2="90" y2="478" stroke="#2563eb" stroke-width="2"/>
+  <text class="tiny" x="95" y="481">Chemin des donnees</text>
+
+  <!-- Control path -->
+  <line x1="200" y1="478" x2="240" y2="478" stroke="#dc2626" stroke-width="1" stroke-dasharray="3,2"/>
+  <text class="tiny" x="245" y="481">Signaux de controle</text>
+
+  <!-- Forward path -->
+  <line x1="370" y1="478" x2="410" y2="478" stroke="#059669" stroke-width="2"/>
+  <text class="tiny" x="415" y="481">Forwarding (bypass)</text>
+
+  <!-- Write-back path -->
+  <line x1="520" y1="478" x2="560" y2="478" stroke="#7c3aed" stroke-width="2"/>
+  <text class="tiny" x="565" y="481">Write-back</text>
+
+  <!-- Pipeline register -->
+  <rect x="650" y="472" width="15" height="12" fill="#f3e8ff" stroke="#9333ea" stroke-width="1"/>
+  <text class="tiny" x="670" y="481">Registre pipeline</text>
+
+  <!-- MUX -->
+  <polygon points="770,472 785,478 770,484" fill="#fef3c7" stroke="#374151" stroke-width="1"/>
+  <text class="tiny" x="790" y="481">Multiplexeur</text>
+
+  <!-- Control unit -->
+  <rect x="870" y="472" width="15" height="12" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+  <text class="tiny" x="890" y="481">Unite controle</text>
+
+  <!-- ==================== Data width annotations ==================== -->
+  <text class="tiny" x="140" y="205" fill="#6b7280">32 bits</text>
+  <text class="tiny" x="325" y="205" fill="#6b7280">32 bits</text>
+  <text class="tiny" x="510" y="205" fill="#6b7280">32 bits</text>
+  <text class="tiny" x="695" y="205" fill="#6b7280">32 bits</text>
 </svg>
