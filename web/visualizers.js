@@ -276,6 +276,18 @@ export class VisualizerManager {
     }
 
     /**
+     * Efface complètement le chronogramme (pour changement de circuit)
+     */
+    clearWaveform() {
+        try {
+            if (this.visualizers.waveform) {
+                this.visualizers.waveform.clear();
+                this.visualizers.waveform.render();
+            }
+        } catch (e) { console.warn('Waveform clear error:', e); }
+    }
+
+    /**
      * Active/désactive les visualiseurs
      */
     setEnabled(enabled) {

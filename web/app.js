@@ -3021,6 +3021,11 @@ function loadChip(chipName) {
         return;
     }
 
+    // Clear waveform when loading a new chip
+    if (state.visualizers) {
+        state.visualizers.clearWaveform();
+    }
+
     state.currentChip = chipName;
 
     // If chip is already unlocked, load the saved source; otherwise load template

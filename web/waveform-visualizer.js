@@ -137,7 +137,7 @@ export class WaveformVisualizer {
     }
 
     /**
-     * Réinitialise le visualiseur
+     * Réinitialise le visualiseur (garde les signaux mais efface l'historique)
      */
     reset() {
         this.currentCycle = 0;
@@ -145,6 +145,17 @@ export class WaveformVisualizer {
             signal.history = [];
         }
         this.scrollX = 0;
+    }
+
+    /**
+     * Efface complètement tous les signaux
+     */
+    clear() {
+        this.currentCycle = 0;
+        this.signals.clear();
+        this.visibleSignals = [];
+        this.scrollX = 0;
+        this.scrollY = 0;
     }
 
     /**
