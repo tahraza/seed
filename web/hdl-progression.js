@@ -5633,8 +5633,15 @@ export function getDependencyLibrary(chipName, chipSources) {
         if (!c) return;
 
         for (const dep of c.dependencies) {
+            // Use saved source if available, otherwise fallback to solution/template
             if (chipSources[dep]) {
                 library[dep] = chipSources[dep];
+            } else {
+                // Fallback to solution or template for primitives and built-in chips
+                const depChip = HDL_CHIPS[dep];
+                if (depChip) {
+                    library[dep] = depChip.solution || depChip.template;
+                }
             }
             collectDeps(dep);
         }
