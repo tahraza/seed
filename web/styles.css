@@ -1909,18 +1909,6 @@ body.mode-hdl .hdl-only {
     display: flex !important;
 }
 
-body.mode-hdl .viz-tab.hdl-only {
-    display: inline-flex !important;
-}
-
-body.mode-hdl .viz-panel.hdl-only {
-    display: block !important;
-}
-
-body.mode-hdl .viz-panel.hdl-only.active {
-    display: flex !important;
-}
-
 /* HDL Debugger Panel */
 #hdl-debugger-panel {
     flex-direction: column;

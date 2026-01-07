@@ -230,18 +230,20 @@
                     <h2>📊 Visualisations</h2>
                 </div>
                 <div class="visualizer-tabs">
-                    <button class="viz-tab active" data-viz="memory">Mémoire</button>
-                    <button class="viz-tab" data-viz="callstack">Pile</button>
-                    <button class="viz-tab" data-viz="waveform">Signaux</button>
-                    <button class="viz-tab" data-viz="alu">ALU</button>
-                    <button class="viz-tab hdl-only" data-viz="hdl-debugger">Debugger HDL</button>
+                    <select class="viz-select" id="viz-selector">
+                        <option value="memory">Mémoire</option>
+                        <option value="callstack">Pile</option>
+                        <option value="waveform">Signaux</option>
+                        <option value="alu">ALU</option>
+                        <option value="hdl-debugger" class="hdl-only-option">Debugger HDL</option>
+                    </select>
                 </div>
                 <div class="visualizer-panels">
                     <div class="viz-panel active" id="memory-visualizer"></div>
                     <div class="viz-panel" id="callstack-visualizer"></div>
                     <div class="viz-panel" id="waveform-visualizer"></div>
                     <div class="viz-panel" id="alu-visualizer"></div>
-                    <div class="viz-panel hdl-only" id="hdl-debugger-panel"></div>
+                    <div class="viz-panel" id="hdl-debugger-panel"></div>
                 </div>
             </section>
 
