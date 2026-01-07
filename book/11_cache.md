@@ -628,7 +628,7 @@ Calculez le hit rate pour ce pattern d'accès avec un cache de 4 lignes de 16 oc
 
 Accès séquentiels aux adresses : 0, 4, 8, 12, 16, 20, 24, 28, 0, 4, 8, 12
 
-*Les solutions se trouvent dans le document **Codex_Solutions**.*
+*Les solutions se trouvent dans le document **Seed_Solutions**.*
 
 ### Checklist de validation
 

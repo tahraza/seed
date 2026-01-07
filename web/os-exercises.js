@@ -1,4 +1,4 @@
-// OS/System Exercises for nand2tetris-codex
+// OS/System Exercises for nand2tetris-seed
 // Operating System concepts with progressive difficulty
 
 export const OS_EXERCISES = {

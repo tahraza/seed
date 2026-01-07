@@ -696,7 +696,7 @@ Calculez mentalement le résultat de ces opérations sur 8 bits :
 | ADD | 0xFF | 0x01 | ? | N=? Z=? C=? |
 | SUB | 0x05 | 0x05 | ? | Z=? |
 
-*Les solutions se trouvent dans le document **Codex_Solutions**.*
+*Les solutions se trouvent dans le document **Seed_Solutions**.*
 
 ### Checklist de validation
 

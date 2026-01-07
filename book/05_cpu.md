@@ -1339,7 +1339,7 @@ ADD R1, R2, R3
 
 Décrivez ce qui se passe à chaque étape (Fetch, Decode, Execute, Memory, Writeback).
 
-*Les solutions se trouvent dans le document **Codex_Solutions**.*
+*Les solutions se trouvent dans le document **Seed_Solutions**.*
 
 ### Checklist de validation
 

@@ -1,4 +1,4 @@
-# nand2tetris-codex
+# nand2tetris-seed
 
 Current specs and decisions captured so far for a web interactive nand2tetris-like
 platform with a VHDL-like HDL, an ARM-inspired 32-bit CPU, and a C-like language.

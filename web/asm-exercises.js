@@ -1,4 +1,4 @@
-// ASM Exercises for nand2tetris-codex
+// ASM Exercises for nand2tetris-seed
 // Each exercise has a template, solution, and test cases
 // Available instructions: ADD, SUB, AND, ORR, EOR, MOV, MVN, CMP, TST, LDR, STR, LDRB, STRB, B, BL, NOP, HALT
 // Shift modifiers (on last operand): LSL, LSR, ASR, ROR  e.g. ADD R0, R1, R2, LSL #2

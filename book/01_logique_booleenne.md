@@ -736,7 +736,7 @@ Complétez cette table de vérité pour la fonction `F(a, b) = AND(OR(a, b), NOT
 | 1 | 0 | ? | ? | ? |
 | 1 | 1 | ? | ? | ? |
 
-*Les solutions se trouvent dans le document **Codex_Solutions**.*
+*Les solutions se trouvent dans le document **Seed_Solutions**.*
 
 ### Checklist de validation
 

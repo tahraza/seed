@@ -5,12 +5,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Noms des fichiers de sortie
-PDF_OUTPUT="Codex_Solutions.pdf"
-HTML_OUTPUT="Codex_Solutions.html"
+PDF_OUTPUT="Seed_Solutions.pdf"
+HTML_OUTPUT="Seed_Solutions.html"
 
 # Fichiers de solutions
 SOLUTIONS=(
-    Codex_Solutions.md
+    Seed_Solutions.md
     Solutions.md
 )
 
@@ -39,7 +39,7 @@ pandoc "${SOLUTIONS[@]}" \
     -V fontsize=10pt \
     -V mainfont="DejaVu Sans" \
     -V monofont="DejaVu Sans Mono" \
-    -V title="Codex - Livre des Solutions" \
+    -V title="Seed - Livre des Solutions" \
     -V subtitle="Solutions des quiz et exercices" 2>&1
 
 if [ $? -eq 0 ]; then
@@ -59,7 +59,7 @@ pandoc "${SOLUTIONS[@]}" \
     --toc-depth=2 \
     --number-sections \
     --highlight-style=breezedark \
-    --metadata title="Codex - Livre des Solutions" 2>&1
+    --metadata title="Seed - Livre des Solutions" 2>&1
 
 if [ $? -eq 0 ]; then
     echo "  ✓ HTML créé: $HTML_OUTPUT ($(du -h "$HTML_OUTPUT" | cut -f1))"

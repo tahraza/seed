@@ -1,4 +1,4 @@
-// nand2tetris-codex - Web IDE
+// nand2tetris-seed - Web IDE
 // Main Application JavaScript
 
 import { HDL_CHIPS, PROJECTS, getChip, canAttempt, getDependencyLibrary } from './hdl-progression.js';
@@ -30,8 +30,8 @@ const CONFIG = {
     GETC_ADDR: 0xFFFF0004,      // Input buffer
     NUM_REGISTERS: 16,
     DEFAULT_SPEED: 50,
-    STORAGE_KEY: 'nand2tetris-codex-progress',
-    HDL_LIBRARY_KEY: 'nand2tetris-codex-hdl-library'
+    STORAGE_KEY: 'nand2tetris-seed-progress',
+    HDL_LIBRARY_KEY: 'nand2tetris-seed-hdl-library'
 };
 
 // ============================================================================

@@ -5,8 +5,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Noms des fichiers de sortie
-PDF_OUTPUT="Codex_Guide.pdf"
-HTML_OUTPUT="Codex_Guide.html"
+PDF_OUTPUT="Seed_Guide.pdf"
+HTML_OUTPUT="Seed_Guide.html"
 
 # Liste des chapitres (sans les solutions - voir build-solutions.sh)
 CHAPTERS=(
@@ -52,7 +52,7 @@ elif [ -f "$HOME/.pandoc/templates/eisvogel.latex" ]; then
 fi
 
 echo "========================================"
-echo "  Génération du livre Codex"
+echo "  Génération du livre Seed"
 echo "========================================"
 echo ""
 
@@ -130,7 +130,7 @@ pandoc metadata-eisvogel.yaml \
     --number-sections \
     --highlight-style breezedark \
     --resource-path=.:images \
-    --metadata title="L'Architecture Codex" 2>&1
+    --metadata title="L'Architecture Seed" 2>&1
 
 if [ $? -eq 0 ]; then
     echo "  ✓ HTML créé: $HTML_OUTPUT ($(du -h "$HTML_OUTPUT" | cut -f1))"

@@ -641,7 +641,7 @@ int sum(int *arr, int len) {
 }
 ```
 
-*Les solutions se trouvent dans le document **Codex_Solutions**.*
+*Les solutions se trouvent dans le document **Seed_Solutions**.*
 
 ### Checklist de validation
 

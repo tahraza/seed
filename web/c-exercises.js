@@ -1,4 +1,4 @@
-// C Exercises for nand2tetris-codex
+// C Exercises for nand2tetris-seed
 // Each exercise has a template, solution, and test cases
 // Organized by category with progressive difficulty
 

@@ -491,7 +491,7 @@ Testez votre compréhension avant de passer au chapitre suivant.
 3. Calcule R0 - R1 et stocke dans R2
 4. Si le résultat est positif, met 1 dans R3, sinon 0
 
-*Les solutions se trouvent dans le document **Codex_Solutions**.*
+*Les solutions se trouvent dans le document **Seed_Solutions**.*
 
 ### Checklist de validation
 

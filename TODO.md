@@ -38,7 +38,7 @@
 
 
 
-# Codex - TODO & Roadmap
+# Seed - TODO & Roadmap
 
 ## État actuel du projet
 

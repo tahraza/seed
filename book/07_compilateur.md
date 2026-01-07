@@ -678,7 +678,7 @@ int double_it(int x) {
 }
 ```
 
-*Les solutions se trouvent dans le document **Codex_Solutions**.*
+*Les solutions se trouvent dans le document **Seed_Solutions**.*
 
 ### Checklist de validation
 

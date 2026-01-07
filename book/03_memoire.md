@@ -408,7 +408,7 @@ Dessinez le schéma bloc d'un registre 1-bit avec les composants suivants :
 
 Indice : La sortie du DFF retourne vers une entrée du MUX.
 
-*Les solutions se trouvent dans le document **Codex_Solutions**.*
+*Les solutions se trouvent dans le document **Seed_Solutions**.*
 
 ### Checklist de validation
 

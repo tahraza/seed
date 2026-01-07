@@ -1,6 +1,6 @@
-# Documentation Pedagogique nand2tetris-codex
+# Documentation Pedagogique nand2tetris-seed
 
-Bienvenue dans la documentation pedagogique du projet nand2tetris-codex !
+Bienvenue dans la documentation pedagogique du projet nand2tetris-seed !
 
 ## Objectif
 

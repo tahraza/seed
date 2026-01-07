@@ -1,5 +1,5 @@
 ---
-title: "L'Architecture Codex"
+title: "L'Architecture Seed"
 subtitle: "De la Porte Logique au Système d'Exploitation 32-bits"
 author: "Tahiry RAZAFINDRALAMBO"
 date: "2026"
@@ -24,7 +24,7 @@ header-includes:
 - \definecolor{codegray}{gray}{0.95}
 - \pagestyle{fancy}
 - \fancyhf{}
-- \fancyhead[C]{L'Architecture Codex}
+- \fancyhead[C]{L'Architecture Seed}
 - \fancyfoot[C]{\thepage}
 - \renewcommand{\headrulewidth}{0.4pt}
 include-before:
@@ -34,7 +34,7 @@ include-before:
   \afterpage{\restorepagecolor}
   \centering
   \vspace*{4cm}
-  {\Huge\bfseries\color{white} L'Architecture Codex\par}
+  {\Huge\bfseries\color{white} L'Architecture Seed\par}
   \vspace{1.5cm}
   {\Large\color{white} De la Porte Logique au Système d'Exploitation 32-bits\par}
   \vspace{0.8cm}

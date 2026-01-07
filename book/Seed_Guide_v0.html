@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
-  <meta name="author" content="Projet Nand2Tetris-Codex" />
+  <meta name="author" content="Projet Nand2Tetris-Seed" />
   <meta name="dcterms.date" content="2026-01-01" />
-  <title>L’Architecture Codex</title>
+  <title>L’Architecture Seed</title>
   <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -1466,15 +1466,15 @@ text-decoration: underline;
 </head>
 <body>
 <header id="title-block-header">
-<h1 class="title">L’Architecture Codex</h1>
+<h1 class="title">L’Architecture Seed</h1>
 <p class="subtitle">De la Porte Logique au Système d’Exploitation
 32-bits</p>
-<p class="author">Projet Nand2Tetris-Codex</p>
+<p class="author">Projet Nand2Tetris-Seed</p>
 <p class="date">2026</p>
 </header>
 <nav id="TOC" role="doc-toc">
 <ul>
-<li><a href="#larchitecture-codex-guide-de-létudiant" id="toc-larchitecture-codex-guide-de-létudiant"><span class="toc-section-number">1</span> L’Architecture Codex : Guide de
+<li><a href="#larchitecture-seed-guide-de-létudiant" id="toc-larchitecture-seed-guide-de-létudiant"><span class="toc-section-number">1</span> L’Architecture Seed : Guide de
 l’Étudiant</a>
 <ul>
 <li><a href="#table-des-matières" id="toc-table-des-matières"><span class="toc-section-number">1.1</span> Table des Matières</a></li>
@@ -1484,7 +1484,7 @@ l’Étudiant</a>
 <ul>
 <li><a href="#pourquoi-construire-un-ordinateur" id="toc-pourquoi-construire-un-ordinateur"><span class="toc-section-number">2.1</span> Pourquoi construire un ordinateur
 ?</a></li>
-<li><a href="#codex-vs-hack-nand2tetris-original" id="toc-codex-vs-hack-nand2tetris-original"><span class="toc-section-number">2.2</span> Codex vs Hack (Nand2Tetris
+<li><a href="#seed-vs-hack-nand2tetris-original" id="toc-seed-vs-hack-nand2tetris-original"><span class="toc-section-number">2.2</span> Seed vs Hack (Nand2Tetris
 Original)</a></li>
 <li><a href="#vue-densemble-du-système" id="toc-vue-densemble-du-système"><span class="toc-section-number">2.3</span> Vue d’ensemble du système</a></li>
 <li><a href="#vos-outils" id="toc-vos-outils"><span class="toc-section-number">2.4</span> Vos Outils</a></li>
@@ -1496,7 +1496,7 @@ Original)</a></li>
 (Not-And)</a></li>
 <li><a href="#portes-élémentaires-à-construire" id="toc-portes-élémentaires-à-construire"><span class="toc-section-number">3.3</span> 1.3 Portes Élémentaires à
 construire</a></li>
-<li><a href="#description-matérielle-codex-hdl" id="toc-description-matérielle-codex-hdl"><span class="toc-section-number">3.4</span> 1.4 Description Matérielle (Codex
+<li><a href="#description-matérielle-seed-hdl" id="toc-description-matérielle-seed-hdl"><span class="toc-section-number">3.4</span> 1.4 Description Matérielle (Seed
 HDL)</a></li>
 <li><a href="#vos-exercices" id="toc-vos-exercices"><span class="toc-section-number">3.5</span> 1.5 Vos Exercices</a></li>
 </ul></li>
@@ -1607,9 +1607,9 @@ Application</a></li>
 </ul></li>
 </ul>
 </nav>
-<h1 data-number="1" id="larchitecture-codex-guide-de-létudiant"><span class="header-section-number">1</span> L’Architecture Codex : Guide de
+<h1 data-number="1" id="larchitecture-seed-guide-de-létudiant"><span class="header-section-number">1</span> L’Architecture Seed : Guide de
 l’Étudiant</h1>
-<p>Ce livre accompagne le projet <strong>Nand2Tetris-Codex</strong>. Il
+<p>Ce livre accompagne le projet <strong>Nand2Tetris-Seed</strong>. Il
 a pour but de vous guider pas à pas dans la construction d’un ordinateur
 complet, moderne et 32-bits, à partir de rien.</p>
 <h2 data-number="1.1" id="table-des-matières"><span class="header-section-number">1.1</span> Table des Matières</h2>
@@ -1696,7 +1696,7 @@ votre travail consistera principalement à écrire du HDL (Hardware
 Description Language), de l’assembleur A32 et du C32.</p>
 </blockquote>
 <h1 data-number="2" id="introduction"><span class="header-section-number">2</span> Introduction</h1>
-<p>Bienvenue dans le projet <strong>Codex</strong>. Si vous lisez ceci,
+<p>Bienvenue dans le projet <strong>Seed</strong>. Si vous lisez ceci,
 c’est que vous avez l’ambition de comprendre comment fonctionnent les
 ordinateurs, non pas en lisant des théories abstraites, mais en en
 construisant un vous-même.</p>
@@ -1710,12 +1710,12 @@ d’abstraction très élevées (Python, Java, React).</p>
 allons descendre au niveau le plus bas — la porte logique — et remonter
 couche par couche jusqu’à pouvoir jouer à un jeu vidéo écrit dans un
 langage de haut niveau sur notre propre machine.</p>
-<h2 data-number="2.2" id="codex-vs-hack-nand2tetris-original"><span class="header-section-number">2.2</span> Codex vs Hack (Nand2Tetris
+<h2 data-number="2.2" id="seed-vs-hack-nand2tetris-original"><span class="header-section-number">2.2</span> Seed vs Hack (Nand2Tetris
 Original)</h2>
 <p>Ce cours est fortement inspiré du légendaire “Nand2Tetris”.
 Cependant, l’ordinateur <em>Hack</em> original a été conçu pour une
 simplicité maximale, parfois au détriment du réalisme moderne.</p>
-<p>L’ordinateur <strong>Codex</strong> propose une approche différente
+<p>L’ordinateur <strong>Seed</strong> propose une approche différente
 :</p>
 <table>
 <colgroup>
@@ -1727,7 +1727,7 @@ simplicité maximale, parfois au détriment du réalisme moderne.</p>
 <tr class="header">
 <th style="text-align: left;">Caractéristique</th>
 <th style="text-align: left;">Hack (Original)</th>
-<th style="text-align: left;">Codex (Ce projet)</th>
+<th style="text-align: left;">Seed (Ce projet)</th>
 </tr>
 </thead>
 <tbody>
@@ -1983,8 +1983,8 @@ sel -------| MUX |--- out
           /
      b --/</code></pre>
 <p>C’est fondamental pour le routage des données dans le CPU.</p>
-<h2 data-number="3.4" id="description-matérielle-codex-hdl"><span class="header-section-number">3.4</span> 1.4 Description Matérielle
-(Codex HDL)</h2>
+<h2 data-number="3.4" id="description-matérielle-seed-hdl"><span class="header-section-number">3.4</span> 1.4 Description Matérielle
+(Seed HDL)</h2>
 <p>Pour décrire nos circuits, nous utilisons un langage inspiré du
 <strong>VHDL</strong>. C’est un langage déclaratif : on définit des
 composants (entités) et on décrit comment ils sont câblés
@@ -2100,7 +2100,7 @@ Poids    :  2^3  2^2  2^1  2^0
 Valeur   :   8    4    2    1
 
 Exemple : 1011 (binaire) = 1*8 + 0*4 + 1*2 + 1*1 = 11 (décimal)</code></pre>
-<p>Dans l’ordinateur Codex, nous travaillons sur <strong>32
+<p>Dans l’ordinateur Seed, nous travaillons sur <strong>32
 bits</strong>, ce qui permet de représenter des nombres allant de <span class="math inline">0</span> à <span class="math inline">2<sup>32</sup> − 1</span> (environ 4 milliards).</p>
 <h3 data-number="4.1.2" id="nombres-signés-le-complément-à-2"><span class="header-section-number">4.1.2</span> Nombres Signés : Le
 Complément à 2</h3>
@@ -2191,7 +2191,7 @@ cout-|  FA   |&lt;----|  FA  |&lt;----|  FA  |&lt;-- cin(0)
 <h2 data-number="4.3" id="lalu32-arithmetic-logic-unit"><span class="header-section-number">4.3</span> 2.3 L’ALU32 (Arithmetic Logic
 Unit)</h2>
 <p>L’ALU est le cœur battant du processeur. C’est elle qui effectue les
-calculs. L’ALU du Codex est une version 32-bits évoluée. Elle prend deux
+calculs. L’ALU du Seed est une version 32-bits évoluée. Elle prend deux
 entrées (<code>a</code>, <code>b</code>) et un code d’opération
 (<code>op</code>).</p>
 <h3 data-number="4.3.1" id="les-opérations-de-lalu32"><span class="header-section-number">4.3.1</span> Les Opérations de
@@ -2297,7 +2297,7 @@ perpétuellement entre 0 et 1.</p>
 <pre class="ascii"><code>     __    __    __
 clk |  |__|  |__|  |__ ...</code></pre>
 <p>Un “cycle” d’horloge se compose d’un front montant (le passage de 0 à
-1) et d’un front descendant. Dans le système Codex, les changements
+1) et d’un front descendant. Dans le système Seed, les changements
 d’état se produisent sur le <strong>front montant</strong> (<em>rising
 edge</em>).</p>
 <h2 data-number="5.2" id="la-brique-de-base-la-bascule-d-dff"><span class="header-section-number">5.2</span> 3.2 La Brique de Base : La
@@ -2313,7 +2313,7 @@ outils)</li>
 <p>La sortie à l’instant <em>t</em> est égale à ce qu’était l’entrée à
 l’instant <em>t-1</em> (le cycle précédent). Elle “mémorise” le bit
 pendant un cycle.</p>
-<p><em>Dans le simulateur Codex, vous devrez souvent câbler
+<p><em>Dans le simulateur Seed, vous devrez souvent câbler
 explicitement le signal <code>clk</code>.</em></p>
 <h2 data-number="5.3" id="construire-une-mémoire-persistante"><span class="header-section-number">5.3</span> 3.3 Construire une Mémoire
 Persistante</h2>
@@ -2418,7 +2418,7 @@ la mémoire. Mais comment <strong>commander</strong> tout cela ? C’est le
 rôle de l’<strong>Architecture de Jeu d’Instructions</strong> (ISA -
 Instruction Set Architecture). C’est le contrat entre le matériel (le
 processeur) et le logiciel (votre code).</p>
-<p>L’architecture <strong>Codex A32-Lite</strong> est une architecture
+<p>L’architecture <strong>Seed A32-Lite</strong> est une architecture
 <strong>RISC 32-bits</strong>, inspirée de la célèbre architecture ARM.
 Elle est conçue pour être simple à comprendre mais suffisamment
 puissante pour supporter un système d’exploitation moderne.</p>
@@ -2434,7 +2434,7 @@ processeurs Intel (x86). Ils ont des instructions très complexes (ex:
 “copie une chaîne de caractères de A à B”). C’est puissant mais
 difficile à construire.</li>
 <li><strong>RISC (Reduced Instruction Set Computer)</strong> : Comme
-ARM, MIPS, ou Codex. Les instructions sont simples et rapides.
+ARM, MIPS, ou Seed. Les instructions sont simples et rapides.
 <ul>
 <li><em>Règle d’or :</em> Le CPU ne calcule <strong>jamais</strong>
 directement en mémoire. Il doit d’abord charger les données dans des
@@ -2582,7 +2582,7 @@ que fonctionnent les boucles et les <code>goto</code>.</p>
 +------+-------+-----------------------------------------------+</code></pre>
 <h3 data-number="6.4.2" id="la-condition-bits-31-28-et-la-prédication"><span class="header-section-number">6.4.2</span> La Condition (Bits 31-28) et
 la Prédication</h3>
-<p>C’est une fonctionnalité unique et puissante d’ARM/Codex.
+<p>C’est une fonctionnalité unique et puissante d’ARM/Seed.
 <strong>Toutes</strong> les instructions peuvent être conditionnelles.
 Au lieu de faire des petits sauts (<code>if x then jump</code>), on peut
 dire “Exécute cette instruction <em>seulement si</em> Zéro est à 1”.</p>
@@ -2965,7 +2965,7 @@ un message de bienvenue).</li>
 caractères terminée par un zéro (null-terminated).</li>
 <li><code>.align 2</code> : Aligne l’adresse suivante sur un multiple de
 4 (<span class="math inline">2<sup>2</sup></span>) octets. C’est crucial
-pour le CPU Codex qui exige que les instructions soient alignées.</li>
+pour le CPU Seed qui exige que les instructions soient alignées.</li>
 </ul>
 <h2 data-number="8.4" id="exemple-dencodage"><span class="header-section-number">8.4</span> 6.4 Exemple d’Encodage</h2>
 <p>Comment l’assembleur encode-t-il l’instruction
@@ -2989,7 +2989,7 @@ d’opération <code>0011</code>.</li>
 <h2 data-number="8.5" id="la-gestion-des-grandes-constantes-value"><span class="header-section-number">8.5</span> 6.5 La Gestion des Grandes
 Constantes (<code>=value</code>)</h2>
 <p>Comme vu au chapitre 4, on ne peut pas mettre une valeur de 32 bits
-dans une instruction de 32 bits. L’assembleur Codex offre une syntaxe
+dans une instruction de 32 bits. L’assembleur Seed offre une syntaxe
 magique : <code>LDR R0, =0xDEADBEEF</code>.</p>
 <p>Lorsque l’assembleur voit cela : 1. Il ajoute la valeur
 <code>0xDEADBEEF</code> dans une zone spéciale appelée <strong>Literal
@@ -3043,7 +3043,7 @@ et utiliser un <strong>Micro-Compilateur</strong> écrit en C32.</p>
 <h2 data-number="9.1" id="le-défi-microc"><span class="header-section-number">9.1</span> 7.1 Le Défi “MicroC”</h2>
 <p>Nous allons porter le célèbre compilateur pédagogique
 <strong>TinyC</strong> de Marc Feeley pour qu’il tourne sur notre
-architecture Codex. Ce compilateur : 1. Est écrit en un seul fichier C.
+architecture Seed. Ce compilateur : 1. Est écrit en un seul fichier C.
 2. Lit du code C sur l’entrée standard (<code>stdin</code>). 3. Génère
 de l’assembleur A32 sur la sortie standard (<code>stdout</code>).</p>
 <h3 data-number="9.1.1" id="limitations-de-c32"><span class="header-section-number">9.1.1</span> Limitations de C32</h3>
@@ -3057,7 +3057,7 @@ tableaux et des offsets manuels). * Pas de <code>malloc</code> complexe
 MicroC</h2>
 <p>Voici une version adaptée de TinyC. Copiez ce code dans un fichier
 <code>micro_c.c</code>.</p>
-<div class="sourceCode" id="cb28"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">// micro_c.c - Un compilateur C minimaliste pour Codex A32</span></span>
+<div class="sourceCode" id="cb28"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">// micro_c.c - Un compilateur C minimaliste pour Seed A32</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co">// Basé sur TinyC de Marc Feeley</span></span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co">// --- Lexer ---</span></span>
@@ -3226,7 +3226,7 @@ C32</h2>
 <p>Le C32 est un sous-ensemble du langage C. Si vous connaissez le C ou
 le Java/C++, vous vous sentirez chez vous.</p>
 <h3 data-number="9.6.1" id="les-types-de-données"><span class="header-section-number">9.6.1</span> 1. Les Types de Données</h3>
-<p>Le Codex est une machine 32-bits, donc le type de base est le mot de
+<p>Le Seed est une machine 32-bits, donc le type de base est le mot de
 32 bits.</p>
 <table>
 <thead>
@@ -3339,7 +3339,7 @@ point d’entrée.</p>
 <span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">extern</span> <span class="dt">void</span> putchar<span class="op">(</span><span class="dt">char</span> c<span class="op">);</span></span>
 <span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">char</span><span class="op">*</span> msg <span class="op">=</span> <span class="st">&quot;Hello Codex!&quot;</span><span class="op">;</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">char</span><span class="op">*</span> msg <span class="op">=</span> <span class="st">&quot;Hello Seed!&quot;</span><span class="op">;</span></span>
 <span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
 <span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="op">(</span>msg<span class="op">[</span>i<span class="op">]</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>        putchar<span class="op">(</span>msg<span class="op">[</span>i<span class="op">]);</span></span>
@@ -3381,7 +3381,7 @@ d’Exploitation</h1>
 <p>“Un OS est ce qui reste quand on a enlevé tout ce qui est utile.”</p>
 </blockquote>
 <p>Félicitations ! Vous avez construit le matériel, l’assembleur et le
-compilateur. Votre machine Codex est fonctionnelle. Mais pour l’instant,
+compilateur. Votre machine Seed est fonctionnelle. Mais pour l’instant,
 chaque programmeur doit réinventer la roue : comment dessiner un cercle
 ? comment lire une chaîne de caractères ?</p>
 <p>Dans ce dernier chapitre, nous allons construire une
@@ -3419,7 +3419,7 @@ chaque allocation.</p>
 la mémoire individuellement.</p>
 <h3 data-number="10.2.2" id="lallocateur-par-liste-chaînée-avancé"><span class="header-section-number">10.2.2</span> L’Allocateur par Liste
 Chaînée (Avancé)</h3>
-<p>L’OS Codex propose aussi une version plus maligne où chaque bloc de
+<p>L’OS Seed propose aussi une version plus maligne où chaque bloc de
 mémoire libre contient un pointeur vers le suivant. Cela permet de
 réutiliser les trous laissés par les blocs libérés.</p>
 <h2 data-number="10.3" id="bibliothèque-graphique-screen.c"><span class="header-section-number">10.3</span> 9.3 Bibliothèque Graphique
@@ -3453,7 +3453,7 @@ programme.</li>
 <h2 data-number="10.5" id="interruptions-et-multitâche-concept"><span class="header-section-number">10.5</span> 9.5 Interruptions et
 Multitâche (Concept)</h2>
 <p>Bien que nous ne construisions pas un système multitâche complet, le
-Codex supporte les <strong>Interruptions</strong>. Imaginez que vous
+Seed supporte les <strong>Interruptions</strong>. Imaginez que vous
 jouez à un jeu (Snake) : 1. Le CPU exécute le code du jeu. 2. Un
 <strong>Timer matériel</strong> déclenche une interruption toutes les
 10ms. 3. Le CPU s’arrête instantanément et saute vers un “Handler” de
@@ -3464,7 +3464,7 @@ logiciel à réagir à un événement.</p>
 <h2 data-number="10.6" id="le-grand-final-votre-application"><span class="header-section-number">10.6</span> 9.6 Le Grand Final : Votre
 Application</h2>
 <p>Vous avez tous les outils en main. Le répertoire <code>demos/</code>
-contient des exemples de ce que vous pouvez réaliser avec l’OS Codex : *
+contient des exemples de ce que vous pouvez réaliser avec l’OS Seed : *
 <code>01_hello</code> : Le classique. * <code>04_snake</code> : Un jeu
 complet utilisant les graphismes et le clavier. * <code>05_shell</code>
 : Une interface en ligne de commande qui tourne sur votre CPU !</p>

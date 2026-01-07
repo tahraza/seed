@@ -255,7 +255,7 @@ ADD R1, R2, R3
 
 Indice : Format ALU registre = `[cond:4][000][opcode:4][S][Rn:4][Rd:4][00000000][Rm:4]`
 
-*Les solutions se trouvent dans le document **Codex_Solutions**.*
+*Les solutions se trouvent dans le document **Seed_Solutions**.*
 
 ### Checklist de validation
 
