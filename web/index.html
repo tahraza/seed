@@ -170,6 +170,26 @@
                     </div>
                 </div>
 
+                <!-- ROM Loading (visible for Computer chip) -->
+                <div class="rom-loading-section" id="rom-loading" style="display: none;">
+                    <div class="section-title">Charger ROM</div>
+                    <div class="rom-loading-content">
+                        <div class="rom-file-input">
+                            <input type="file" id="rom-file" accept=".bin,.a32b" style="display: none;">
+                            <button class="action-btn" id="btn-load-rom-file">
+                                <span>📂</span> Fichier .bin/.a32b
+                            </button>
+                        </div>
+                        <div class="rom-hex-input">
+                            <input type="text" id="rom-hex" placeholder="0x610A 0x6220 0x0312 ...">
+                            <button class="action-btn small" id="btn-load-rom-hex" title="Charger hex">
+                                ▶ Load
+                            </button>
+                        </div>
+                        <div class="rom-status" id="rom-status"></div>
+                    </div>
+                </div>
+
                 <!-- Screen -->
                 <div class="screen-wrapper">
                     <div class="screen-title">Écran 320×240</div>

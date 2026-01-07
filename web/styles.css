@@ -1948,6 +1948,64 @@ kbd {
 }
 
 /* ==========================================================================
+   ROM Loading Section
+   ========================================================================== */
+
+.rom-loading-section {
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px dashed var(--accent);
+}
+
+.rom-loading-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.rom-file-input {
+    display: flex;
+    gap: 8px;
+}
+
+.rom-hex-input {
+    display: flex;
+    gap: 8px;
+}
+
+.rom-hex-input input {
+    flex: 1;
+    padding: 6px 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+}
+
+.rom-hex-input input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.rom-status {
+    font-size: 11px;
+    color: var(--text-muted);
+    min-height: 16px;
+}
+
+.rom-status.success {
+    color: var(--success);
+}
+
+.rom-status.error {
+    color: var(--error);
+}
+
+/* ==========================================================================
    HDL-Only Elements - Visible uniquement en mode HDL
    ========================================================================== */
 

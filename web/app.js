@@ -266,6 +266,7 @@ function updateModeSpecificUI() {
     const visualizersSection = document.querySelector('.visualizations-panel');
 
     const hdlSignalsSection = document.getElementById('hdl-signals');
+    const romLoadingSection = document.getElementById('rom-loading');
 
     if (state.mode === 'hdl') {
         // Add mode class to body for CSS selectors
@@ -275,6 +276,7 @@ function updateModeSpecificUI() {
         screenWrapper.style.display = 'none';
         registersSection.style.display = 'none';
         if (hdlSignalsSection) hdlSignalsSection.style.display = 'block';
+        // ROM loading visibility depends on current chip (handled by updateRomLoadingVisibility)
         // Show chronogram for HDL mode
         if (visualizersSection) {
             visualizersSection.style.display = 'block';
@@ -292,6 +294,7 @@ function updateModeSpecificUI() {
         screenWrapper.style.display = 'block';
         registersSection.style.display = 'block';
         if (hdlSignalsSection) hdlSignalsSection.style.display = 'none';
+        if (romLoadingSection) romLoadingSection.style.display = 'none';
         // Show memory visualizer for ASM/C
         if (visualizersSection) {
             visualizersSection.style.display = 'block';
@@ -3071,8 +3074,126 @@ function loadChip(chipName) {
     // Initialize HDL signals panel so user can set inputs before running
     initHdlSignals(chip);
 
+    // Show ROM loading section for Computer chip
+    updateRomLoadingVisibility(chipName);
+
     updateHdlProgressUI();
     log(`Loaded chip: ${chipName}`, 'info');
+}
+
+/**
+ * Show/hide ROM loading section based on chip type
+ */
+function updateRomLoadingVisibility(chipName) {
+    const romSection = document.getElementById('rom-loading');
+    if (!romSection) return;
+
+    // Show ROM loading for Computer chip (or any chip with ROM)
+    const chipsWithRom = ['Computer', 'ROM32K'];
+    romSection.style.display = chipsWithRom.includes(chipName) ? 'block' : 'none';
+}
+
+/**
+ * Load hex data into ROM
+ */
+function loadRomHex(hexData) {
+    if (!state.hdlSim) {
+        log('HDL simulator not initialized', 'error');
+        return false;
+    }
+
+    try {
+        state.hdlSim.load_rom(0, hexData);
+        log(`ROM loaded: ${hexData.split(/\s+/).length} words`, 'success');
+        updateRomStatus(`Loaded ${hexData.split(/\s+/).length} words`, 'success');
+        return true;
+    } catch (e) {
+        log(`ROM load error: ${e}`, 'error');
+        updateRomStatus(`Error: ${e}`, 'error');
+        return false;
+    }
+}
+
+/**
+ * Load ROM from binary file (.bin or .a32b)
+ */
+async function loadRomFile(file) {
+    if (!state.hdlSim) {
+        log('HDL simulator not initialized', 'error');
+        return;
+    }
+
+    try {
+        const buffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(buffer);
+
+        // Check if it's an A32B file (has header)
+        let dataOffset = 0;
+        let isA32B = false;
+
+        if (bytes.length >= 4) {
+            const header = String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]);
+            if (header === 'A32B') {
+                isA32B = true;
+                // Parse A32B header to find .text section
+                // A32B format: header (4) + version (2) + section_count (2) + sections...
+                // Each section: type(4) + flags(4) + addr(4) + size(4) + data(size)
+                const view = new DataView(buffer);
+                const sectionCount = view.getUint16(6, true);
+
+                let offset = 8; // After header
+                for (let i = 0; i < sectionCount && offset < bytes.length; i++) {
+                    const sectionType = view.getUint32(offset, true);
+                    const sectionFlags = view.getUint32(offset + 4, true);
+                    const sectionAddr = view.getUint32(offset + 8, true);
+                    const sectionSize = view.getUint32(offset + 12, true);
+
+                    // Type 1 = .text (code section)
+                    if (sectionType === 1) {
+                        dataOffset = offset + 16;
+                        break;
+                    }
+                    offset += 16 + sectionSize;
+                }
+            }
+        }
+
+        // Convert bytes to hex words (16-bit for A32-Lite)
+        const hexWords = [];
+        const data = isA32B ? bytes.slice(dataOffset) : bytes;
+
+        // Read as 16-bit little-endian words
+        for (let i = 0; i + 1 < data.length; i += 2) {
+            const word = data[i] | (data[i + 1] << 8);
+            hexWords.push(`0x${word.toString(16).padStart(4, '0')}`);
+        }
+
+        if (hexWords.length === 0) {
+            log('No data found in file', 'error');
+            updateRomStatus('No data found', 'error');
+            return;
+        }
+
+        const hexData = hexWords.join(' ');
+        loadRomHex(hexData);
+
+        log(`Loaded ${file.name}: ${hexWords.length} words`, 'success');
+    } catch (e) {
+        log(`Failed to load ROM file: ${e}`, 'error');
+        updateRomStatus(`Load failed: ${e}`, 'error');
+    }
+}
+
+/**
+ * Update ROM status display
+ */
+function updateRomStatus(message, type) {
+    const statusEl = document.getElementById('rom-status');
+    if (!statusEl) return;
+
+    statusEl.textContent = message;
+    statusEl.className = 'rom-status';
+    if (type) statusEl.classList.add(type);
 }
 
 function updateChipInfoPanel(chip) {
@@ -3724,6 +3845,39 @@ function setupEventListeners() {
     const solutionBtnHdl = document.getElementById('btn-solution-hdl');
     if (solutionBtnHdl) {
         solutionBtnHdl.addEventListener('click', showSolution);
+    }
+
+    // ROM Loading buttons
+    const romFileBtn = document.getElementById('btn-load-rom-file');
+    const romFileInput = document.getElementById('rom-file');
+    const romHexBtn = document.getElementById('btn-load-rom-hex');
+    const romHexInput = document.getElementById('rom-hex');
+
+    if (romFileBtn && romFileInput) {
+        romFileBtn.addEventListener('click', () => romFileInput.click());
+        romFileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                loadRomFile(e.target.files[0]);
+            }
+        });
+    }
+
+    if (romHexBtn && romHexInput) {
+        romHexBtn.addEventListener('click', () => {
+            const hexData = romHexInput.value.trim();
+            if (hexData) {
+                loadRomHex(hexData);
+            }
+        });
+        // Allow Enter key to load ROM
+        romHexInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const hexData = romHexInput.value.trim();
+                if (hexData) {
+                    loadRomHex(hexData);
+                }
+            }
+        });
     }
 
     // ASM Download binary button
