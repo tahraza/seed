@@ -232,20 +232,30 @@ export class WaveformVisualizer {
         const h = this.signalHeight;
         const padding = 4;
 
+        // Fond de la zone de label
+        ctx.fillStyle = '#16213e';
+        ctx.fillRect(0, y, labelW, h);
+
         // Label du signal
-        ctx.fillStyle = this.colors.text;
-        ctx.font = '11px monospace';
-        ctx.textAlign = 'right';
-        ctx.fillText(name, labelW - 5, y + h / 2 + 4);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(name, 5, y + h / 2 + 4);
 
         // Fond du signal
         ctx.fillStyle = this.colors.background;
-        ctx.fillRect(labelW, y, waveW, h);
+        ctx.fillRect(labelW, y, Math.max(0, waveW), h);
 
         // Bordure
         ctx.strokeStyle = this.colors.grid;
         ctx.lineWidth = 1;
-        ctx.strokeRect(labelW, y, waveW, h);
+        ctx.strokeRect(labelW, y, Math.max(0, waveW), h);
+
+        // Ligne séparatrice entre label et waveform
+        ctx.beginPath();
+        ctx.moveTo(labelW, y);
+        ctx.lineTo(labelW, y + h);
+        ctx.stroke();
 
         if (data.history.length === 0) return;
 
