@@ -311,6 +311,7 @@ end architecture;
 ## 13. Limitations
 
 Ce qui n'est **PAS** supporté :
+
 - Logique asynchrone (sensibilité niveau)
 - Instructions `wait`
 - Instructions `generate`
@@ -331,6 +332,7 @@ Ce qui n'est **PAS** supporté :
 5. **Reset synchrone** : Préférer au reset asynchrone
 
 ```vhdl
+
 -- BON
 signal counter : bits(7 downto 0) := x"00";
 
