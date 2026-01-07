@@ -8,7 +8,7 @@ cd "$SCRIPT_DIR"
 PDF_OUTPUT="Codex_Guide.pdf"
 HTML_OUTPUT="Codex_Guide.html"
 
-# Liste des chapitres
+# Liste des chapitres (sans les solutions - voir build-solutions.sh)
 CHAPTERS=(
     README.md
     00_introduction.md
@@ -24,8 +24,6 @@ CHAPTERS=(
     10_exercices.md
     10bis_debogage.md
     11_cache.md
-    Codex_Solutions.md
-    Solutions.md
 )
 
 # Liste des cartes de référence

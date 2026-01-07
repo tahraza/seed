@@ -1,8 +1,18 @@
 #!/bin/bash
 
-# Nom du fichier de sortie
-OUTPUT="Codex_Solutions.pdf"
+# Répertoire du script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+# Noms des fichiers de sortie
+PDF_OUTPUT="Codex_Solutions.pdf"
 HTML_OUTPUT="Codex_Solutions.html"
+
+# Fichiers de solutions
+SOLUTIONS=(
+    Codex_Solutions.md
+    Solutions.md
+)
 
 # Vérification de la présence de pandoc
 if ! command -v pandoc &> /dev/null; then
@@ -10,36 +20,54 @@ if ! command -v pandoc &> /dev/null; then
     exit 1
 fi
 
-echo "Génération du livre des solutions..."
+echo "========================================"
+echo "  Génération du livre des solutions"
+echo "========================================"
+echo ""
 
-# Commande Pandoc pour PDF
-pandoc Solutions.md \
-    -o "$OUTPUT" \
+# Génération du PDF
+echo "[1/2] Génération du PDF..."
+
+pandoc "${SOLUTIONS[@]}" \
+    -o "$PDF_OUTPUT" \
     --toc \
     --toc-depth=2 \
     --number-sections \
-    --highlight-style=pygments \
+    --highlight-style=breezedark \
     --pdf-engine=xelatex \
     -V geometry:margin=2cm \
     -V fontsize=10pt \
     -V mainfont="DejaVu Sans" \
-    -V monofont="DejaVu Sans Mono" 2> /dev/null
+    -V monofont="DejaVu Sans Mono" \
+    -V title="Codex - Livre des Solutions" \
+    -V subtitle="Solutions des quiz et exercices" 2>&1
 
 if [ $? -eq 0 ]; then
-    echo "Succès ! Le fichier $OUTPUT a été créé."
+    echo "  ✓ PDF créé: $PDF_OUTPUT ($(du -h "$PDF_OUTPUT" | cut -f1))"
 else
-    echo "Échec PDF, génération HTML..."
+    echo "  ✗ Échec de la génération PDF"
 fi
 
 # Génération HTML
-pandoc Solutions.md \
+echo ""
+echo "[2/2] Génération du HTML..."
+
+pandoc "${SOLUTIONS[@]}" \
     -s --embed-resources \
     -o "$HTML_OUTPUT" \
     --toc \
     --toc-depth=2 \
     --number-sections \
-    --highlight-style=pygments
+    --highlight-style=breezedark \
+    --metadata title="Codex - Livre des Solutions" 2>&1
 
 if [ $? -eq 0 ]; then
-    echo "Succès ! Le fichier $HTML_OUTPUT a été créé."
+    echo "  ✓ HTML créé: $HTML_OUTPUT ($(du -h "$HTML_OUTPUT" | cut -f1))"
+else
+    echo "  ✗ Échec de la génération HTML"
 fi
+
+echo ""
+echo "========================================"
+echo "  Génération terminée"
+echo "========================================"
