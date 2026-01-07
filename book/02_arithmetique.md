@@ -411,6 +411,103 @@ Exemple : R0 = 0xFFFFFFFF, R1 = 0x00000001
 
 ---
 
+## La Multiplication Matérielle
+
+La multiplication est une opération plus complexe que l'addition, mais elle peut être implémentée efficacement en matériel grâce à l'algorithme des **produits partiels**.
+
+### Le Principe : Multiplication à la Main
+
+Rappelons comment on multiplie en binaire, comme à l'école primaire :
+
+```
+        1 0 1 1   (11 en décimal)
+      ×   1 1 0   (6 en décimal)
+      ---------
+        0 0 0 0   (1011 × 0, décalé de 0)
+      1 0 1 1     (1011 × 1, décalé de 1)
+    1 0 1 1       (1011 × 1, décalé de 2)
+    -----------
+    1 0 0 0 0 1 0  (66 en décimal)
+```
+
+Chaque ligne est un **produit partiel** : c'est simplement `a` multiplié par un bit de `b`, puis décalé vers la gauche.
+
+### L'Algorithme des Produits Partiels
+
+Pour multiplier deux nombres de N bits :
+
+1. **Générer les produits partiels** : Pour chaque bit `b[i]`, calculer `pp[i] = a AND b[i]`
+   - Si `b[i] = 0`, le produit partiel est 0
+   - Si `b[i] = 1`, le produit partiel est `a`
+
+2. **Décaler chaque produit partiel** : `pp[i]` est décalé de `i` positions vers la gauche
+
+3. **Additionner tous les produits partiels** : Le résultat final est la somme de tous les `pp[i]` décalés
+
+### Structure du Multiplicateur 8-bits (Mul8)
+
+Pour un multiplicateur 8×8 → 16 bits :
+
+```
+Entrées:  a[7:0], b[7:0]
+Sortie:   y[15:0] = a × b
+
+Produits partiels:
+  pp0 = a AND b[0]  →  [7:0]      (pas de décalage)
+  pp1 = a AND b[1]  →  [8:1]      (décalage de 1)
+  pp2 = a AND b[2]  →  [9:2]      (décalage de 2)
+  ...
+  pp7 = a AND b[7]  →  [14:7]     (décalage de 7)
+```
+
+### Addition en Arbre (Wallace Tree)
+
+Pour additionner 8 produits partiels efficacement, on utilise une structure en arbre :
+
+```
+Niveau 1:  pp0+pp1 → sum01    pp2+pp3 → sum23    pp4+pp5 → sum45    pp6+pp7 → sum67
+Niveau 2:  sum01+sum23 → sum0123              sum45+sum67 → sum4567
+Niveau 3:  sum0123 + sum4567 → résultat final
+```
+
+Cette structure en arbre réduit la latence de O(n) à O(log n).
+
+### Pourquoi le Résultat est sur 16 bits ?
+
+Le produit de deux nombres de N bits peut avoir jusqu'à 2N bits :
+- Pire cas : `0xFF × 0xFF = 0xFE01` (255 × 255 = 65025)
+- C'est pourquoi `Mul8` a une sortie de 16 bits
+
+### Extension à 32 bits (Mul32)
+
+Pour un multiplicateur 32×32 → 64 bits, le principe est identique mais à plus grande échelle :
+
+1. **32 produits partiels** de 32 bits chacun
+2. **Étendre chaque pp à 64 bits** avec décalage approprié
+3. **Addition en arbre** à 5 niveaux (log₂(32) = 5)
+
+```
+Structure Mul32:
+  - 32 instances de And32 (génération des produits partiels)
+  - 31 instances de Add64 (addition en arbre)
+  - Résultat : 64 bits
+```
+
+### Optimisations dans les Vrais Processeurs
+
+Les multiplicateurs modernes utilisent des techniques avancées :
+
+| Technique | Description |
+|-----------|-------------|
+| **Booth Encoding** | Réduit le nombre de produits partiels |
+| **Carry-Save Adder (CSA)** | Retarde la propagation des retenues |
+| **Wallace Tree** | Structure en arbre pour additionner les pp |
+| **Dadda Multiplier** | Variante optimisée du Wallace Tree |
+
+Notre implémentation pédagogique utilise l'approche simple des produits partiels avec addition en arbre ripple-carry.
+
+---
+
 ## Architecture de l'ALU
 
 Voici comment l'ALU est structurée en interne :
@@ -435,6 +532,8 @@ Lancez le **Simulateur Web** et allez dans **HDL Progression** → **Projet 3 : 
 | `Inc16` | Incrémenteur (+1) — cas spécial utile | [*] |
 | `Sub16` | Soustracteur (via complément à 2) | [**] |
 | `ALU` | L'ALU complète avec drapeaux | [***] |
+| `And8` | AND 8-bit avec masque (pour produits partiels) | [*] |
+| `Mul8` | Multiplicateur 8×8 → 16 bits | [***] |
 
 ### Conseils pour l'ALU
 
@@ -453,6 +552,27 @@ Lancez le **Simulateur Web** et allez dans **HDL Progression** → **Projet 3 : 
    - Z : tous les bits sont à 0 ? (utilisez un grand OR puis NOT)
    - C : retenue de sortie de l'additionneur
    - V : comparez les signes des entrées et du résultat
+
+### Conseils pour le Multiplicateur (Mul8)
+
+1. **And8 d'abord** : Commencez par implémenter `And8` qui génère un produit partiel
+   - C'est simplement 8 portes AND en parallèle
+   - Chaque bit de `a` est ANDé avec le même bit `b`
+
+2. **Étendre les produits partiels** :
+   - `pp0` → bits [7:0], reste à 0
+   - `pp1` → bits [8:1], bit 0 et bits [15:9] à 0
+   - `pp2` → bits [9:2], bits [1:0] et bits [15:10] à 0
+   - ... et ainsi de suite
+
+3. **Addition en arbre** :
+   ```
+   Niveau 1: 4 additions (pp0+pp1, pp2+pp3, pp4+pp5, pp6+pp7)
+   Niveau 2: 2 additions
+   Niveau 3: 1 addition finale
+   ```
+
+4. **Ne pas oublier** : Le résultat est sur 16 bits, pas 8 !
 
 ### Tests en ligne de commande
 

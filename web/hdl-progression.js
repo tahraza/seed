@@ -1581,6 +1581,244 @@ end architecture;
 `,
     },
 
+    'And8': {
+        project: 3,
+        name: 'And8',
+        description: 'AND 8-bit avec masque (pour produits partiels)',
+        dependencies: ['And2'],
+        template: `-- AND 8-bit avec masque
+-- Chaque bit de a est ANDé avec le même bit b
+-- Utile pour générer des produits partiels dans un multiplicateur
+
+entity And8 is
+  port(
+    a : in bits(7 downto 0);
+    b : in bit;
+    y : out bits(7 downto 0)
+  );
+end entity;
+
+architecture rtl of And8 is
+  component And2
+    port(a : in bit; b : in bit; y : out bit);
+  end component;
+begin
+  -- YOUR CODE HERE
+  -- Instancier 8 portes And2, une pour chaque bit
+end architecture;
+`,
+        solution: `-- AND 8-bit avec masque
+entity And8 is
+  port(
+    a : in bits(7 downto 0);
+    b : in bit;
+    y : out bits(7 downto 0)
+  );
+end entity;
+
+architecture rtl of And8 is
+  component And2
+    port(a : in bit; b : in bit; y : out bit);
+  end component;
+begin
+  u0: And2 port map (a => a(0), b => b, y => y(0));
+  u1: And2 port map (a => a(1), b => b, y => y(1));
+  u2: And2 port map (a => a(2), b => b, y => y(2));
+  u3: And2 port map (a => a(3), b => b, y => y(3));
+  u4: And2 port map (a => a(4), b => b, y => y(4));
+  u5: And2 port map (a => a(5), b => b, y => y(5));
+  u6: And2 port map (a => a(6), b => b, y => y(6));
+  u7: And2 port map (a => a(7), b => b, y => y(7));
+end architecture;
+`,
+        test: `load And8
+set a 0x00
+set b 0
+eval
+expect y 0x00
+set a 0xFF
+set b 0
+eval
+expect y 0x00
+set a 0xFF
+set b 1
+eval
+expect y 0xFF
+set a 0xA5
+set b 1
+eval
+expect y 0xA5
+set a 0x3C
+set b 1
+eval
+expect y 0x3C
+`,
+    },
+
+    'Mul8': {
+        project: 3,
+        name: 'Mul8',
+        description: 'Multiplicateur 8-bit (produit 16-bit)',
+        dependencies: ['And8', 'Add16'],
+        template: `-- Multiplicateur 8-bit non signé
+-- y = a * b (8-bit × 8-bit = 16-bit)
+--
+-- Algorithme par produits partiels:
+-- Pour chaque bit b[i], on génère pp_i = a AND b[i]
+-- Puis on décale pp_i de i positions vers la gauche
+-- Enfin on additionne tous les produits partiels
+
+entity Mul8 is
+  port(
+    a : in bits(7 downto 0);
+    b : in bits(7 downto 0);
+    y : out bits(15 downto 0)
+  );
+end entity;
+
+architecture rtl of Mul8 is
+  component And8
+    port(a : in bits(7 downto 0); b : in bit; y : out bits(7 downto 0));
+  end component;
+
+  component Add16
+    port(a : in bits(15 downto 0); b : in bits(15 downto 0); cin : in bit;
+         sum : out bits(15 downto 0); cout : out bit);
+  end component;
+
+  -- Produits partiels (8 bits chacun)
+  signal pp0, pp1, pp2, pp3, pp4, pp5, pp6, pp7 : bits(7 downto 0);
+
+  -- Produits partiels étendus et décalés (16 bits)
+  signal ext0, ext1, ext2, ext3, ext4, ext5, ext6, ext7 : bits(15 downto 0);
+
+  -- Sommes intermédiaires
+  signal sum01, sum23, sum45, sum67 : bits(15 downto 0);
+  signal sum0123, sum4567 : bits(15 downto 0);
+
+begin
+  -- YOUR CODE HERE
+  -- 1. Générer les 8 produits partiels avec And8
+  -- 2. Étendre chaque pp à 16 bits avec décalage approprié
+  -- 3. Additionner en arbre avec Add16
+end architecture;
+`,
+        solution: `-- Multiplicateur 8-bit non signé
+entity Mul8 is
+  port(
+    a : in bits(7 downto 0);
+    b : in bits(7 downto 0);
+    y : out bits(15 downto 0)
+  );
+end entity;
+
+architecture rtl of Mul8 is
+  component And8
+    port(a : in bits(7 downto 0); b : in bit; y : out bits(7 downto 0));
+  end component;
+
+  component Add16
+    port(a : in bits(15 downto 0); b : in bits(15 downto 0); cin : in bit;
+         sum : out bits(15 downto 0); cout : out bit);
+  end component;
+
+  signal pp0, pp1, pp2, pp3, pp4, pp5, pp6, pp7 : bits(7 downto 0);
+  signal ext0, ext1, ext2, ext3, ext4, ext5, ext6, ext7 : bits(15 downto 0);
+  signal sum01, sum23, sum45, sum67 : bits(15 downto 0);
+  signal sum0123, sum4567 : bits(15 downto 0);
+  signal c1, c2, c3, c4, c5, c6, c7 : bit;
+
+begin
+  -- Générer les produits partiels
+  and0: And8 port map (a => a, b => b(0), y => pp0);
+  and1: And8 port map (a => a, b => b(1), y => pp1);
+  and2: And8 port map (a => a, b => b(2), y => pp2);
+  and3: And8 port map (a => a, b => b(3), y => pp3);
+  and4: And8 port map (a => a, b => b(4), y => pp4);
+  and5: And8 port map (a => a, b => b(5), y => pp5);
+  and6: And8 port map (a => a, b => b(6), y => pp6);
+  and7: And8 port map (a => a, b => b(7), y => pp7);
+
+  -- Étendre et décaler les produits partiels
+  ext0(7 downto 0) <= pp0;
+  ext0(15 downto 8) <= x"00";
+
+  ext1(0) <= '0';
+  ext1(8 downto 1) <= pp1;
+  ext1(15 downto 9) <= "0000000";
+
+  ext2(1 downto 0) <= "00";
+  ext2(9 downto 2) <= pp2;
+  ext2(15 downto 10) <= "000000";
+
+  ext3(2 downto 0) <= "000";
+  ext3(10 downto 3) <= pp3;
+  ext3(15 downto 11) <= "00000";
+
+  ext4(3 downto 0) <= x"0";
+  ext4(11 downto 4) <= pp4;
+  ext4(15 downto 12) <= x"0";
+
+  ext5(4 downto 0) <= "00000";
+  ext5(12 downto 5) <= pp5;
+  ext5(15 downto 13) <= "000";
+
+  ext6(5 downto 0) <= "000000";
+  ext6(13 downto 6) <= pp6;
+  ext6(15 downto 14) <= "00";
+
+  ext7(6 downto 0) <= "0000000";
+  ext7(14 downto 7) <= pp7;
+  ext7(15) <= '0';
+
+  -- Addition en arbre (3 niveaux)
+  add01: Add16 port map (a => ext0, b => ext1, cin => '0', sum => sum01, cout => c1);
+  add23: Add16 port map (a => ext2, b => ext3, cin => '0', sum => sum23, cout => c2);
+  add45: Add16 port map (a => ext4, b => ext5, cin => '0', sum => sum45, cout => c3);
+  add67: Add16 port map (a => ext6, b => ext7, cin => '0', sum => sum67, cout => c4);
+
+  add0123: Add16 port map (a => sum01, b => sum23, cin => '0', sum => sum0123, cout => c5);
+  add4567: Add16 port map (a => sum45, b => sum67, cin => '0', sum => sum4567, cout => c6);
+
+  add_final: Add16 port map (a => sum0123, b => sum4567, cin => '0', sum => y, cout => c7);
+end architecture;
+`,
+        test: `load Mul8
+set a 0x00
+set b 0x00
+eval
+expect y 0x0000
+set a 0x01
+set b 0x01
+eval
+expect y 0x0001
+set a 0x02
+set b 0x03
+eval
+expect y 0x0006
+set a 0x05
+set b 0x07
+eval
+expect y 0x0023
+set a 0x0F
+set b 0x0F
+eval
+expect y 0x00E1
+set a 0x10
+set b 0x10
+eval
+expect y 0x0100
+set a 0xFF
+set b 0x02
+eval
+expect y 0x01FE
+set a 0xFF
+set b 0xFF
+eval
+expect y 0xFE01
+`,
+    },
+
     // =========================================================================
     // Project 4: Sequential Logic
     // =========================================================================
@@ -3532,7 +3770,7 @@ expect fill_line 1
 export const PROJECTS = [
     { id: 1, name: 'Portes Logiques', chips: ['Inv', 'And2', 'Or2', 'Xor2', 'Mux', 'DMux'] },
     { id: 2, name: 'Multi-bits', chips: ['Inv16', 'And16', 'Or16', 'Mux16', 'Or8Way', 'Mux4Way16', 'Mux8Way16', 'DMux4Way', 'DMux8Way'] },
-    { id: 3, name: 'Arithmetique', chips: ['HalfAdder', 'FullAdder', 'Add16', 'Inc16', 'Sub16', 'ALU'] },
+    { id: 3, name: 'Arithmetique', chips: ['HalfAdder', 'FullAdder', 'Add16', 'Inc16', 'Sub16', 'ALU', 'And8', 'Mul8'] },
     { id: 4, name: 'Sequentiel', chips: ['DFF1', 'BitReg', 'Register16', 'PC', 'RAM8', 'RAM64', 'RegFile'] },
     { id: 5, name: 'CPU', chips: ['Decoder', 'CondCheck', 'Control', 'CPU'] },
     { id: 6, name: 'CPU Pipeline', chips: ['IF_ID_Reg', 'HazardDetect', 'ForwardUnit', 'CPU_Pipeline'] },
