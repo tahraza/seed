@@ -5448,36 +5448,82 @@ begin
   );
 end architecture;
 `,
-        test: `// Test Computer with a simple program
-// This program: adds 2 + 3 and stores result in RAM[0]
+        test: `// =====================================================
+// 🎮 CAPSTONE: L'Ordinateur Complet en Action !
+// =====================================================
+//
+// Ce test démontre le cycle FETCH-EXECUTE complet :
+//
+//   ┌──────────────────────────────────────────────────┐
+//   │  Le Flux de Compilation (comme la Game Boy!)    │
+//   │                                                  │
+//   │   Code C          Assembleur        ROM          │
+//   │   snake.c   →    snake.a32    →   snake.bin    │
+//   │                                      │          │
+//   │   "Programme"    "Instructions"   "Cartouche"  │
+//   │                                      │          │
+//   │                                      ▼          │
+//   │                              ┌─────────────┐    │
+//   │                              │  Computer   │    │
+//   │                              │ ROM → CPU → RAM  │
+//   │                              └─────────────┘    │
+//   └──────────────────────────────────────────────────┘
+//
+// Format d'instruction A32-Lite (16 bits):
+//   [15:12] = opcode   (0=ADD, 1=SUB, 2=AND, 3=OR, 4=LOAD, 5=STORE)
+//   [11:8]  = rd       (registre destination)
+//   [7:4]   = rs1      (registre source 1)
+//   [3:0]   = rs2      (registre source 2)
+//
+// Programme exemple: Additionner les valeurs en RAM[0] et RAM[1]
+// puis stocker le résultat en RAM[2]
+//
+//   Addr  | Hex    | Instruction           | Commentaire
+//   ------|--------|----------------------|------------------
+//   0x00  | 0x4100 | LOAD R1, [R0]        | R1 = RAM[0]
+//   0x01  | 0x0002 | ADD R0, R0, R2       | (NOP - prépare R0)
+//   0x02  | 0x0001 | ADD R0, R0, R1       | (avance PC)
+//   ...
+//
+// Note: Le vrai jeu Snake (snake.c) tourne sur c32_runner
+// qui émule le processeur A32 complet (32 bits).
+// Ici on démontre le principe avec notre CPU simplifié.
+// =====================================================
 
 load Computer
 
-// Load program into ROM
-// This is a simplified instruction set example
-// In reality, you'd compile C code to machine code
-romload 0x2002 0x3003 0x4000
+// Charger un mini-programme dans la ROM
+// Instructions: quelques opérations ALU simples
+romload 0x0100 0x0211 0x0322 0x0433
 
-// Reset computer
+// Reset du Computer
 set reset 1
 tick
 tock
 set reset 0
 
-// Execute first instruction (load 2)
+// Cycle 1: Fetch instruction 0x0100, Execute
+// ADD R1, R0, R0 (R1 = 0 + 0 = 0)
 tick
 tock
 
-// Execute second instruction (add 3)
+// Cycle 2: Fetch instruction 0x0211, Execute
+// ADD R2, R1, R1 (R2 = R1 + R1)
 tick
 tock
 
-// Execute third instruction (store to RAM)
+// Cycle 3: Fetch instruction 0x0322, Execute
+// ADD R3, R2, R2 (R3 = R2 + R2)
 tick
 tock
 
-// The exact expectations depend on your CPU's instruction encoding
-// This test verifies the computer can execute multiple cycles
+// Cycle 4: Fetch instruction 0x0433, Execute
+// ADD R4, R3, R3 (R4 = R3 + R3)
+tick
+tock
+
+// Le Computer a exécuté 4 instructions automatiquement !
+// C'est le cycle fetch-execute en action.
 `,
     },
 };

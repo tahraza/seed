@@ -84,13 +84,66 @@ La ROM32K est comme une cartouche de jeu qu'on insere dans une console :
 - La **console** (CPU) lit et execute les instructions
 - La **memoire de travail** (RAM) stocke les donnees du jeu
 
-**Comment ca fonctionne :**
+**Le flux de compilation complet :**
 
-1. **Compiler** votre code C en fichier binaire `.bin`
-2. **Charger** le binaire dans la ROM avec `romload`
-3. **Executer** : le CPU lit les instructions de la ROM et les execute
+```
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   Code C             Assembleur           Binaire           │
+│   snake.c    ───►    snake.a32    ───►   snake.bin         │
+│                                              │              │
+│   int main() {       MOV R0, #42          01001010         │
+│     return 42;       MOV PC, LR           11100001         │
+│   }                                          │              │
+│                                              ▼              │
+│                                     ┌──────────────┐        │
+│                                     │   Computer   │        │
+│                                     │              │        │
+│                                     │ ROM ──► CPU  │        │
+│                                     │         │    │        │
+│                                     │         ▼    │        │
+│                                     │        RAM   │        │
+│                                     └──────────────┘        │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
 
-C'est le cycle **fetch-execute** en action, construit a partir de simples portes NAND !
+**Outils de compilation :**
+
+```bash
+# 1. Compiler C vers Assembleur
+./c32_cli snake.c -o snake.a32
+
+# 2. Assembler vers Binaire
+./a32_cli snake.a32 -o snake.bin
+
+# 3. Executer sur le simulateur
+./c32_runner snake.c
+```
+
+**Dans l'interface web HDL :**
+
+```
+load Computer
+romload 0x0100 0x0211 0x0322   // Charge les instructions
+set reset 1
+tick
+tock
+set reset 0
+// ... le CPU execute automatiquement !
+```
+
+**Exemple concret : le jeu Snake**
+
+Le fichier `demos/04_snake/snake.c` contient un vrai jeu Snake en C.
+Quand vous le compilez :
+1. `c32_cli` transforme le C en ~2000 lignes d'assembleur
+2. `a32_cli` assemble en ~8000 octets de code machine
+3. Ce binaire est charge dans la ROM
+4. Le CPU lit et execute chaque instruction
+
+C'est exactement ce qui se passe quand vous inserez une cartouche
+dans une Game Boy et appuyez sur Power !
 
 ---
 

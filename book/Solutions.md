@@ -1882,20 +1882,64 @@ begin
 end architecture;
 ```
 
-**Comment charger un programme dans la ROM :**
+**🎮 Le Flux Complet : Du Code C au Jeu qui Tourne**
 
-1. Écrivez votre code en C ou assembleur
-2. Compilez-le en fichier binaire `.bin`
-3. Utilisez la commande `romload` dans le test :
-   ```
-   load Computer
-   romload 0x1234 0x5678 0xABCD  // Charge 3 instructions
-   set reset 1
-   tick
-   tock
-   set reset 0
-   // ... exécution du programme
-   ```
+C'est exactement comme une cartouche de Game Boy :
+
+```
+┌─────────────────────────────────────────────────────────┐
+│   Code C              Assembleur           ROM          │
+│   snake.c    ───►    snake.a32    ───►   cartouche    │
+│                                              │          │
+│   while(alive) {     .Lloop:               0x4100      │
+│     move_snake();      BL move_snake       0x0211      │
+│   }                    B .Lloop            0x0322      │
+│                                              │          │
+│                                              ▼          │
+│                                     ┌──────────────┐    │
+│                                     │   Computer   │    │
+│                                     │ ROM → CPU    │    │
+│                                     │       ↓      │    │
+│                                     │      RAM     │    │
+│                                     └──────────────┘    │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Outils de compilation :**
+
+```bash
+# Compiler le jeu Snake
+./c32_cli demos/04_snake/snake.c -o snake.a32
+./a32_cli snake.a32 -o snake.bin
+
+# Ou directement l'exécuter
+./c32_runner demos/04_snake/snake.c
+```
+
+**Dans l'interface web HDL :**
+
+```
+load Computer
+romload 0x0100 0x0211 0x0322 0x0433   // Programme en ROM
+set reset 1
+tick
+tock
+set reset 0
+// Le CPU exécute automatiquement !
+tick
+tock  // Cycle 1: fetch + execute instruction 0
+tick
+tock  // Cycle 2: fetch + execute instruction 1
+// ... etc
+```
+
+**Note importante :**
+
+Le CPU HDL (A32-Lite) utilise des instructions 16 bits simplifiées.
+Le vrai jeu Snake (`demos/04_snake/snake.c`) utilise le processeur
+A32 complet (32 bits) via `c32_runner`. Le principe est identique :
+le programme est chargé en mémoire et le CPU l'exécute instruction
+par instruction.
 
 ---
 
