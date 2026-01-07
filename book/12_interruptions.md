@@ -554,6 +554,17 @@ void good_function() {
 
 ## Exercices Pratiques
 
+### Exercices sur le Simulateur Web
+
+Lancez le **Simulateur Web** et allez dans **Exercices OS** pour pratiquer les concepts de ce chapitre :
+
+| Exercice | Description | Concepts |
+|----------|-------------|----------|
+| `os-timer` | Compte à rebours visuel | Timer, compteurs |
+| `os-irq` | Interruptions visuelles (T/K/S) | Handlers, dispatch, acquittement |
+
+Ces exercices interactifs vous permettent de voir les interruptions en action avec un retour visuel immédiat.
+
 ### Exercice 1 : Gestionnaire de Timer Simple
 
 Implémentez un handler de timer qui compte les secondes :

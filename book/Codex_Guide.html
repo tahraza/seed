@@ -2468,21 +2468,25 @@ Longtemps !</a></li>
 id="toc-exercices-pratiques-9"><span
 class="toc-section-number">15.9</span> Exercices Pratiques</a>
 <ul>
+<li><a href="#exercices-sur-le-simulateur-web-9"
+id="toc-exercices-sur-le-simulateur-web-9"><span
+class="toc-section-number">15.9.1</span> Exercices sur le Simulateur
+Web</a></li>
 <li><a href="#exercice-1-gestionnaire-de-timer-simple"
 id="toc-exercice-1-gestionnaire-de-timer-simple"><span
-class="toc-section-number">15.9.1</span> Exercice 1 : Gestionnaire de
+class="toc-section-number">15.9.2</span> Exercice 1 : Gestionnaire de
 Timer Simple</a></li>
 <li><a href="#exercice-2-buffer-circulaire-pour-clavier"
 id="toc-exercice-2-buffer-circulaire-pour-clavier"><span
-class="toc-section-number">15.9.2</span> Exercice 2 : Buffer Circulaire
+class="toc-section-number">15.9.3</span> Exercice 2 : Buffer Circulaire
 pour Clavier</a></li>
 <li><a href="#exercice-3-ordonnanceur-simple"
 id="toc-exercice-3-ordonnanceur-simple"><span
-class="toc-section-number">15.9.3</span> Exercice 3 : Ordonnanceur
+class="toc-section-number">15.9.4</span> Exercice 3 : Ordonnanceur
 Simple</a></li>
 <li><a href="#exercice-4-analyse-de-latence"
 id="toc-exercice-4-analyse-de-latence"><span
-class="toc-section-number">15.9.4</span> Exercice 4 : Analyse de
+class="toc-section-number">15.9.5</span> Exercice 4 : Analyse de
 Latence</a></li>
 </ul></li>
 <li><a href="#auto-évaluation-10" id="toc-auto-évaluation-10"><span
@@ -2583,25 +2587,29 @@ class="toc-section-number">16.3.7</span> Modèles de Concurrence</a></li>
 id="toc-exercices-pratiques-10"><span
 class="toc-section-number">16.4</span> Exercices Pratiques</a>
 <ul>
+<li><a href="#exercices-sur-le-simulateur-web-10"
+id="toc-exercices-sur-le-simulateur-web-10"><span
+class="toc-section-number">16.4.1</span> Exercices sur le Simulateur
+Web</a></li>
 <li><a href="#exercice-1-analyse-dun-fichier-objet"
 id="toc-exercice-1-analyse-dun-fichier-objet"><span
-class="toc-section-number">16.4.1</span> Exercice 1 : Analyse d’un
+class="toc-section-number">16.4.2</span> Exercice 1 : Analyse d’un
 Fichier Objet</a></li>
 <li><a href="#exercice-2-linking-manuel"
 id="toc-exercice-2-linking-manuel"><span
-class="toc-section-number">16.4.2</span> Exercice 2 : Linking
+class="toc-section-number">16.4.3</span> Exercice 2 : Linking
 Manuel</a></li>
 <li><a href="#exercice-3-exception-handling-en-c"
 id="toc-exercice-3-exception-handling-en-c"><span
-class="toc-section-number">16.4.3</span> Exercice 3 : Exception Handling
+class="toc-section-number">16.4.4</span> Exercice 3 : Exception Handling
 en C</a></li>
 <li><a href="#exercice-4-producteur-consommateur"
 id="toc-exercice-4-producteur-consommateur"><span
-class="toc-section-number">16.4.4</span> Exercice 4 :
+class="toc-section-number">16.4.5</span> Exercice 4 :
 Producteur-Consommateur</a></li>
 <li><a href="#exercice-5-détection-de-deadlock"
 id="toc-exercice-5-détection-de-deadlock"><span
-class="toc-section-number">16.4.5</span> Exercice 5 : Détection de
+class="toc-section-number">16.4.6</span> Exercice 5 : Détection de
 Deadlock</a></li>
 </ul></li>
 <li><a href="#auto-évaluation-11" id="toc-auto-évaluation-11"><span
@@ -14388,9 +14396,43 @@ class="sourceCode c"><code class="sourceCode c"><span id="cb238-1"><a href="#cb2
 <hr />
 <h2 data-number="15.9" id="exercices-pratiques-9"><span
 class="header-section-number">15.9</span> Exercices Pratiques</h2>
-<h3 data-number="15.9.1"
+<h3 data-number="15.9.1" id="exercices-sur-le-simulateur-web-9"><span
+class="header-section-number">15.9.1</span> Exercices sur le Simulateur
+Web</h3>
+<p>Lancez le <strong>Simulateur Web</strong> et allez dans
+<strong>Exercices OS</strong> pour pratiquer les concepts de ce chapitre
+:</p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 39%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Exercice</th>
+<th>Description</th>
+<th>Concepts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>os-timer</code></td>
+<td>Compte à rebours visuel</td>
+<td>Timer, compteurs</td>
+</tr>
+<tr class="even">
+<td><code>os-irq</code></td>
+<td>Interruptions visuelles (T/K/S)</td>
+<td>Handlers, dispatch, acquittement</td>
+</tr>
+</tbody>
+</table>
+<p>Ces exercices interactifs vous permettent de voir les interruptions
+en action avec un retour visuel immédiat.</p>
+<h3 data-number="15.9.2"
 id="exercice-1-gestionnaire-de-timer-simple"><span
-class="header-section-number">15.9.1</span> Exercice 1 : Gestionnaire de
+class="header-section-number">15.9.2</span> Exercice 1 : Gestionnaire de
 Timer Simple</h3>
 <p>Implémentez un handler de timer qui compte les secondes :</p>
 <div class="sourceCode" id="cb239"><pre
@@ -14406,9 +14448,9 @@ class="sourceCode asm"><code class="sourceCode fasm"><span id="cb239-1"><a href=
 <span id="cb239-10"><a href="#cb239-10" aria-hidden="true" tabindex="-1"></a><span class="co">; - Acquitter l&#39;interruption</span></span>
 <span id="cb239-11"><a href="#cb239-11" aria-hidden="true" tabindex="-1"></a><span class="fu">timer_handler:</span></span>
 <span id="cb239-12"><a href="#cb239-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">; Votre code ici</span></span></code></pre></div>
-<h3 data-number="15.9.2"
+<h3 data-number="15.9.3"
 id="exercice-2-buffer-circulaire-pour-clavier"><span
-class="header-section-number">15.9.2</span> Exercice 2 : Buffer
+class="header-section-number">15.9.3</span> Exercice 2 : Buffer
 Circulaire pour Clavier</h3>
 <div class="sourceCode" id="cb240"><pre
 class="sourceCode c"><code class="sourceCode c"><span id="cb240-1"><a href="#cb240-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Implémenter un buffer circulaire pour stocker les touches</span></span>
@@ -14424,8 +14466,8 @@ class="sourceCode c"><code class="sourceCode c"><span id="cb240-1"><a href="#cb2
 <span id="cb240-11"><a href="#cb240-11" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> keyboard_isr<span class="op">();</span>        <span class="co">// Ajoute une touche au buffer</span></span>
 <span id="cb240-12"><a href="#cb240-12" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> get_key<span class="op">();</span>              <span class="co">// Lit une touche (bloquant ou non)</span></span>
 <span id="cb240-13"><a href="#cb240-13" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> buffer_empty<span class="op">();</span>         <span class="co">// Test si vide</span></span></code></pre></div>
-<h3 data-number="15.9.3" id="exercice-3-ordonnanceur-simple"><span
-class="header-section-number">15.9.3</span> Exercice 3 : Ordonnanceur
+<h3 data-number="15.9.4" id="exercice-3-ordonnanceur-simple"><span
+class="header-section-number">15.9.4</span> Exercice 3 : Ordonnanceur
 Simple</h3>
 <div class="sourceCode" id="cb241"><pre
 class="sourceCode c"><code class="sourceCode c"><span id="cb241-1"><a href="#cb241-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Implémenter un scheduler round-robin basé sur timer</span></span>
@@ -14444,8 +14486,8 @@ class="sourceCode c"><code class="sourceCode c"><span id="cb241-1"><a href="#cb2
 <span id="cb241-14"><a href="#cb241-14" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> timer_isr<span class="op">();</span>           <span class="co">// Décrémente time_remaining, schedule si 0</span></span>
 <span id="cb241-15"><a href="#cb241-15" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> schedule<span class="op">();</span>            <span class="co">// Choisit le prochain thread</span></span>
 <span id="cb241-16"><a href="#cb241-16" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> context_switch<span class="op">();</span>      <span class="co">// Change de thread</span></span></code></pre></div>
-<h3 data-number="15.9.4" id="exercice-4-analyse-de-latence"><span
-class="header-section-number">15.9.4</span> Exercice 4 : Analyse de
+<h3 data-number="15.9.5" id="exercice-4-analyse-de-latence"><span
+class="header-section-number">15.9.5</span> Exercice 4 : Analyse de
 Latence</h3>
 <p>Calculez la latence d’interruption pour : - Instruction en cours :
 LDM (chargement de 8 registres) - Sauvegarde automatique : 3 cycles -
@@ -15204,8 +15246,47 @@ class="header-section-number">16.3.7</span> Modèles de Concurrence</h3>
 <hr />
 <h2 data-number="16.4" id="exercices-pratiques-10"><span
 class="header-section-number">16.4</span> Exercices Pratiques</h2>
-<h3 data-number="16.4.1" id="exercice-1-analyse-dun-fichier-objet"><span
-class="header-section-number">16.4.1</span> Exercice 1 : Analyse d’un
+<h3 data-number="16.4.1" id="exercices-sur-le-simulateur-web-10"><span
+class="header-section-number">16.4.1</span> Exercices sur le Simulateur
+Web</h3>
+<p>Lancez le <strong>Simulateur Web</strong> et allez dans
+<strong>Exercices OS</strong> pour pratiquer les concepts de ce chapitre
+:</p>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 39%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Exercice</th>
+<th>Description</th>
+<th>Concepts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>os-coro</code></td>
+<td>Coroutines visuelles (alternance A/B)</td>
+<td>Changement de contexte, yield</td>
+</tr>
+<tr class="even">
+<td><code>os-sched</code></td>
+<td>Scheduler avec préemption</td>
+<td>Ordonnancement, time slices</td>
+</tr>
+<tr class="odd">
+<td><code>os-project2</code></td>
+<td>Projet: Task Manager</td>
+<td>Threads, scheduler complet</td>
+</tr>
+</tbody>
+</table>
+<p>Ces exercices montrent visuellement comment les threads/coroutines
+alternent l’exécution.</p>
+<h3 data-number="16.4.2" id="exercice-1-analyse-dun-fichier-objet"><span
+class="header-section-number">16.4.2</span> Exercice 1 : Analyse d’un
 Fichier Objet</h3>
 <p>Utilisez <code>objdump</code> ou <code>readelf</code> pour analyser
 un fichier <code>.o</code> :</p>
@@ -15224,8 +15305,8 @@ class="sourceCode bash"><code class="sourceCode bash"><span id="cb263-1"><a href
 <p>Questions : 1. Quels symboles sont définis ? Lesquels sont indéfinis
 ? 2. Quelle taille fait la section <code>.text</code> ? 3. Où est
 stockée la chaîne “Hello World” ?</p>
-<h3 data-number="16.4.2" id="exercice-2-linking-manuel"><span
-class="header-section-number">16.4.2</span> Exercice 2 : Linking
+<h3 data-number="16.4.3" id="exercice-2-linking-manuel"><span
+class="header-section-number">16.4.3</span> Exercice 2 : Linking
 Manuel</h3>
 <p>Créez deux fichiers :</p>
 <div class="sourceCode" id="cb264"><pre
@@ -15248,8 +15329,8 @@ class="sourceCode c"><code class="sourceCode c"><span id="cb264-1"><a href="#cb2
 <li>Que se passe-t-il ? Pourquoi ? (Indice : <code>_start</code>,
 libc)</li>
 </ol>
-<h3 data-number="16.4.3" id="exercice-3-exception-handling-en-c"><span
-class="header-section-number">16.4.3</span> Exercice 3 : Exception
+<h3 data-number="16.4.4" id="exercice-3-exception-handling-en-c"><span
+class="header-section-number">16.4.4</span> Exercice 3 : Exception
 Handling en C</h3>
 <p>Implémentez un système d’exceptions simple avec setjmp/longjmp :</p>
 <div class="sourceCode" id="cb265"><pre
@@ -15261,8 +15342,8 @@ class="sourceCode c"><code class="sourceCode c"><span id="cb265-1"><a href="#cb2
 <span id="cb265-6"><a href="#cb265-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> CATCH<span class="op">(</span>code<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb265-7"><a href="#cb265-7" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">&quot;Exception </span><span class="sc">%d\n</span><span class="st">&quot;</span><span class="op">,</span> code<span class="op">);</span></span>
 <span id="cb265-8"><a href="#cb265-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> END_TRY<span class="op">;</span></span></code></pre></div>
-<h3 data-number="16.4.4" id="exercice-4-producteur-consommateur"><span
-class="header-section-number">16.4.4</span> Exercice 4 :
+<h3 data-number="16.4.5" id="exercice-4-producteur-consommateur"><span
+class="header-section-number">16.4.5</span> Exercice 4 :
 Producteur-Consommateur</h3>
 <p>Implémentez le problème classique producteur-consommateur :</p>
 <div class="sourceCode" id="cb266"><pre
@@ -15273,8 +15354,8 @@ class="sourceCode c"><code class="sourceCode c"><span id="cb266-1"><a href="#cb2
 <span id="cb266-5"><a href="#cb266-5" aria-hidden="true" tabindex="-1"></a><span class="co">// </span><span class="al">TODO</span><span class="co">: Implémenter avec mutex et condition variables</span></span>
 <span id="cb266-6"><a href="#cb266-6" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span><span class="op">*</span> producer<span class="op">(</span><span class="dt">void</span><span class="op">*</span> arg<span class="op">);</span>   <span class="co">// Produit des items</span></span>
 <span id="cb266-7"><a href="#cb266-7" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span><span class="op">*</span> consumer<span class="op">(</span><span class="dt">void</span><span class="op">*</span> arg<span class="op">);</span>   <span class="co">// Consomme des items</span></span></code></pre></div>
-<h3 data-number="16.4.5" id="exercice-5-détection-de-deadlock"><span
-class="header-section-number">16.4.5</span> Exercice 5 : Détection de
+<h3 data-number="16.4.6" id="exercice-5-détection-de-deadlock"><span
+class="header-section-number">16.4.6</span> Exercice 5 : Détection de
 Deadlock</h3>
 <p>Analysez ce code et identifiez le deadlock potentiel :</p>
 <div class="sourceCode" id="cb267"><pre

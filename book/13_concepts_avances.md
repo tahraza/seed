@@ -732,6 +732,18 @@ if (pthread_mutex_trylock(&lockB) != 0) {
 
 ## Exercices Pratiques
 
+### Exercices sur le Simulateur Web
+
+Lancez le **Simulateur Web** et allez dans **Exercices OS** pour pratiquer les concepts de ce chapitre :
+
+| Exercice | Description | Concepts |
+|----------|-------------|----------|
+| `os-coro` | Coroutines visuelles (alternance A/B) | Changement de contexte, yield |
+| `os-sched` | Scheduler avec préemption | Ordonnancement, time slices |
+| `os-project2` | Projet: Task Manager | Threads, scheduler complet |
+
+Ces exercices montrent visuellement comment les threads/coroutines alternent l'exécution.
+
 ### Exercice 1 : Analyse d'un Fichier Objet
 
 Utilisez `objdump` ou `readelf` pour analyser un fichier `.o` :
