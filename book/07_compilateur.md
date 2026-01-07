@@ -8,23 +8,9 @@ Dans ce chapitre, nous allons construire le **pont** entre le langage de haut ni
 
 ## Où en sommes-nous ?
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     COUCHE 7: Applications                       │
-├─────────────────────────────────────────────────────────────────┤
-│                  COUCHE 6: Système d'Exploitation                │
-├─────────────────────────────────────────────────────────────────┤
-│                 COUCHE 5: Langage de Haut Niveau (C32)           │
-├─────────────────────────────────────────────────────────────────┤
-│  ══════════════► COUCHE 4: Compilateur ◄════════════════════════│
-│               (Transforme C32 → Assembleur A32)                  │
-│                    (Vous êtes ici !)                             │
-├─────────────────────────────────────────────────────────────────┤
-│                   COUCHE 3: Assembleur (A32 ASM)                 │
-├─────────────────────────────────────────────────────────────────┤
-│                 COUCHE 2: Architecture Machine (ISA)             │
-└─────────────────────────────────────────────────────────────────┘
-```
+![Position dans l'architecture](images/architecture-stack.svg)
+
+*Nous sommes à la Couche 4 : Compilateur - Transforme C32 en Assembleur A32*
 
 Le compilateur est le **traducteur automatique** qui transforme du code lisible par les humains en code exécutable par la machine.
 
@@ -365,6 +351,7 @@ Le projet final combine toutes les phases : lexer → parser → codegen pour pr
 ### Techniques Clés
 
 Ces exercices utilisent la technique de **descente récursive** :
+
 - `parse_expr()` gère `+` et `-` (basse priorité)
 - `parse_term()` gère `*` et `/` (haute priorité)
 - `parse_factor()` gère les nombres et les parenthèses

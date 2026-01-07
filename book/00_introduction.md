@@ -39,57 +39,7 @@ Ce projet a pour but de **briser l'abstraction**. Nous allons descendre au nivea
 
 Voici les couches que nous allons traverser, de bas en haut :
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     COUCHE 7: Applications                       │
-│              (Jeux, Shell, Calculatrice, Éditeur)                │
-│                                                                  │
-│   C'est ce que l'utilisateur voit et utilise. Tout le reste     │
-│   n'existe que pour rendre cette couche possible.                │
-├─────────────────────────────────────────────────────────────────┤
-│                  COUCHE 6: Système d'Exploitation                │
-│           (Gestion mémoire, Drivers écran/clavier)               │
-│                                                                  │
-│   L'OS cache la complexité du matériel. Au lieu de manipuler    │
-│   des adresses, on appelle draw_pixel() ou read_key().          │
-├─────────────────────────────────────────────────────────────────┤
-│                 COUCHE 5: Langage de Haut Niveau (C32)           │
-│                    (Variables, fonctions, boucles)               │
-│                                                                  │
-│   On écrit du code lisible par un humain. Le compilateur        │
-│   le transforme en instructions machine.                         │
-├─────────────────────────────────────────────────────────────────┤
-│                      COUCHE 4: Compilateur                       │
-│               (Transforme C32 → Assembleur A32)                  │
-│                                                                  │
-│   Le compilateur est un traducteur automatique. Il comprend     │
-│   votre intention et génère le code équivalent.                  │
-├─────────────────────────────────────────────────────────────────┤
-│                   COUCHE 3: Assembleur (A32 ASM)                 │
-│               (Mnémoniques → Code machine binaire)               │
-│                                                                  │
-│   L'assembleur traduit les instructions humainement lisibles    │
-│   (ADD, MOV) en suites de 0 et de 1 que le CPU comprend.        │
-├─────────────────────────────────────────────────────────────────┤
-│                 COUCHE 2: Architecture Machine (ISA)             │
-│          (Jeu d'instructions, Registres, Mémoire)                │
-│                                                                  │
-│   C'est le "contrat" entre le matériel et le logiciel.          │
-│   Il définit ce que le processeur sait faire.                    │
-├─────────────────────────────────────────────────────────────────┤
-│                    COUCHE 1: Logique Matérielle                  │
-│               (Portes logiques, ALU, RAM, CPU)                   │
-│                                                                  │
-│   Des circuits électroniques qui ne connaissent que 0 et 1,     │
-│   mais qui, combinés intelligemment, peuvent tout calculer.      │
-├─────────────────────────────────────────────────────────────────┤
-│                     COUCHE 0: La Porte NAND                      │
-│                    (Notre axiome de départ)                      │
-│                                                                  │
-│   Tout commence ici. Une seule porte logique, et à partir       │
-│   d'elle, nous construisons tout le reste.                       │
-└─────────────────────────────────────────────────────────────────┘
-```
+![Les 8 couches d'abstraction](images/architecture-stack.svg)
 
 ### La beauté de l'abstraction
 
@@ -113,7 +63,7 @@ Comparé aux architectures pédagogiques classiques plus simples (comme Hack), C
 | **Registres** | 2 (A et D) | **16 (R0-R15)** style ARM |
 | **Mémoire** | Séparée (Harvard) | **Unifiée** (Von Neumann) |
 | **Instructions** | Simple, propriétaire | **RISC moderne** (Load/Store) |
-| **Écran** | Monochrome fixe | **320×240 couleurs** |
+| **Écran** | Monochrome fixe | **320×240 monochrome** |
 
 ### Pourquoi ces changements ?
 

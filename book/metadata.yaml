@@ -4,6 +4,8 @@ subtitle: "De la Porte Logique au Système d'Exploitation 32-bits"
 author: "Tahiry RAZAFINDRALAMBO"
 date: "2026"
 lang: fr
+documentclass: book
+classoption: oneside
 geometry:
 - top=2.5cm
 - bottom=2.5cm
@@ -14,13 +16,33 @@ sansfont: "DejaVu Sans"
 monofont: "DejaVu Sans Mono"
 fontsize: 11pt
 header-includes:
+- \usepackage{fancyhdr}
+- \usepackage{xcolor}
+- \usepackage{pagecolor}
+- \usepackage{afterpage}
+- \definecolor{titleblue}{HTML}{1E90FF}
+- \definecolor{codegray}{gray}{0.95}
+- \pagestyle{fancy}
+- \fancyhf{}
+- \fancyhead[C]{L'Architecture Codex}
+- \fancyfoot[C]{\thepage}
+- \renewcommand{\headrulewidth}{0.4pt}
+include-before:
 - |
-  \usepackage{fancyhdr}
-  \pagestyle{fancy}
-  \fancyhead[CO,CE]{L'Architecture Codex}
-  \fancyfoot[CO,CE]{\thepage}
-  \usepackage{xcolor}
-  \definecolor{codegray}{gray}{0.95}
-  \let\oldtexttt\texttt
-  \renewcommand{\texttt}[1]{\colorbox{codegray}{\oldtexttt{#1}}}
+  \begin{titlepage}
+  \newpagecolor{titleblue}
+  \afterpage{\restorepagecolor}
+  \centering
+  \vspace*{4cm}
+  {\Huge\bfseries\color{white} L'Architecture Codex\par}
+  \vspace{1.5cm}
+  {\Large\color{white} De la Porte Logique au Système d'Exploitation 32-bits\par}
+  \vspace{0.8cm}
+  {\color{white}\rule{0.6\textwidth}{2pt}\par}
+  \vspace{3cm}
+  {\large\color{white} Tahiry RAZAFINDRALAMBO\par}
+  \vspace{1.5cm}
+  {\color{white} 2026\par}
+  \vfill
+  \end{titlepage}
 ...

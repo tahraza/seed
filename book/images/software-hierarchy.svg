@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 250" width="400" height="250">
+  <defs>
+    <style>
+      .layer { stroke: #374151; stroke-width: 2; }
+      .label { font-family: sans-serif; font-size: 12px; fill: #1f2937; font-weight: bold; }
+      .sublabel { font-family: sans-serif; font-size: 10px; fill: #6b7280; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e3a8a; }
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#374151"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="200" y="25" text-anchor="middle">Hierarchie Logicielle</text>
+
+  <!-- Application layer -->
+  <rect x="80" y="45" width="240" height="50" rx="6" fill="#dbeafe" class="layer"/>
+  <text class="label" x="200" y="70" text-anchor="middle">Applications</text>
+  <text class="sublabel" x="200" y="85" text-anchor="middle">(Jeux, Editeur, Shell)</text>
+
+  <!-- Arrow down -->
+  <line x1="200" y1="95" x2="200" y2="115" stroke="#374151" stroke-width="2" marker-end="url(#arr)"/>
+  <text class="sublabel" x="230" y="110">appelle</text>
+
+  <!-- System Library layer -->
+  <rect x="80" y="120" width="240" height="50" rx="6" fill="#dcfce7" class="layer"/>
+  <text class="label" x="200" y="145" text-anchor="middle">Bibliotheque Systeme (OS)</text>
+  <text class="sublabel" x="200" y="160" text-anchor="middle">(Heap, Ecran, Clavier)</text>
+
+  <!-- Arrow down -->
+  <line x1="200" y1="170" x2="200" y2="190" stroke="#374151" stroke-width="2" marker-end="url(#arr)"/>
+  <text class="sublabel" x="230" y="185">controle</text>
+
+  <!-- Hardware layer -->
+  <rect x="80" y="195" width="240" height="50" rx="6" fill="#fef3c7" class="layer"/>
+  <text class="label" x="200" y="220" text-anchor="middle">Materiel</text>
+  <text class="sublabel" x="200" y="235" text-anchor="middle">(CPU, RAM, Peripheriques)</text>
+</svg>

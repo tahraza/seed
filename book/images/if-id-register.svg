@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 280" width="500" height="280">
+  <defs>
+    <style>
+      .box { stroke: #2563eb; stroke-width: 2; fill: #dbeafe; rx: 6; }
+      .wire { stroke: #374151; stroke-width: 2; fill: none; }
+      .label { font-family: sans-serif; font-size: 10px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 12px; font-weight: bold; fill: #1e40af; }
+      .section { font-family: sans-serif; font-size: 9px; fill: #6b7280; font-style: italic; }
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#374151"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="250" y="20" text-anchor="middle">Registre de Pipeline IF/ID</text>
+
+  <!-- Main box -->
+  <rect class="box" x="150" y="40" width="200" height="200" rx="6"/>
+  <text class="title" x="250" y="65" text-anchor="middle">IF/ID Register</text>
+
+  <!-- Inputs -->
+  <text class="section" x="160" y="85">Entrees:</text>
+
+  <line class="wire" x1="50" y1="100" x2="150" y2="100" marker-end="url(#arr)"/>
+  <text class="label" x="55" y="95">if_instr (32b)</text>
+
+  <line class="wire" x1="50" y1="125" x2="150" y2="125" marker-end="url(#arr)"/>
+  <text class="label" x="55" y="120">if_pc_plus4 (32b)</text>
+
+  <line class="wire" x1="50" y1="150" x2="150" y2="150" marker-end="url(#arr)"/>
+  <text class="label" x="55" y="145">stall (1b)</text>
+
+  <line class="wire" x1="50" y1="175" x2="150" y2="175" marker-end="url(#arr)"/>
+  <text class="label" x="55" y="170">flush (1b)</text>
+
+  <!-- Behavior text inside box -->
+  <text class="section" x="160" y="200">Comportement:</text>
+  <text class="label" x="165" y="215" font-size="8">reset/flush: NOP</text>
+  <text class="label" x="165" y="227" font-size="8">stall: conserver</text>
+
+  <!-- Outputs -->
+  <line class="wire" x1="350" y1="100" x2="450" y2="100" marker-end="url(#arr)"/>
+  <text class="label" x="375" y="95">id_instr (32b)</text>
+
+  <line class="wire" x1="350" y1="125" x2="450" y2="125" marker-end="url(#arr)"/>
+  <text class="label" x="360" y="120">id_pc_plus4 (32b)</text>
+
+  <!-- Clock input from top -->
+  <line class="wire" x1="250" y1="25" x2="250" y2="40"/>
+  <text class="label" x="260" y="35">clk</text>
+
+  <!-- Reset input -->
+  <line class="wire" x1="300" y1="25" x2="300" y2="40"/>
+  <text class="label" x="305" y="35">reset</text>
+
+  <!-- Legend -->
+  <text class="section" x="250" y="265" text-anchor="middle">Stocke l'instruction entre les etages IF et ID</text>
+</svg>

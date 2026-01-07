@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 120" width="650" height="120">
+  <defs>
+    <style>
+      .stage { stroke: #374151; stroke-width: 1.5; }
+      .label { font-family: sans-serif; font-size: 10px; fill: #1f2937; font-weight: bold; }
+      .sublabel { font-family: sans-serif; font-size: 8px; fill: #6b7280; }
+      .title { font-family: sans-serif; font-size: 12px; font-weight: bold; fill: #1e3a8a; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="325" y="20" text-anchor="middle">Vue Pipeline - Etapes d'Execution</text>
+
+  <!-- Stage boxes -->
+  <rect x="20" y="40" width="110" height="55" fill="#fef3c7" class="stage" rx="4"/>
+  <text class="label" x="75" y="58" text-anchor="middle">FETCH</text>
+  <text class="sublabel" x="75" y="72" text-anchor="middle">PC</text>
+  <text class="sublabel" x="75" y="84" text-anchor="middle">Memoire</text>
+
+  <rect x="145" y="40" width="110" height="55" fill="#dcfce7" class="stage" rx="4"/>
+  <text class="label" x="200" y="58" text-anchor="middle">DECODE</text>
+  <text class="sublabel" x="200" y="72" text-anchor="middle">Instruction</text>
+  <text class="sublabel" x="200" y="84" text-anchor="middle">decodee</text>
+
+  <rect x="270" y="40" width="110" height="55" fill="#dbeafe" class="stage" rx="4"/>
+  <text class="label" x="325" y="58" text-anchor="middle">EXECUTE</text>
+  <text class="sublabel" x="325" y="72" text-anchor="middle">ALU</text>
+  <text class="sublabel" x="325" y="84" text-anchor="middle">A op B = R</text>
+
+  <rect x="395" y="40" width="110" height="55" fill="#e0e7ff" class="stage" rx="4"/>
+  <text class="label" x="450" y="58" text-anchor="middle">MEMORY</text>
+  <text class="sublabel" x="450" y="72" text-anchor="middle">Cache L1</text>
+  <text class="sublabel" x="450" y="84" text-anchor="middle">Hit/Miss</text>
+
+  <rect x="520" y="40" width="110" height="55" fill="#fce7f3" class="stage" rx="4"/>
+  <text class="label" x="575" y="58" text-anchor="middle">WRITEBACK</text>
+  <text class="sublabel" x="575" y="72" text-anchor="middle">Registres</text>
+  <text class="sublabel" x="575" y="84" text-anchor="middle">Rd &lt;- R</text>
+
+  <!-- Dividers -->
+  <line x1="130" y1="40" x2="130" y2="95" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="255" y1="40" x2="255" y2="95" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="380" y1="40" x2="380" y2="95" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="505" y1="40" x2="505" y2="95" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,3"/>
+</svg>

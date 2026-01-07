@@ -10,27 +10,9 @@ Pour construire un véritable ordinateur, nous devons pouvoir **stocker de l'inf
 
 ## Où en sommes-nous ?
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     COUCHE 7: Applications                       │
-├─────────────────────────────────────────────────────────────────┤
-│                  COUCHE 6: Système d'Exploitation                │
-├─────────────────────────────────────────────────────────────────┤
-│                 COUCHE 5: Langage de Haut Niveau (C32)           │
-├─────────────────────────────────────────────────────────────────┤
-│                      COUCHE 4: Compilateur                       │
-├─────────────────────────────────────────────────────────────────┤
-│                   COUCHE 3: Assembleur (A32 ASM)                 │
-├─────────────────────────────────────────────────────────────────┤
-│                 COUCHE 2: Architecture Machine (ISA)             │
-├─────────────────────────────────────────────────────────────────┤
-│  ══════════════► COUCHE 1: Logique Matérielle ◄══════════════   │
-│              (Portes → ALU → MÉMOIRE → CPU)                      │
-│                    (Vous êtes ici !)                             │
-├─────────────────────────────────────────────────────────────────┤
-│                     COUCHE 0: La Porte NAND                      │
-└─────────────────────────────────────────────────────────────────┘
-```
+![Position dans l'architecture](images/architecture-stack.svg)
+
+*Nous sommes à la Couche 1 : Logique Matérielle (Portes - ALU - MEMOIRE - CPU)*
 
 Nous continuons à construire la couche matérielle. Après les portes logiques (Chapitre 1) et l'ALU (Chapitre 2), nous abordons maintenant la **mémoire** — le composant qui permet à l'ordinateur de "se souvenir".
 
@@ -90,6 +72,7 @@ L'horloge est un signal qui oscille perpétuellement entre 0 et 1 à une fréque
 Le moment crucial est le **front montant** : le passage de 0 à 1.
 
 Dans le système Codex, les changements d'état se produisent sur le front montant. Cela signifie :
+
 - Pendant que l'horloge est à 0, les circuits combinatoires calculent
 - Quand l'horloge passe à 1, les résultats sont capturés dans les registres
 
@@ -98,6 +81,7 @@ C'est comme dire : "Tout le monde calcule... et maintenant, on fige les résulta
 ### Fréquence d'horloge
 
 La fréquence de l'horloge détermine la vitesse du processeur :
+
 - Un processeur à 1 GHz = 1 milliard de cycles par seconde
 - À chaque cycle, le CPU peut exécuter (une partie d')une instruction
 
@@ -123,16 +107,7 @@ La **DFF** (Data Flip-Flop) est l'atome de la mémoire. C'est le plus petit circ
 
 La sortie à l'instant *t* est égale à ce qu'était l'entrée au cycle précédent.
 
-```
-         Cycle 1    Cycle 2    Cycle 3    Cycle 4
-clk      ───┐ ┌───  ───┐ ┌───  ───┐ ┌───  ───┐ ┌───
-            └─┘        └─┘        └─┘        └─┘
-d        ═══1═══════0═════════1═════════1═══════
-q        ═══?═══════1═════════0═════════1═══════
-                    ↑         ↑         ↑
-                La sortie prend la valeur de d
-                du cycle précédent
-```
+![Signal d'horloge et DFF](images/clock-timing.svg)
 
 ### Pourquoi est-ce utile ?
 
@@ -154,18 +129,21 @@ La DFF mémorise pendant UN cycle, puis elle prend la nouvelle valeur d'entrée.
 ### Le problème
 
 On veut un circuit qui :
+
 - Si `load = 1` : stocke la nouvelle valeur `in`
 - Si `load = 0` : conserve l'ancienne valeur
 
 ### La solution : la rétroaction
 
 On utilise un **Mux** pour choisir entre :
+
 - L'ancienne valeur (sortie de la DFF)
 - La nouvelle valeur (`in`)
 
 ![Registre 1-bit avec rétroaction](images/bit-register.svg)
 
 **Fonctionnement** :
+
 - Si `load = 0` : Le Mux sélectionne la sortie de la DFF. La DFF ré-enregistre sa propre valeur. La valeur est **maintenue**.
 - Si `load = 1` : Le Mux sélectionne `in`. La DFF enregistre la nouvelle valeur.
 
@@ -181,15 +159,7 @@ Cette petite boucle de rétroaction transforme un délai d'un cycle en une mémo
 
 Un registre 32-bits est simplement **32 registres 1-bit en parallèle**, partageant le même signal `load`.
 
-```
-              ┌─────────────────────────────────────┐
-              │           Register 32-bit           │
-              │                                      │
- in[31:0] ────┤  [Bit] [Bit] [Bit] ... [Bit] [Bit]  ├──── out[31:0]
-              │    31    30    29        1     0    │
-    load  ────┤────────────────────────────────────►│
-              └─────────────────────────────────────┘
-```
+![Registre 32 bits](images/register32.svg)
 
 Quand `load = 1`, les 32 bits sont capturés simultanément. C'est atomique.
 
@@ -235,27 +205,7 @@ La RAM utilise les composants que nous avons construits :
 
 ### Exemple : RAM8 (8 mots de 32 bits)
 
-```
-address[2:0]     ┌────────────────────────────────────┐
-                 │                                     │
-    ┌────────────┤  DMux8Way (distribue le load)      │
-    │            │                                     │
-    │            └──┬────┬────┬────┬────┬────┬────┬───┘
-    │               │    │    │    │    │    │    │
-    │  load         ▼    ▼    ▼    ▼    ▼    ▼    ▼
-    │            ┌────┬────┬────┬────┬────┬────┬────┬────┐
-    │            │Reg0│Reg1│Reg2│Reg3│Reg4│Reg5│Reg6│Reg7│
-    │            └─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┴─┬──┘
-    │              │    │    │    │    │    │    │    │
-    │              ▼    ▼    ▼    ▼    ▼    ▼    ▼    ▼
-    │            ┌────────────────────────────────────┐
-    └────────────┤  Mux8Way32 (sélectionne la sortie) │
-                 │                                     │
-                 └──────────────────┬─────────────────┘
-                                    │
-                                    ▼
-                                   out[31:0]
-```
+![Architecture RAM8](images/ram8-architecture.svg)
 
 ### Construction hiérarchique de grandes RAMs
 
@@ -268,6 +218,7 @@ address[5:0] = address[5:3] (3 bits supérieurs) + address[2:0] (3 bits inférie
 ```
 
 On utilise 8 RAM8 :
+
 - Les 3 bits de poids fort (`address[5:3]`) choisissent **quelle RAM8**
 - Les 3 bits de poids faible (`address[2:0]`) choisissent **quel mot dans la RAM8**
 
@@ -282,6 +233,7 @@ Le **Program Counter** (PC) est peut-être le registre le plus important du CPU.
 ### Pourquoi est-il spécial ?
 
 Après chaque instruction, le PC doit passer à l'instruction suivante. Mais parfois :
+
 - On veut **sauter** à une autre adresse (boucles, conditions)
 - On veut **revenir à 0** (redémarrage)
 
@@ -301,6 +253,7 @@ Après chaque instruction, le PC doit passer à l'instruction suivante. Mais par
 ### Le lien avec l'exécution du programme
 
 À chaque cycle d'horloge :
+
 1. Le CPU lit l'instruction à l'adresse `PC`
 2. Il décode et exécute l'instruction
 3. Il met à jour le PC (incrément ou saut)
@@ -317,6 +270,7 @@ Dans un vrai ordinateur, il y a plusieurs niveaux de mémoire :
 ![Pyramide de la hiérarchie mémoire](images/memory-hierarchy.svg)
 
 Plus on monte dans la pyramide :
+
 - Plus c'est rapide
 - Plus c'est cher par octet
 - Plus la capacité est faible
@@ -334,12 +288,12 @@ Lancez le **Simulateur Web** et allez dans **HDL Progression** → **Projet 4 : 
 | Exercice | Description | Difficulté |
 |----------|-------------|:----------:|
 | `DFF1` | Bascule D (fournie comme primitive) | — |
-| `BitReg` | Registre 1-bit (Mux + DFF) | ⭐ |
-| `Register16` | Registre 16-bits (16 BitReg en parallèle) | ⭐ |
-| `PC` | Compteur de programme avec reset/load/inc | ⭐⭐ |
-| `RAM8` | RAM de 8 mots (DMux + 8 Registres + Mux) | ⭐⭐ |
-| `RAM64` | RAM de 64 mots (8 RAM8) | ⭐⭐ |
-| `RegFile` | Banc de registres (lecture double, écriture simple) | ⭐⭐⭐ |
+| `BitReg` | Registre 1-bit (Mux + DFF) | [*] |
+| `Register16` | Registre 16-bits (16 BitReg en parallèle) | [*] |
+| `PC` | Compteur de programme avec reset/load/inc | [**] |
+| `RAM8` | RAM de 8 mots (DMux + 8 Registres + Mux) | [**] |
+| `RAM64` | RAM de 64 mots (8 RAM8) | [**] |
+| `RegFile` | Banc de registres (lecture double, écriture simple) | [***] |
 
 ### Ordre de progression recommandé
 

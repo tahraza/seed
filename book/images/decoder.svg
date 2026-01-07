@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 220" width="450" height="220">
+  <defs>
+    <style>
+      .box { stroke: #2563eb; stroke-width: 2; fill: #dbeafe; }
+      .wire { stroke: #374151; stroke-width: 2; fill: none; }
+      .bus { stroke: #1e40af; stroke-width: 3; fill: none; }
+      .label { font-family: sans-serif; font-size: 11px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e3a8a; }
+      .field { font-family: monospace; font-size: 10px; fill: #374151; }
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#374151"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="225" y="25" text-anchor="middle">Le Decodeur d'Instructions</text>
+
+  <!-- Input instruction -->
+  <text class="label" x="225" y="50" text-anchor="middle" font-weight="bold">Instruction (32 bits)</text>
+  <line class="bus" x1="225" y1="55" x2="225" y2="80" marker-end="url(#arr)"/>
+
+  <!-- Decoder box -->
+  <rect class="box" x="100" y="85" width="250" height="60" rx="6"/>
+  <text class="label" x="225" y="115" text-anchor="middle" font-weight="bold">DECODEUR</text>
+  <text class="label" x="225" y="130" text-anchor="middle" font-size="10">(circuit combinatoire)</text>
+
+  <!-- Output wires -->
+  <line class="wire" x1="130" y1="145" x2="130" y2="180" marker-end="url(#arr)"/>
+  <line class="wire" x1="180" y1="145" x2="180" y2="180" marker-end="url(#arr)"/>
+  <line class="wire" x1="225" y1="145" x2="225" y2="180" marker-end="url(#arr)"/>
+  <line class="wire" x1="270" y1="145" x2="270" y2="180" marker-end="url(#arr)"/>
+  <line class="wire" x1="320" y1="145" x2="320" y2="180" marker-end="url(#arr)"/>
+
+  <!-- Output labels -->
+  <text class="field" x="130" y="195" text-anchor="middle">Rd</text>
+  <text class="label" x="130" y="210" text-anchor="middle" font-size="9">(4 bits)</text>
+
+  <text class="field" x="180" y="195" text-anchor="middle">Rn</text>
+  <text class="label" x="180" y="210" text-anchor="middle" font-size="9">(4 bits)</text>
+
+  <text class="field" x="225" y="195" text-anchor="middle">Rm</text>
+  <text class="label" x="225" y="210" text-anchor="middle" font-size="9">(4 bits)</text>
+
+  <text class="field" x="270" y="195" text-anchor="middle">Imm</text>
+  <text class="label" x="270" y="210" text-anchor="middle" font-size="9">(12 bits)</text>
+
+  <text class="field" x="320" y="195" text-anchor="middle">Opcode</text>
+  <text class="label" x="320" y="210" text-anchor="middle" font-size="9">(8 bits)</text>
+</svg>

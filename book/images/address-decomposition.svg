@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 300" width="650" height="300">
+  <defs>
+    <style>
+      .box { stroke: #374151; stroke-width: 2; }
+      .label { font-family: sans-serif; font-size: 11px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e3a8a; }
+      .small { font-family: sans-serif; font-size: 9px; fill: #6b7280; }
+      .mono { font-family: monospace; font-size: 10px; fill: #1f2937; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="325" y="25" text-anchor="middle">Decomposition d'une Adresse 32 bits</text>
+
+  <!-- Example address -->
+  <text class="label" x="50" y="55">Adresse: 0x00001234</text>
+
+  <!-- Binary representation -->
+  <text class="mono" x="50" y="80">0000 0000 0000 0000 0001 0010 0011 0100</text>
+
+  <!-- Address breakdown boxes -->
+  <rect x="50" y="100" width="330" height="40" fill="#fef3c7" class="box"/>
+  <text class="label" x="215" y="125" text-anchor="middle" font-weight="bold">Tag (22 bits)</text>
+
+  <rect x="380" y="100" width="120" height="40" fill="#c7d2fe" class="box"/>
+  <text class="label" x="440" y="125" text-anchor="middle" font-weight="bold">Index (6 bits)</text>
+
+  <rect x="500" y="100" width="80" height="40" fill="#dcfce7" class="box"/>
+  <text class="label" x="540" y="125" text-anchor="middle" font-weight="bold">Offset (4 bits)</text>
+
+  <!-- Arrows pointing down -->
+  <line x1="215" y1="140" x2="215" y2="160" stroke="#374151" stroke-width="1.5" marker-end="url(#arrowsmall)"/>
+  <line x1="440" y1="140" x2="440" y2="160" stroke="#374151" stroke-width="1.5" marker-end="url(#arrowsmall)"/>
+  <line x1="540" y1="140" x2="540" y2="160" stroke="#374151" stroke-width="1.5" marker-end="url(#arrowsmall)"/>
+
+  <defs>
+    <marker id="arrowsmall" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 6 2.5, 0 5" fill="#374151"/>
+    </marker>
+  </defs>
+
+  <!-- Explanation boxes -->
+  <rect x="50" y="170" width="230" height="110" fill="#fef9e6" stroke="#d97706" rx="4"/>
+  <text class="label" x="165" y="190" text-anchor="middle" font-weight="bold" fill="#92400e">Tag</text>
+  <text class="small" x="60" y="210">Identifie quelle zone de la RAM</text>
+  <text class="small" x="60" y="225">est stockee dans cette ligne.</text>
+  <text class="small" x="60" y="245">Compare avec le tag stocke</text>
+  <text class="small" x="60" y="260">pour determiner si hit ou miss.</text>
+
+  <rect x="290" y="170" width="170" height="110" fill="#ede9fe" stroke="#7c3aed" rx="4"/>
+  <text class="label" x="375" y="190" text-anchor="middle" font-weight="bold" fill="#5b21b6">Index</text>
+  <text class="small" x="300" y="210">Quelle ligne du cache?</text>
+  <text class="small" x="300" y="230">6 bits = 64 lignes</text>
+  <text class="small" x="300" y="250">(0 a 63)</text>
+
+  <rect x="470" y="170" width="160" height="110" fill="#d1fae5" stroke="#059669" rx="4"/>
+  <text class="label" x="550" y="190" text-anchor="middle" font-weight="bold" fill="#047857">Offset</text>
+  <text class="small" x="480" y="210">Quel octet dans la ligne?</text>
+  <text class="small" x="480" y="230">4 bits = 16 positions</text>
+  <text class="small" x="480" y="250">(0 a 15)</text>
+</svg>

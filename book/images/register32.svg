@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 550 180" width="550" height="180">
+  <defs>
+    <style>
+      .box { stroke: #2563eb; stroke-width: 2; fill: #dbeafe; }
+      .bit { stroke: #1e40af; stroke-width: 1.5; fill: #bfdbfe; }
+      .wire { stroke: #374151; stroke-width: 2; fill: none; }
+      .bus { stroke: #1e40af; stroke-width: 3; fill: none; }
+      .label { font-family: sans-serif; font-size: 11px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e3a8a; }
+      .small { font-family: sans-serif; font-size: 9px; fill: #6b7280; }
+    </style>
+    <marker id="arrowb" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#1e40af"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="275" y="25" text-anchor="middle">Registre 32 bits</text>
+
+  <!-- Main register box -->
+  <rect class="box" x="100" y="50" width="350" height="80" rx="6"/>
+  <text class="label" x="275" y="75" text-anchor="middle" font-weight="bold">Register 32-bit</text>
+
+  <!-- Individual bits -->
+  <rect class="bit" x="120" y="90" width="30" height="25" rx="3"/>
+  <text class="small" x="135" y="107" text-anchor="middle">Bit</text>
+  <text class="small" x="135" y="130" text-anchor="middle">31</text>
+
+  <rect class="bit" x="160" y="90" width="30" height="25" rx="3"/>
+  <text class="small" x="175" y="107" text-anchor="middle">Bit</text>
+  <text class="small" x="175" y="130" text-anchor="middle">30</text>
+
+  <rect class="bit" x="200" y="90" width="30" height="25" rx="3"/>
+  <text class="small" x="215" y="107" text-anchor="middle">Bit</text>
+  <text class="small" x="215" y="130" text-anchor="middle">29</text>
+
+  <text class="label" x="260" y="107" text-anchor="middle">...</text>
+
+  <rect class="bit" x="300" y="90" width="30" height="25" rx="3"/>
+  <text class="small" x="315" y="107" text-anchor="middle">Bit</text>
+  <text class="small" x="315" y="130" text-anchor="middle">2</text>
+
+  <rect class="bit" x="340" y="90" width="30" height="25" rx="3"/>
+  <text class="small" x="355" y="107" text-anchor="middle">Bit</text>
+  <text class="small" x="355" y="130" text-anchor="middle">1</text>
+
+  <rect class="bit" x="380" y="90" width="30" height="25" rx="3"/>
+  <text class="small" x="395" y="107" text-anchor="middle">Bit</text>
+  <text class="small" x="395" y="130" text-anchor="middle">0</text>
+
+  <!-- Input bus -->
+  <line class="bus" x1="20" y1="90" x2="100" y2="90" marker-end="url(#arrowb)"/>
+  <text class="label" x="35" y="85" font-weight="bold">in[31:0]</text>
+
+  <!-- Output bus -->
+  <line class="bus" x1="450" y1="90" x2="530" y2="90" marker-end="url(#arrowb)"/>
+  <text class="label" x="480" y="85" font-weight="bold">out[31:0]</text>
+
+  <!-- Load signal -->
+  <line class="wire" x1="275" y1="160" x2="275" y2="130"/>
+  <text class="label" x="275" y="175" text-anchor="middle" font-weight="bold">load</text>
+
+  <!-- Load distribution arrow -->
+  <path d="M 275 130 L 120 115 M 275 130 L 430 115" stroke="#374151" stroke-width="1" stroke-dasharray="3,2" fill="none"/>
+</svg>

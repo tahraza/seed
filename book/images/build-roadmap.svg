@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 100" width="650" height="100">
+  <defs>
+    <style>
+      .box { stroke: #374151; stroke-width: 1.5; rx: 4; }
+      .arrow { stroke: #374151; stroke-width: 2; fill: none; }
+      .label { font-family: sans-serif; font-size: 10px; fill: #1f2937; }
+      .chapter { font-family: sans-serif; font-size: 8px; fill: #6b7280; }
+      .title { font-family: sans-serif; font-size: 12px; font-weight: bold; fill: #1e3a8a; }
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#374151"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="325" y="18" text-anchor="middle">Ce que nous allons construire</text>
+
+  <!-- Chapter labels -->
+  <text class="chapter" x="55" y="38" text-anchor="middle">Chap. 1</text>
+  <text class="chapter" x="185" y="38" text-anchor="middle">Ce chapitre</text>
+  <text class="chapter" x="450" y="38" text-anchor="middle">Chap. 5</text>
+
+  <!-- First row: XOR, AND -->
+  <rect x="20" y="45" width="70" height="25" fill="#dcfce7" class="box"/>
+  <text class="label" x="55" y="62" text-anchor="middle">XOR, AND</text>
+
+  <!-- Arrow -->
+  <line class="arrow" x1="90" y1="57" x2="110" y2="57" marker-end="url(#arr)"/>
+
+  <!-- Half Adder -->
+  <rect x="115" y="45" width="70" height="25" fill="#dbeafe" class="box"/>
+  <text class="label" x="150" y="62" text-anchor="middle">Half Adder</text>
+
+  <!-- Arrow -->
+  <line class="arrow" x1="185" y1="57" x2="205" y2="57" marker-end="url(#arr)"/>
+
+  <!-- Full Adder -->
+  <rect x="210" y="45" width="70" height="25" fill="#dbeafe" class="box"/>
+  <text class="label" x="245" y="62" text-anchor="middle">Full Adder</text>
+
+  <!-- Arrow -->
+  <line class="arrow" x1="280" y1="57" x2="300" y2="57" marker-end="url(#arr)"/>
+
+  <!-- Add32 -->
+  <rect x="305" y="45" width="80" height="25" fill="#e0e7ff" class="box"/>
+  <text class="label" x="345" y="62" text-anchor="middle">Add32</text>
+
+  <!-- Arrow -->
+  <line class="arrow" x1="385" y1="57" x2="405" y2="57" marker-end="url(#arr)"/>
+
+  <!-- ALU -->
+  <rect x="410" y="45" width="70" height="25" fill="#fef3c7" class="box"/>
+  <text class="label" x="445" y="62" text-anchor="middle">ALU</text>
+
+  <!-- Arrow -->
+  <line class="arrow" x1="480" y1="57" x2="500" y2="57" marker-end="url(#arr)"/>
+
+  <!-- CPU -->
+  <rect x="505" y="45" width="70" height="25" fill="#fce7f3" class="box"/>
+  <text class="label" x="540" y="62" text-anchor="middle">CPU</text>
+
+  <!-- Bottom label -->
+  <text class="chapter" x="55" y="85" text-anchor="middle">Portes</text>
+  <text class="chapter" x="185" y="85" text-anchor="middle">Additionneurs</text>
+  <text class="chapter" x="345" y="85" text-anchor="middle">32 bits</text>
+  <text class="chapter" x="540" y="85" text-anchor="middle">Processeur</text>
+</svg>

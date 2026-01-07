@@ -8,27 +8,9 @@ Dans le chapitre précédent, nous avons appris à manipuler des bits individuel
 
 ## Où en sommes-nous ?
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     COUCHE 7: Applications                       │
-├─────────────────────────────────────────────────────────────────┤
-│                  COUCHE 6: Système d'Exploitation                │
-├─────────────────────────────────────────────────────────────────┤
-│                 COUCHE 5: Langage de Haut Niveau (C32)           │
-├─────────────────────────────────────────────────────────────────┤
-│                      COUCHE 4: Compilateur                       │
-├─────────────────────────────────────────────────────────────────┤
-│                   COUCHE 3: Assembleur (A32 ASM)                 │
-├─────────────────────────────────────────────────────────────────┤
-│                 COUCHE 2: Architecture Machine (ISA)             │
-├─────────────────────────────────────────────────────────────────┤
-│  ══════════════► COUCHE 1: Logique Matérielle ◄══════════════   │
-│              (Portes logiques → ALU, RAM, CPU)                   │
-│                    (Vous êtes ici !)                             │
-├─────────────────────────────────────────────────────────────────┤
-│                     COUCHE 0: La Porte NAND                      │
-└─────────────────────────────────────────────────────────────────┘
-```
+![Position dans l'architecture](images/architecture-stack.svg)
+
+*Nous sommes à la Couche 1 : Logique Matérielle (Portes logiques - ALU, RAM, CPU)*
 
 Nous sommes toujours dans la couche matérielle, mais nous montons d'un niveau. Nous allons combiner les portes logiques du Chapitre 1 pour construire des circuits arithmétiques, culminant avec l'**ALU** (Arithmetic Logic Unit) — le composant qui effectue TOUS les calculs du processeur.
 
@@ -39,6 +21,7 @@ Nous sommes toujours dans la couche matérielle, mais nous montons d'un niveau. 
 ### Au cœur de tout calcul
 
 Regardez ce que fait un ordinateur :
+
 - **Afficher une image** : Calculer la couleur de chaque pixel (additions, multiplications)
 - **Jouer un son** : Mélanger des formes d'onde (additions)
 - **Naviguer sur le web** : Calculer des checksums, décompresser des données
@@ -48,13 +31,7 @@ Même les opérations les plus "abstraites" se réduisent finalement à des opé
 
 ### Ce que nous allons construire
 
-```
-Chapitre 1          Ce chapitre              Chapitre 5
-    ↓                    ↓                       ↓
-  XOR, AND          Half Adder                  CPU
-     ↓                   ↓                       ↓
-  Portes  ────→  Full Adder  ────→  Additionneur 32-bits  ────→  ALU  ────→  CPU
-```
+![Feuille de route : des portes à l'ALU](images/build-roadmap.svg)
 
 À la fin de ce chapitre, vous aurez construit une ALU capable d'effectuer :
 - Addition et soustraction
@@ -130,7 +107,7 @@ Pour obtenir -X à partir de X :
     0101   (5)
   + 1011   (-5)
   ──────
-   10000   → Les 4 bits de poids faible sont 0000 ✓
+   10000   → Les 4 bits de poids faible sont 0000 OK
             (La retenue "1" est ignorée car on travaille sur 4 bits)
 ```
 
@@ -171,12 +148,13 @@ Calculons 5 + 3 = 8 :
 ```
 
 Détail colonne par colonne (de droite à gauche) :
+
 - Colonne 0 : 1 + 1 = 0, retenue 1
 - Colonne 1 : 0 + 1 + 1(retenue) = 0, retenue 1
 - Colonne 2 : 1 + 0 + 1(retenue) = 0, retenue 1
 - Colonne 3 : 0 + 0 + 1(retenue) = 1
 
-Résultat : 1000₂ = 8₁₀ ✓
+Résultat : 1000₂ = 8₁₀ OK
 
 ---
 
@@ -245,6 +223,7 @@ Un Full Adder peut être construit avec **deux Half Adders et une porte OR** :
 ![Construction du Full Adder](images/full-adder-construction.svg)
 
 Formules :
+
 - `s1 = XOR(a, b)`
 - `sum = XOR(s1, cin)`
 - `c1 = AND(a, b)`
@@ -308,6 +287,7 @@ A - B = A + (-B) = A + (NOT B) + 1
 ```
 
 En pratique :
+
 1. Inverser tous les bits de B (avec des portes NOT)
 2. Additionner A et NOT(B) avec une retenue d'entrée de 1
 
@@ -327,6 +307,7 @@ Les drapeaux sont des informations supplémentaires sur le résultat :
 **À quoi servent ces drapeaux ?**
 
 Ils permettent au CPU de prendre des décisions :
+
 - `BEQ` (Branch if Equal) teste si Z = 1
 - `BLT` (Branch if Less Than) teste une combinaison de N et V
 - `BCS` (Branch if Carry Set) teste si C = 1
@@ -349,32 +330,7 @@ Sans les drapeaux, il serait impossible d'implémenter les conditions `if`, les 
 
 Voici comment l'ALU est structurée en interne :
 
-```
-                        ┌─────────────────────────────────────┐
-                        │                ALU                   │
-                        │                                      │
-    a ─────────────────►│  ┌─────┐                            │
-                        │  │ AND ├──────┐                     │
-    b ─────────────────►│  └─────┘      │                     │
-                        │               │                     │
-                        │  ┌─────┐      │    ┌───────────┐    │
-    a ─────────────────►│  │ XOR ├──────┼───►│           │    │
-                        │  └─────┘      │    │           │    │
-    b ─────────────────►│               │    │    MUX    ├───►│───► y
-                        │  ┌─────┐      │    │  (sélection│    │
-    a ─────────────────►│  │ ADD ├──────┼───►│   par op)  │    │
-                        │  └─────┘      │    │           │    │
-    b ─────────────────►│               │    │           │    │
-         (ou NOT b      │  ┌─────┐      │    └─────┬─────┘    │
-          pour SUB)     │  │ ORR ├──────┘          │          │
-                        │  └─────┘                 │          │
-                        │                         op          │
-                        │                                      │
-                        │  ┌─────────────────────────────────┐│
-                        │  │ Calcul des drapeaux N, Z, C, V  ││
-                        │  └─────────────────────────────────┘│
-                        └─────────────────────────────────────┘
-```
+![Architecture de l'ALU](images/alu-architecture.svg)
 
 L'idée clé : calculer TOUS les résultats possibles en parallèle, puis utiliser un multiplexeur pour sélectionner le bon selon `op`.
 
@@ -388,12 +344,12 @@ Lancez le **Simulateur Web** et allez dans **HDL Progression** → **Projet 3 : 
 
 | Exercice | Description | Difficulté |
 |----------|-------------|:----------:|
-| `HalfAdder` | Demi-additionneur (XOR + AND) | ⭐ |
-| `FullAdder` | Additionneur complet (2 Half Adders + OR) | ⭐⭐ |
-| `Add16` | Additionneur 16 bits en cascade | ⭐⭐ |
-| `Inc16` | Incrémenteur (+1) — cas spécial utile | ⭐ |
-| `Sub16` | Soustracteur (via complément à 2) | ⭐⭐ |
-| `ALU` | L'ALU complète avec drapeaux | ⭐⭐⭐ |
+| `HalfAdder` | Demi-additionneur (XOR + AND) | [*] |
+| `FullAdder` | Additionneur complet (2 Half Adders + OR) | [**] |
+| `Add16` | Additionneur 16 bits en cascade | [**] |
+| `Inc16` | Incrémenteur (+1) — cas spécial utile | [*] |
+| `Sub16` | Soustracteur (via complément à 2) | [**] |
+| `ALU` | L'ALU complète avec drapeaux | [***] |
 
 ### Conseils pour l'ALU
 
@@ -438,7 +394,8 @@ Construisez un circuit qui multiplie deux nombres de 4 bits. Indice : la multipl
 ### Défi 3 : Comparateur
 
 Construisez un circuit qui compare deux nombres 32 bits et produit trois sorties :
-- `lt` : a < b
+
+/bin/bash: ligne 1: q : commande introuvable
 - `eq` : a == b
 - `gt` : a > b
 

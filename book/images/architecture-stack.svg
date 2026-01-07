@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 580" width="700" height="580">
+  <defs>
+    <style>
+      .layer { stroke: #1e40af; stroke-width: 2; }
+      .layer-text { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e40af; }
+      .layer-subtitle { font-family: sans-serif; font-size: 11px; fill: #4b5563; }
+      .layer-desc { font-family: sans-serif; font-size: 10px; fill: #6b7280; font-style: italic; }
+      .title { font-family: sans-serif; font-size: 16px; font-weight: bold; fill: #1e3a8a; }
+    </style>
+    <linearGradient id="grad7" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#dbeafe;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#bfdbfe;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad6" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#e0e7ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c7d2fe;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad5" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ede9fe;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ddd6fe;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fae8ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f5d0fe;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fce7f3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fbcfe8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fee2e2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fecaca;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ffedd5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fed7aa;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad0" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fef3c7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#fde68a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="350" y="25" text-anchor="middle">Les 8 Couches d'Abstraction</text>
+
+  <!-- Layer 7: Applications -->
+  <rect class="layer" x="20" y="40" width="660" height="60" rx="4" fill="url(#grad7)"/>
+  <text class="layer-text" x="35" y="62">COUCHE 7: Applications</text>
+  <text class="layer-subtitle" x="35" y="78">(Jeux, Shell, Calculatrice, Editeur)</text>
+  <text class="layer-desc" x="35" y="92">Ce que l'utilisateur voit et utilise</text>
+
+  <!-- Layer 6: OS -->
+  <rect class="layer" x="20" y="105" width="660" height="60" rx="4" fill="url(#grad6)"/>
+  <text class="layer-text" x="35" y="127">COUCHE 6: Systeme d'Exploitation</text>
+  <text class="layer-subtitle" x="35" y="143">(Gestion memoire, Drivers ecran/clavier)</text>
+  <text class="layer-desc" x="35" y="157">Cache la complexite du materiel</text>
+
+  <!-- Layer 5: High-level Language -->
+  <rect class="layer" x="20" y="170" width="660" height="60" rx="4" fill="url(#grad5)"/>
+  <text class="layer-text" x="35" y="192">COUCHE 5: Langage de Haut Niveau (C32)</text>
+  <text class="layer-subtitle" x="35" y="208">(Variables, fonctions, boucles)</text>
+  <text class="layer-desc" x="35" y="222">Code lisible par un humain</text>
+
+  <!-- Layer 4: Compiler -->
+  <rect class="layer" x="20" y="235" width="660" height="60" rx="4" fill="url(#grad4)"/>
+  <text class="layer-text" x="35" y="257">COUCHE 4: Compilateur</text>
+  <text class="layer-subtitle" x="35" y="273">(Transforme C32 en Assembleur A32)</text>
+  <text class="layer-desc" x="35" y="287">Traducteur automatique</text>
+
+  <!-- Layer 3: Assembler -->
+  <rect class="layer" x="20" y="300" width="660" height="60" rx="4" fill="url(#grad3)"/>
+  <text class="layer-text" x="35" y="322">COUCHE 3: Assembleur (A32 ASM)</text>
+  <text class="layer-subtitle" x="35" y="338">(Mnemoniques en Code machine binaire)</text>
+  <text class="layer-desc" x="35" y="352">ADD, MOV en suites de 0 et 1</text>
+
+  <!-- Layer 2: ISA -->
+  <rect class="layer" x="20" y="365" width="660" height="60" rx="4" fill="url(#grad2)"/>
+  <text class="layer-text" x="35" y="387">COUCHE 2: Architecture Machine (ISA)</text>
+  <text class="layer-subtitle" x="35" y="403">(Jeu d'instructions, Registres, Memoire)</text>
+  <text class="layer-desc" x="35" y="417">Contrat entre materiel et logiciel</text>
+
+  <!-- Layer 1: Hardware Logic -->
+  <rect class="layer" x="20" y="430" width="660" height="60" rx="4" fill="url(#grad1)"/>
+  <text class="layer-text" x="35" y="452">COUCHE 1: Logique Materielle</text>
+  <text class="layer-subtitle" x="35" y="468">(Portes logiques, ALU, RAM, CPU)</text>
+  <text class="layer-desc" x="35" y="482">Circuits electroniques: 0 et 1</text>
+
+  <!-- Layer 0: NAND -->
+  <rect class="layer" x="20" y="495" width="660" height="60" rx="4" fill="url(#grad0)" stroke="#d97706"/>
+  <text class="layer-text" x="35" y="517" fill="#92400e">COUCHE 0: La Porte NAND</text>
+  <text class="layer-subtitle" x="35" y="533">(Notre axiome de depart)</text>
+  <text class="layer-desc" x="35" y="547">Tout commence ici</text>
+
+  <!-- Arrows indicating direction -->
+  <path d="M 690 520 L 690 60" stroke="#9ca3af" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#9ca3af"/>
+    </marker>
+  </defs>
+  <text x="695" y="300" font-family="sans-serif" font-size="11" fill="#6b7280" transform="rotate(-90 695 300)">Abstraction croissante</text>
+</svg>

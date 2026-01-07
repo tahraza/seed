@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 200" width="700" height="200">
+  <defs>
+    <style>
+      .cell { stroke: #374151; stroke-width: 1; }
+      .label { font-family: sans-serif; font-size: 10px; fill: #1f2937; }
+      .header { font-family: sans-serif; font-size: 10px; fill: #6b7280; font-weight: bold; }
+      .title { font-family: sans-serif; font-size: 12px; font-weight: bold; fill: #1e3a8a; }
+      .note { font-family: sans-serif; font-size: 9px; fill: #059669; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="350" y="20" text-anchor="middle">Visualisation du Pipeline - 5 Instructions</text>
+
+  <!-- Column headers -->
+  <text class="header" x="90" y="45" text-anchor="middle">Cycle 1</text>
+  <text class="header" x="165" y="45" text-anchor="middle">Cycle 2</text>
+  <text class="header" x="240" y="45" text-anchor="middle">Cycle 3</text>
+  <text class="header" x="315" y="45" text-anchor="middle">Cycle 4</text>
+  <text class="header" x="390" y="45" text-anchor="middle">Cycle 5</text>
+  <text class="header" x="465" y="45" text-anchor="middle">Cycle 6</text>
+  <text class="header" x="540" y="45" text-anchor="middle">Cycle 7</text>
+
+  <!-- Row labels -->
+  <text class="label" x="25" y="70">Instr 1</text>
+  <text class="label" x="25" y="95">Instr 2</text>
+  <text class="label" x="25" y="120">Instr 3</text>
+  <text class="label" x="25" y="145">Instr 4</text>
+  <text class="label" x="25" y="170">Instr 5</text>
+
+  <!-- Instruction 1 -->
+  <rect x="55" y="55" width="70" height="20" fill="#fef3c7" class="cell"/>
+  <text class="label" x="90" y="70" text-anchor="middle">IF</text>
+  <rect x="130" y="55" width="70" height="20" fill="#dcfce7" class="cell"/>
+  <text class="label" x="165" y="70" text-anchor="middle">ID</text>
+  <rect x="205" y="55" width="70" height="20" fill="#dbeafe" class="cell"/>
+  <text class="label" x="240" y="70" text-anchor="middle">EX</text>
+  <rect x="280" y="55" width="70" height="20" fill="#e0e7ff" class="cell"/>
+  <text class="label" x="315" y="70" text-anchor="middle">MEM</text>
+  <rect x="355" y="55" width="70" height="20" fill="#fce7f3" class="cell"/>
+  <text class="label" x="390" y="70" text-anchor="middle">WB</text>
+
+  <!-- Instruction 2 -->
+  <rect x="130" y="80" width="70" height="20" fill="#fef3c7" class="cell"/>
+  <text class="label" x="165" y="95" text-anchor="middle">IF</text>
+  <rect x="205" y="80" width="70" height="20" fill="#dcfce7" class="cell"/>
+  <text class="label" x="240" y="95" text-anchor="middle">ID</text>
+  <rect x="280" y="80" width="70" height="20" fill="#dbeafe" class="cell"/>
+  <text class="label" x="315" y="95" text-anchor="middle">EX</text>
+  <rect x="355" y="80" width="70" height="20" fill="#e0e7ff" class="cell"/>
+  <text class="label" x="390" y="95" text-anchor="middle">MEM</text>
+  <rect x="430" y="80" width="70" height="20" fill="#fce7f3" class="cell"/>
+  <text class="label" x="465" y="95" text-anchor="middle">WB</text>
+
+  <!-- Instruction 3 -->
+  <rect x="205" y="105" width="70" height="20" fill="#fef3c7" class="cell"/>
+  <text class="label" x="240" y="120" text-anchor="middle">IF</text>
+  <rect x="280" y="105" width="70" height="20" fill="#dcfce7" class="cell"/>
+  <text class="label" x="315" y="120" text-anchor="middle">ID</text>
+  <rect x="355" y="105" width="70" height="20" fill="#dbeafe" class="cell"/>
+  <text class="label" x="390" y="120" text-anchor="middle">EX</text>
+  <rect x="430" y="105" width="70" height="20" fill="#e0e7ff" class="cell"/>
+  <text class="label" x="465" y="120" text-anchor="middle">MEM</text>
+  <rect x="505" y="105" width="70" height="20" fill="#fce7f3" class="cell"/>
+  <text class="label" x="540" y="120" text-anchor="middle">WB</text>
+
+  <!-- Instruction 4 -->
+  <rect x="280" y="130" width="70" height="20" fill="#fef3c7" class="cell"/>
+  <text class="label" x="315" y="145" text-anchor="middle">IF</text>
+  <rect x="355" y="130" width="70" height="20" fill="#dcfce7" class="cell"/>
+  <text class="label" x="390" y="145" text-anchor="middle">ID</text>
+  <rect x="430" y="130" width="70" height="20" fill="#dbeafe" class="cell"/>
+  <text class="label" x="465" y="145" text-anchor="middle">EX</text>
+  <rect x="505" y="130" width="70" height="20" fill="#e0e7ff" class="cell"/>
+  <text class="label" x="540" y="145" text-anchor="middle">MEM</text>
+  <text class="label" x="590" y="145">...</text>
+
+  <!-- Instruction 5 -->
+  <rect x="355" y="155" width="70" height="20" fill="#fef3c7" class="cell"/>
+  <text class="label" x="390" y="170" text-anchor="middle">IF</text>
+  <rect x="430" y="155" width="70" height="20" fill="#dcfce7" class="cell"/>
+  <text class="label" x="465" y="170" text-anchor="middle">ID</text>
+  <rect x="505" y="155" width="70" height="20" fill="#dbeafe" class="cell"/>
+  <text class="label" x="540" y="170" text-anchor="middle">EX</text>
+  <text class="label" x="590" y="170">...</text>
+
+  <!-- Annotation -->
+  <text class="note" x="350" y="195" text-anchor="middle">A partir du cycle 5 : 1 instruction terminee par cycle!</text>
+</svg>

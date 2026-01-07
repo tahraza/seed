@@ -10,29 +10,12 @@ L'ISA est le **contrat** entre le matériel et le logiciel. C'est la liste de to
 
 ## Où en sommes-nous ?
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     COUCHE 7: Applications                       │
-├─────────────────────────────────────────────────────────────────┤
-│                  COUCHE 6: Système d'Exploitation                │
-├─────────────────────────────────────────────────────────────────┤
-│                 COUCHE 5: Langage de Haut Niveau (C32)           │
-├─────────────────────────────────────────────────────────────────┤
-│                      COUCHE 4: Compilateur                       │
-├─────────────────────────────────────────────────────────────────┤
-│                   COUCHE 3: Assembleur (A32 ASM)                 │
-├─────────────────────────────────────────────────────────────────┤
-│  ══════════════► COUCHE 2: Architecture Machine (ISA) ◄════════ │
-│          (Jeu d'instructions, Registres, Mémoire)                │
-│                    (Vous êtes ici !)                             │
-├─────────────────────────────────────────────────────────────────┤
-│                    COUCHE 1: Logique Matérielle                  │
-├─────────────────────────────────────────────────────────────────┤
-│                     COUCHE 0: La Porte NAND                      │
-└─────────────────────────────────────────────────────────────────┘
-```
+![Position dans l'architecture](images/architecture-stack.svg)
+
+*Nous sommes à la Couche 2 : Architecture Machine (ISA) - Le contrat entre matériel et logiciel*
 
 Ce chapitre marque une transition importante. Nous quittons temporairement le monde du matériel pour définir **l'interface** entre matériel et logiciel. L'ISA que nous définissons ici sera :
+
 - **Implémentée** par le CPU au Chapitre 5
 - **Utilisée** par l'assembleur au Chapitre 6
 - **Ciblée** par le compilateur au Chapitre 7
@@ -44,18 +27,21 @@ Ce chapitre marque une transition importante. Nous quittons temporairement le mo
 ### Le contrat fondamental
 
 L'architecture d'un processeur définit :
+
 1. **Les registres** : Combien ? Quelle taille ? Quel rôle ?
 2. **Les instructions** : Quelles opérations le CPU peut-il faire ?
 3. **L'encodage** : Comment les instructions sont-elles représentées en binaire ?
 4. **Le modèle mémoire** : Comment le CPU voit-il la mémoire ?
 
 C'est un **contrat** :
+
 - Le matériel **promet** d'exécuter les instructions comme spécifié
 - Le logiciel **s'engage** à n'utiliser que les instructions définies
 
 ### Codex A32 : Une architecture RISC moderne
 
 L'architecture **Codex A32** est inspirée de ARM, l'architecture qui équipe la plupart des smartphones et le Raspberry Pi. Elle est :
+
 - **RISC** (Reduced Instruction Set Computer) : Instructions simples et rapides
 - **32 bits** : Registres et adresses sur 32 bits
 - **Load/Store** : Le CPU ne calcule jamais directement en mémoire
@@ -161,11 +147,13 @@ La mémoire est un espace linéaire de 4 Go (2³² octets), mais toutes les adre
 En Codex (comme en ARM), les périphériques sont accessibles **comme de la mémoire**. Il n'y a pas d'instructions spéciales `IN`/`OUT`.
 
 **L'écran** :
+
 - Adresse : `0x00400000` à `0x00402580`
 - Format : 1 bit par pixel, 40 octets par ligne
 - Écrire un `1` à un bit = pixel blanc
 
 **Le clavier** :
+
 - Adresse : `0x00402600`
 - Lire cette adresse donne le code ASCII de la touche pressée (ou 0)
 
@@ -283,10 +271,10 @@ LDR R0, [R1, R2]    ; Registre : adresse = R1 + R2
 |:------------|:-------|
 | `B label` | Saut inconditionnel |
 | `BL label` | Branch with Link (appel de fonction) |
-| `BEQ label` | Saut si égal (Z=1) |
-| `BNE label` | Saut si différent (Z=0) |
-| `BLT label` | Saut si plus petit (signé) |
-| `BGT label` | Saut si plus grand (signé) |
+| `B.EQ label` | Saut si égal (Z=1) |
+| `B.NE label` | Saut si différent (Z=0) |
+| `B.LT label` | Saut si plus petit (signé) |
+| `B.GT label` | Saut si plus grand (signé) |
 
 **Le mystère de `BL`** :
 ```asm
@@ -429,21 +417,21 @@ Lancez le **Simulateur Web** et allez dans **A32 Assembly**.
 
 | Exercice | Description | Difficulté |
 |----------|-------------|:----------:|
-| `Hello World` | Afficher du texte | ⭐ |
-| `Addition` | Additionner deux registres | ⭐ |
-| `Soustraction` | Soustraire avec le drapeau | ⭐ |
-| `Logique` | Opérations AND, OR, XOR | ⭐ |
-| `Conditions` | Utiliser les branches conditionnelles | ⭐⭐ |
-| `Boucles` | Implémenter une boucle while | ⭐⭐ |
-| `Multiplication` | Multiplier par additions successives | ⭐⭐ |
-| `Fibonacci` | Calculer la suite de Fibonacci | ⭐⭐ |
-| `Tableaux` | Parcourir un tableau en mémoire | ⭐⭐ |
-| `Maximum Tableau` | Trouver le max dans un tableau | ⭐⭐⭐ |
-| `Fonctions` | Appeler des fonctions avec BL | ⭐⭐⭐ |
-| `Pixel` | Allumer un pixel à l'écran | ⭐⭐ |
-| `Ligne` | Dessiner une ligne | ⭐⭐⭐ |
-| `Rectangle` | Dessiner un rectangle | ⭐⭐⭐ |
-| `Lire un Caractère` | Lire le clavier | ⭐⭐ |
+| `Hello World` | Afficher du texte | [*] |
+| `Addition` | Additionner deux registres | [*] |
+| `Soustraction` | Soustraire avec le drapeau | [*] |
+| `Logique` | Opérations AND, OR, XOR | [*] |
+| `Conditions` | Utiliser les branches conditionnelles | [**] |
+| `Boucles` | Implémenter une boucle while | [**] |
+| `Multiplication` | Multiplier par additions successives | [**] |
+| `Fibonacci` | Calculer la suite de Fibonacci | [**] |
+| `Tableaux` | Parcourir un tableau en mémoire | [**] |
+| `Maximum Tableau` | Trouver le max dans un tableau | [***] |
+| `Fonctions` | Appeler des fonctions avec BL | [***] |
+| `Pixel` | Allumer un pixel à l'écran | [**] |
+| `Ligne` | Dessiner une ligne | [***] |
+| `Rectangle` | Dessiner un rectangle | [***] |
+| `Lire un Caractère` | Lire le clavier | [**] |
 
 ### Tests en ligne de commande
 

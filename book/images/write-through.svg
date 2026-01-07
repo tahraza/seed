@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 550 280" width="550" height="280">
+  <defs>
+    <style>
+      .box { stroke: #374151; stroke-width: 1.5; rx: 4; }
+      .title-box { stroke: #2563eb; stroke-width: 2; fill: #dbeafe; rx: 6; }
+      .label { font-family: sans-serif; font-size: 10px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e40af; }
+      .mono { font-family: monospace; font-size: 10px; fill: #1f2937; }
+      .arrow { stroke: #374151; stroke-width: 2; fill: none; }
+      .good { font-family: sans-serif; font-size: 10px; fill: #059669; }
+      .bad { font-family: sans-serif; font-size: 10px; fill: #dc2626; }
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#374151"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <rect class="title-box" x="20" y="10" width="510" height="35"/>
+  <text class="title" x="275" y="33" text-anchor="middle">WRITE-THROUGH (Ecriture Directe)</text>
+
+  <!-- CPU Request -->
+  <text class="label" x="30" y="70">CPU veut ecrire la valeur 42 a l'adresse 0x1000</text>
+
+  <!-- CPU Box -->
+  <rect x="120" y="90" width="80" height="50" fill="#e0e7ff" class="box"/>
+  <text class="label" x="160" y="115" text-anchor="middle" font-weight="bold">CPU</text>
+  <text class="mono" x="160" y="130" text-anchor="middle">write(42)</text>
+
+  <!-- Arrows to both -->
+  <line class="arrow" x1="200" y1="115" x2="280" y2="115" marker-end="url(#arr)"/>
+  <path class="arrow" d="M 200 115 L 240 115 L 240 185 L 280 185" marker-end="url(#arr)"/>
+
+  <!-- Cache Box -->
+  <rect x="290" y="85" width="100" height="60" fill="#dcfce7" class="box"/>
+  <text class="label" x="340" y="105" text-anchor="middle" font-weight="bold">Cache</text>
+  <text class="mono" x="340" y="120" text-anchor="middle">(rapide)</text>
+  <text class="mono" x="340" y="135" text-anchor="middle" fill="#059669">42 OK</text>
+
+  <!-- RAM Box -->
+  <rect x="290" y="160" width="100" height="60" fill="#fef3c7" class="box"/>
+  <text class="label" x="340" y="180" text-anchor="middle" font-weight="bold">RAM</text>
+  <text class="mono" x="340" y="195" text-anchor="middle">(lent)</text>
+  <text class="mono" x="340" y="210" text-anchor="middle" fill="#059669">42 OK</text>
+
+  <!-- Simultanee label -->
+  <text class="label" x="420" y="145" fill="#6b7280">Ecriture</text>
+  <text class="label" x="420" y="158" fill="#6b7280">simultanee</text>
+
+  <!-- Pros/Cons -->
+  <text class="good" x="30" y="250">+ Cache et RAM sont TOUJOURS synchronises</text>
+  <text class="bad" x="30" y="268">- Chaque ecriture attend la RAM (lent)</text>
+</svg>

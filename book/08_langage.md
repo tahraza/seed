@@ -8,23 +8,9 @@ Jusqu'à présent, nous avons construit le matériel et appris à lui parler en 
 
 ## Où en sommes-nous ?
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     COUCHE 7: Applications                       │
-├─────────────────────────────────────────────────────────────────┤
-│                  COUCHE 6: Système d'Exploitation                │
-├─────────────────────────────────────────────────────────────────┤
-│  ══════════════► COUCHE 5: Langage de Haut Niveau (C32) ◄══════ │
-│                    (Variables, fonctions, boucles)               │
-│                    (Vous êtes ici !)                             │
-├─────────────────────────────────────────────────────────────────┤
-│                      COUCHE 4: Compilateur                       │
-├─────────────────────────────────────────────────────────────────┤
-│                   COUCHE 3: Assembleur (A32 ASM)                 │
-├─────────────────────────────────────────────────────────────────┤
-│                 COUCHE 2: Architecture Machine (ISA)             │
-└─────────────────────────────────────────────────────────────────┘
-```
+![Position dans l'architecture](images/architecture-stack.svg)
+
+*Nous sommes à la Couche 5 : Langage de Haut Niveau (C32) - Variables, fonctions, boucles*
 
 Le C32 est un sous-ensemble du langage C. Si vous connaissez le C, le Java ou le C++, vous vous sentirez chez vous.
 

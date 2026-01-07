@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 380" width="500" height="380">
+  <defs>
+    <style>
+      .box { stroke: #374151; stroke-width: 2; }
+      .reg { fill: #dbeafe; stroke: #2563eb; stroke-width: 1.5; }
+      .mux { fill: #fef3c7; stroke: #d97706; stroke-width: 1.5; }
+      .dmux { fill: #dcfce7; stroke: #16a34a; stroke-width: 1.5; }
+      .wire { stroke: #374151; stroke-width: 1.5; fill: none; }
+      .bus { stroke: #1e40af; stroke-width: 2.5; fill: none; }
+      .label { font-family: sans-serif; font-size: 10px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e3a8a; }
+    </style>
+    <marker id="arr" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 6 2.5, 0 5" fill="#374151"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="250" y="25" text-anchor="middle">Architecture RAM8 (8 mots de 32 bits)</text>
+
+  <!-- Address input -->
+  <text class="label" x="20" y="55" font-weight="bold">address[2:0]</text>
+
+  <!-- DMux8Way -->
+  <rect class="dmux" x="130" y="40" width="80" height="50" rx="4"/>
+  <text class="label" x="170" y="60" text-anchor="middle" font-weight="bold" fill="#166534">DMux8Way</text>
+  <text class="label" x="170" y="75" text-anchor="middle" font-size="9">(distribue load)</text>
+
+  <!-- Load input -->
+  <text class="label" x="20" y="130" font-weight="bold">load</text>
+  <line class="wire" x1="50" y1="125" x2="130" y2="65" marker-end="url(#arr)"/>
+
+  <!-- Address to DMux -->
+  <line class="wire" x1="110" y1="50" x2="130" y2="50" marker-end="url(#arr)"/>
+
+  <!-- 8 Registers -->
+  <rect class="reg" x="80" y="120" width="40" height="30" rx="3"/>
+  <text class="label" x="100" y="140" text-anchor="middle">Reg0</text>
+
+  <rect class="reg" x="130" y="120" width="40" height="30" rx="3"/>
+  <text class="label" x="150" y="140" text-anchor="middle">Reg1</text>
+
+  <rect class="reg" x="180" y="120" width="40" height="30" rx="3"/>
+  <text class="label" x="200" y="140" text-anchor="middle">Reg2</text>
+
+  <rect class="reg" x="230" y="120" width="40" height="30" rx="3"/>
+  <text class="label" x="250" y="140" text-anchor="middle">Reg3</text>
+
+  <rect class="reg" x="280" y="120" width="40" height="30" rx="3"/>
+  <text class="label" x="300" y="140" text-anchor="middle">Reg4</text>
+
+  <rect class="reg" x="330" y="120" width="40" height="30" rx="3"/>
+  <text class="label" x="350" y="140" text-anchor="middle">Reg5</text>
+
+  <rect class="reg" x="380" y="120" width="40" height="30" rx="3"/>
+  <text class="label" x="400" y="140" text-anchor="middle">Reg6</text>
+
+  <rect class="reg" x="430" y="120" width="40" height="30" rx="3"/>
+  <text class="label" x="450" y="140" text-anchor="middle">Reg7</text>
+
+  <!-- DMux to Registers -->
+  <line class="wire" x1="145" y1="90" x2="100" y2="120"/>
+  <line class="wire" x1="152" y1="90" x2="150" y2="120"/>
+  <line class="wire" x1="159" y1="90" x2="200" y2="120"/>
+  <line class="wire" x1="166" y1="90" x2="250" y2="120"/>
+  <line class="wire" x1="173" y1="90" x2="300" y2="120"/>
+  <line class="wire" x1="180" y1="90" x2="350" y2="120"/>
+  <line class="wire" x1="187" y1="90" x2="400" y2="120"/>
+  <line class="wire" x1="194" y1="90" x2="450" y2="120"/>
+
+  <!-- Input data bus -->
+  <text class="label" x="20" y="180" font-weight="bold">in[31:0]</text>
+  <line class="bus" x1="60" y1="175" x2="60" y2="200"/>
+  <line class="bus" x1="60" y1="200" x2="480" y2="200"/>
+
+  <!-- Data to each register -->
+  <line class="wire" x1="100" y1="200" x2="100" y2="150"/>
+  <line class="wire" x1="150" y1="200" x2="150" y2="150"/>
+  <line class="wire" x1="200" y1="200" x2="200" y2="150"/>
+  <line class="wire" x1="250" y1="200" x2="250" y2="150"/>
+  <line class="wire" x1="300" y1="200" x2="300" y2="150"/>
+  <line class="wire" x1="350" y1="200" x2="350" y2="150"/>
+  <line class="wire" x1="400" y1="200" x2="400" y2="150"/>
+  <line class="wire" x1="450" y1="200" x2="450" y2="150"/>
+
+  <!-- Register outputs to Mux -->
+  <line class="wire" x1="100" y1="150" x2="100" y2="250"/>
+  <line class="wire" x1="150" y1="150" x2="150" y2="250"/>
+  <line class="wire" x1="200" y1="150" x2="200" y2="250"/>
+  <line class="wire" x1="250" y1="150" x2="250" y2="250"/>
+  <line class="wire" x1="300" y1="150" x2="300" y2="250"/>
+  <line class="wire" x1="350" y1="150" x2="350" y2="250"/>
+  <line class="wire" x1="400" y1="150" x2="400" y2="250"/>
+  <line class="wire" x1="450" y1="150" x2="450" y2="250"/>
+
+  <!-- Mux8Way32 -->
+  <rect class="mux" x="80" y="250" width="390" height="50" rx="4"/>
+  <text class="label" x="275" y="275" text-anchor="middle" font-weight="bold" fill="#92400e">Mux8Way32 (selectionne la sortie)</text>
+
+  <!-- Address to Mux -->
+  <line class="wire" x1="50" y1="275" x2="80" y2="275"/>
+  <text class="label" x="25" y="280" font-size="9">addr</text>
+
+  <!-- Output -->
+  <line class="bus" x1="275" y1="300" x2="275" y2="350" marker-end="url(#arr)"/>
+  <text class="label" x="275" y="370" text-anchor="middle" font-weight="bold">out[31:0]</text>
+</svg>

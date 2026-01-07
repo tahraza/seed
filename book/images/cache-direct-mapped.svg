@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 350" width="600" height="350">
+  <defs>
+    <style>
+      .header { fill: #1e40af; stroke: #1e40af; stroke-width: 1; }
+      .header-text { font-family: sans-serif; font-size: 10px; fill: white; font-weight: bold; }
+      .cell { stroke: #374151; stroke-width: 1; }
+      .valid { fill: #dcfce7; }
+      .tag { fill: #fef3c7; }
+      .data { fill: #dbeafe; }
+      .active { fill: #fecaca; stroke: #dc2626; stroke-width: 2; }
+      .label { font-family: sans-serif; font-size: 10px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e3a8a; }
+      .mono { font-family: monospace; font-size: 9px; fill: #374151; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="300" y="25" text-anchor="middle">Cache Direct-Mapped (64 lignes)</text>
+
+  <!-- Header row -->
+  <rect class="header" x="50" y="40" width="50" height="25"/>
+  <text class="header-text" x="75" y="57" text-anchor="middle">Index</text>
+
+  <rect class="header" x="100" y="40" width="50" height="25"/>
+  <text class="header-text" x="125" y="57" text-anchor="middle">Valid</text>
+
+  <rect class="header" x="150" y="40" width="100" height="25"/>
+  <text class="header-text" x="200" y="57" text-anchor="middle">Tag</text>
+
+  <rect class="header" x="250" y="40" width="300" height="25"/>
+  <text class="header-text" x="400" y="57" text-anchor="middle">Donnees (128 bits)</text>
+
+  <!-- Row 0 -->
+  <rect x="50" y="65" width="50" height="25" fill="#f9fafb" class="cell"/>
+  <text class="mono" x="75" y="82" text-anchor="middle">0</text>
+  <rect x="100" y="65" width="50" height="25" class="cell valid"/>
+  <text class="mono" x="125" y="82" text-anchor="middle">1</text>
+  <rect x="150" y="65" width="100" height="25" class="cell tag"/>
+  <text class="mono" x="200" y="82" text-anchor="middle">0x00012</text>
+  <rect x="250" y="65" width="300" height="25" class="cell data"/>
+  <text class="mono" x="400" y="82" text-anchor="middle">[Mot0][Mot1][Mot2][Mot3]</text>
+
+  <!-- Row 1 -->
+  <rect x="50" y="90" width="50" height="25" fill="#f9fafb" class="cell"/>
+  <text class="mono" x="75" y="107" text-anchor="middle">1</text>
+  <rect x="100" y="90" width="50" height="25" class="cell" fill="#fee2e2"/>
+  <text class="mono" x="125" y="107" text-anchor="middle">0</text>
+  <rect x="150" y="90" width="100" height="25" class="cell" fill="#f5f5f5"/>
+  <text class="mono" x="200" y="107" text-anchor="middle">------</text>
+  <rect x="250" y="90" width="300" height="25" class="cell" fill="#f5f5f5"/>
+  <text class="mono" x="400" y="107" text-anchor="middle">-------------------------</text>
+
+  <!-- Row 2 -->
+  <rect x="50" y="115" width="50" height="25" fill="#f9fafb" class="cell"/>
+  <text class="mono" x="75" y="132" text-anchor="middle">2</text>
+  <rect x="100" y="115" width="50" height="25" class="cell valid"/>
+  <text class="mono" x="125" y="132" text-anchor="middle">1</text>
+  <rect x="150" y="115" width="100" height="25" class="cell tag"/>
+  <text class="mono" x="200" y="132" text-anchor="middle">0x00045</text>
+  <rect x="250" y="115" width="300" height="25" class="cell data"/>
+  <text class="mono" x="400" y="132" text-anchor="middle">[Mot0][Mot1][Mot2][Mot3]</text>
+
+  <!-- Row 3 (active) -->
+  <rect x="50" y="140" width="50" height="25" class="active"/>
+  <text class="mono" x="75" y="157" text-anchor="middle" font-weight="bold">3</text>
+  <rect x="100" y="140" width="50" height="25" class="active"/>
+  <text class="mono" x="125" y="157" text-anchor="middle">1</text>
+  <rect x="150" y="140" width="100" height="25" class="active"/>
+  <text class="mono" x="200" y="157" text-anchor="middle">0x00123</text>
+  <rect x="250" y="140" width="300" height="25" class="active"/>
+  <text class="mono" x="400" y="157" text-anchor="middle">[Mot0][Mot1][Mot2][Mot3]</text>
+  <text class="label" x="560" y="157" fill="#dc2626" font-size="9">Ligne active</text>
+
+  <!-- Row 4 -->
+  <rect x="50" y="165" width="50" height="25" fill="#f9fafb" class="cell"/>
+  <text class="mono" x="75" y="182" text-anchor="middle">4</text>
+  <rect x="100" y="165" width="50" height="25" class="cell" fill="#fee2e2"/>
+  <text class="mono" x="125" y="182" text-anchor="middle">0</text>
+  <rect x="150" y="165" width="100" height="25" class="cell" fill="#f5f5f5"/>
+  <text class="mono" x="200" y="182" text-anchor="middle">------</text>
+  <rect x="250" y="165" width="300" height="25" class="cell" fill="#f5f5f5"/>
+  <text class="mono" x="400" y="182" text-anchor="middle">-------------------------</text>
+
+  <!-- Row 5 -->
+  <rect x="50" y="190" width="50" height="25" fill="#f9fafb" class="cell"/>
+  <text class="mono" x="75" y="207" text-anchor="middle">5</text>
+  <rect x="100" y="190" width="50" height="25" class="cell valid"/>
+  <text class="mono" x="125" y="207" text-anchor="middle">1</text>
+  <rect x="150" y="190" width="100" height="25" class="cell tag"/>
+  <text class="mono" x="200" y="207" text-anchor="middle">0x00067</text>
+  <rect x="250" y="190" width="300" height="25" class="cell data"/>
+  <text class="mono" x="400" y="207" text-anchor="middle">[Mot0][Mot1][Mot2][Mot3]</text>
+
+  <!-- Ellipsis row -->
+  <rect x="50" y="215" width="500" height="25" fill="#f9fafb" class="cell"/>
+  <text class="mono" x="300" y="232" text-anchor="middle">...</text>
+
+  <!-- Row 63 -->
+  <rect x="50" y="240" width="50" height="25" fill="#f9fafb" class="cell"/>
+  <text class="mono" x="75" y="257" text-anchor="middle">63</text>
+  <rect x="100" y="240" width="50" height="25" class="cell valid"/>
+  <text class="mono" x="125" y="257" text-anchor="middle">1</text>
+  <rect x="150" y="240" width="100" height="25" class="cell tag"/>
+  <text class="mono" x="200" y="257" text-anchor="middle">0x00ABC</text>
+  <rect x="250" y="240" width="300" height="25" class="cell data"/>
+  <text class="mono" x="400" y="257" text-anchor="middle">[Mot0][Mot1][Mot2][Mot3]</text>
+
+  <!-- Legend -->
+  <rect x="50" y="285" width="500" height="50" fill="#f9fafb" stroke="#e5e7eb" rx="4"/>
+  <text class="label" x="300" y="305" text-anchor="middle">Chaque ligne = 1 bit Valid + 20 bits Tag + 128 bits Data</text>
+  <rect x="100" y="315" width="15" height="15" class="valid"/>
+  <text class="label" x="120" y="327">Valid=1</text>
+  <rect x="180" y="315" width="15" height="15" fill="#fee2e2" class="cell"/>
+  <text class="label" x="200" y="327">Valid=0</text>
+  <rect x="260" y="315" width="15" height="15" class="tag"/>
+  <text class="label" x="280" y="327">Tag</text>
+  <rect x="320" y="315" width="15" height="15" class="data"/>
+  <text class="label" x="340" y="327">Donnees</text>
+</svg>

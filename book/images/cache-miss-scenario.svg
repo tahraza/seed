@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 420" width="650" height="420">
+  <defs>
+    <style>
+      .box { stroke: #374151; stroke-width: 1.5; rx: 4; }
+      .title-box { stroke: #dc2626; stroke-width: 2; fill: #fee2e2; rx: 6; }
+      .step { font-family: sans-serif; font-size: 11px; fill: #1f2937; }
+      .label { font-family: sans-serif; font-size: 10px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #dc2626; }
+      .mono { font-family: monospace; font-size: 10px; fill: #1f2937; }
+      .fail { font-family: sans-serif; font-size: 11px; fill: #dc2626; font-weight: bold; }
+      .success { font-family: sans-serif; font-size: 11px; fill: #059669; font-weight: bold; }
+      .arrow { stroke: #374151; stroke-width: 1.5; fill: none; }
+      .field { stroke: #374151; stroke-width: 1; }
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#374151"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <rect class="title-box" x="20" y="10" width="610" height="35"/>
+  <text class="title" x="325" y="33" text-anchor="middle">CACHE MISS (Echec)</text>
+
+  <!-- CPU Request -->
+  <text class="step" x="30" y="70">CPU demande: "Je veux lire l'adresse 0x00005678"</text>
+
+  <!-- Step 1: Extract fields -->
+  <text class="step" x="30" y="100" font-weight="bold">Etape 1: Extraire les champs</text>
+
+  <rect x="80" y="110" width="130" height="30" fill="#dbeafe" class="field"/>
+  <text class="mono" x="145" y="130" text-anchor="middle">Tag = 0x00005</text>
+
+  <rect x="210" y="110" width="120" height="30" fill="#dcfce7" class="field"/>
+  <text class="mono" x="270" y="130" text-anchor="middle">Index = 0x67</text>
+
+  <rect x="330" y="110" width="120" height="30" fill="#fef3c7" class="field"/>
+  <text class="mono" x="390" y="130" text-anchor="middle">Offset = 0x8</text>
+
+  <!-- Arrow down -->
+  <line class="arrow" x1="270" y1="140" x2="270" y2="170" marker-end="url(#arr)"/>
+
+  <!-- Step 2: Go to line -->
+  <text class="step" x="30" y="190" font-weight="bold">Etape 2: Aller a la ligne 0x67 (103)</text>
+
+  <!-- Cache line box -->
+  <rect x="80" y="200" width="450" height="40" fill="#f3f4f6" class="box"/>
+  <text class="label" x="25" y="225">Cache ligne 103:</text>
+
+  <rect x="90" y="208" width="80" height="24" fill="#dcfce7" class="field"/>
+  <text class="mono" x="130" y="224" text-anchor="middle">Valid=1</text>
+
+  <rect x="180" y="208" width="130" height="24" fill="#fee2e2" class="field"/>
+  <text class="mono" x="245" y="224" text-anchor="middle">Tag=0x00099</text>
+
+  <rect x="320" y="208" width="200" height="24" fill="#fef3c7" class="field"/>
+  <text class="mono" x="420" y="224" text-anchor="middle">Donnees [32 octets]</text>
+
+  <!-- Step 3: Verify -->
+  <text class="step" x="30" y="270" font-weight="bold">Etape 3: Verifier</text>
+
+  <line class="arrow" x1="130" y1="240" x2="130" y2="280" marker-end="url(#arr)"/>
+  <text class="label" x="145" y="265">Valid = 1?</text>
+  <text class="success" x="145" y="280">OUI</text>
+
+  <line class="arrow" x1="245" y1="240" x2="245" y2="280" marker-end="url(#arr)"/>
+  <text class="label" x="260" y="265">Tag match?</text>
+  <text class="fail" x="260" y="280">NON!</text>
+  <text class="mono" x="330" y="280">0x00005 != 0x00099</text>
+
+  <!-- Step 4: MISS -->
+  <text class="step" x="30" y="320" font-weight="bold">Etape 4: C'est un MISS !</text>
+
+  <rect x="80" y="330" width="450" height="70" fill="#fee2e2" class="box" stroke="#dc2626"/>
+  <text class="label" x="95" y="350">1. Aller chercher en RAM (lent: ~100 ns)</text>
+  <text class="label" x="95" y="368">2. Charger la nouvelle ligne dans le cache</text>
+  <text class="label" x="95" y="386">3. Retourner la donnee au CPU</text>
+
+  <!-- Fail indicator -->
+  <circle cx="580" cy="365" r="25" fill="#dc2626"/>
+  <text x="580" y="372" text-anchor="middle" fill="white" font-family="sans-serif" font-size="16" font-weight="bold">MISS</text>
+</svg>

@@ -1,48 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 200" width="350" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 400" width="500" height="400">
   <defs>
     <style>
-      .level { stroke: #2563eb; stroke-width: 2; }
-      .level-1 { fill: #1e40af; }
-      .level-2 { fill: #2563eb; }
-      .level-3 { fill: #3b82f6; }
-      .level-4 { fill: #60a5fa; }
-      .level-5 { fill: #93c5fd; }
-      .label { font-family: sans-serif; font-size: 11px; fill: white; font-weight: bold; }
-      .label-dark { font-family: sans-serif; font-size: 11px; fill: #1e40af; font-weight: bold; }
-      .size { font-family: monospace; font-size: 9px; fill: #666; }
-      .arrow-label { font-family: sans-serif; font-size: 10px; fill: #666; }
-      .arrow { stroke: #999; stroke-width: 1.5; fill: none; }
+      .level { stroke: #374151; stroke-width: 2; }
+      .label { font-family: sans-serif; font-size: 11px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e3a8a; }
+      .speed { font-family: sans-serif; font-size: 10px; fill: #6b7280; }
+      .size { font-family: sans-serif; font-size: 10px; fill: #059669; font-weight: bold; }
     </style>
   </defs>
 
-  <!-- Pyramid levels (top to bottom) -->
-  <polygon class="level level-1" points="175,10 195,40 155,40"/>
-  <polygon class="level level-2" points="155,45 195,45 215,75 135,75"/>
-  <polygon class="level level-3" points="135,80 215,80 235,110 115,110"/>
-  <polygon class="level level-4" points="115,115 235,115 260,145 90,145"/>
-  <polygon class="level level-5" points="90,150 260,150 285,180 65,180"/>
+  <!-- Title -->
+  <text class="title" x="250" y="25" text-anchor="middle">Hierarchie Memoire</text>
 
-  <!-- Labels -->
-  <text class="label" x="158" y="32">Registres</text>
-  <text class="label" x="152" y="64">Cache L1</text>
-  <text class="label" x="152" y="99">Cache L2</text>
-  <text class="label" x="160" y="134">RAM</text>
-  <text class="label-dark" x="155" y="169">Disque</text>
+  <!-- Pyramid levels - from top (fast/small) to bottom (slow/large) -->
 
-  <!-- Sizes -->
-  <text class="size" x="290" y="32">64 octets</text>
-  <text class="size" x="290" y="64">32 Ko</text>
-  <text class="size" x="290" y="99">256 Ko</text>
-  <text class="size" x="290" y="134">16 Go</text>
-  <text class="size" x="290" y="169">1 To</text>
+  <!-- Registers -->
+  <polygon points="250,50 280,90 220,90" fill="#fef3c7" class="level"/>
+  <text class="label" x="250" y="80" text-anchor="middle" font-weight="bold">Registres</text>
+  <text class="speed" x="320" y="75">~0.3 ns</text>
+  <text class="size" x="180" y="75">128 o</text>
 
-  <!-- Left arrow (Rapidité) -->
-  <line class="arrow" x1="30" y1="170" x2="30" y2="30"/>
-  <polygon points="30,25 25,35 35,35" fill="#999"/>
-  <text class="arrow-label" x="10" y="100" transform="rotate(-90, 10, 100)">Rapidité</text>
+  <!-- L1 Cache -->
+  <polygon points="220,90 280,90 310,140 190,140" fill="#fed7aa" class="level"/>
+  <text class="label" x="250" y="120" text-anchor="middle" font-weight="bold">Cache L1</text>
+  <text class="speed" x="340" y="120">~1 ns</text>
+  <text class="size" x="160" y="120">32 Ko</text>
 
-  <!-- Right arrow (Capacité) -->
-  <line class="arrow" x1="50" y1="30" x2="50" y2="170"/>
-  <polygon points="50,175 45,165 55,165" fill="#999"/>
-  <text class="arrow-label" x="55" y="100" transform="rotate(-90, 55, 100)">Capacité</text>
+  <!-- L2 Cache -->
+  <polygon points="190,140 310,140 350,200 150,200" fill="#fecaca" class="level"/>
+  <text class="label" x="250" y="175" text-anchor="middle" font-weight="bold">Cache L2</text>
+  <text class="speed" x="370" y="175">~4 ns</text>
+  <text class="size" x="130" y="175">256 Ko</text>
+
+  <!-- RAM -->
+  <polygon points="150,200 350,200 400,280 100,280" fill="#c7d2fe" class="level"/>
+  <text class="label" x="250" y="245" text-anchor="middle" font-weight="bold">RAM</text>
+  <text class="speed" x="410" y="245">~100 ns</text>
+  <text class="size" x="80" y="245">8 Go</text>
+
+  <!-- SSD/Disk -->
+  <polygon points="100,280 400,280 450,360 50,360" fill="#dbeafe" class="level"/>
+  <text class="label" x="250" y="325" text-anchor="middle" font-weight="bold">Disque SSD</text>
+  <text class="speed" x="460" y="325">~100,000 ns</text>
+  <text class="size" x="30" y="325">512 Go</text>
+
+  <!-- Arrows indicating speed/size trade-off -->
+  <line x1="30" y1="360" x2="30" y2="60" stroke="#9ca3af" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="15" y="210" font-family="sans-serif" font-size="10" fill="#6b7280" transform="rotate(-90 15 210)">Plus rapide</text>
+
+  <line x1="470" y1="60" x2="470" y2="360" stroke="#9ca3af" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="485" y="210" font-family="sans-serif" font-size="10" fill="#6b7280" transform="rotate(90 485 210)">Plus grand</text>
+
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#9ca3af"/>
+    </marker>
+  </defs>
+
+  <!-- Bottom note -->
+  <text class="label" x="250" y="385" text-anchor="middle" font-style="italic">Plus on descend, plus c'est lent mais plus c'est grand</text>
 </svg>

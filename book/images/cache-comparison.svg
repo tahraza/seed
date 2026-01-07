@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 280" width="650" height="280">
+  <defs>
+    <style>
+      .box { stroke: #374151; stroke-width: 1.5; rx: 4; }
+      .title-box { stroke: #2563eb; stroke-width: 2; fill: #dbeafe; rx: 6; }
+      .cell { stroke: #374151; stroke-width: 1; }
+      .label { font-family: sans-serif; font-size: 10px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 12px; font-weight: bold; fill: #1e40af; }
+      .good { font-family: sans-serif; font-size: 10px; fill: #059669; font-weight: bold; }
+      .bad { font-family: sans-serif; font-size: 10px; fill: #dc2626; font-weight: bold; }
+      .mono { font-family: monospace; font-size: 9px; fill: #1f2937; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <rect class="title-box" x="20" y="10" width="610" height="30"/>
+  <text class="title" x="325" y="30" text-anchor="middle">COMPARAISON ROW-MAJOR vs COLUMN-MAJOR</text>
+
+  <!-- Row-Major Side -->
+  <text class="good" x="100" y="60" text-anchor="middle">ROW-MAJOR (bon)</text>
+
+  <text class="label" x="30" y="85">Cache Line 1:</text>
+  <rect x="120" y="70" width="30" height="22" fill="#dcfce7" class="cell"/>
+  <text class="mono" x="135" y="85" text-anchor="middle">0</text>
+  <rect x="150" y="70" width="30" height="22" fill="#dcfce7" class="cell"/>
+  <text class="mono" x="165" y="85" text-anchor="middle">1</text>
+  <rect x="180" y="70" width="30" height="22" fill="#dcfce7" class="cell"/>
+  <text class="mono" x="195" y="85" text-anchor="middle">2</text>
+  <rect x="210" y="70" width="30" height="22" fill="#dcfce7" class="cell"/>
+  <text class="mono" x="225" y="85" text-anchor="middle">3</text>
+
+  <text class="mono" x="135" y="105">1</text>
+  <text class="mono" x="165" y="105">2</text>
+  <text class="mono" x="195" y="105">3</text>
+  <text class="mono" x="225" y="105">4</text>
+  <text class="good" x="260" y="105">Tout utilise!</text>
+
+  <text class="label" x="30" y="135">Cache Line 2:</text>
+  <rect x="120" y="120" width="30" height="22" fill="#dbeafe" class="cell"/>
+  <text class="mono" x="135" y="135" text-anchor="middle">4</text>
+  <rect x="150" y="120" width="30" height="22" fill="#dbeafe" class="cell"/>
+  <text class="mono" x="165" y="135" text-anchor="middle">5</text>
+  <rect x="180" y="120" width="30" height="22" fill="#dbeafe" class="cell"/>
+  <text class="mono" x="195" y="135" text-anchor="middle">6</text>
+  <rect x="210" y="120" width="30" height="22" fill="#dbeafe" class="cell"/>
+  <text class="mono" x="225" y="135" text-anchor="middle">7</text>
+
+  <text class="mono" x="135" y="155">5</text>
+  <text class="mono" x="165" y="155">6</text>
+  <text class="mono" x="195" y="155">7</text>
+  <text class="mono" x="225" y="155">8</text>
+  <text class="good" x="260" y="155">Tout utilise!</text>
+
+  <!-- Column-Major Side -->
+  <text class="bad" x="480" y="60" text-anchor="middle">COLUMN-MAJOR (mauvais)</text>
+
+  <text class="label" x="370" y="85">Cache Line 1:</text>
+  <rect x="460" y="70" width="30" height="22" fill="#fee2e2" class="cell"/>
+  <text class="mono" x="475" y="85" text-anchor="middle">0</text>
+  <rect x="490" y="70" width="30" height="22" fill="#f3f4f6" class="cell"/>
+  <text class="mono" x="505" y="85" text-anchor="middle">1</text>
+  <rect x="520" y="70" width="30" height="22" fill="#f3f4f6" class="cell"/>
+  <text class="mono" x="535" y="85" text-anchor="middle">2</text>
+  <rect x="550" y="70" width="30" height="22" fill="#fee2e2" class="cell"/>
+  <text class="mono" x="565" y="85" text-anchor="middle">3</text>
+
+  <text class="mono" x="475" y="105">1</text>
+  <text class="mono" x="565" y="105">5</text>
+  <text class="bad" x="595" y="105">Gaspille!</text>
+
+  <text class="label" x="370" y="135">Cache Line 2:</text>
+  <rect x="460" y="120" width="30" height="22" fill="#fee2e2" class="cell"/>
+  <text class="mono" x="475" y="135" text-anchor="middle">4</text>
+  <rect x="490" y="120" width="30" height="22" fill="#f3f4f6" class="cell"/>
+  <text class="mono" x="505" y="135" text-anchor="middle">5</text>
+  <rect x="520" y="120" width="30" height="22" fill="#f3f4f6" class="cell"/>
+  <text class="mono" x="535" y="135" text-anchor="middle">6</text>
+  <rect x="550" y="120" width="30" height="22" fill="#fee2e2" class="cell"/>
+  <text class="mono" x="565" y="135" text-anchor="middle">7</text>
+
+  <text class="mono" x="475" y="155">2</text>
+  <text class="mono" x="565" y="155">6</text>
+  <text class="bad" x="595" y="155">Gaspille!</text>
+
+  <!-- Results -->
+  <rect x="30" y="180" width="280" height="45" fill="#d1fae5" class="box" stroke="#059679"/>
+  <text class="label" x="170" y="198" text-anchor="middle">Resultat:</text>
+  <text class="label" x="170" y="213" text-anchor="middle">4 acces memoire pour 16 elements</text>
+
+  <rect x="340" y="180" width="280" height="45" fill="#fee2e2" class="box" stroke="#dc2626"/>
+  <text class="label" x="480" y="198" text-anchor="middle">Resultat:</text>
+  <text class="label" x="480" y="213" text-anchor="middle">16 acces memoire pour 16 elements</text>
+
+  <!-- Hit rate bars -->
+  <rect x="30" y="240" width="280" height="25" fill="#f3f4f6" class="box"/>
+  <rect x="32" y="242" width="260" height="21" fill="#059679"/>
+  <text class="good" x="170" y="257" text-anchor="middle" fill="white">95% hits</text>
+
+  <rect x="340" y="240" width="280" height="25" fill="#f3f4f6" class="box"/>
+  <rect x="342" y="242" width="68" height="21" fill="#dc2626"/>
+  <text class="bad" x="480" y="257" text-anchor="middle">25% hits</text>
+</svg>

@@ -8,27 +8,9 @@ C'est le grand moment. Nous allons assembler toutes les pièces du puzzle — po
 
 ## Où en sommes-nous ?
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     COUCHE 7: Applications                       │
-├─────────────────────────────────────────────────────────────────┤
-│                  COUCHE 6: Système d'Exploitation                │
-├─────────────────────────────────────────────────────────────────┤
-│                 COUCHE 5: Langage de Haut Niveau (C32)           │
-├─────────────────────────────────────────────────────────────────┤
-│                      COUCHE 4: Compilateur                       │
-├─────────────────────────────────────────────────────────────────┤
-│                   COUCHE 3: Assembleur (A32 ASM)                 │
-├─────────────────────────────────────────────────────────────────┤
-│                 COUCHE 2: Architecture Machine (ISA)             │
-├─────────────────────────────────────────────────────────────────┤
-│  ══════════════► COUCHE 1: CPU - L'Aboutissement ◄══════════════│
-│          (Nous assemblons tout : ALU + RAM + Registres)          │
-│                    (Vous êtes ici !)                             │
-├─────────────────────────────────────────────────────────────────┤
-│                     COUCHE 0: La Porte NAND                      │
-└─────────────────────────────────────────────────────────────────┘
-```
+![Position dans l'architecture](images/architecture-stack.svg)
+
+*Nous sommes à la Couche 1 : CPU - L'Aboutissement (ALU + RAM + Registres)*
 
 Ce chapitre est le **point culminant** de tout le travail matériel. Après ce chapitre, vous aurez construit un ordinateur complet capable d'exécuter du vrai code !
 
@@ -47,6 +29,7 @@ Le **simulateur Rust** (`a32_core`) implémente un CPU **mono-cycle** :
 *Chaque instruction traverse TOUTES les étapes en UN cycle*
 
 **Utilisé par :**
+
 - Le **CPU Visualizer** (interface web)
 - Le **runner** (`a32_runner`)
 - L'**IDE web** (exécution des programmes)
@@ -73,6 +56,7 @@ Le **CPU en HDL** (`hdl_lib/05_cpu/CPU_Pipeline.hdl`) implémente un vrai **pipe
 | `CPU_Pipeline.hdl` | CPU complet assemblé |
 
 **Utilisé par :**
+
 - Les **exercices HDL** (apprentissage hardware)
 - Le **simulateur HDL** (`hdl_cli`)
 
@@ -97,6 +81,7 @@ Le **CPU en HDL** (`hdl_lib/05_cpu/CPU_Pipeline.hdl`) implémente un vrai **pipe
 ### Le chef d'orchestre
 
 Le CPU (Central Processing Unit) est le composant qui :
+
 1. **Lit** les instructions depuis la mémoire
 2. **Décode** ces instructions pour comprendre quoi faire
 3. **Exécute** les opérations (calculs, accès mémoire, branchements)
@@ -128,67 +113,7 @@ C'est une machine à états qui exécute une instruction après l'autre, inlassa
 
 Voici le schéma complet du CPU. Chaque flèche est un fil (ou un bus de 32 fils). Chaque boîte est un composant que vous avez construit ou que vous allez construire.
 
-```
-                            ┌──────────────────────────────────────────┐
-                            │           UNITÉ DE CONTRÔLE              │
-                            │  (génère tous les signaux de contrôle)   │
-                            └──────────────────┬───────────────────────┘
-                                               │
-          Signaux de contrôle : reg_write, mem_read, mem_write, alu_op, etc.
-                                               │
-    ┌──────────────────────────────────────────┼──────────────────────────────┐
-    │                                          │                              │
-    │   ┌───────┐     ┌──────────────┐        │        ┌──────────────┐      │
-    │   │       │     │   MÉMOIRE    │        │        │   DÉCODEUR   │      │
-    │   │  PC   ├────►│ INSTRUCTIONS ├───────────────►│  (analyse    │      │
-    │   │       │     │              │        │        │  les bits)   │      │
-    │   └───┬───┘     └──────────────┘        │        └──────┬───────┘      │
-    │       │              │                  │               │              │
-    │       │              │ instruction      │               │              │
-    │       ▼              ▼                  │               ▼              │
-    │   ┌───────┐                             │         Rd, Rn, Rm, Imm      │
-    │   │ ADD 4 │                             │               │              │
-    │   └───┬───┘                             │               ▼              │
-    │       │                                 │        ┌─────────────┐       │
-    │       │ PC+4                            │        │  REGISTRES  │       │
-    │       │                                 │        │   (R0-R15)  │       │
-    │       ▼                                 │        └──────┬──────┘       │
-    │   ┌───────┐                             │               │              │
-    │   │  MUX  │ ← (Branch ou PC+4?)         │         Rn    │    Rm        │
-    │   └───┬───┘                             │          │    │    │         │
-    │       │                                 │          ▼    │    ▼         │
-    │       │ Nouvelle valeur de PC           │        ┌──────┴────────┐     │
-    │       │                                 │        │      MUX      │     │
-    │       └─────────────────────────────────┼───────►│  (Rm ou Imm?) │     │
-    │                                         │        └───────┬───────┘     │
-    │                                         │                │             │
-    │                                         │                ▼             │
-    │                                         │        ┌───────────────┐     │
-    │                                         │        │      ALU      │     │
-    │                                         │        │  (ADD, SUB...)│     │
-    │                                         │        └───────┬───────┘     │
-    │                                         │                │             │
-    │                                         │          Résultat + Flags    │
-    │                                         │                │             │
-    │                                         │                ▼             │
-    │                                         │        ┌───────────────┐     │
-    │                                         │        │   MÉMOIRE     │     │
-    │                                         │        │   DONNÉES     │     │
-    │                                         │        │ (LDR/STR)     │     │
-    │                                         │        └───────┬───────┘     │
-    │                                         │                │             │
-    │                                         │                ▼             │
-    │                                         │        ┌───────────────┐     │
-    │                                         │        │      MUX      │     │
-    │                                         └───────►│ (ALU ou MEM?) │     │
-    │                                                  └───────┬───────┘     │
-    │                                                          │             │
-    │                                                          ▼             │
-    │                                                  Valeur à écrire       │
-    │                                                  dans le registre Rd   │
-    │                                                                        │
-    └────────────────────────────────────────────────────────────────────────┘
-```
+![Architecture du CPU (Data Path)](images/cpu-datapath.svg)
 
 ### Les flux de données
 
@@ -208,6 +133,7 @@ Voici le schéma complet du CPU. Chaque flèche est un fil (ou un bus de 32 fils
 Vous l'avez déjà construit au Chapitre 3 ! Le PC contient l'adresse de l'instruction courante.
 
 **Modes de fonctionnement** :
+
 - `inc = 1` : PC ← PC + 4 (instruction suivante)
 - `load = 1` : PC ← adresse de branchement
 - `reset = 1` : PC ← 0 (redémarrage)
@@ -216,19 +142,10 @@ Vous l'avez déjà construit au Chapitre 3 ! Le PC contient l'adresse de l'instr
 
 Le décodeur est un circuit **purement combinatoire** qui "découpe" les 32 bits de l'instruction.
 
-```
-                    Instruction (32 bits)
-                           │
-              ┌────────────┴────────────┐
-              │                         │
-              │        DÉCODEUR         │
-              │                         │
-              └─┬──┬──┬──┬──┬──┬──┬──┬──┘
-                │  │  │  │  │  │  │  │
-               cond class op S Rn Rd Rm imm12 imm24
-```
+![Le décodeur d'instructions](images/decoder.svg)
 
 **Sorties du décodeur** :
+
 | Signal | Bits | Description |
 |:-------|:-----|:------------|
 | `cond` | 31-28 | Code de condition (EQ, NE, LT...) |
@@ -247,22 +164,7 @@ Le décodeur ne fait que du **câblage** — il ne calcule rien, il ne fait que 
 
 L'unité de contrôle est le **chef d'orchestre**. Elle regarde la classe et l'opcode, et décide quels signaux activer.
 
-```
-                  ┌────────────────────────────────┐
-                  │       UNITÉ DE CONTRÔLE        │
-      class ─────►│                                │
-      opcode ────►│   (Grande table de vérité)     │
-      cond ──────►│                                │
-      flags ─────►│                                │
-                  └─┬──┬──┬──┬──┬──┬──┬──┬──┬──┬──┘
-                    │  │  │  │  │  │  │  │  │  │
-              reg_write  │  │  │  │  │  │  │  │
-                 mem_read│  │  │  │  │  │  │  │
-                 mem_write  │  │  │  │  │  │  │
-                   alu_src  │  │  │  │  │  │  │
-                     branch │  │  │  │  │  │  │
-                       ...   ...
-```
+![Unité de contrôle](images/control-unit.svg)
 
 **Exemples de signaux de contrôle** :
 
@@ -280,10 +182,12 @@ L'unité de contrôle est le **chef d'orchestre**. Elle regarde la classe et l'o
 Ce petit circuit vérifie si la condition est satisfaite.
 
 **Entrées** :
+
 - `cond` : Le code de condition (4 bits, ex: 0000 = EQ)
 - `flags` : Les drapeaux NZCV
 
 **Sortie** :
+
 - `ok` : 1 si la condition est vraie, 0 sinon
 
 ```
@@ -299,19 +203,11 @@ Si `ok = 0`, l'instruction est "annulée" — on n'écrit pas dans le registre, 
 ### 5. Le Banc de Registres (RegFile)
 
 Vous l'avez construit au Chapitre 3 (RAM8, RAM16...). Le banc de registres est une RAM spéciale avec :
+
 - **2 ports de lecture** : Lire Rn ET Rm simultanément
 - **1 port d'écriture** : Écrire dans Rd
 
-```
-               ┌─────────────────────────────┐
-    Rn (4b) ──►│                             ├───► Data_A (32b)
-    Rm (4b) ──►│       BANC DE REGISTRES     ├───► Data_B (32b)
-               │          (16 × 32 bits)     │
-    Rd (4b) ──►│                             │
-   Data_W ────►│                             │
-    we ───────►│                             │
-               └─────────────────────────────┘
-```
+![Interface du banc de registres](images/register-bank-interface.svg)
 
 ### 6. Les Multiplexeurs
 
@@ -451,10 +347,10 @@ Lancez le **Simulateur Web** et allez dans **HDL Progression** → **Projet 5 : 
 
 | Exercice | Description | Difficulté |
 |----------|-------------|:----------:|
-| `Decoder` | Découper l'instruction en champs | ⭐⭐ |
-| `CondCheck` | Vérifier les conditions (EQ, NE, LT...) | ⭐⭐ |
-| `Control` | Générer les signaux de contrôle | ⭐⭐⭐ |
-| `CPU` | L'assemblage final ! | ⭐⭐⭐⭐ |
+| `Decoder` | Découper l'instruction en champs | [**] |
+| `CondCheck` | Vérifier les conditions (EQ, NE, LT...) | [**] |
+| `Control` | Générer les signaux de contrôle | [***] |
+| `CPU` | L'assemblage final ! | [****] |
 
 ### Ordre de progression
 
@@ -510,20 +406,14 @@ npm run dev
 
 Le Visualizer affiche les **5 étapes du cycle d'exécution** :
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  FETCH      │  DECODE     │  EXECUTE    │  MEMORY     │ WRITEBACK│
-│             │             │             │             │          │
-│  PC ───────►│ Instruction │ ALU         │ Cache L1    │ Registres│
-│  Mémoire    │ décodée     │ A op B = R  │ Hit/Miss    │ Rd ← R   │
-└─────────────────────────────────────────────────────────────────┘
-```
+![Vue Pipeline - Étapes d'exécution](images/pipeline-view.svg)
 
 Chaque étape s'illumine en jaune quand elle est active, vous permettant de suivre la progression de l'instruction.
 
 #### Panneau Registres
 
 Affiche les **16 registres** (R0-R15) avec les alias :
+
 - **SP** (R13) : Stack Pointer
 - **LR** (R14) : Link Register
 - **PC** (R15) : Program Counter
@@ -533,6 +423,7 @@ Les registres modifiés s'illuminent en vert pendant un instant.
 #### Panneau Flags (CPSR)
 
 Les 4 drapeaux du processeur sont affichés :
+
 - **N** (Negative) : Le résultat est négatif
 - **Z** (Zero) : Le résultat est zéro
 - **C** (Carry) : Retenue/emprunt
@@ -543,6 +434,7 @@ Les flags changent de couleur quand ils sont actifs.
 #### Panneau Code Source
 
 Affiche le code assembleur avec :
+
 - **Coloration syntaxique** : Instructions, registres, nombres, commentaires
 - **Surlignage de la ligne courante** : La ligne en cours d'exécution est mise en évidence en jaune
 - **Défilement automatique** : Le code défile pour suivre l'exécution
@@ -550,6 +442,7 @@ Affiche le code assembleur avec :
 #### Panneau Mémoire et Cache
 
 Affiche :
+
 - **Vue mémoire** : Les octets en mémoire autour du PC
 - **Statistiques cache** : Hits, Misses, Taux de réussite
 - **Contenu du cache L1** : Lignes valides avec tag et données
@@ -599,20 +492,24 @@ Utilisez le Visualizer pour observer ces comportements :
 ## Conseils de Débogage
 
 ### Le PC reste à 0 ?
+
 - Vérifiez que `inc = 1` par défaut
 - Vérifiez que le reset n'est pas bloqué
 
 ### Les branchements ne marchent pas ?
+
 - L'offset dans l'instruction est en mots (× 4 pour avoir des octets)
 - Vérifiez que `cond_ok` est correct
 - Vérifiez le calcul de l'adresse de branchement
 
 ### Rien ne s'écrit dans les registres ?
+
 - `reg_write` doit être à 1
 - `cond_ok` doit être à 1
 - Le registre destination ne doit pas être R15 (géré à part)
 
 ### LDR/STR ne fonctionne pas ?
+
 - Vérifiez le calcul de l'adresse (base + offset)
 - Vérifiez les signaux `mem_read` et `mem_write`
 - Attention à l'alignement (adresses multiples de 4)
@@ -633,13 +530,7 @@ Cette section explique en détail ce qu'est un pipeline, pourquoi il est nécess
 
 Dans notre CPU single-cycle, une instruction doit traverser **tous** les composants en un seul cycle :
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  PC → Mémoire → Décodeur → Registres → ALU → Mémoire → Registres │
-│                                                                   │
-│  ←───────────────── UN SEUL CYCLE ─────────────────────────────→ │
-└──────────────────────────────────────────────────────────────────┘
-```
+![Le problème de la chaîne critique](images/critical-path.svg)
 
 Le cycle d'horloge doit être assez **long** pour que le signal traverse tout ce chemin. Si chaque étape prend 1 nanoseconde, le cycle doit faire au minimum 6 ns.
 
@@ -647,31 +538,9 @@ Le cycle d'horloge doit être assez **long** pour que le signal traverse tout ce
 
 #### Une analogie : La laverie
 
-Imaginez que vous avez 4 lessives à faire. Chaque lessive a 4 étapes :
-1. **Laver** (30 min)
-2. **Sécher** (30 min)
-3. **Plier** (30 min)
-4. **Ranger** (30 min)
+Imaginez que vous avez 4 lessives à faire. Chaque lessive a 4 étapes : laver (30 min), sécher (30 min), plier (30 min), ranger (30 min).
 
-**Approche "single-cycle"** : Attendre qu'une lessive soit complètement terminée avant de commencer la suivante.
-
-```
-Lessive 1 : |──Laver──|──Sécher──|──Plier──|──Ranger──|
-Lessive 2 :                                            |──Laver──|──Sécher──|...
-```
-
-Temps total : 4 lessives × 2h = **8 heures**
-
-**Approche "pipeline"** : Dès que la machine à laver est libre, commencer la lessive suivante !
-
-```
-Lessive 1 : |──Laver──|──Sécher──|──Plier──|──Ranger──|
-Lessive 2 :           |──Laver──|──Sécher──|──Plier──|──Ranger──|
-Lessive 3 :                     |──Laver──|──Sécher──|──Plier──|──Ranger──|
-Lessive 4 :                               |──Laver──|──Sécher──|──Plier──|──Ranger──|
-```
-
-Temps total : 2h + 3 × 30min = **3h30**
+![Analogie de la laverie](images/laundry-analogy.svg)
 
 Le pipeline ne rend pas une lessive individuelle plus rapide, mais il permet de traiter **plus de lessives par heure** !
 
@@ -681,18 +550,7 @@ Le pipeline ne rend pas une lessive individuelle plus rapide, mais il permet de 
 
 Notre CPU pipeliné divise l'exécution en **5 étapes**, chacune prenant exactement 1 cycle d'horloge :
 
-```
-┌────────────────────────────────────────────────────────────────────────────┐
-│                                                                            │
-│  ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐   ┌──────┐                     │
-│  │  IF  │ → │  ID  │ → │  EX  │ → │ MEM  │ → │  WB  │                     │
-│  │Fetch │   │Decode│   │Execute   │Memory│   │Write │                     │
-│  └──────┘   └──────┘   └──────┘   └──────┘   └──────┘                     │
-│                                                                            │
-│  1 cycle    1 cycle    1 cycle    1 cycle    1 cycle                      │
-│                                                                            │
-└────────────────────────────────────────────────────────────────────────────┘
-```
+![Pipeline à 5 étages](images/pipeline-5-stages.svg)
 
 #### Étape 1 : IF (Instruction Fetch)
 
@@ -711,6 +569,7 @@ Notre CPU pipeliné divise l'exécution en **5 étapes**, chacune prenant exacte
 ```
 
 **Ce qui se passe** :
+
 1. Le PC (Program Counter) envoie son adresse à la mémoire
 2. La mémoire renvoie l'instruction (32 bits)
 3. On calcule PC + 4 pour l'instruction suivante
@@ -735,6 +594,7 @@ Notre CPU pipeliné divise l'exécution en **5 étapes**, chacune prenant exacte
 ```
 
 **Ce qui se passe** :
+
 1. Le décodeur extrait les champs (Rd, Rn, Rm, opcode, etc.)
 2. L'unité de contrôle génère les signaux (reg_write, mem_read, etc.)
 3. On lit les valeurs des registres Rn et Rm
@@ -761,6 +621,7 @@ Notre CPU pipeliné divise l'exécution en **5 étapes**, chacune prenant exacte
 ```
 
 **Ce qui se passe** :
+
 1. L'ALU effectue l'opération (ADD, SUB, AND, etc.)
 2. Les flags (N, Z, C, V) sont calculés
 3. Pour les branchements, on calcule l'adresse cible
@@ -787,6 +648,7 @@ Notre CPU pipeliné divise l'exécution en **5 étapes**, chacune prenant exacte
 ```
 
 **Ce qui se passe** :
+
 1. Pour LDR : on lit la mémoire à l'adresse calculée
 2. Pour STR : on écrit la valeur en mémoire
 3. Pour les autres instructions : rien (le résultat ALU est juste transmis)
@@ -809,6 +671,7 @@ Notre CPU pipeliné divise l'exécution en **5 étapes**, chacune prenant exacte
 ```
 
 **Ce qui se passe** :
+
 1. On choisit le résultat à écrire (ALU ou mémoire)
 2. Si `reg_write = 1`, on écrit dans le registre Rd
 
@@ -818,16 +681,7 @@ Notre CPU pipeliné divise l'exécution en **5 étapes**, chacune prenant exacte
 
 Voici comment 5 instructions traversent le pipeline :
 
-```
-         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │ Cycle 6 │ Cycle 7 │
-─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
-Instr 1  │   IF    │   ID    │   EX    │   MEM   │   WB    │         │         │
-Instr 2  │         │   IF    │   ID    │   EX    │   MEM   │   WB    │         │
-Instr 3  │         │         │   IF    │   ID    │   EX    │   MEM   │   WB    │
-Instr 4  │         │         │         │   IF    │   ID    │   EX    │   MEM   │...
-Instr 5  │         │         │         │         │   IF    │   ID    │   EX    │...
-─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
-```
+![Visualisation du timing du pipeline](images/pipeline-timing.svg)
 
 **Observation clé** : À partir du cycle 5, le pipeline est "rempli" et on termine **une instruction par cycle** !
 
@@ -855,51 +709,19 @@ Le pipeline est **~5× plus rapide** !
 
 Pour que le pipeline fonctionne, il faut **stocker** les résultats intermédiaires entre chaque étage. C'est le rôle des **registres de pipeline**.
 
-```
-┌──────┐   ┌───────────┐   ┌──────┐   ┌───────────┐   ┌──────┐
-│  IF  │ → │  IF/ID    │ → │  ID  │ → │  ID/EX    │ → │  EX  │ → ...
-│      │   │  Register │   │      │   │  Register │   │      │
-└──────┘   └───────────┘   └──────┘   └───────────┘   └──────┘
-                │                           │
-          (instruction,              (valeurs registres,
-           PC+4)                      signaux contrôle,
-                                      Rd, Rn, Rm, imm)
-```
-
 #### Le registre IF/ID
 
 **Stocke** :
+
 - L'instruction (32 bits)
 - PC+4 (32 bits)
 
 **Signaux spéciaux** :
+
 - `stall` : Si 1, garder les mêmes valeurs (ne pas avancer)
 - `flush` : Si 1, mettre l'instruction à NOP (annuler)
 
-```
-┌─────────────────────────────────────────────┐
-│  IF/ID Register                             │
-│                                             │
-│  Entrées:                                   │
-│    if_instr ───────────┐                    │
-│    if_pc_plus4 ────────┤                    │
-│    stall ──────────────┤                    │
-│    flush ──────────────┘                    │
-│                                             │
-│  Comportement:                              │
-│    Si reset OU flush:                       │
-│      → instr = NOP, pc = 0                  │
-│    Sinon si stall:                          │
-│      → garder les valeurs actuelles         │
-│    Sinon:                                   │
-│      → capturer les nouvelles valeurs       │
-│                                             │
-│  Sorties:                                   │
-│    id_instr ←──────────┘                    │
-│    id_pc_plus4 ←───────                     │
-│                                             │
-└─────────────────────────────────────────────┘
-```
+![Registre de pipeline IF/ID](images/if-id-register.svg)
 
 ---
 
@@ -916,14 +738,7 @@ ADD R1, R2, R3    ; Instruction 1: R1 = R2 + R3
 SUB R4, R1, R5    ; Instruction 2: R4 = R1 - R5 (utilise R1!)
 ```
 
-Visualisons dans le pipeline :
-
-```
-         │ Cycle 1 │ Cycle 2 │ Cycle 3 │ Cycle 4 │ Cycle 5 │
-─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
-ADD R1   │   IF    │   ID    │   EX    │   MEM   │   WB ←──── R1 écrit ici!
-SUB R4,R1│         │   IF    │   ID ←──── R1 lu ici!         │
-```
+![Aléa de données (Data Hazard)](images/data-hazard.svg)
 
 **Le problème** : SUB lit R1 au cycle 3 (étage ID), mais ADD n'écrit R1 qu'au cycle 5 (étage WB). SUB va lire l'**ancienne** valeur de R1 !
 
@@ -997,25 +812,25 @@ Instr 3  │         │         │   IF    │  STALL  │   ID    │   EX   
 **Le HazardDetect** détecte ces situations :
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  HazardDetect                                               │
-│                                                             │
-│  Entrées:                                                   │
-│    id_rn, id_rm    : registres sources en ID                │
-│    id_rn_used      : Rn est utilisé par l'instruction?      │
-│    id_rm_used      : Rm est utilisé par l'instruction?      │
-│    ex_rd           : registre destination en EX             │
-│    ex_mem_read     : instruction en EX est un LDR?          │
-│                                                             │
-│  Logique:                                                   │
-│    Si EX est un load (ex_mem_read = 1)                      │
-│    ET ID utilise ce registre (id_rn = ex_rd ou id_rm = ex_rd)│
-│    → Déclencher un STALL                                    │
-│                                                             │
-│  Sortie:                                                    │
-│    stall : 1 = bloquer IF et ID, insérer NOP en EX          │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│  HazardDetect                                                 │
+│                                                               │
+│  Entrées:                                                     │
+│    id_rn, id_rm    : registres sources en ID                  │
+│    id_rn_used      : Rn est utilisé par l'instruction?        │
+│    id_rm_used      : Rm est utilisé par l'instruction?        │
+│    ex_rd           : registre destination en EX               │
+│    ex_mem_read     : instruction en EX est un LDR?            │
+│                                                               │
+│  Logique:                                                     │
+│    Si EX est un load (ex_mem_read = 1)                        │
+│    ET ID utilise ce registre (id_rn = ex_rd ou id_rm = ex_rd) │
+│    → Déclencher un STALL                                      │
+│                                                               │
+│  Sortie:                                                      │
+│    stall : 1 = bloquer IF et ID, insérer NOP en EX            │
+│                                                               │
+└───────────────────────────────────────────────────────────────┘
 ```
 
 #### Aléa de Contrôle (Control Hazard)
@@ -1059,28 +874,7 @@ Le signal `flush` met les registres de pipeline à NOP (instruction qui ne fait 
 
 ### Architecture Complète du CPU Pipeline
 
-```
-┌────────────────────────────────────────────────────────────────────────────────┐
-│                            CPU PIPELINE 5 ÉTAGES                               │
-│                                                                                │
-│  ┌───────┐     ┌───────┐     ┌───────┐     ┌───────┐     ┌───────┐           │
-│  │       │     │ IF/ID │     │       │     │ ID/EX │     │       │           │
-│  │  IF   │────►│  Reg  │────►│  ID   │────►│  Reg  │────►│  EX   │──...      │
-│  │       │     │       │     │       │     │       │     │       │           │
-│  └───┬───┘     └───────┘     └───┬───┘     └───────┘     └───┬───┘           │
-│      │                           │                           │               │
-│      │                           │                           │               │
-│      │                     ┌─────┴─────┐               ┌─────┴─────┐         │
-│      │                     │  Hazard   │               │  Forward  │         │
-│      │                     │  Detect   │               │   Unit    │         │
-│      │                     └─────┬─────┘               └───────────┘         │
-│      │                           │                                           │
-│      │◄──────────────────────────┘ (stall)                                   │
-│      │                                                                       │
-│      │◄──────────────────────────────────────────────────── (flush si branch)│
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
+![Architecture du CPU Pipeline](images/cpu-pipeline-architecture.svg)
 
 ---
 
@@ -1093,11 +887,13 @@ Le **Projet 6 : CPU Pipeline** vous permet de construire ces composants.
 **Objectif** : Implémenter le registre de pipeline IF/ID.
 
 **Comportement** :
+
 1. Sur `reset='1'` OU `flush='1'` : mettre l'instruction à NOP (0xE0000000)
 2. Sur `stall='1'` : garder les valeurs actuelles
 3. Sinon : capturer les nouvelles valeurs
 
 **Squelette** :
+
 ```vhdl
 architecture rtl of IF_ID_Reg is
   signal instr_reg : bits(31 downto 0);
@@ -1127,6 +923,7 @@ end architecture;
 **Objectif** : Détecter les aléas load-use.
 
 **Logique** :
+
 ```
 rn_hazard = ex_mem_read AND id_rn_used AND (id_rn = ex_rd)
 rm_hazard = ex_mem_read AND id_rm_used AND (id_rm = ex_rd)
@@ -1134,6 +931,7 @@ stall = rn_hazard OR rm_hazard
 ```
 
 **En HDL** (attention : pas de `when...else`, utiliser la logique booléenne) :
+
 ```vhdl
 architecture rtl of HazardDetect is
   signal rn_hazard : bit;
@@ -1150,11 +948,13 @@ end architecture;
 **Objectif** : Générer les signaux de forwarding.
 
 **Encodage** :
+
 - `00` : Pas de forwarding
 - `01` : Forward depuis MEM
 - `10` : Forward depuis WB
 
 **Logique** :
+
 ```
 mem_fwd_a = mem_reg_write AND (mem_rd = ex_rn)
 wb_fwd_a = wb_reg_write AND (wb_rd = ex_rn) AND (NOT mem_fwd_a)
@@ -1162,6 +962,7 @@ forward_a = wb_fwd_a & mem_fwd_a   (concaténation de bits)
 ```
 
 **En HDL** :
+
 ```vhdl
 architecture rtl of ForwardUnit is
   signal mem_fwd_a, wb_fwd_a : bit;
@@ -1308,6 +1109,7 @@ Mais ces concepts dépassent le cadre de ce livre. Le pipeline à 5 étages rest
 **Félicitations !** Vous venez de construire un ordinateur complet.
 
 Ce CPU que vous avez construit peut maintenant :
+
 - Exécuter des programmes écrits en assembleur (Chapitre 6)
 - Exécuter des programmes compilés depuis C32 (Chapitre 7-8)
 - Faire tourner un système d'exploitation minimal (Chapitre 9)

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 320" width="600" height="320">
+  <defs>
+    <style>
+      .box { stroke: #374151; stroke-width: 1.5; rx: 4; }
+      .title-box { stroke: #1e40af; stroke-width: 2; fill: #dbeafe; rx: 6; }
+      .section { stroke: #374151; stroke-width: 1; fill: #f9fafb; rx: 4; }
+      .label { font-family: sans-serif; font-size: 10px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e40af; }
+      .heading { font-family: sans-serif; font-size: 11px; fill: #374151; font-weight: bold; }
+      .mono { font-family: monospace; font-size: 9px; fill: #374151; }
+      .good { fill: #059679; }
+      .bad { fill: #dc2626; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <rect class="title-box" x="20" y="10" width="560" height="30"/>
+  <text class="title" x="300" y="30" text-anchor="middle">RESUME DU CACHE</text>
+
+  <!-- POURQUOI section -->
+  <rect class="section" x="30" y="50" width="260" height="80"/>
+  <text class="heading" x="40" y="70">POURQUOI ?</text>
+  <text class="label" x="40" y="90">RAM (~100ns) est 100x plus lente</text>
+  <text class="label" x="40" y="105">que le CPU (~1ns)</text>
+  <text class="good" x="40" y="120">→ Le cache comble cet ecart</text>
+
+  <!-- COMMENT section -->
+  <rect class="section" x="310" y="50" width="260" height="80"/>
+  <text class="heading" x="320" y="70">COMMENT ?</text>
+  <text class="label" x="320" y="90">Exploite la LOCALITE:</text>
+  <text class="label" x="325" y="105">- Temporelle: reutilisation des donnees</text>
+  <text class="label" x="325" y="120">- Spatiale: donnees voisines ensemble</text>
+
+  <!-- STRUCTURE section -->
+  <rect class="section" x="30" y="140" width="260" height="80"/>
+  <text class="heading" x="40" y="160">STRUCTURE</text>
+  <text class="mono" x="40" y="180">Adresse → [Tag | Index | Offset]</text>
+  <text class="mono" x="40" y="200">Ligne → [Valid | Tag | Donnees]</text>
+  <text class="label" x="40" y="215">(16 octets par ligne)</text>
+
+  <!-- OPTIMISATION section -->
+  <rect class="section" x="310" y="140" width="260" height="80"/>
+  <text class="heading" x="320" y="160">OPTIMISATION</text>
+  <text class="good" x="325" y="180">+ Parcours row-major (sequentiel)</text>
+  <text class="good" x="325" y="195">+ Blocking (traitement par blocs)</text>
+  <text class="bad" x="325" y="210">- Parcours column-major (sauts)</text>
+
+  <!-- Key metrics -->
+  <rect x="30" y="235" width="540" height="70" fill="#f3e8ff" stroke="#7c3aed" stroke-width="1.5" rx="6"/>
+  <text class="heading" x="300" y="255" text-anchor="middle" fill="#7c3aed">METRIQUES CLES</text>
+
+  <rect x="50" y="265" width="150" height="30" fill="#d1fae5" class="box"/>
+  <text class="label" x="125" y="285" text-anchor="middle" font-weight="bold">Hit: ~1 ns</text>
+
+  <rect x="225" y="265" width="150" height="30" fill="#fee2e2" class="box"/>
+  <text class="label" x="300" y="285" text-anchor="middle" font-weight="bold">Miss: ~100 ns</text>
+
+  <rect x="400" y="265" width="150" height="30" fill="#dbeafe" class="box"/>
+  <text class="label" x="475" y="285" text-anchor="middle" font-weight="bold">Hit Rate: ~95%</text>
+</svg>

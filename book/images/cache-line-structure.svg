@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 280" width="600" height="280">
+  <defs>
+    <style>
+      .box { stroke: #374151; stroke-width: 2; }
+      .label { font-family: sans-serif; font-size: 11px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e3a8a; }
+      .small { font-family: sans-serif; font-size: 9px; fill: #6b7280; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="300" y="25" text-anchor="middle">Structure d'une Ligne de Cache</text>
+
+  <!-- Cache line structure -->
+  <rect x="50" y="50" width="40" height="50" fill="#dcfce7" class="box"/>
+  <text class="label" x="70" y="80" text-anchor="middle" font-weight="bold">V</text>
+  <text class="small" x="70" y="115" text-anchor="middle">Valid</text>
+  <text class="small" x="70" y="125" text-anchor="middle">(1 bit)</text>
+
+  <rect x="90" y="50" width="120" height="50" fill="#fef3c7" class="box"/>
+  <text class="label" x="150" y="80" text-anchor="middle" font-weight="bold">Tag</text>
+  <text class="small" x="150" y="115" text-anchor="middle">Identifiant</text>
+  <text class="small" x="150" y="125" text-anchor="middle">(20 bits)</text>
+
+  <rect x="210" y="50" width="340" height="50" fill="#dbeafe" class="box"/>
+  <text class="label" x="380" y="80" text-anchor="middle" font-weight="bold">Donnees (128 bits = 16 octets)</text>
+
+  <!-- Data breakdown -->
+  <rect x="210" y="100" width="85" height="30" fill="#bfdbfe" class="box"/>
+  <text class="small" x="252" y="120" text-anchor="middle">Mot 0</text>
+  <rect x="295" y="100" width="85" height="30" fill="#bfdbfe" class="box"/>
+  <text class="small" x="337" y="120" text-anchor="middle">Mot 1</text>
+  <rect x="380" y="100" width="85" height="30" fill="#bfdbfe" class="box"/>
+  <text class="small" x="422" y="120" text-anchor="middle">Mot 2</text>
+  <rect x="465" y="100" width="85" height="30" fill="#bfdbfe" class="box"/>
+  <text class="small" x="507" y="120" text-anchor="middle">Mot 3</text>
+
+  <!-- Explanation boxes -->
+  <rect x="50" y="160" width="500" height="100" fill="#f9fafb" stroke="#e5e7eb" rx="4"/>
+
+  <circle cx="80" cy="185" r="8" fill="#dcfce7" stroke="#16a34a"/>
+  <text class="label" x="95" y="189">Valid = 1 : Cette ligne contient des donnees valides</text>
+
+  <circle cx="80" cy="210" r="8" fill="#fef3c7" stroke="#d97706"/>
+  <text class="label" x="95" y="214">Tag : Identifie la zone memoire stockee</text>
+
+  <circle cx="80" cy="235" r="8" fill="#dbeafe" stroke="#2563eb"/>
+  <text class="label" x="95" y="239">Donnees : 4 mots de 32 bits (4 x 4 = 16 octets)</text>
+</svg>

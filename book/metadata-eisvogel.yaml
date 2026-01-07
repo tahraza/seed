@@ -1,0 +1,26 @@
+---
+title: "L'Architecture Codex"
+subtitle: "De la Porte Logique au Système d'Exploitation 32-bits"
+author: "Tahiry RAZAFINDRALAMBO"
+date: "2026"
+lang: fr
+titlepage: true
+titlepage-color: "1E90FF"
+titlepage-text-color: "FFFFFF"
+titlepage-rule-color: "FFFFFF"
+titlepage-rule-height: 2
+toc-own-page: true
+book: true
+classoption: oneside
+geometry:
+- top=2.5cm
+- bottom=2.5cm
+- left=2.5cm
+- right=2.5cm
+mainfont: "DejaVu Serif"
+sansfont: "DejaVu Sans"
+monofont: "DejaVu Sans Mono"
+fontsize: 11pt
+listings-no-page-break: true
+code-block-font-size: \small
+...

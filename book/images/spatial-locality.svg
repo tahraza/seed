@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 550 220" width="550" height="220">
+  <defs>
+    <style>
+      .box { stroke: #374151; stroke-width: 1.5; }
+      .cell { stroke: #2563eb; stroke-width: 1.5; fill: #dbeafe; }
+      .label { font-family: sans-serif; font-size: 11px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e3a8a; }
+      .code { font-family: monospace; font-size: 10px; fill: #1f2937; }
+      .small { font-family: sans-serif; font-size: 9px; fill: #6b7280; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="275" y="25" text-anchor="middle">Localite Spatiale</text>
+
+  <!-- Box -->
+  <rect x="20" y="35" width="510" height="170" fill="#eff6ff" class="box" rx="4"/>
+
+  <!-- Code example -->
+  <text class="code" x="40" y="60">for (i = 0; i &lt; 100; i++)</text>
+  <text class="code" x="60" y="75">traiter(arr[i]);</text>
+
+  <!-- Memory label -->
+  <text class="label" x="40" y="105" font-weight="bold">Memoire:</text>
+
+  <!-- Array cells -->
+  <rect class="cell" x="110" y="90" width="45" height="30" rx="2"/>
+  <text class="small" x="132" y="110" text-anchor="middle">arr[0]</text>
+
+  <rect class="cell" x="155" y="90" width="45" height="30" rx="2"/>
+  <text class="small" x="177" y="110" text-anchor="middle">arr[1]</text>
+
+  <rect class="cell" x="200" y="90" width="45" height="30" rx="2"/>
+  <text class="small" x="222" y="110" text-anchor="middle">arr[2]</text>
+
+  <rect class="cell" x="245" y="90" width="45" height="30" rx="2"/>
+  <text class="small" x="267" y="110" text-anchor="middle">arr[3]</text>
+
+  <rect class="cell" x="290" y="90" width="45" height="30" rx="2"/>
+  <text class="small" x="312" y="110" text-anchor="middle">arr[4]</text>
+
+  <rect class="cell" x="335" y="90" width="45" height="30" rx="2"/>
+  <text class="small" x="357" y="110" text-anchor="middle">arr[5]</text>
+
+  <rect class="cell" x="380" y="90" width="45" height="30" rx="2"/>
+  <text class="small" x="402" y="110" text-anchor="middle">arr[6]</text>
+
+  <text class="label" x="440" y="110">...</text>
+
+  <!-- Access order arrows -->
+  <path d="M 132 125 L 132 145" stroke="#059669" stroke-width="1.5" marker-end="url(#greenarr)"/>
+  <text class="small" x="132" y="158" text-anchor="middle" fill="#059669">1er</text>
+
+  <path d="M 177 125 L 177 145" stroke="#059669" stroke-width="1.5" marker-end="url(#greenarr)"/>
+  <text class="small" x="177" y="158" text-anchor="middle" fill="#059669">2eme</text>
+
+  <path d="M 222 125 L 222 145" stroke="#059669" stroke-width="1.5" marker-end="url(#greenarr)"/>
+  <text class="small" x="222" y="158" text-anchor="middle" fill="#059669">3eme</text>
+
+  <path d="M 267 125 L 267 145" stroke="#059679" stroke-width="1.5" marker-end="url(#greenarr)"/>
+  <text class="small" x="267" y="158" text-anchor="middle" fill="#059679">4eme</text>
+
+  <path d="M 312 125 L 312 145" stroke="#059679" stroke-width="1.5" marker-end="url(#greenarr)"/>
+  <text class="small" x="312" y="158" text-anchor="middle" fill="#059679">5eme</text>
+
+  <!-- Explanation -->
+  <text class="label" x="275" y="185" text-anchor="middle">Les elements consecutifs sont cote a cote en memoire</text>
+  <text class="label" x="275" y="200" text-anchor="middle" fill="#059669" font-weight="bold">On peut les charger ensemble dans le cache !</text>
+
+  <defs>
+    <marker id="greenarr" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 6 2.5, 0 5" fill="#059679"/>
+    </marker>
+  </defs>
+</svg>

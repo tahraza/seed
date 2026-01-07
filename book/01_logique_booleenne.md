@@ -8,27 +8,9 @@ Tout ordinateur numérique, aussi complexe soit-il, est construit à partir de c
 
 ## Où en sommes-nous ?
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     COUCHE 7: Applications                       │
-├─────────────────────────────────────────────────────────────────┤
-│                  COUCHE 6: Système d'Exploitation                │
-├─────────────────────────────────────────────────────────────────┤
-│                 COUCHE 5: Langage de Haut Niveau (C32)           │
-├─────────────────────────────────────────────────────────────────┤
-│                      COUCHE 4: Compilateur                       │
-├─────────────────────────────────────────────────────────────────┤
-│                   COUCHE 3: Assembleur (A32 ASM)                 │
-├─────────────────────────────────────────────────────────────────┤
-│                 COUCHE 2: Architecture Machine (ISA)             │
-├─────────────────────────────────────────────────────────────────┤
-│                    COUCHE 1: Logique Matérielle                  │
-│               (Portes logiques, ALU, RAM, CPU)                   │
-├─────────────────────────────────────────────────────────────────┤
-│  ══════════════► COUCHE 0: La Porte NAND ◄══════════════        │
-│                    (Vous êtes ici !)                             │
-└─────────────────────────────────────────────────────────────────┘
-```
+![Position dans l'architecture](images/architecture-stack.svg)
+
+*Nous sommes à la Couche 0 : La Porte NAND - Notre axiome de départ*
 
 Nous commençons tout en bas de la pyramide. C'est ici que nous posons les fondations de tout l'édifice. Chaque porte que vous construirez dans ce chapitre sera utilisée dans les chapitres suivants pour construire des circuits de plus en plus complexes, jusqu'au CPU complet.
 
@@ -115,6 +97,7 @@ Votre mission dans ce chapitre est de construire les portes suivantes, en utilis
 **Rôle dans l'ordinateur** : L'inverseur est fondamental. Il permet de créer des conditions négatives ("si PAS égal..."), de complémenter des nombres (pour la soustraction), et d'implémenter des bascules (pour la mémoire).
 
 **Spécification** :
+
 | in | out |
 |----|-----|
 | 0  | 1   |
@@ -127,8 +110,9 @@ Votre mission dans ce chapitre est de construire les portes suivantes, en utilis
 ![NOT construit à partir de NAND](images/not-from-nand.svg)
 
 Vérifions avec la table de vérité :
-- Si `in = 0` : NAND(0, 0) = 1 ✓
-- Si `in = 1` : NAND(1, 1) = 0 ✓
+
+- Si `in = 0` : NAND(0, 0) = 1 OK
+- Si `in = 1` : NAND(1, 1) = 0 OK
 
 C'est exactement le comportement NOT !
 
@@ -142,6 +126,7 @@ C'est exactement le comportement NOT !
 - Contrôler le passage de données (avec un signal d'activation)
 
 **Spécification** :
+
 | A | B | AND(A, B) |
 |---|---|:---------:|
 | 0 | 0 | 0 |
@@ -167,6 +152,7 @@ Formule : `AND(A, B) = NOT(NAND(A, B))`
 - Créer des priorités (interruptions, erreurs)
 
 **Spécification** :
+
 | A | B | OR(A, B) |
 |---|---|:--------:|
 | 0 | 0 | 0 |
@@ -200,6 +186,7 @@ A OR B = (NOT A) NAND (NOT B)
 - **La détection d'erreurs** : Calcul de parité
 
 **Spécification** :
+
 | A | B | XOR(A, B) |
 |---|---|:---------:|
 | 0 | 0 | 0 |
@@ -221,11 +208,13 @@ En mots : "A est vrai et B est faux" OU "A est faux et B est vrai".
 ### E. Multiplexeur (Mux) — L'aiguilleur
 
 **Rôle dans l'ordinateur** : Le multiplexeur est l'un des composants les plus importants ! Il permet de :
+
 - **Choisir entre plusieurs sources de données** : Comme un aiguillage de train
 - **Implémenter les conditions** : `if (sel) then b else a`
 - **Construire la mémoire** : Sélectionner quelle cellule lire
 
 **Spécification** :
+
 - Si `sel == 0` alors `out = a`
 - Si `sel == 1` alors `out = b`
 
@@ -240,6 +229,7 @@ out = (a AND NOT sel) OR (b AND sel)
 **Pourquoi le Mux est-il si important ?**
 
 Imaginez que vous construisez un CPU. À chaque cycle, le CPU doit choisir :
+
 - D'où vient l'opérande ? De la mémoire ou d'un registre ?
 - Où va le résultat ? Vers la mémoire ou un registre ?
 - Quelle instruction exécuter ?
@@ -251,10 +241,12 @@ Chacun de ces choix est implémenté par un multiplexeur !
 ### F. Démultiplexeur (DMux) — L'inverse de l'aiguilleur
 
 **Rôle dans l'ordinateur** : Le DMux fait l'inverse du Mux — il prend UNE entrée et la dirige vers UNE des sorties possibles. Utile pour :
+
 - **L'adressage mémoire** : Activer la bonne cellule
 - **La distribution de signaux** : Envoyer une commande au bon périphérique
 
 **Spécification** :
+
 - Si `sel == 0` alors `a = in, b = 0`
 - Si `sel == 1` alors `a = 0, b = in`
 
@@ -279,6 +271,7 @@ XOR, Mux, DMux          ↓                   ↓                complet !
 ```
 
 **Chaque porte a un rôle précis** :
+
 - **NOT** : Permet la soustraction (via le complément à 2)
 - **AND** : Masquage de bits, conditions ET
 - **OR** : Combinaison de signaux, conditions OU
@@ -297,6 +290,7 @@ Pour décrire nos circuits, nous utilisons un langage appelé **HDL** (Hardware 
 ### Pourquoi un langage de description ?
 
 En électronique réelle, on dessine des schémas. Mais les schémas deviennent illisibles pour des circuits complexes (un CPU contient des millions de portes !). Le HDL permet de :
+
 1. **Décrire** des circuits de manière textuelle
 2. **Simuler** leur comportement avant fabrication
 3. **Synthétiser** le circuit vers du matériel réel
@@ -433,14 +427,15 @@ Le **Simulateur Web** vous permet de construire et tester vos portes de manière
 
 | Exercice | Description | Difficulté |
 |----------|-------------|:----------:|
-| `Inv` | Inverseur (NOT) — Votre première porte | ⭐ |
-| `And2` | Porte AND à 2 entrées | ⭐ |
-| `Or2` | Porte OR à 2 entrées | ⭐ |
-| `Xor2` | Porte XOR (Ou exclusif) | ⭐⭐ |
-| `Mux` | Multiplexeur 2 vers 1 | ⭐⭐ |
-| `DMux` | Démultiplexeur 1 vers 2 | ⭐⭐ |
+| `Inv` | Inverseur (NOT) — Votre première porte | [*] |
+| `And2` | Porte AND à 2 entrées | [*] |
+| `Or2` | Porte OR à 2 entrées | [*] |
+| `Xor2` | Porte XOR (Ou exclusif) | [**] |
+| `Mux` | Multiplexeur 2 vers 1 | [**] |
+| `DMux` | Démultiplexeur 1 vers 2 | [**] |
 
 **Pour chaque exercice** :
+
 1. Lisez la spécification et la table de vérité
 2. Réfléchissez à comment combiner les portes disponibles
 3. Écrivez votre code HDL

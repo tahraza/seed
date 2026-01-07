@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 150" width="650" height="150">
+  <defs>
+    <style>
+      .box { stroke: #374151; stroke-width: 1.5; rx: 4; }
+      .arrow { stroke: #374151; stroke-width: 2; fill: none; }
+      .label { font-family: sans-serif; font-size: 10px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 12px; font-weight: bold; fill: #1e3a8a; }
+      .timing { font-family: sans-serif; font-size: 9px; fill: #dc2626; }
+    </style>
+    <marker id="arr" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 6 2.5, 0 5" fill="#374151"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="325" y="20" text-anchor="middle">Le Probleme de la Chaine Critique (Single-Cycle)</text>
+
+  <!-- Pipeline boxes -->
+  <rect x="20" y="45" width="60" height="40" fill="#fef3c7" class="box"/>
+  <text class="label" x="50" y="70" text-anchor="middle">PC</text>
+
+  <rect x="100" y="45" width="80" height="40" fill="#dcfce7" class="box"/>
+  <text class="label" x="140" y="70" text-anchor="middle">Memoire</text>
+
+  <rect x="200" y="45" width="70" height="40" fill="#dbeafe" class="box"/>
+  <text class="label" x="235" y="70" text-anchor="middle">Decodeur</text>
+
+  <rect x="290" y="45" width="70" height="40" fill="#e0e7ff" class="box"/>
+  <text class="label" x="325" y="70" text-anchor="middle">Registres</text>
+
+  <rect x="380" y="45" width="60" height="40" fill="#fce7f3" class="box"/>
+  <text class="label" x="410" y="70" text-anchor="middle">ALU</text>
+
+  <rect x="460" y="45" width="70" height="40" fill="#dcfce7" class="box"/>
+  <text class="label" x="495" y="70" text-anchor="middle">Memoire</text>
+
+  <rect x="550" y="45" width="70" height="40" fill="#e0e7ff" class="box"/>
+  <text class="label" x="585" y="70" text-anchor="middle">Registres</text>
+
+  <!-- Arrows -->
+  <line class="arrow" x1="80" y1="65" x2="100" y2="65" marker-end="url(#arr)"/>
+  <line class="arrow" x1="180" y1="65" x2="200" y2="65" marker-end="url(#arr)"/>
+  <line class="arrow" x1="270" y1="65" x2="290" y2="65" marker-end="url(#arr)"/>
+  <line class="arrow" x1="360" y1="65" x2="380" y2="65" marker-end="url(#arr)"/>
+  <line class="arrow" x1="440" y1="65" x2="460" y2="65" marker-end="url(#arr)"/>
+  <line class="arrow" x1="530" y1="65" x2="550" y2="65" marker-end="url(#arr)"/>
+
+  <!-- Timing bracket -->
+  <line x1="20" y1="105" x2="620" y2="105" stroke="#dc2626" stroke-width="2"/>
+  <line x1="20" y1="100" x2="20" y2="110" stroke="#dc2626" stroke-width="2"/>
+  <line x1="620" y1="100" x2="620" y2="110" stroke="#dc2626" stroke-width="2"/>
+  <text class="timing" x="320" y="125" text-anchor="middle">UN SEUL CYCLE (tout doit passer)</text>
+
+  <!-- Problem explanation -->
+  <text class="label" x="325" y="145" text-anchor="middle" fill="#6b7280">Le cycle doit etre assez long pour traverser TOUS les composants</text>
+</svg>

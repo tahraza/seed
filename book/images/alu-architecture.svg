@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 420" width="620" height="420">
+  <defs>
+    <style>
+      .gate { fill: #e0e7ff; stroke: #4f46e5; stroke-width: 1.5; }
+      .adder { fill: #dcfce7; stroke: #16a34a; stroke-width: 1.5; }
+      .mux { fill: #fef3c7; stroke: #d97706; stroke-width: 1.5; }
+      .shifter { fill: #fce7f3; stroke: #db2777; stroke-width: 1.5; }
+      .wire { stroke: #374151; stroke-width: 1.5; fill: none; }
+      .bus { stroke: #1e40af; stroke-width: 3; fill: none; }
+      .label { font-family: sans-serif; font-size: 10px; fill: #1f2937; }
+      .label-bold { font-family: sans-serif; font-size: 10px; fill: #1f2937; font-weight: bold; }
+      .gate-label { font-family: sans-serif; font-size: 9px; font-weight: bold; fill: #4f46e5; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e40af; }
+      .section { font-family: sans-serif; font-size: 11px; font-weight: bold; fill: #374151; }
+      .flag-box { fill: #fef3c7; stroke: #d97706; stroke-width: 1.5; }
+      .input-label { font-family: monospace; font-size: 10px; fill: #1e40af; font-weight: bold; }
+      .output-label { font-family: monospace; font-size: 10px; fill: #16a34a; font-weight: bold; }
+    </style>
+    <marker id="arr" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 6 2.5, 0 5" fill="#374151"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0 0, 6 2.5, 0 5" fill="#1e40af"/>
+    </marker>
+  </defs>
+
+  <text class="title" x="310" y="20" text-anchor="middle">Architecture Interne de l'ALU 32 bits</text>
+
+  <text class="section" x="30" y="45">ENTREES</text>
+  <text class="section" x="140" y="45">PREPARATION B</text>
+  <text class="section" x="280" y="45">OPERATIONS</text>
+  <text class="section" x="440" y="45">SELECTION</text>
+  <text class="section" x="540" y="45">SORTIES</text>
+
+  <line class="bus" x1="20" y1="100" x2="80" y2="100" marker-end="url(#arr-blue)"/>
+  <text class="input-label" x="25" y="92">A[31:0]</text>
+
+  <line class="bus" x1="20" y1="180" x2="80" y2="180" marker-end="url(#arr-blue)"/>
+  <text class="input-label" x="25" y="172">B[31:0]</text>
+
+  <rect class="gate" x="100" y="205" width="50" height="30" rx="4"/>
+  <text class="gate-label" x="125" y="224" text-anchor="middle">NOT</text>
+
+  <line class="wire" x1="80" y1="180" x2="90" y2="180"/>
+  <line class="wire" x1="90" y1="180" x2="90" y2="220"/>
+  <line class="wire" x1="90" y1="220" x2="100" y2="220"/>
+
+  <path class="mux" d="M 165 170 L 195 180 L 195 230 L 165 240 Z"/>
+  <text class="gate-label" x="175" y="210">M</text>
+
+  <line class="wire" x1="90" y1="180" x2="165" y2="185"/>
+  <line class="wire" x1="150" y1="220" x2="165" y2="220"/>
+
+  <line class="wire" x1="180" y1="250" x2="180" y2="240"/>
+  <text class="label" x="170" y="265">sub</text>
+
+  <line class="wire" x1="195" y1="205" x2="220" y2="205"/>
+
+  <line class="wire" x1="85" y1="100" x2="85" y2="300"/>
+  <line class="wire" x1="220" y1="90" x2="220" y2="300"/>
+
+  <rect class="gate" x="250" y="65" width="60" height="30" rx="4"/>
+  <text class="gate-label" x="280" y="84" text-anchor="middle">AND</text>
+  <line class="wire" x1="85" y1="75" x2="250" y2="75"/>
+  <line class="wire" x1="220" y1="85" x2="250" y2="85"/>
+  <line class="wire" x1="310" y1="80" x2="380" y2="80"/>
+
+  <rect class="gate" x="250" y="105" width="60" height="30" rx="4"/>
+  <text class="gate-label" x="280" y="124" text-anchor="middle">OR</text>
+  <line class="wire" x1="85" y1="115" x2="250" y2="115"/>
+  <line class="wire" x1="220" y1="125" x2="250" y2="125"/>
+  <line class="wire" x1="310" y1="120" x2="380" y2="120"/>
+
+  <rect class="gate" x="250" y="145" width="60" height="30" rx="4"/>
+  <text class="gate-label" x="280" y="164" text-anchor="middle">XOR</text>
+  <line class="wire" x1="85" y1="155" x2="250" y2="155"/>
+  <line class="wire" x1="220" y1="165" x2="250" y2="165"/>
+  <line class="wire" x1="310" y1="160" x2="380" y2="160"/>
+
+  <rect class="adder" x="250" y="185" width="60" height="40" rx="4"/>
+  <text x="280" y="202" text-anchor="middle" font-family="sans-serif" font-size="9px" font-weight="bold" fill="#16a34a">ADD</text>
+  <text class="label" x="280" y="216" text-anchor="middle">32-bit</text>
+  <line class="wire" x1="85" y1="195" x2="250" y2="195"/>
+  <line class="wire" x1="220" y1="215" x2="250" y2="215"/>
+  <line class="wire" x1="310" y1="205" x2="380" y2="200"/>
+
+  <line class="wire" x1="310" y1="215" x2="340" y2="215"/>
+  <line class="wire" x1="340" y1="215" x2="340" y2="350"/>
+  <text class="label" x="315" y="228">cout</text>
+
+  <rect class="shifter" x="250" y="235" width="60" height="30" rx="4"/>
+  <text x="280" y="254" text-anchor="middle" font-family="sans-serif" font-size="9px" font-weight="bold" fill="#db2777">SLL</text>
+  <line class="wire" x1="85" y1="250" x2="250" y2="250"/>
+  <line class="wire" x1="310" y1="250" x2="380" y2="240"/>
+
+  <rect class="shifter" x="250" y="275" width="60" height="30" rx="4"/>
+  <text x="280" y="294" text-anchor="middle" font-family="sans-serif" font-size="9px" font-weight="bold" fill="#db2777">SRL</text>
+  <line class="wire" x1="85" y1="290" x2="250" y2="290"/>
+  <line class="wire" x1="310" y1="290" x2="380" y2="280"/>
+
+  <rect class="shifter" x="250" y="315" width="60" height="30" rx="4"/>
+  <text x="280" y="334" text-anchor="middle" font-family="sans-serif" font-size="9px" font-weight="bold" fill="#db2777">SRA</text>
+  <line class="wire" x1="85" y1="330" x2="250" y2="330"/>
+  <line class="wire" x1="310" y1="330" x2="380" y2="320"/>
+
+  <path class="mux" d="M 380 60 L 430 80 L 430 340 L 380 360 Z"/>
+  <text class="gate-label" x="398" y="215">MUX</text>
+  <text class="gate-label" x="398" y="230">8:1</text>
+
+  <line class="wire" x1="405" y1="370" x2="405" y2="360"/>
+  <text class="label-bold" x="390" y="385">op[2:0]</text>
+
+  <line class="bus" x1="430" y1="210" x2="510" y2="210" marker-end="url(#arr-blue)"/>
+  <text class="output-label" x="515" y="214">Y[31:0]</text>
+
+  <rect class="flag-box" x="460" y="250" width="140" height="110" rx="4"/>
+  <text class="label-bold" x="530" y="270" text-anchor="middle">Calcul des Flags</text>
+
+  <line class="wire" x1="470" y1="210" x2="470" y2="250"/>
+
+  <text class="label-bold" x="475" y="290">N</text>
+  <text class="label" x="490" y="290">= Y[31]</text>
+
+  <text class="label-bold" x="475" y="308">Z</text>
+  <text class="label" x="490" y="308">= (Y == 0)</text>
+
+  <text class="label-bold" x="475" y="326">C</text>
+  <text class="label" x="490" y="326">= cout (add/sub)</text>
+
+  <text class="label-bold" x="475" y="344">V</text>
+  <text class="label" x="490" y="344">= overflow</text>
+
+  <line class="wire" x1="340" y1="350" x2="460" y2="350"/>
+  <line class="wire" x1="460" y1="350" x2="460" y2="320"/>
+  <line class="wire" x1="460" y1="320" x2="475" y2="320"/>
+
+  <line class="wire" x1="600" y1="285" x2="610" y2="285" marker-end="url(#arr)"/>
+  <line class="wire" x1="600" y1="305" x2="610" y2="305" marker-end="url(#arr)"/>
+  <line class="wire" x1="600" y1="325" x2="610" y2="325" marker-end="url(#arr)"/>
+  <line class="wire" x1="600" y1="345" x2="610" y2="345" marker-end="url(#arr)"/>
+
+  <rect x="20" y="350" width="200" height="60" fill="#f9fafb" stroke="#d1d5db" rx="4"/>
+  <text class="label-bold" x="120" y="368" text-anchor="middle">Legende</text>
+  <rect x="30" y="378" width="15" height="10" fill="#e0e7ff" stroke="#4f46e5"/>
+  <text class="label" x="50" y="387">Logique</text>
+  <rect x="90" y="378" width="15" height="10" fill="#dcfce7" stroke="#16a34a"/>
+  <text class="label" x="110" y="387">Additionneur</text>
+  <rect x="160" y="378" width="15" height="10" fill="#fce7f3" stroke="#db2777"/>
+  <text class="label" x="180" y="387">Decaleur</text>
+</svg>
