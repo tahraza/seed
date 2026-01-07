@@ -238,63 +238,13 @@ Testez votre compréhension avant de passer au chapitre suivant.
 
 **Q1.** Pourquoi l'assembleur fait-il deux passes sur le code source ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-**Passe 1** : Collecter tous les symboles (labels) et leurs adresses
-**Passe 2** : Générer le code binaire en résolvant les références
-
-Problème sans 2 passes : un `B label` pourrait référencer un label défini plus tard dans le code. On ne connaît pas encore son adresse !
-</details>
-
 **Q2.** Quelle est la différence entre `.text` et `.data` ?
-
-<details>
-<summary>Voir la réponse</summary>
-
-- **`.text`** : Section pour le **code exécutable** (instructions)
-- **`.data`** : Section pour les **données initialisées** (variables, constantes)
-
-Le CPU exécute `.text`, il lit/écrit `.data`. Les séparer permet d'optimiser (ex: `.text` en lecture seule).
-</details>
 
 **Q3.** Comment l'assembleur gère-t-il `LDR R0, =0xDEADBEEF` ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-C'est une **pseudo-instruction** ! L'assembleur :
-1. Place la valeur `0xDEADBEEF` dans le **literal pool** (après le code)
-2. Remplace par `LDR R0, [PC, #offset]` où offset pointe vers le literal pool
-
-Cela permet de charger n'importe quelle valeur 32 bits, même si elle ne tient pas dans un immédiat.
-</details>
-
 **Q4.** Que se passe-t-il si un branchement est trop loin (offset > 24 bits) ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-L'assembleur génère une **erreur** ou effectue un **branch relaxation** :
-- Remplace `B far_label` par un `LDR PC, =far_label`
-- La destination est chargée depuis le literal pool
-
-C'est rare en pratique (24 bits = ±32 MB de portée).
-</details>
-
 **Q5.** Qu'est-ce qu'un fichier binaire A32B contient exactement ?
-
-<details>
-<summary>Voir la réponse</summary>
-
-Structure du format A32B :
-1. **Header** : Magic number, taille des sections, point d'entrée
-2. **Section .text** : Instructions encodées (32 bits chacune)
-3. **Section .data** : Données initialisées
-4. **Section .bss** : Taille des données non-initialisées (pas de contenu)
-
-Le CPU charge ce fichier en RAM et commence à exécuter à l'adresse d'entrée.
-</details>
 
 ### Mini-défi pratique
 
@@ -305,23 +255,7 @@ ADD R1, R2, R3
 
 Indice : Format ALU registre = `[cond:4][000][opcode:4][S][Rn:4][Rd:4][00000000][Rm:4]`
 
-<details>
-<summary>Voir la solution</summary>
-
-| Champ | Valeur | Bits |
-|-------|--------|------|
-| cond | AL (always) | 1110 |
-| class | 000 | 000 |
-| opcode | ADD = 0100 | 0100 |
-| S | 0 (pas de flags) | 0 |
-| Rn | R2 = 0010 | 0010 |
-| Rd | R1 = 0001 | 0001 |
-| reserved | 00000000 | 00000000 |
-| Rm | R3 = 0011 | 0011 |
-
-Binaire : `1110 000 0100 0 0010 0001 00000000 0011`
-Hex : `0xE0821003`
-</details>
+*Les solutions se trouvent dans le document **Codex_Solutions**.*
 
 ### Checklist de validation
 

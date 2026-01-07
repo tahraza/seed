@@ -24,6 +24,8 @@ CHAPTERS=(
     10_exercices.md
     10bis_debogage.md
     11_cache.md
+    Codex_Solutions.md
+    Solutions.md
 )
 
 # Liste des cartes de référence

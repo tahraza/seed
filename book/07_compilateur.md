@@ -418,84 +418,13 @@ Testez votre compréhension avant de passer au chapitre suivant.
 
 **Q1.** Quelles sont les trois phases principales d'un compilateur ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-1. **Lexer (Analyse lexicale)** : Découpe le texte en tokens (mots-clés, identifiants, nombres)
-2. **Parser (Analyse syntaxique)** : Construit l'arbre syntaxique (AST) selon la grammaire
-3. **Codegen (Génération de code)** : Traduit l'AST en assembleur
-
-Chaque phase transforme une représentation en une autre, plus proche de la machine.
-</details>
-
 **Q2.** Comment le compilateur gère-t-il les variables locales ?
-
-<details>
-<summary>Voir la réponse</summary>
-
-Les variables locales sont stockées sur la **pile** (stack) :
-1. À l'entrée de la fonction, on réserve de l'espace : `SUB SP, SP, #taille`
-2. Chaque variable a un offset fixe : `[SP, #offset]`
-3. À la sortie, on libère : `ADD SP, SP, #taille`
-
-Les registres sont utilisés pour les calculs temporaires.
-</details>
 
 **Q3.** Comment un `if-else` est-il traduit en assembleur ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-```c
-if (a > b) {
-    // bloc_if
-} else {
-    // bloc_else
-}
-```
-
-Devient :
-```asm
-    CMP  Ra, Rb      ; Comparer a et b
-    BLE  else_label  ; Si a <= b, sauter au else
-    ; bloc_if
-    B    end_if      ; Sauter la partie else
-else_label:
-    ; bloc_else
-end_if:
-```
-</details>
-
 **Q4.** Quelle est la convention d'appel pour les arguments de fonction ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-- **R0-R3** : 4 premiers arguments
-- **Pile** : Arguments supplémentaires (du 5ème et au-delà)
-- **R0** : Valeur de retour
-- **LR** : Adresse de retour (sauvegardée par `BL`)
-
-Le compilateur génère `PUSH`/`POP` pour sauvegarder les registres callee-saved (R4-R11).
-</details>
-
 **Q5.** Pourquoi le compilateur génère-t-il un prologue et un épilogue pour chaque fonction ?
-
-<details>
-<summary>Voir la réponse</summary>
-
-**Prologue** (début de fonction) :
-- Sauvegarder LR (adresse de retour)
-- Sauvegarder les registres callee-saved utilisés
-- Réserver l'espace pour les variables locales
-
-**Épilogue** (fin de fonction) :
-- Restaurer l'espace de pile
-- Restaurer les registres sauvegardés
-- Retourner via `BX LR`
-
-Sans cela, les appels imbriqués corrompraient les données.
-</details>
 
 ### Mini-défi pratique
 
@@ -507,18 +436,7 @@ int double_it(int x) {
 }
 ```
 
-<details>
-<summary>Voir la solution</summary>
-
-```asm
-double_it:
-    ; Pas besoin de prologue complexe (pas de variables locales, pas d'appels)
-    ADD R0, R0, R0   ; R0 = x + x (argument en R0, retour en R0)
-    BX LR            ; Retour
-```
-
-Le compilateur optimise : pas de PUSH/POP car aucun registre callee-saved n'est utilisé.
-</details>
+*Les solutions se trouvent dans le document **Codex_Solutions**.*
 
 ### Checklist de validation
 

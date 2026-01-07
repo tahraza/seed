@@ -392,62 +392,13 @@ Testez votre compréhension avant de passer au chapitre suivant.
 
 **Q1.** Quelle est la différence fondamentale entre un circuit combinatoire et un circuit séquentiel ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-- **Combinatoire** : La sortie dépend **uniquement** des entrées actuelles (ex: AND, OR, ALU)
-- **Séquentiel** : La sortie dépend des entrées **et de l'état précédent** (ex: registres, RAM)
-
-Les circuits séquentiels ont de la "mémoire" grâce à la rétroaction.
-</details>
-
 **Q2.** Pourquoi le signal `load` est-il nécessaire dans un registre ?
-
-<details>
-<summary>Voir la réponse</summary>
-
-Sans `load`, le registre changerait de valeur à **chaque** cycle d'horloge. Le signal `load` permet de **contrôler quand** le registre doit capturer une nouvelle valeur :
-- `load = 1` : Le registre mémorise l'entrée
-- `load = 0` : Le registre conserve sa valeur actuelle
-</details>
 
 **Q3.** Comment fonctionne l'adressage dans une RAM de 8 mots ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-Une adresse de 3 bits (0-7) sélectionne l'un des 8 registres :
-1. **Lecture** : Un MUX 8-vers-1 route la sortie du registre sélectionné
-2. **Écriture** : Un DMUX 1-vers-8 active le `load` du registre sélectionné
-
-L'adresse est comme un "numéro de chambre d'hôtel".
-</details>
-
 **Q4.** Le PC (Program Counter) a plusieurs modes : reset, load, inc, hold. Dans quel ordre de priorité fonctionnent-ils ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-Ordre de priorité (le premier qui gagne) :
-1. **reset** : PC = 0 (redémarrage)
-2. **load** : PC = valeur d'entrée (saut/branchement)
-3. **inc** : PC = PC + 4 (instruction suivante)
-4. **hold** : PC reste inchangé (jamais utilisé en pratique)
-
-C'est implémenté avec des MUX en cascade.
-</details>
-
 **Q5.** Pourquoi la RAM est-elle plus lente que les registres ?
-
-<details>
-<summary>Voir la réponse</summary>
-
-1. **Décodage d'adresse** : Il faut décoder l'adresse pour sélectionner le bon mot
-2. **Multiplexage** : Les données traversent des MUX pour atteindre la sortie
-3. **Capacité** : Plus de mémoire = fils plus longs = délais plus grands
-
-C'est pourquoi on utilise une **hiérarchie** : registres (rapides, peu) → cache → RAM (lente, beaucoup).
-</details>
 
 ### Mini-défi pratique
 
@@ -457,32 +408,7 @@ Dessinez le schéma bloc d'un registre 1-bit avec les composants suivants :
 
 Indice : La sortie du DFF retourne vers une entrée du MUX.
 
-<details>
-<summary>Voir la solution</summary>
-
-```
-       load
-         │
-         ▼
-    ┌────────┐
-in ─┤0       │
-    │  MUX   ├───┬───► vers DFF.d
-    │        │   │
- ┌──┤1       │   │
- │  └────────┘   │
- │               │
- │  ┌────────┐   │
- │  │        │   │
- └──┤ q  DFF ├───┴───► out
-    │        │
-    └────────┘
-        ▲
-        │ clk
-```
-
-Quand `load=0`, le MUX sélectionne la sortie du DFF (boucle de rétroaction → conservation).
-Quand `load=1`, le MUX sélectionne `in` (nouvelle valeur mémorisée).
-</details>
+*Les solutions se trouvent dans le document **Codex_Solutions**.*
 
 ### Checklist de validation
 

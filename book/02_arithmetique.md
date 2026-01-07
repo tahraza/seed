@@ -449,56 +449,13 @@ Testez votre compréhension avant de passer au chapitre suivant.
 
 **Q1.** Dans un Half Adder, quelle porte logique calcule le bit de somme ? Et la retenue ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-- **Somme** : XOR (car 1+1=0 avec retenue, 1+0=1, 0+0=0)
-- **Retenue** : AND (car seul 1+1 produit une retenue)
-
-C'est la base de toute l'arithmétique binaire !
-</details>
-
 **Q2.** Quelle est la représentation en complément à 2 de -1 sur 8 bits ?
-
-<details>
-<summary>Voir la réponse</summary>
-
-**0xFF** (soit `11111111` en binaire)
-
-Pour trouver -N : inverser tous les bits de N, puis ajouter 1.
-- 1 = `00000001`
-- Inversion = `11111110`
-- +1 = `11111111` = -1
-</details>
 
 **Q3.** Comment l'ALU effectue-t-elle une soustraction A - B ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-Elle calcule `A + NOT(B) + 1`, ce qui équivaut à `A + (-B)`.
-
-Le "+1" vient du carry-in forcé à 1 quand on soustrait. C'est le complément à 2 en action !
-</details>
-
 **Q4.** Que signifient les drapeaux N, Z, C, V ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-- **N (Negative)** : Le bit 31 du résultat est 1 (nombre négatif en signé)
-- **Z (Zero)** : Le résultat est exactement 0
-- **C (Carry)** : Il y a eu une retenue sortante (débordement non-signé)
-- **V (oVerflow)** : Débordement signé (ex: positif + positif = négatif)
-</details>
-
 **Q5.** Pourquoi `CMP R1, R2` n'a pas besoin de registre destination ?
-
-<details>
-<summary>Voir la réponse</summary>
-
-Parce que `CMP` effectue `R1 - R2` mais ne stocke pas le résultat — il met seulement à jour les **drapeaux**. Ces drapeaux seront utilisés par l'instruction de branchement suivante (`BEQ`, `BNE`, etc.).
-</details>
 
 ### Mini-défi pratique
 
@@ -510,17 +467,7 @@ Calculez mentalement le résultat de ces opérations sur 8 bits :
 | ADD | 0xFF | 0x01 | ? | N=? Z=? C=? |
 | SUB | 0x05 | 0x05 | ? | Z=? |
 
-<details>
-<summary>Voir la solution</summary>
-
-| Opération | A | B | Résultat | Drapeaux |
-|-----------|---|---|----------|----------|
-| ADD | 0x7F | 0x01 | 0x80 | N=1, Z=0, **V=1** (overflow: 127+1=-128) |
-| ADD | 0xFF | 0x01 | 0x00 | N=0, **Z=1**, **C=1** (retenue perdue) |
-| SUB | 0x05 | 0x05 | 0x00 | **Z=1** |
-
-Le premier cas montre l'overflow signé : deux positifs donnent un négatif !
-</details>
+*Les solutions se trouvent dans le document **Codex_Solutions**.*
 
 ### Checklist de validation
 

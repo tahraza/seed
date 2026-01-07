@@ -250,84 +250,13 @@ Testez votre compréhension du cache.
 
 **Q1.** Qu'est-ce que la localité temporelle et la localité spatiale ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-- **Localité temporelle** : Une donnée accédée récemment sera probablement réaccédée bientôt
-  - Exemple : variable de boucle, compteur
-- **Localité spatiale** : Les données proches en mémoire seront probablement accédées ensemble
-  - Exemple : éléments consécutifs d'un tableau
-
-Le cache exploite ces deux principes pour prédire quelles données garder.
-</details>
-
 **Q2.** Pourquoi le parcours en ligne (row-major) est-il plus efficace que le parcours en colonne ?
-
-<details>
-<summary>Voir la réponse</summary>
-
-En C, les tableaux 2D sont stockés **ligne par ligne** en mémoire :
-```
-[0][0], [0][1], [0][2], [1][0], [1][1], [1][2], ...
-```
-
-- **Row-major** : Accès séquentiel → chaque cache line est utilisée complètement
-- **Column-major** : Sauts en mémoire → chaque accès peut causer un cache miss
-
-Différence de performance : peut être 10x ou plus sur de grandes matrices !
-</details>
 
 **Q3.** Qu'est-ce qu'un cache hit et un cache miss ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-- **Cache hit** : La donnée demandée est **dans le cache** → accès rapide (~1-3 cycles)
-- **Cache miss** : La donnée n'est **pas dans le cache** → doit aller en RAM (~100 cycles)
-
-Le **hit rate** = hits / (hits + misses) est une métrique clé de performance.
-</details>
-
 **Q4.** Comment fonctionne un cache direct-mapped ?
 
-<details>
-<summary>Voir la réponse</summary>
-
-Chaque adresse mémoire correspond à **une seule** ligne de cache :
-```
-index = (adresse / taille_ligne) % nombre_lignes
-```
-
-Structure d'une ligne : `[Valid][Tag][Data...]`
-- **Valid** : La ligne contient-elle des données valides ?
-- **Tag** : Quelle adresse est stockée ici ?
-- **Data** : Les données elles-mêmes (souvent 32-64 octets)
-
-Avantage : simple. Inconvénient : conflits si deux adresses mappent au même index.
-</details>
-
 **Q5.** Qu'est-ce que la technique de "blocking" ?
-
-<details>
-<summary>Voir la réponse</summary>
-
-Le **blocking** (ou tiling) divise les données en blocs qui tiennent dans le cache :
-
-```c
-// Sans blocking : parcours complet des matrices
-for (i = 0; i < N; i++)
-    for (j = 0; j < N; j++)
-        C[i][j] += A[i][k] * B[k][j];
-
-// Avec blocking : traiter par blocs de taille B
-for (ii = 0; ii < N; ii += B)
-    for (jj = 0; jj < N; jj += B)
-        for (kk = 0; kk < N; kk += B)
-            // Traiter le bloc [ii..ii+B][jj..jj+B]
-```
-
-Le blocking améliore la réutilisation des données en cache.
-</details>
 
 ### Mini-défi pratique
 
@@ -335,30 +264,7 @@ Calculez le hit rate pour ce pattern d'accès avec un cache de 4 lignes de 16 oc
 
 Accès séquentiels aux adresses : 0, 4, 8, 12, 16, 20, 24, 28, 0, 4, 8, 12
 
-<details>
-<summary>Voir la solution</summary>
-
-Cache : 4 lignes × 16 octets = 64 octets total
-
-| Accès | Adresse | Ligne cache | Hit/Miss |
-|-------|---------|-------------|----------|
-| 1 | 0 | 0 | Miss (premier accès) |
-| 2 | 4 | 0 | Hit (même ligne que 0) |
-| 3 | 8 | 0 | Hit |
-| 4 | 12 | 0 | Hit |
-| 5 | 16 | 1 | Miss (nouvelle ligne) |
-| 6 | 20 | 1 | Hit |
-| 7 | 24 | 1 | Hit |
-| 8 | 28 | 1 | Hit |
-| 9 | 0 | 0 | Hit (toujours en cache) |
-| 10 | 4 | 0 | Hit |
-| 11 | 8 | 0 | Hit |
-| 12 | 12 | 0 | Hit |
-
-**Hit rate** = 10 hits / 12 accès = **83%**
-
-La localité spatiale (accès consécutifs) et temporelle (réaccès à 0-12) sont bien exploitées.
-</details>
+*Les solutions se trouvent dans le document **Codex_Solutions**.*
 
 ### Checklist de validation
 
