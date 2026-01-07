@@ -423,14 +423,30 @@ mod wasm_api {
             let result = run_test(hdl_source, test_script, &library)
                 .map_err(|e| js_err(e.to_string()))?;
 
-            // Return as JSON
+            // Build failures array with detailed info
+            let failures_json: Vec<String> = result.failures.iter().map(|f| {
+                let inputs_json: Vec<String> = f.inputs.iter()
+                    .map(|(k, v)| format!(r#""{}":{}"#, k, serde_json_wasm::to_string(v).unwrap_or_else(|_| "\"?\"".to_string())))
+                    .collect();
+                format!(
+                    r#"{{"line":{},"signal":"{}","expected":"{}","actual":"{}","inputs":{{{}}}}}"#,
+                    f.line_number,
+                    f.signal,
+                    f.expected,
+                    f.actual,
+                    inputs_json.join(",")
+                )
+            }).collect();
+
+            // Return as JSON with failures detail
             let json = format!(
-                r#"{{"passed":{},"total":{},"passed_checks":{},"errors":{}}}"#,
+                r#"{{"passed":{},"total":{},"passed_checks":{},"errors":{},"failures":[{}]}}"#,
                 result.passed,
                 result.total_checks,
                 result.passed_checks,
                 serde_json_wasm::to_string(&result.errors)
-                    .unwrap_or_else(|_| "[]".to_string())
+                    .unwrap_or_else(|_| "[]".to_string()),
+                failures_json.join(",")
             );
             Ok(json)
         }

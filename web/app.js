@@ -3206,11 +3206,20 @@ function parseChipInterface(template) {
     const inputs = [];
     const outputs = [];
 
+    // Only parse ports from the entity section, not from component declarations
+    // Extract entity port section: between "port(" and ");" before "end entity"
+    const entityMatch = template.match(/entity\s+\w+\s+is\s*port\s*\(([\s\S]*?)\)\s*;\s*end\s+entity/i);
+    if (!entityMatch) {
+        return { inputs, outputs };
+    }
+
+    const portSection = entityMatch[1];
+
     // Match port declarations like "a : in bit" or "y : out bits(15 downto 0)"
     const portRegex = /(\w+)\s*:\s*(in|out)\s+(bits?)(?:\s*\(\s*(\d+)\s+downto\s+(\d+)\s*\))?/gi;
     let match;
 
-    while ((match = portRegex.exec(template)) !== null) {
+    while ((match = portRegex.exec(portSection)) !== null) {
         const name = match[1];
         const direction = match[2].toLowerCase();
         const high = match[4] ? parseInt(match[4]) : null;
@@ -3280,8 +3289,25 @@ async function runHdlTest() {
             }
         } else {
             log(`Tests failed: ${result.passed_checks}/${result.total} passed`, 'error');
-            for (const err of result.errors) {
-                log(`  ${err}`, 'error');
+            // Display detailed failures
+            if (result.failures && result.failures.length > 0) {
+                for (const f of result.failures) {
+                    log(`  ❌ Ligne ${f.line}: Signal '${f.signal}'`, 'error');
+                    log(`     Attendu : ${f.expected}`, 'error');
+                    log(`     Obtenu  : ${f.actual}`, 'error');
+                    if (f.inputs && Object.keys(f.inputs).length > 0) {
+                        const inputStr = Object.entries(f.inputs)
+                            .sort(([a], [b]) => a.localeCompare(b))
+                            .map(([k, v]) => `${k}=${v}`)
+                            .join(', ');
+                        log(`     Entrées : ${inputStr}`, 'error');
+                    }
+                }
+            } else {
+                // Fallback to errors array
+                for (const err of result.errors) {
+                    log(`  ${err}`, 'error');
+                }
             }
         }
     } catch (e) {
@@ -3323,8 +3349,29 @@ function updateTestResultsPanel(result) {
         </div>`;
     }
 
-    // Show failed tests / errors
-    if (result.errors && result.errors.length > 0) {
+    // Show failed tests with details
+    if (result.failures && result.failures.length > 0) {
+        for (const f of result.failures) {
+            const inputStr = (f.inputs && Object.keys(f.inputs).length > 0)
+                ? Object.entries(f.inputs)
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([k, v]) => `${escapeHtml(k)}=${escapeHtml(v)}`)
+                    .join(', ')
+                : '';
+            html += `<div class="test-item failed">
+                <span class="status-icon">✗</span>
+                <div class="test-failure-detail">
+                    <div class="failure-line">Ligne ${f.line}: <code>${escapeHtml(f.signal)}</code></div>
+                    <div class="failure-values">
+                        <span class="expected">Attendu: <code>${escapeHtml(f.expected)}</code></span>
+                        <span class="actual">Obtenu: <code>${escapeHtml(f.actual)}</code></span>
+                    </div>
+                    ${inputStr ? `<div class="failure-inputs">Entrées: ${inputStr}</div>` : ''}
+                </div>
+            </div>`;
+        }
+    } else if (result.errors && result.errors.length > 0) {
+        // Fallback to errors array
         for (const err of result.errors) {
             html += `<div class="test-item failed">
                 <span class="status-icon">✗</span>

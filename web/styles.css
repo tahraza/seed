@@ -24,7 +24,7 @@
 
     /* Spacing */
     --header-height: 56px;
-    --console-height: 180px;
+    --console-height: 220px;
     --panel-gap: 12px;
     --border-radius: 8px;
 
@@ -71,7 +71,7 @@ body {
 /* App Layout */
 #app {
     display: grid;
-    grid-template-rows: var(--header-height) 1fr 180px;
+    grid-template-rows: var(--header-height) 1fr var(--console-height);
     height: 100vh;
 }
 
@@ -1750,6 +1750,56 @@ kbd {
 
 .test-item.failed .test-detail {
     color: var(--error);
+}
+
+/* Test failure details */
+.test-failure-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.test-failure-detail .failure-line {
+    color: var(--text-secondary);
+}
+
+.test-failure-detail .failure-line code {
+    color: var(--accent);
+    background: var(--bg-tertiary);
+    padding: 1px 4px;
+    border-radius: 2px;
+}
+
+.test-failure-detail .failure-values {
+    display: flex;
+    gap: 12px;
+    font-size: 10px;
+}
+
+.test-failure-detail .expected {
+    color: var(--success);
+}
+
+.test-failure-detail .expected code {
+    background: rgba(63, 185, 80, 0.15);
+    padding: 1px 4px;
+    border-radius: 2px;
+}
+
+.test-failure-detail .actual {
+    color: var(--error);
+}
+
+.test-failure-detail .actual code {
+    background: rgba(248, 81, 73, 0.15);
+    padding: 1px 4px;
+    border-radius: 2px;
+}
+
+.test-failure-detail .failure-inputs {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 2px;
 }
 
 
