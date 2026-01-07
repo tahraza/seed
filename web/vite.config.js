@@ -44,6 +44,12 @@ export default defineConfig({
   },
   build: {
     target: "es2020",
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        visualizer: resolve(__dirname, 'visualizer.html'),
+      },
+    },
   },
   define: {
     // Injecter la variable globale dans le code
