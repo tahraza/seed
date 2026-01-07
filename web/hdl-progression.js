@@ -48,14 +48,20 @@ begin
   u0: nand2 port map (a => a, b => a, y => y);
 end architecture;
 `,
-        test: `load Inv
+        test: `// Test file for Inv (NOT gate)
+// Tests all possible inputs for a 1-bit inverter
+
+load Inv
+
+// Test 0 -> 1
 set a 0
 eval
 expect y 1
+
+// Test 1 -> 0
 set a 1
 eval
-expect y 0
-`,
+expect y 0`,
     },
 
     'And2': {
@@ -110,24 +116,34 @@ begin
   u1: Inv port map (a => t, y => y);
 end architecture;
 `,
-        test: `load And2
+        test: `// Test file for And2 (AND gate)
+// Tests all 4 possible input combinations
+
+load And2
+
+// 0 AND 0 = 0
 set a 0
 set b 0
 eval
 expect y 0
+
+// 0 AND 1 = 0
 set a 0
 set b 1
 eval
 expect y 0
+
+// 1 AND 0 = 0
 set a 1
 set b 0
 eval
 expect y 0
+
+// 1 AND 1 = 1
 set a 1
 set b 1
 eval
-expect y 1
-`,
+expect y 1`,
     },
 
     'Or2': {
@@ -183,24 +199,34 @@ begin
   u2: nand2 port map (a => na, b => nb, y => y);
 end architecture;
 `,
-        test: `load Or2
+        test: `// Test file for Or2 (OR gate)
+// Tests all 4 possible input combinations
+
+load Or2
+
+// 0 OR 0 = 0
 set a 0
 set b 0
 eval
 expect y 0
+
+// 0 OR 1 = 1
 set a 0
 set b 1
 eval
 expect y 1
+
+// 1 OR 0 = 1
 set a 1
 set b 0
 eval
 expect y 1
+
+// 1 OR 1 = 1
 set a 1
 set b 1
 eval
-expect y 1
-`,
+expect y 1`,
     },
 
     'Xor2': {
@@ -264,24 +290,34 @@ begin
   u4: Or2 port map (a => t1, b => t2, y => y);
 end architecture;
 `,
-        test: `load Xor2
+        test: `// Test file for Xor2 (XOR gate)
+// Tests all 4 possible input combinations
+
+load Xor2
+
+// 0 XOR 0 = 0
 set a 0
 set b 0
 eval
 expect y 0
+
+// 0 XOR 1 = 1
 set a 0
 set b 1
 eval
 expect y 1
+
+// 1 XOR 0 = 1
 set a 1
 set b 0
 eval
 expect y 1
+
+// 1 XOR 1 = 0
 set a 1
 set b 1
 eval
-expect y 0
-`,
+expect y 0`,
     },
 
     'Mux': {
@@ -346,28 +382,61 @@ begin
   u3: Or2 port map (a => t1, b => t2, y => y);
 end architecture;
 `,
-        test: `load Mux
+        test: `// Test file for Mux (2-way 1-bit multiplexer)
+// if sel=0 then y=a else y=b
+// Tests all 8 possible input combinations
+
+load Mux
+
+// sel=0: output should be a
 set a 0
 set b 0
 set sel 0
 eval
 expect y 0
+
+set a 0
+set b 1
+set sel 0
+eval
+expect y 0
+
 set a 1
 set b 0
 set sel 0
 eval
 expect y 1
+
+set a 1
+set b 1
+set sel 0
+eval
+expect y 1
+
+// sel=1: output should be b
+set a 0
+set b 0
+set sel 1
+eval
+expect y 0
+
 set a 0
 set b 1
 set sel 1
 eval
 expect y 1
+
 set a 1
 set b 0
 set sel 1
 eval
 expect y 0
-`,
+
+set a 1
+set b 1
+set sel 1
+eval
+expect y 1`,
     },
 
     'DMux': {
@@ -425,23 +494,37 @@ begin
   u2: And2 port map (a => x, b => sel, y => b);
 end architecture;
 `,
-        test: `load DMux
+        test: `// Test file for DMux (1-to-2 demultiplexer)
+// if sel=0 then {a=x, b=0} else {a=0, b=x}
+// Tests all 4 possible input combinations
+
+load DMux
+
+// sel=0: input goes to a, b=0
 set x 0
 set sel 0
 eval
 expect a 0
 expect b 0
+
 set x 1
 set sel 0
 eval
 expect a 1
 expect b 0
+
+// sel=1: input goes to b, a=0
+set x 0
+set sel 1
+eval
+expect a 0
+expect b 0
+
 set x 1
 set sel 1
 eval
 expect a 0
-expect b 1
-`,
+expect b 1`,
     },
 
     // =========================================================================
@@ -503,17 +586,54 @@ begin
   u15: Inv port map (a => a(15), y => y(15));
 end architecture;
 `,
-        test: `load Inv16
+        test: `// Test file for Inv16 (16-bit NOT)
+// Inverts all 16 bits
+
+load Inv16
+
+// All zeros -> all ones
 set a 0x0000
 eval
 expect y 0xFFFF
+
+// All ones -> all zeros
 set a 0xFFFF
 eval
 expect y 0x0000
+
+// Alternating pattern 1010...
 set a 0xAAAA
 eval
 expect y 0x5555
-`,
+
+// Alternating pattern 0101...
+set a 0x5555
+eval
+expect y 0xAAAA
+
+// High byte only
+set a 0xFF00
+eval
+expect y 0x00FF
+
+// Low byte only
+set a 0x00FF
+eval
+expect y 0xFF00
+
+// Single bit patterns
+set a 0x0001
+eval
+expect y 0xFFFE
+
+set a 0x8000
+eval
+expect y 0x7FFF
+
+// Random pattern
+set a 0x1234
+eval
+expect y 0xEDCB`,
     },
 
     'And16': {
@@ -572,24 +692,64 @@ begin
   u15: And2 port map (a => a(15), b => b(15), y => y(15));
 end architecture;
 `,
-        test: `load And16
+        test: `// Test file for And16 (16-bit AND)
+// Bitwise AND of two 16-bit inputs
+
+load And16
+
+// All zeros
 set a 0x0000
 set b 0x0000
 eval
 expect y 0x0000
+
+// AND with all ones = identity
+set a 0x1234
+set b 0xFFFF
+eval
+expect y 0x1234
+
+// AND with all zeros = zero
+set a 0x1234
+set b 0x0000
+eval
+expect y 0x0000
+
+// All ones
 set a 0xFFFF
 set b 0xFFFF
 eval
 expect y 0xFFFF
+
+// Alternating patterns
 set a 0xAAAA
 set b 0x5555
 eval
 expect y 0x0000
-set a 0xFF00
-set b 0x0FF0
+
+// Same alternating
+set a 0xAAAA
+set b 0xAAAA
 eval
-expect y 0x0F00
-`,
+expect y 0xAAAA
+
+// Mask high byte
+set a 0x1234
+set b 0xFF00
+eval
+expect y 0x1200
+
+// Mask low byte
+set a 0x1234
+set b 0x00FF
+eval
+expect y 0x0034
+
+// Random patterns
+set a 0xABCD
+set b 0x1357
+eval
+expect y 0x0145`,
     },
 
     'Or16': {
@@ -648,24 +808,58 @@ begin
   u15: Or2 port map (a => a(15), b => b(15), y => y(15));
 end architecture;
 `,
-        test: `load Or16
+        test: `// Test file for Or16 (16-bit OR)
+// Bitwise OR of two 16-bit inputs
+
+load Or16
+
+// All zeros
 set a 0x0000
 set b 0x0000
 eval
 expect y 0x0000
-set a 0xFFFF
+
+// OR with all zeros = identity
+set a 0x1234
 set b 0x0000
 eval
+expect y 0x1234
+
+// OR with all ones = all ones
+set a 0x1234
+set b 0xFFFF
+eval
 expect y 0xFFFF
+
+// All ones
+set a 0xFFFF
+set b 0xFFFF
+eval
+expect y 0xFFFF
+
+// Alternating patterns combine
 set a 0xAAAA
 set b 0x5555
 eval
 expect y 0xFFFF
+
+// Same alternating
+set a 0xAAAA
+set b 0xAAAA
+eval
+expect y 0xAAAA
+
+// Combine bytes
 set a 0xFF00
 set b 0x00FF
 eval
 expect y 0xFFFF
-`,
+
+// Random patterns
+set a 0xABCD
+set b 0x1357
+eval
+expect y 0xBBDF`,
     },
 
     'Mux16': {
@@ -726,16 +920,61 @@ begin
   u15: Mux port map (a => a(15), b => b(15), sel => sel, y => y(15));
 end architecture;
 `,
-        test: `load Mux16
+        test: `// Test file for Mux16 (16-bit 2-way multiplexer)
+// if sel=0 then y=a else y=b
+
+load Mux16
+
+// sel=0: output a
+set a 0x0000
+set b 0xFFFF
+set sel 0
+eval
+expect y 0x0000
+
 set a 0x1234
 set b 0x5678
 set sel 0
 eval
 expect y 0x1234
+
+set a 0xAAAA
+set b 0x5555
+set sel 0
+eval
+expect y 0xAAAA
+
+// sel=1: output b
+set a 0x0000
+set b 0xFFFF
+set sel 1
+eval
+expect y 0xFFFF
+
+set a 0x1234
+set b 0x5678
 set sel 1
 eval
 expect y 0x5678
-`,
+
+set a 0xAAAA
+set b 0x5555
+set sel 1
+eval
+expect y 0x5555
+
+// Edge cases
+set a 0xFFFF
+set b 0xFFFF
+set sel 0
+eval
+expect y 0xFFFF
+
+set a 0x0000
+set b 0x0000
+set sel 1
+eval
+expect y 0x0000`,
     },
 
     'Or8Way': {
@@ -786,20 +1025,62 @@ begin
   u6: Or2 port map (a => t5, b => t6, y => y);
 end architecture;
 `,
-        test: `load Or8Way
-set a 0x00
+        test: `// Test file for Or8Way (8-input OR)
+// Output is 1 if any of the 8 input bits is 1
+
+load Or8Way
+
+// All zeros
+set in 0x00
 eval
-expect y 0
-set a 0x01
+expect out 0
+
+// All ones
+set in 0xFF
 eval
-expect y 1
-set a 0x80
+expect out 1
+
+// Single bit set (each position)
+set in 0x01
 eval
-expect y 1
-set a 0xFF
+expect out 1
+
+set in 0x02
 eval
-expect y 1
-`,
+expect out 1
+
+set in 0x04
+eval
+expect out 1
+
+set in 0x08
+eval
+expect out 1
+
+set in 0x10
+eval
+expect out 1
+
+set in 0x20
+eval
+expect out 1
+
+set in 0x40
+eval
+expect out 1
+
+set in 0x80
+eval
+expect out 1
+
+// Multiple bits
+set in 0xAA
+eval
+expect out 1
+
+set in 0x55
+eval
+expect out 1`,
     },
 
     'Mux4Way16': {
@@ -853,24 +1134,58 @@ begin
   u2: Mux16 port map (a => ab, b => cd, sel => sel(1), y => y);
 end architecture;
 `,
-        test: `load Mux4Way16
+        test: `// Test file for Mux4Way16 (4-way 16-bit multiplexer)
+// sel=00: y=a, sel=01: y=b, sel=10: y=c, sel=11: y=d
+
+load Mux4Way16
+
+// Set up distinct values for each input
 set a 0x1111
 set b 0x2222
 set c 0x3333
 set d 0x4444
+
+// Select a (sel=00)
 set sel 0b00
 eval
 expect y 0x1111
+
+// Select b (sel=01)
 set sel 0b01
 eval
 expect y 0x2222
+
+// Select c (sel=10)
 set sel 0b10
 eval
 expect y 0x3333
+
+// Select d (sel=11)
 set sel 0b11
 eval
 expect y 0x4444
-`,
+
+// Test with different values
+set a 0x0000
+set b 0xFFFF
+set c 0xAAAA
+set d 0x5555
+
+set sel 0b00
+eval
+expect y 0x0000
+
+set sel 0b01
+eval
+expect y 0xFFFF
+
+set sel 0b10
+eval
+expect y 0xAAAA
+
+set sel 0b11
+eval
+expect y 0x5555`,
     },
 
     'Mux8Way16': {
@@ -1009,33 +1324,70 @@ begin
   u2: DMux port map (x => hi, sel => sel(0), a => c, b => d);
 end architecture;
 `,
-        test: `load DMux4Way
-set x 1
+        test: `// Test file for DMux4Way (1-to-4 demultiplexer)
+// Routes input to one of 4 outputs based on 2-bit selector
+
+load DMux4Way
+
+// in=0: all outputs should be 0
+set in 0
+set sel 0b00
+eval
+expect a 0
+expect b 0
+expect c 0
+expect d 0
+
+set sel 0b01
+eval
+expect a 0
+expect b 0
+expect c 0
+expect d 0
+
+set sel 0b10
+eval
+expect a 0
+expect b 0
+expect c 0
+expect d 0
+
+set sel 0b11
+eval
+expect a 0
+expect b 0
+expect c 0
+expect d 0
+
+// in=1: only selected output should be 1
+set in 1
 set sel 0b00
 eval
 expect a 1
 expect b 0
 expect c 0
 expect d 0
+
 set sel 0b01
 eval
 expect a 0
 expect b 1
 expect c 0
 expect d 0
+
 set sel 0b10
 eval
 expect a 0
 expect b 0
 expect c 1
 expect d 0
+
 set sel 0b11
 eval
 expect a 0
 expect b 0
 expect c 0
-expect d 1
-`,
+expect d 1`,
     },
 
     'DMux8Way': {
@@ -1157,23 +1509,38 @@ begin
   u1: And2 port map (a => a, b => b, y => carry);
 end architecture;
 `,
-        test: `load HalfAdder
+        test: `// Test file for HalfAdder
+// Adds two 1-bit numbers, outputs sum and carry
+
+load HalfAdder
+
+// 0 + 0 = 0, carry = 0
 set a 0
 set b 0
 eval
 expect sum 0
 expect carry 0
+
+// 0 + 1 = 1, carry = 0
 set a 0
 set b 1
 eval
 expect sum 1
 expect carry 0
+
+// 1 + 0 = 1, carry = 0
+set a 1
+set b 0
+eval
+expect sum 1
+expect carry 0
+
+// 1 + 1 = 0, carry = 1 (10 in binary)
 set a 1
 set b 1
 eval
 expect sum 0
-expect carry 1
-`,
+expect carry 1`,
     },
 
     'FullAdder': {
@@ -1231,26 +1598,74 @@ begin
   u2: Or2 port map (a => c1, b => c2, y => cout);
 end architecture;
 `,
-        test: `load FullAdder
+        test: `// Test file for FullAdder
+// Adds three 1-bit numbers (a + b + c), outputs sum and carry
+
+load FullAdder
+
+// 0 + 0 + 0 = 0, carry = 0
 set a 0
 set b 0
-set cin 0
+set c 0
 eval
 expect sum 0
-expect cout 0
-set a 1
-set b 1
-set cin 0
-eval
-expect sum 0
-expect cout 1
-set a 1
-set b 1
-set cin 1
+expect carry 0
+
+// 0 + 0 + 1 = 1, carry = 0
+set a 0
+set b 0
+set c 1
 eval
 expect sum 1
-expect cout 1
-`,
+expect carry 0
+
+// 0 + 1 + 0 = 1, carry = 0
+set a 0
+set b 1
+set c 0
+eval
+expect sum 1
+expect carry 0
+
+// 0 + 1 + 1 = 0, carry = 1 (10 in binary)
+set a 0
+set b 1
+set c 1
+eval
+expect sum 0
+expect carry 1
+
+// 1 + 0 + 0 = 1, carry = 0
+set a 1
+set b 0
+set c 0
+eval
+expect sum 1
+expect carry 0
+
+// 1 + 0 + 1 = 0, carry = 1
+set a 1
+set b 0
+set c 1
+eval
+expect sum 0
+expect carry 1
+
+// 1 + 1 + 0 = 0, carry = 1
+set a 1
+set b 1
+set c 0
+eval
+expect sum 0
+expect carry 1
+
+// 1 + 1 + 1 = 1, carry = 1 (11 in binary)
+set a 1
+set b 1
+set c 1
+eval
+expect sum 1
+expect carry 1`,
     },
 
     'Add16': {
@@ -1316,26 +1731,76 @@ begin
   u15: FullAdder port map (a => a(15), b => b(15), cin => c(15), sum => sum(15), cout => cout);
 end architecture;
 `,
-        test: `load Add16
+        test: `// Test file for Add16 (16-bit adder)
+// Adds two 16-bit numbers (overflow is ignored)
+
+load Add16
+
+// 0 + 0 = 0
 set a 0x0000
 set b 0x0000
-set cin 0
 eval
-expect sum 0x0000
-expect cout 0
+expect out 0x0000
+
+// 0 + 1 = 1
+set a 0x0000
+set b 0x0001
+eval
+expect out 0x0001
+
+// 1 + 1 = 2
 set a 0x0001
 set b 0x0001
-set cin 0
 eval
-expect sum 0x0002
-expect cout 0
+expect out 0x0002
+
+// Simple addition
+set a 0x0005
+set b 0x0003
+eval
+expect out 0x0008
+
+// Addition with carry propagation
+set a 0x00FF
+set b 0x0001
+eval
+expect out 0x0100
+
+// Larger numbers
+set a 0x1234
+set b 0x5678
+eval
+expect out 0x68AC
+
+// Max value
+set a 0xFFFF
+set b 0x0000
+eval
+expect out 0xFFFF
+
+// Overflow wraps around
 set a 0xFFFF
 set b 0x0001
-set cin 0
 eval
-expect sum 0x0000
-expect cout 1
-`,
+expect out 0x0000
+
+set a 0xFFFF
+set b 0x0002
+eval
+expect out 0x0001
+
+// Two large numbers
+set a 0x8000
+set b 0x8000
+eval
+expect out 0x0000
+
+// Negative numbers (two's complement)
+// -1 + -1 = -2 (0xFFFF + 0xFFFF = 0xFFFE with overflow)
+set a 0xFFFF
+set b 0xFFFF
+eval
+expect out 0xFFFE`,
     },
 
     'Inc16': {
@@ -1380,17 +1845,55 @@ begin
   u0: Add16 port map (a => a, b => zero16, cin => '1', sum => y, cout => unused_cout);
 end architecture;
 `,
-        test: `load Inc16
-set a 0x0000
+        test: `// Test file for Inc16 (16-bit incrementer)
+// Adds 1 to a 16-bit number
+
+load Inc16
+
+// 0 + 1 = 1
+set in 0x0000
 eval
-expect y 0x0001
-set a 0x00FF
+expect out 0x0001
+
+// 1 + 1 = 2
+set in 0x0001
 eval
-expect y 0x0100
-set a 0xFFFF
+expect out 0x0002
+
+// Carry propagation
+set in 0x00FF
 eval
-expect y 0x0000
-`,
+expect out 0x0100
+
+set in 0x0FFF
+eval
+expect out 0x1000
+
+// Large number
+set in 0x1234
+eval
+expect out 0x1235
+
+// Max value wraps to 0
+set in 0xFFFF
+eval
+expect out 0x0000
+
+// Near max
+set in 0xFFFE
+eval
+expect out 0xFFFF
+
+// Negative number in two's complement
+// -1 + 1 = 0
+set in 0xFFFF
+eval
+expect out 0x0000
+
+// -2 + 1 = -1
+set in 0xFFFE
+eval
+expect out 0xFFFF`,
     },
 
     'Sub16': {
@@ -1500,24 +2003,173 @@ begin
   -- YOUR CODE HERE
 end architecture;
 `,
-        test: `load ALU
+        test: `// Test file for ALU (16-bit Arithmetic Logic Unit)
+// Operations: op=00: AND, op=01: OR, op=10: ADD, op=11: SUB
+// Flags: zero (result is 0), neg (result is negative/MSB set)
+
+load ALU
+
+// ========== AND (op=00) ==========
 set a 0x00FF
 set b 0x0F0F
 set op 0b00
 eval
 expect y 0x000F
+expect zero 0
+expect neg 0
+
+set a 0xFFFF
+set b 0xFFFF
+set op 0b00
+eval
+expect y 0xFFFF
+expect zero 0
+expect neg 1
+
+set a 0xAAAA
+set b 0x5555
+set op 0b00
+eval
+expect y 0x0000
+expect zero 1
+expect neg 0
+
+// ========== OR (op=01) ==========
+set a 0x00FF
+set b 0x0F0F
 set op 0b01
 eval
 expect y 0x0FFF
-set a 0x0003
+expect zero 0
+expect neg 0
+
+set a 0xAAAA
+set b 0x5555
+set op 0b01
+eval
+expect y 0xFFFF
+expect zero 0
+expect neg 1
+
+set a 0x0000
+set b 0x0000
+set op 0b01
+eval
+expect y 0x0000
+expect zero 1
+expect neg 0
+
+// ========== ADD (op=10) ==========
+set a 0x0001
 set b 0x0002
 set op 0b10
 eval
-expect y 0x0005
+expect y 0x0003
+expect zero 0
+expect neg 0
+
+set a 0x0000
+set b 0x0000
+set op 0b10
+eval
+expect y 0x0000
+expect zero 1
+expect neg 0
+
+set a 0xFFFF
+set b 0x0001
+set op 0b10
+eval
+expect y 0x0000
+expect zero 1
+expect neg 0
+
+set a 0x7FFF
+set b 0x0001
+set op 0b10
+eval
+expect y 0x8000
+expect zero 0
+expect neg 1
+
+set a 0x1234
+set b 0x5678
+set op 0b10
+eval
+expect y 0x68AC
+expect zero 0
+expect neg 0
+
+// ========== SUB (op=11) ==========
+set a 0x0003
+set b 0x0001
 set op 0b11
 eval
-expect y 0x0001
-`,
+expect y 0x0002
+expect zero 0
+expect neg 0
+
+set a 0x0001
+set b 0x0001
+set op 0b11
+eval
+expect y 0x0000
+expect zero 1
+expect neg 0
+
+set a 0x0001
+set b 0x0002
+set op 0b11
+eval
+expect y 0xFFFF
+expect zero 0
+expect neg 1
+
+set a 0x0000
+set b 0x0001
+set op 0b11
+eval
+expect y 0xFFFF
+expect zero 0
+expect neg 1
+
+set a 0x5678
+set b 0x1234
+set op 0b11
+eval
+expect y 0x4444
+expect zero 0
+expect neg 0
+
+// ========== Edge cases ==========
+// Large positive - large positive
+set a 0x8000
+set b 0x8000
+set op 0b11
+eval
+expect y 0x0000
+expect zero 1
+expect neg 0
+
+// Test all operations with same inputs
+set a 0x1234
+set b 0x00FF
+
+set op 0b00
+eval
+expect y 0x0034
+
+set op 0b01
+eval
+expect y 0x12FF
+
+set op 0b10
+eval
+expect y 0x1333
+
+set op 0b11
+eval
+expect y 0x1135`,
         solution: `-- 16-bit ALU
 -- op: 0=AND, 1=OR, 2=ADD, 3=SUB
 
@@ -1844,14 +2496,50 @@ begin
   u0: dff port map (clk => clk, d => d, q => q);
 end architecture;
 `,
-        test: `load DFF1
-set d 1
-tick
-expect q 1
+        test: `// Test file for DFF1 (D Flip-Flop)
+// Output follows input on clock edge
+
+load DFF1
+
+// Initial state (after reset)
 set d 0
 tick
+tock
 expect q 0
-`,
+
+// Set to 1
+set d 1
+tick
+tock
+expect q 1
+
+// Hold 1
+set d 1
+tick
+tock
+expect q 1
+
+// Set back to 0
+set d 0
+tick
+tock
+expect q 0
+
+// Verify data only changes on clock edge
+set d 1
+// Before clock, output should still be 0
+tick
+// Rising edge captures d=1
+tock
+expect q 1
+
+// Change input but don't clock
+set d 0
+// Output should still be 1 (no clock yet)
+expect q 1
+tick
+tock
+expect q 0`,
     },
 
     'BitReg': {
@@ -1907,19 +2595,71 @@ begin
   q <= q_int;
 end architecture;
 `,
-        test: `load BitReg
-set d 1
-set load 1
-tick
-expect q 1
-set d 0
+        test: `// Test file for BitReg (1-bit register with load enable)
+// Only loads new value when load=1
+
+load BitReg
+
+// Initial state
+set in 0
 set load 0
 tick
-expect q 1
+tock
+expect out 0
+
+// Try to load 1 without load enable
+set in 1
+set load 0
+tick
+tock
+expect out 0
+
+// Load 1 with load enable
+set in 1
 set load 1
 tick
-expect q 0
-`,
+tock
+expect out 1
+
+// Hold value (load disabled)
+set in 0
+set load 0
+tick
+tock
+expect out 1
+
+// Still holding
+set in 0
+set load 0
+tick
+tock
+expect out 1
+
+// Load 0
+set in 0
+set load 1
+tick
+tock
+expect out 0
+
+// Load sequence
+set in 1
+set load 1
+tick
+tock
+expect out 1
+
+set in 0
+set load 1
+tick
+tock
+expect out 0
+
+set in 1
+set load 1
+tick
+tock
+expect out 1`,
     },
 
     'Register16': {
@@ -1979,19 +2719,80 @@ begin
   u15: BitReg port map (clk => clk, d => d(15), load => load, q => q(15));
 end architecture;
 `,
-        test: `load Register16
-set d 0x1234
-set load 1
-tick
-expect q 0x1234
-set d 0x5678
+        test: `// Test file for Register16 (16-bit register with load enable)
+// Only loads new value when load=1
+
+load Register16
+
+// Initial state
+set in 0x0000
 set load 0
 tick
-expect q 0x1234
+tock
+expect out 0x0000
+
+// Try to change without load
+set in 0x1234
+set load 0
+tick
+tock
+expect out 0x0000
+
+// Load a value
+set in 0x1234
 set load 1
 tick
-expect q 0x5678
-`,
+tock
+expect out 0x1234
+
+// Hold value
+set in 0x5678
+set load 0
+tick
+tock
+expect out 0x1234
+
+// Load new value
+set in 0x5678
+set load 1
+tick
+tock
+expect out 0x5678
+
+// Load all ones
+set in 0xFFFF
+set load 1
+tick
+tock
+expect out 0xFFFF
+
+// Load all zeros
+set in 0x0000
+set load 1
+tick
+tock
+expect out 0x0000
+
+// Alternating pattern
+set in 0xAAAA
+set load 1
+tick
+tock
+expect out 0xAAAA
+
+// Hold
+set in 0x5555
+set load 0
+tick
+tock
+expect out 0xAAAA
+
+// Finally load the new pattern
+set in 0x5555
+set load 1
+tick
+tock
+expect out 0x5555`,
     },
 
     'PC': {
@@ -2075,29 +2876,99 @@ begin
   q <= q_int;
 end architecture;
 `,
-        test: `load PC
-set d 0x0000
-set inc 0
+        test: `// Test file for PC (Program Counter)
+// Supports: reset, load, increment
+// Priority: reset > load > inc
+
+load PC
+
+// Initial state (reset)
+set in 0x0000
 set load 0
+set inc 0
 set reset 1
 tick
-expect q 0x0000
+tock
+expect out 0x0000
+
+// Increment
 set reset 0
+set load 0
 set inc 1
 tick
-expect q 0x0001
+tock
+expect out 0x0001
+
+// Keep incrementing
+set inc 1
 tick
-expect q 0x0002
-set d 0x0100
+tock
+expect out 0x0002
+
+set inc 1
+tick
+tock
+expect out 0x0003
+
+// Hold (no operation)
+set inc 0
+tick
+tock
+expect out 0x0003
+
+// Load a value
+set in 0x1000
 set load 1
 set inc 0
 tick
-expect q 0x0100
+tock
+expect out 0x1000
+
+// Increment from loaded value
 set load 0
 set inc 1
 tick
-expect q 0x0101
-`,
+tock
+expect out 0x1001
+
+// Load has priority over inc
+set in 0x2000
+set load 1
+set inc 1
+tick
+tock
+expect out 0x2000
+
+// Reset has priority over all
+set in 0x3000
+set reset 1
+set load 1
+set inc 1
+tick
+tock
+expect out 0x0000
+
+// Back to normal increment
+set reset 0
+set load 0
+set inc 1
+tick
+tock
+expect out 0x0001
+
+// Test overflow (wrap around)
+set in 0xFFFF
+set load 1
+set inc 0
+tick
+tock
+expect out 0xFFFF
+
+set load 0
+set inc 1
+tick
+tock
+expect out 0x0000`,
     },
 
     'RAM8': {
@@ -2169,25 +3040,127 @@ begin
   u_mux: Mux8Way16 port map (a => r0, b => r1, c => r2, d => r3, e => r4, f => r5, g => r6, h => r7, sel => addr, y => dout);
 end architecture;
 `,
-        test: `load RAM8
-set din 0x1234
-set addr 0b000
-set we 1
+        test: `// Test file for RAM8 (8-word RAM)
+// 8 16-bit registers addressable by 3-bit address
+
+load RAM8
+
+// Write to address 0
+set in 0x1111
+set address 0b000
+set load 1
 tick
-set we 0
-eval
-expect dout 0x1234
-set din 0x5678
-set addr 0b001
-set we 1
+tock
+expect out 0x1111
+
+// Write to address 1
+set in 0x2222
+set address 0b001
+set load 1
 tick
-set we 0
-eval
-expect dout 0x5678
-set addr 0b000
-eval
-expect dout 0x1234
-`,
+tock
+expect out 0x2222
+
+// Write to address 7
+set in 0x7777
+set address 0b111
+set load 1
+tick
+tock
+expect out 0x7777
+
+// Read back address 0 (no write)
+set load 0
+set address 0b000
+tick
+tock
+expect out 0x1111
+
+// Read back address 1
+set address 0b001
+tick
+tock
+expect out 0x2222
+
+// Read back address 7
+set address 0b111
+tick
+tock
+expect out 0x7777
+
+// Write to all addresses
+set load 1
+set in 0xAAAA
+set address 0b010
+tick
+tock
+expect out 0xAAAA
+
+set in 0xBBBB
+set address 0b011
+tick
+tock
+expect out 0xBBBB
+
+set in 0xCCCC
+set address 0b100
+tick
+tock
+expect out 0xCCCC
+
+set in 0xDDDD
+set address 0b101
+tick
+tock
+expect out 0xDDDD
+
+set in 0xEEEE
+set address 0b110
+tick
+tock
+expect out 0xEEEE
+
+// Verify all values preserved
+set load 0
+set address 0b000
+tick
+tock
+expect out 0x1111
+
+set address 0b001
+tick
+tock
+expect out 0x2222
+
+set address 0b010
+tick
+tock
+expect out 0xAAAA
+
+set address 0b011
+tick
+tock
+expect out 0xBBBB
+
+set address 0b100
+tick
+tock
+expect out 0xCCCC
+
+set address 0b101
+tick
+tock
+expect out 0xDDDD
+
+set address 0b110
+tick
+tock
+expect out 0xEEEE
+
+set address 0b111
+tick
+tock
+expect out 0x7777`,
     },
 
     'RAM64': {
@@ -2337,24 +3310,79 @@ begin
   -- Note: Simplified - real implementation would need proper read port addressing
 end architecture;
 `,
-        test: `load RegFile
-set waddr 0b0001
+        test: `// Test file for RegFile (16-register file)
+// 2 read ports, 1 write port
+
+load RegFile
+
+// Write to register 0
+set we 1
+set waddr 0x0
 set wdata 0x1111
-set we 1
+set raddr1 0x0
+set raddr2 0x0
 tick
-set we 0
-set raddr1 0b0001
-eval
+tock
 expect rdata1 0x1111
-set waddr 0b0010
+expect rdata2 0x1111
+
+// Write to register 1, read from both
+set waddr 0x1
 set wdata 0x2222
-set we 1
 tick
+tock
+expect rdata1 0x1111
+expect rdata2 0x1111
+
+// Read register 1
+set raddr1 0x1
+tick
+tock
+expect rdata1 0x2222
+
+// Write to register 15
+set waddr 0xF
+set wdata 0xFFFF
+tick
+tock
+
+// Read both ports from different registers
+set raddr1 0x0
+set raddr2 0xF
+tick
+tock
+expect rdata1 0x1111
+expect rdata2 0xFFFF
+
+// Write disabled - value should not change
 set we 0
-set raddr2 0b0010
-eval
-expect rdata2 0x2222
-`,
+set waddr 0x0
+set wdata 0x9999
+tick
+tock
+set raddr1 0x0
+tick
+tock
+expect rdata1 0x1111
+
+// Re-enable write
+set we 1
+set waddr 0x5
+set wdata 0x5555
+tick
+tock
+set raddr1 0x5
+tick
+tock
+expect rdata1 0x5555
+
+// Simultaneous different reads
+set raddr1 0x0
+set raddr2 0x5
+tick
+tock
+expect rdata1 0x1111
+expect rdata2 0x5555`,
     },
 
     // =========================================================================
@@ -2437,15 +3465,52 @@ begin
   branch <= is_branch;
 end architecture;
 `,
-        test: `load Decoder
-set opcode 0b0000
+        test: `// Test file for Decoder (Instruction Decoder)
+// Decodes instruction fields for CPU control
+
+load Decoder
+
+// Test R-type instruction (ADD R1, R2, R3)
+// Format: [cond:4][op:4][rd:4][rn:4][rm:4][shift:12]
+set instr 0xE0812003
 eval
-expect alu_op 0b00
-expect reg_write 1
-set opcode 0b0100
+expect rd 0x1
+expect rn 0x2
+expect rm 0x3
+expect imm_flag 0
+
+// Test I-type instruction (MOV R0, #0xFF)
+set instr 0xE3A000FF
 eval
+expect rd 0x0
+expect imm_flag 1
+
+// Test Load instruction (LDR R4, [R5])
+set instr 0xE5954000
+eval
+expect rd 0x4
+expect rn 0x5
 expect mem_read 1
-`,
+expect mem_write 0
+
+// Test Store instruction (STR R6, [R7])
+set instr 0xE5876000
+eval
+expect rd 0x6
+expect rn 0x7
+expect mem_read 0
+expect mem_write 1
+
+// Test Branch instruction (B label)
+set instr 0xEA000010
+eval
+expect branch 1
+
+// Test conditional instruction (BNE)
+set instr 0x1A000005
+eval
+expect cond 0x1
+expect branch 1`,
     },
 
     'CondCheck': {
