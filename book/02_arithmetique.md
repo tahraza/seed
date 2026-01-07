@@ -324,6 +324,91 @@ Sans les drapeaux, il serait impossible d'implémenter les conditions `if`, les 
   - Deux négatifs donnent un positif
   - Formule : `V = (a[31] == b[31]) AND (a[31] != y[31])` (pour l'addition)
 
+### Quand Utiliser Chaque Drapeau ?
+
+C'est la question cruciale ! Les drapeaux ont des significations différentes selon qu'on travaille en **signé** ou **non-signé**.
+
+#### Arithmétique Non-Signée (unsigned)
+
+Pour des nombres non-signés (0 à 2³²-1), utilisez **C** et **Z** :
+
+| Condition | Test | Explication |
+|-----------|------|-------------|
+| a == b | Z = 1 | Résultat de a - b est zéro |
+| a != b | Z = 0 | Résultat non nul |
+| a < b | C = 0 | Pas de retenue → emprunt |
+| a >= b | C = 1 | Retenue présente → pas d'emprunt |
+| a > b | C = 1 ET Z = 0 | Pas d'emprunt et non égal |
+| a <= b | C = 0 OU Z = 1 | Emprunt ou égal |
+
+**Pourquoi C ?** En soustraction non-signée, si a < b, le résultat "wrappe" (passe par 0) et il n'y a pas de retenue. Si a >= b, la soustraction ne wrappe pas et produit une retenue.
+
+#### Arithmétique Signée (signed)
+
+Pour des nombres signés (-2³¹ à 2³¹-1), utilisez **N**, **V**, et **Z** :
+
+| Condition | Test | Explication |
+|-----------|------|-------------|
+| a == b | Z = 1 | Résultat de a - b est zéro |
+| a != b | Z = 0 | Résultat non nul |
+| a < b | N ≠ V | Voir explication ci-dessous |
+| a >= b | N = V | L'inverse |
+| a > b | Z = 0 ET N = V | Non égal et pas moins que |
+| a <= b | Z = 1 OU N ≠ V | Égal ou moins que |
+
+**Pourquoi N ≠ V pour "moins que" ?**
+
+C'est subtil mais élégant. Après `a - b` :
+
+1. **Sans overflow (V = 0)** : Le signe du résultat est fiable
+   - Si N = 1 (négatif) → a < b ✓
+   - Si N = 0 (positif) → a >= b ✓
+
+2. **Avec overflow (V = 1)** : Le signe est **inversé** !
+   - Si N = 1 mais V = 1 → En réalité a >= b (l'overflow a inversé le signe)
+   - Si N = 0 mais V = 1 → En réalité a < b
+
+Donc : `a < b` ⟺ (N = 1 et V = 0) OU (N = 0 et V = 1) ⟺ **N ≠ V**
+
+#### Table de Référence des Branchements
+
+| Instruction | Signification | Flags testés | Signé/Non-signé |
+|-------------|---------------|--------------|-----------------|
+| BEQ | Equal | Z = 1 | Les deux |
+| BNE | Not Equal | Z = 0 | Les deux |
+| BCS/BHS | Carry Set / Higher or Same | C = 1 | Non-signé |
+| BCC/BLO | Carry Clear / Lower | C = 0 | Non-signé |
+| BHI | Higher | C = 1 et Z = 0 | Non-signé |
+| BLS | Lower or Same | C = 0 ou Z = 1 | Non-signé |
+| BGE | Greater or Equal | N = V | Signé |
+| BLT | Less Than | N ≠ V | Signé |
+| BGT | Greater Than | Z = 0 et N = V | Signé |
+| BLE | Less or Equal | Z = 1 ou N ≠ V | Signé |
+| BMI | Minus (negative) | N = 1 | — |
+| BPL | Plus (positive/zero) | N = 0 | — |
+| BVS | Overflow Set | V = 1 | — |
+| BVC | Overflow Clear | V = 0 | — |
+
+#### Exemple Pratique : Comparaison
+
+```asm
+; Comparer deux nombres signés
+    CMP R0, R1      ; Calcule R0 - R1, met à jour les flags
+    BLT moins       ; Si R0 < R1 (signé), sauter
+
+; Comparer deux nombres non-signés
+    CMP R2, R3      ; Calcule R2 - R3, met à jour les flags
+    BLO moins_u     ; Si R2 < R3 (non-signé), sauter
+```
+
+**Attention** : Utiliser BLT pour du non-signé ou BLO pour du signé donne des résultats incorrects !
+
+```
+Exemple : R0 = 0xFFFFFFFF, R1 = 0x00000001
+- En non-signé : 4294967295 > 1 → BHI pris, BLO non pris ✓
+- En signé : -1 < 1 → BLT pris, BGE non pris ✓
+```
+
 ---
 
 ## Architecture de l'ALU

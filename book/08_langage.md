@@ -229,6 +229,105 @@ p[3] = 42;         // Équivalent à tab[3] = 42
 *(p + 3) = 42;     // Même chose !
 ```
 
+### Arithmétique des Pointeurs
+
+C'est un concept **crucial** mais souvent mal compris. Quand vous ajoutez 1 à un pointeur, il n'avance pas d'un octet, mais d'un **élément** !
+
+#### Le Principe : Scaling par sizeof
+
+```c
+int* p;      // Pointeur vers int (4 octets)
+char* c;     // Pointeur vers char (1 octet)
+
+p = p + 1;   // Avance de 4 octets (sizeof(int))
+c = c + 1;   // Avance de 1 octet (sizeof(char))
+```
+
+**Pourquoi ?** Parce que `p + 1` signifie "l'élément suivant", pas "l'octet suivant".
+
+#### Exemple en Mémoire
+
+```
+Adresse :    0x1000  0x1004  0x1008  0x100C
+             ┌──────┬──────┬──────┬──────┐
+int tab[4] = │  10  │  20  │  30  │  40  │
+             └──────┴──────┴──────┴──────┘
+                p     p+1    p+2    p+3
+```
+
+Si `p = &tab[0]` (adresse 0x1000) :
+- `p + 1` = 0x1004 (pas 0x1001 !)
+- `p + 2` = 0x1008
+- `*p` = 10
+- `*(p + 2)` = 30 = `p[2]`
+
+#### Équivalence Pointeur/Tableau
+
+Ces expressions sont **identiques** :
+
+| Forme tableau | Forme pointeur | Signification |
+|---------------|----------------|---------------|
+| `tab[i]` | `*(tab + i)` | Valeur à l'indice i |
+| `&tab[i]` | `tab + i` | Adresse de l'indice i |
+
+#### Différence `*p + 1` vs `*(p + 1)`
+
+**Attention aux parenthèses !**
+
+```c
+int tab[3] = {10, 20, 30};
+int* p = tab;
+
+*p + 1     // = 10 + 1 = 11  (valeur + 1)
+*(p + 1)   // = 20           (élément suivant)
+```
+
+#### Soustraction de Pointeurs
+
+La différence entre deux pointeurs donne le **nombre d'éléments** :
+
+```c
+int tab[10];
+int* debut = &tab[0];
+int* fin = &tab[7];
+
+int distance = fin - debut;  // = 7 (éléments), pas 28 (octets)
+```
+
+#### Parcours de Tableau avec Pointeurs
+
+Deux façons équivalentes de parcourir :
+
+```c
+// Style indexation
+for (int i = 0; i < 10; i = i + 1) {
+    tab[i] = tab[i] * 2;
+}
+
+// Style pointeur
+int* p = tab;
+int* end = tab + 10;
+while (p < end) {
+    *p = *p * 2;
+    p = p + 1;
+}
+```
+
+#### Pointeurs vers Différents Types
+
+```c
+// Même adresse, interprétation différente
+int val = 0x41424344;    // 'ABCD' en ASCII
+int* pi = &val;
+char* pc = (char*)&val;  // Cast nécessaire
+
+*pi       // = 0x41424344 (un int de 4 octets)
+pc[0]     // = 0x44 = 'D' (premier octet, little-endian)
+pc[1]     // = 0x43 = 'C'
+pc[2]     // = 0x42 = 'B'
+pc[3]     // = 0x41 = 'A'
+```
+
 ---
 
 ## Accès au Matériel (MMIO)
@@ -339,7 +438,7 @@ La section **C32** contient de nombreux exercices progressifs :
 
 ## Les Structures (Structs)
 
-Le C32 supporte les structures (structs) pour regrouper plusieurs variables :
+Le C32 supporte les structures (structs) pour regrouper plusieurs variables.
 
 ### Définition d'une structure
 
@@ -356,6 +455,83 @@ struct Point {
 struct Point p;     // Déclarer une variable de type struct
 p.x = 10;           // Accéder aux champs avec .
 p.y = 20;
+```
+
+### Organisation en Mémoire
+
+**Concept clé** : Les champs d'une structure sont placés **consécutivement** en mémoire.
+
+```c
+struct Point {
+    int x;    // Offset 0, taille 4
+    int y;    // Offset 4, taille 4
+};            // Taille totale : 8 octets
+```
+
+En mémoire (si `p` est à l'adresse 0x1000) :
+
+```
+Adresse :   0x1000        0x1004
+            ┌─────────────┬─────────────┐
+struct p =  │     x       │     y       │
+            │   (4 oct)   │   (4 oct)   │
+            └─────────────┴─────────────┘
+            &p            &p + 4
+            &p.x          &p.y
+```
+
+### Calcul des Offsets
+
+Le compilateur calcule l'**offset** de chaque champ :
+
+```c
+struct Player {
+    int health;     // Offset 0
+    int x;          // Offset 4
+    int y;          // Offset 8
+    char name[16];  // Offset 12
+};                  // Taille totale : 28 octets
+```
+
+Quand vous écrivez `player.y`, le compilateur génère :
+
+```asm
+; player.y = 100
+; Si R0 contient l'adresse de player :
+MOV R1, #100
+STR R1, [R0, #8]   ; Offset de y = 8
+```
+
+### Alignement (Padding)
+
+En C standard, les structures peuvent avoir du "padding" pour l'alignement. En C32, on suppose un alignement simple sur 4 octets pour les int.
+
+```c
+struct Mixed {
+    char a;    // Offset 0, taille 1
+    // (3 octets de padding)
+    int b;     // Offset 4, taille 4
+    char c;    // Offset 8, taille 1
+    // (3 octets de padding)
+};             // Taille : 12 octets (pas 6 !)
+```
+
+### Tableaux de Structures
+
+```c
+struct Point points[3];
+
+// En mémoire (chaque Point = 8 octets) :
+// points[0] à offset 0
+// points[1] à offset 8
+// points[2] à offset 16
+```
+
+Pour accéder à `points[i].y` :
+
+```
+adresse = base + i * sizeof(struct Point) + offset_y
+        = base + i * 8 + 4
 ```
 
 ### Pointeur vers structure

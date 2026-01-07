@@ -542,3 +542,334 @@ Parcourir par colonnes (j puis i) saute de N éléments à chaque accès → tr�
 ## Chapitre 10bis : Débogage
 
 Les solutions des exercices de débogage sont dans le chapitre lui-même, car ils font partie intégrante de l'apprentissage du débogage. Consultez les balises `<details>` dans le chapitre 10bis.
+
+---
+
+## Chapitre 12 : Interruptions
+
+### Q1. Quelle est la différence entre une interruption matérielle et une exception ?
+
+- **Interruption matérielle (IRQ)** : Déclenchée par un **périphérique externe** (timer, clavier, réseau) de manière asynchrone. Le CPU peut être interrompu à n'importe quel moment.
+- **Exception** : Déclenchée par le **programme lui-même** lors d'une erreur ou condition spéciale (division par zéro, adresse invalide, instruction invalide). Synchrone avec l'exécution.
+
+Les deux utilisent un mécanisme similaire (sauvegarde du contexte, saut à un handler), mais leur origine diffère.
+
+### Q2. Pourquoi le polling est-il inefficace comparé aux interruptions ?
+
+Le **polling** (attente active) gaspille des ressources :
+1. Le CPU vérifie constamment l'état des périphériques
+2. Cycles perdus même quand rien ne se passe
+3. Latence variable (dépend de la fréquence de vérification)
+4. Ne scale pas avec le nombre de périphériques
+
+Les **interruptions** permettent au CPU de travailler normalement et d'être notifié instantanément quand un événement se produit.
+
+### Q3. Que contient la table des vecteurs d'interruption (IVT) ?
+
+L'IVT contient les **adresses des handlers** pour chaque type d'interruption :
+- Chaque entrée est un pointeur vers la routine de service (ISR)
+- Indexée par le numéro d'interruption
+- Placée à une adresse fixe en mémoire (souvent 0x00000000)
+- Permet au CPU de trouver rapidement le code à exécuter
+
+Exemple : IRQ #6 → IVT[6] → adresse 0x00001600 → keyboard_handler
+
+### Q4. Qu'est-ce qu'une race condition et comment l'éviter ?
+
+Une **race condition** se produit quand deux threads/contextes accèdent à une variable partagée sans synchronisation, et le résultat dépend de l'ordre d'exécution.
+
+```c
+// Problème : interruption entre lecture et écriture
+count = count + 1;  // LOAD, ADD, STORE (non atomique)
+```
+
+**Solutions** :
+1. Désactiver les interruptions pendant l'accès critique
+2. Utiliser des instructions atomiques (LDREX/STREX)
+3. Utiliser des mutex/spinlocks
+
+### Q5. Pourquoi est-il important que les handlers d'interruption soient courts ?
+
+Plusieurs raisons :
+1. **Latence** : D'autres IRQ sont bloquées pendant qu'un handler s'exécute
+2. **Réactivité** : Un long handler dégrade la réponse du système
+3. **Temps réel** : Les deadlines peuvent être manquées
+4. **Pile IRQ** : Généralement petite, risque de débordement
+
+**Bonne pratique** : Faire le minimum (flag, acquittement) et déférer le travail lourd au thread principal ou à une tâche dédiée.
+
+### Q6. Expliquez le rôle de l'instruction RETI (ou équivalent).
+
+RETI (Return from Interrupt) effectue :
+1. **Restaure PC** : Depuis la valeur sauvegardée (LR_irq ou pile)
+2. **Restaure les flags** : CPSR depuis SPSR
+3. **Réactive les interruptions** : Clear le bit I si nécessaire
+4. **Change de mode** : Retourne au mode utilisateur/système
+
+C'est une instruction spéciale car elle modifie atomiquement PC et les flags, ce qu'une séquence normale ne pourrait pas faire.
+
+### Q7. Qu'est-ce que le FIQ et pourquoi est-il plus rapide que l'IRQ ?
+
+Le **FIQ** (Fast Interrupt Request) est une interruption haute priorité avec des optimisations :
+1. **Registres banqués** : R8_fiq à R14_fiq sont séparés → pas besoin de PUSH/POP
+2. **Vecteur en fin d'IVT** : Le handler peut être placé directement là (pas de saut)
+3. **Priorité maximale** : Ne peut pas être interrompu par IRQ
+
+Gain typique : 20+ cycles économisés au début/fin du handler.
+
+### Exercice de réflexion
+
+**Question** : Timer IRQ toutes les 1 ms, handler de 50 µs, latence réseau requise < 100 µs. Possible ?
+
+**Analyse** :
+- Période timer : 1000 µs
+- Durée handler : 50 µs
+- Temps entre handlers : 950 µs libres
+
+Dans le **pire cas**, un événement réseau arrive juste après le début d'un handler timer :
+- Attente : 50 µs (fin du handler timer)
+- Latence totale : 50 µs < 100 µs ✓
+
+**Conclusion** : Oui, c'est possible, mais de justesse. Si le handler timer prenait 100 µs, ce ne serait plus garanti.
+
+Pour plus de marge, on pourrait :
+- Rendre le timer handler interruptible (nested IRQ)
+- Donner une priorité plus haute au réseau (FIQ)
+- Réduire la durée du handler timer
+
+### Exercice 1 : Timer Handler
+
+```asm
+.data
+ticks:      .word 0
+seconds:    .word 0
+
+.text
+timer_handler:
+    PUSH {R0-R2, LR}
+
+    ; Incrémenter ticks
+    LDR R0, =ticks
+    LDR R1, [R0]
+    ADD R1, R1, #1
+
+    ; Vérifier si 1000 ticks
+    CMP R1, #1000
+    BLT .store_ticks
+
+    ; Reset ticks et incrémenter seconds
+    MOV R1, #0
+    LDR R2, =seconds
+    LDR R0, [R2]
+    ADD R0, R0, #1
+    STR R0, [R2]
+
+.store_ticks:
+    LDR R0, =ticks
+    STR R1, [R0]
+
+    ; Acquitter l'interruption
+    LDR R0, =PIC_BASE
+    MOV R1, #0x20           ; EOI
+    STR R1, [R0, #EOI_OFFSET]
+
+    POP {R0-R2, LR}
+    SUBS PC, LR, #4         ; RETI
+```
+
+### Exercice 4 : Calcul de Latence
+
+- LDM 8 registres : ~10 cycles (2 + 8 accès mémoire)
+- Sauvegarde automatique : 3 cycles
+- Fetch vecteur : 2 cycles
+- PUSH 6 registres : ~8 cycles (2 + 6 accès)
+
+**Latence totale** = 10 + 3 + 2 + 8 = **23 cycles**
+
+À 100 MHz : 23 × 10 ns = **230 ns**
+
+---
+
+## Chapitre 13 : Concepts Avancés
+
+### Q1. Quelle est la différence entre linking statique et dynamique ?
+
+**Linking statique** :
+- Tout le code des bibliothèques est copié dans l'exécutable
+- Fichier volumineux mais autonome
+- Pas de dépendance externe au runtime
+
+**Linking dynamique** :
+- L'exécutable contient des références aux bibliothèques (.so/.dll)
+- Résolution au chargement ou à la première utilisation (lazy)
+- Fichier petit, bibliothèques partagées entre programmes
+- Mises à jour possibles sans recompiler
+
+### Q2. Qu'est-ce que la table des symboles dans un fichier objet ?
+
+La table des symboles liste tous les **noms** (fonctions, variables globales) du fichier :
+- **Symboles définis** : Implémentés dans ce fichier (avec adresse)
+- **Symboles indéfinis** : Référencés mais définis ailleurs (à résoudre par le linker)
+- **Attributs** : Global/local, taille, type (fonction, donnée)
+
+Le linker utilise cette table pour résoudre les références entre fichiers.
+
+### Q3. Que fait le préprocesseur avec `#include` et `#define` ?
+
+**`#include`** : Copie textuellement le contenu du fichier inclus à cet endroit.
+```c
+#include <stdio.h>   // Cherche dans /usr/include/
+#include "myfile.h"  // Cherche dans le répertoire courant
+```
+
+**`#define`** : Définit une macro de substitution textuelle.
+```c
+#define MAX 100          // MAX → 100 partout
+#define SQUARE(x) ((x)*(x))  // SQUARE(5) → ((5)*(5))
+```
+
+Ces opérations sont purement textuelles, avant la compilation.
+
+### Q4. Expliquez le concept de "stack unwinding" lors d'une exception.
+
+Le **stack unwinding** est le processus de recherche d'un handler :
+
+1. Une exception est levée (throw)
+2. Le runtime remonte la pile d'appels
+3. Pour chaque fonction :
+   - Vérifie s'il y a un catch compatible
+   - Si non, appelle les destructeurs des objets locaux
+   - Continue à remonter
+4. Si un catch est trouvé, le contrôle y est transféré
+5. Sinon, le programme termine (unhandled exception)
+
+Ce processus garantit que les ressources sont libérées même en cas d'erreur.
+
+### Q5. Quelle est la différence entre un processus et un thread ?
+
+**Processus** :
+- Espace mémoire isolé (protection MMU)
+- Ressources propres (file descriptors, etc.)
+- Communication via IPC (pipes, sockets, shared memory)
+- Création coûteuse (fork)
+
+**Thread** :
+- Partage l'espace mémoire du processus parent
+- Pile et registres propres uniquement
+- Communication directe (variables partagées)
+- Création légère
+- Nécessite synchronisation (mutex)
+
+### Q6. Qu'est-ce qu'une race condition et comment l'éviter ?
+
+Une **race condition** se produit quand le résultat d'un programme dépend de l'ordre d'exécution de threads concurrents accédant à des données partagées.
+
+```c
+// Thread A et B exécutent simultanément :
+counter++;  // LOAD → ADD → STORE (non atomique)
+```
+
+**Solutions** :
+1. **Mutex** : Verrouiller l'accès aux données partagées
+2. **Opérations atomiques** : Instructions indivisibles
+3. **Thread-local storage** : Chaque thread a sa copie
+4. **Immutabilité** : Données qui ne changent pas
+5. **Message passing** : Pas de mémoire partagée
+
+### Q7. Qu'est-ce qu'un deadlock ? Donnez les quatre conditions nécessaires.
+
+Un **deadlock** est une situation où deux ou plusieurs threads s'attendent mutuellement indéfiniment.
+
+Les **quatre conditions** (Coffman) :
+1. **Exclusion mutuelle** : La ressource ne peut être utilisée que par un thread à la fois
+2. **Hold and wait** : Un thread garde une ressource tout en attendant une autre
+3. **Pas de préemption** : Les ressources ne peuvent pas être retirées de force
+4. **Attente circulaire** : A attend B, B attend C, C attend A
+
+Pour éviter les deadlocks, éliminer l'une de ces conditions (souvent l'attente circulaire via un ordre d'acquisition fixe).
+
+### Q8. Pourquoi les opérations atomiques sont-elles nécessaires pour les mutex ?
+
+L'acquisition d'un mutex doit être **atomique** (indivisible) pour éviter que deux threads ne l'acquièrent simultanément :
+
+```c
+// MAUVAIS (non atomique) :
+if (lock == 0) {    // Thread A lit 0
+    lock = 1;       // Thread B lit aussi 0 avant A n'écrive !
+}
+// Les deux threads croient avoir le lock !
+
+// BON (atomique) :
+// Test-and-Set en une seule instruction
+if (atomic_exchange(&lock, 1) == 0) {
+    // Lock acquis
+}
+```
+
+Les instructions comme `LDREX/STREX` (ARM) ou `CMPXCHG` (x86) garantissent l'atomicité.
+
+### Exercice 2 : Linking Manuel
+
+1. `gcc -c main.c -c math.c` crée main.o et math.o
+2. `nm main.o` montre : `main (T)`, `add (U)` (undefined)
+3. `nm math.o` montre : `add (T)` (text/defined)
+4. `ld main.o math.o -o prog` échoue car :
+   - `_start` manque (point d'entrée standard)
+   - Pas de code d'initialisation C (crt0)
+   - Pas de libc (exit, etc.)
+
+**Solution** : Utiliser gcc pour le link final qui ajoute automatiquement crt0.o et -lc.
+
+### Exercice 3 : Exceptions en C
+
+```c
+#include <setjmp.h>
+
+static jmp_buf __exception_env;
+static int __exception_code;
+
+#define TRY if (setjmp(__exception_env) == 0)
+#define CATCH(code) else { int code = __exception_code;
+#define END_TRY }
+#define THROW(code) do { __exception_code = (code); longjmp(__exception_env, 1); } while(0)
+
+// Utilisation :
+TRY {
+    if (error) THROW(42);
+    do_work();
+} CATCH(code) {
+    printf("Exception %d\n", code);
+} END_TRY;
+```
+
+**Limitation** : Ne gère qu'un niveau de try/catch. Pour le nesting, utiliser une pile de jmp_buf.
+
+### Exercice 5 : Détection de Deadlock
+
+```
+Thread A : lock(m1) → lock(m2)
+Thread B : lock(m2) → lock(m3)
+Thread C : lock(m3) → lock(m1)
+```
+
+**Graphe de dépendance** :
+```
+m1 ──→ m2 ──→ m3
+ ↑            │
+ └────────────┘
+```
+
+**Oui, deadlock possible** si :
+- A acquiert m1, attend m2
+- B acquiert m2, attend m3
+- C acquiert m3, attend m1 (cycle !)
+
+**Solution** : Ordre fixe d'acquisition. Toujours acquérir dans l'ordre m1 → m2 → m3.
+
+```c
+void* thread_c(void* arg) {
+    lock(&m1); lock(&m3);  // m1 AVANT m3 maintenant
+    work();
+    unlock(&m3); unlock(&m1);
+}
+```

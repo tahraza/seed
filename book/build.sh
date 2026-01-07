@@ -24,6 +24,8 @@ CHAPTERS=(
     10_exercices.md
     10bis_debogage.md
     11_cache.md
+    12_interruptions.md
+    13_concepts_avances.md
 )
 
 # Liste des cartes de référence

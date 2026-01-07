@@ -221,6 +221,170 @@ Les multiplexeurs routent les données entre les composants :
 
 ---
 
+## Du Format d'Instruction au Hardware
+
+C'est une question fondamentale : **comment chaque bit de l'instruction devient-il une action dans le hardware ?**
+
+### Rappel : Format d'une Instruction A32
+
+```
+ 31  28 27 25 24  21 20 19 16 15 12 11          0
+┌──────┬─────┬──────┬──┬─────┬─────┬─────────────┐
+│ cond │class│  op  │ S│  Rn │  Rd │   operand2  │
+└──────┴─────┴──────┴──┴─────┴─────┴─────────────┘
+```
+
+### Mapping ISA → Hardware
+
+Voici comment chaque champ de l'instruction contrôle le hardware :
+
+| Bits | Champ | Hardware | Fonction |
+|------|-------|----------|----------|
+| [31:28] | `cond` | **Cond Check** | Compare avec NZCV, génère `cond_ok` |
+| [27:25] | `class` | **Decoder** | Distingue ALU/Mémoire/Branch/etc. |
+| [24:21] | `op` | **Control Unit** | Génère `ALU_op`, `reg_write`, `mem_write` |
+| [20] | `S` | **Flag Register** | Active la mise à jour des flags |
+| [19:16] | `Rn` | **RegFile port A** | Adresse du registre source 1 |
+| [15:12] | `Rd` | **RegFile port W** | Adresse du registre destination |
+| [11:0] | `operand2` | **Imm Extender** ou **RegFile port B** | Deuxième opérande |
+
+### Exemple Détaillé : ADD R1, R2, R3
+
+L'instruction `ADD R1, R2, R3` en binaire :
+
+```
+1110 000 0100 0 0010 0001 00000000 0011
+│    │   │    │ │    │    │         │
+│    │   │    │ │    │    │         └── Rm = R3 (0011)
+│    │   │    │ │    │    └── padding (ignoré)
+│    │   │    │ │    └── Rd = R1 (0001)
+│    │   │    │ └── Rn = R2 (0010)
+│    │   │    └── S = 0 (ne met pas à jour les flags)
+│    │   └── opcode = 0100 (ADD)
+│    └── class = 000 (ALU avec registre)
+└── cond = 1110 (AL = Always)
+```
+
+**Parcours dans le hardware** :
+
+1. **Cond Check** : `cond = 1110` (AL) → `cond_ok = 1` (toujours vrai)
+
+2. **Decoder** : `class = 000` → Instruction ALU avec registre
+   - `reg_write = 1` (on écrit dans un registre)
+   - `mem_read = 0`, `mem_write = 0` (pas d'accès mémoire)
+   - `ALU_src = 0` (opérande 2 = registre, pas immédiat)
+
+3. **Control Unit** : `op = 0100` → `ALU_op = ADD`
+
+4. **RegFile** :
+   - Port A lit `Rn = R2` → `Data_A = valeur de R2`
+   - Port B lit `Rm = R3` → `Data_B = valeur de R3`
+
+5. **ALU** : Calcule `Data_A + Data_B`
+
+6. **Writeback** : Écrit le résultat dans `Rd = R1`
+
+### Exemple Détaillé : LDR R0, [R1, #8]
+
+L'instruction `LDR R0, [R1, #8]` :
+
+```
+1110 010 1 1001 0001 0000 000000001000
+│    │   │ │    │    │    │
+│    │   │ │    │    │    └── offset = #8
+│    │   │ │    │    └── Rd = R0
+│    │   │ │    └── Rn = R1
+│    │   │ └── opcode (bits) = 1001 (LDR avec offset positif)
+│    │   └── L = 1 (Load, pas Store)
+│    └── class = 010 (Mémoire)
+└── cond = 1110 (AL)
+```
+
+**Parcours** :
+
+1. **Decoder** : `class = 010` → Instruction mémoire
+   - `mem_read = 1` (on lit la mémoire)
+   - `ALU_src = 1` (opérande 2 = immédiat)
+   - `ALU_op = ADD` (pour calculer l'adresse)
+
+2. **RegFile** : Lit `Rn = R1` → adresse de base
+
+3. **Imm Extender** : Extrait offset = 8
+
+4. **ALU** : Calcule `R1 + 8` → adresse effective
+
+5. **Mémoire** : Lit MEM[adresse] → valeur
+
+6. **Writeback** : `Rd = R0` reçoit la valeur lue
+
+### Exemple Détaillé : BEQ label
+
+L'instruction `BEQ label` (avec offset de 10 instructions) :
+
+```
+0000 101 0 000000000000000000001010
+│    │   │ │
+│    │   │ └── offset = 10 (en nombre d'instructions)
+│    │   └── L = 0 (Branch, pas Branch-Link)
+│    └── class = 101 (Branch)
+└── cond = 0000 (EQ = Equal, Z=1)
+```
+
+**Parcours** :
+
+1. **Cond Check** : `cond = 0000` (EQ) → `cond_ok = Z` (prend le flag Z actuel)
+
+2. **Decoder** : `class = 101` → Instruction de branchement
+   - `PC_src = branch_taken` (si cond_ok = 1)
+   - `reg_write = 0` (pas d'écriture registre)
+
+3. **Calcul de l'adresse cible** : `PC + 4 + (offset × 4)` = `PC + 4 + 40`
+
+4. **MUX PC** : Si `cond_ok = 1` (Z était à 1), PC ← adresse cible
+
+### Schéma Récapitulatif
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     INSTRUCTION (32 bits)                    │
+└─────────────────────────────────────────────────────────────┘
+          │           │           │           │
+          ▼           ▼           ▼           ▼
+    ┌──────────┐ ┌─────────┐ ┌─────────┐ ┌──────────┐
+    │cond[31:28]│ │Decoder  │ │ RegFile │ │Imm Extend│
+    │          │ │class,op │ │ Rn,Rd,Rm│ │ operand2 │
+    └────┬─────┘ └────┬────┘ └────┬────┘ └────┬─────┘
+         │            │           │           │
+         ▼            ▼           ▼           ▼
+    ┌─────────┐  ┌─────────┐  ┌──────┐   ┌───────┐
+    │Cond     │  │Control  │  │Data_A│   │Data_B │
+    │Check    │  │Unit     │  │Data_B│   │ou Imm │
+    │         │  │         │  │      │   │       │
+    │cond_ok  │  │signaux  │  └──┬───┘   └───┬───┘
+    └────┬────┘  └────┬────┘     │           │
+         │            │          └─────┬─────┘
+         │            │                │
+         │            ▼                ▼
+         │       ┌─────────────────────────┐
+         │       │          ALU            │
+         │       │    (selon ALU_op)       │
+         │       └───────────┬─────────────┘
+         │                   │
+         │                   ▼
+         │            ┌─────────────┐
+         │            │   Résultat  │
+         │            │   + Flags   │
+         │            └──────┬──────┘
+         │                   │
+         ▼                   ▼
+    ┌────────────────────────────────┐
+    │   Activation conditionnelle    │
+    │   (si cond_ok = 1, exécute)    │
+    └────────────────────────────────┘
+```
+
+---
+
 ## Le Cycle d'Exécution en Détail
 
 Notre CPU est **single-cycle** : chaque instruction s'exécute en un seul cycle d'horloge.

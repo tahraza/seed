@@ -419,6 +419,203 @@ end architecture;
 
 ---
 
+## Portes Multi-Entrées et Multi-Bits
+
+Jusqu'ici, nous avons construit des portes à **2 entrées** (And2, Or2, Xor2). Mais en pratique, nous avons souvent besoin de :
+- **Portes à N entrées** : Or8Way, And4Way
+- **Portes sur N bits** : And16, Or32
+
+### Généralisation à N Entrées
+
+#### Or8Way : OU sur 8 bits
+
+Imaginons qu'on veuille savoir si **au moins un bit** parmi 8 est à 1. C'est un OR à 8 entrées :
+
+```
+Or8Way(a[0..7]) = a[0] OR a[1] OR a[2] OR ... OR a[7]
+```
+
+**Construction hiérarchique** (en arbre) :
+
+```
+Niveau 1 :  Or2(a[0], a[1]) → t0    Or2(a[2], a[3]) → t1
+            Or2(a[4], a[5]) → t2    Or2(a[6], a[7]) → t3
+
+Niveau 2 :  Or2(t0, t1) → t4        Or2(t2, t3) → t5
+
+Niveau 3 :  Or2(t4, t5) → sortie
+```
+
+**Avantage** : Seulement 3 niveaux de profondeur (log₂(8) = 3), au lieu de 7 en série.
+
+```vhdl
+entity Or8Way is
+  port(
+    a : in bits(7 downto 0);
+    y : out bit
+  );
+end entity;
+
+architecture rtl of Or8Way is
+  component Or2
+    port(a : in bit; b : in bit; y : out bit);
+  end component;
+  signal t0, t1, t2, t3, t4, t5 : bit;
+begin
+  -- Niveau 1 : paires
+  u0: Or2 port map (a => a(0), b => a(1), y => t0);
+  u1: Or2 port map (a => a(2), b => a(3), y => t1);
+  u2: Or2 port map (a => a(4), b => a(5), y => t2);
+  u3: Or2 port map (a => a(6), b => a(7), y => t3);
+  -- Niveau 2
+  u4: Or2 port map (a => t0, b => t1, y => t4);
+  u5: Or2 port map (a => t2, b => t3, y => t5);
+  -- Niveau 3
+  u6: Or2 port map (a => t4, b => t5, y => y);
+end architecture;
+```
+
+### Multiplexeurs Multi-Entrées
+
+#### Mux4Way : Choisir parmi 4 entrées
+
+Avec 2 bits de sélection, on peut choisir parmi 4 entrées :
+
+| sel[1] | sel[0] | Sortie |
+|:------:|:------:|:------:|
+| 0 | 0 | a |
+| 0 | 1 | b |
+| 1 | 0 | c |
+| 1 | 1 | d |
+
+**Construction avec des Mux 2:1** :
+
+```
+        sel[0]
+          │
+    ┌─────┼─────┐
+    │     │     │
+  ┌─▼─┐ ┌─▼─┐   │
+a─┤Mux├─┤   │   │
+b─┤   │ │Mux├───┼──► sortie
+  └───┘ │   │   │
+  ┌───┐ └─▲─┘   │
+c─┤Mux├───┘     │
+d─┤   │         │
+  └─▲─┘         │
+    │           │
+  sel[1]────────┘
+```
+
+```vhdl
+entity Mux4Way is
+  port(
+    a, b, c, d : in bit;
+    sel : in bits(1 downto 0);
+    y : out bit
+  );
+end entity;
+
+architecture rtl of Mux4Way is
+  component Mux
+    port(a : in bit; b : in bit; sel : in bit; y : out bit);
+  end component;
+  signal ab, cd : bit;
+begin
+  -- Niveau 1 : sélection par sel[0]
+  u_ab: Mux port map (a => a, b => b, sel => sel(0), y => ab);
+  u_cd: Mux port map (a => c, b => d, sel => sel(0), y => cd);
+  -- Niveau 2 : sélection par sel[1]
+  u_out: Mux port map (a => ab, b => cd, sel => sel(1), y => y);
+end architecture;
+```
+
+#### Mux8Way : 8 entrées, 3 bits de sélection
+
+Le même principe s'étend : 2 Mux4Way + 1 Mux donne un Mux8Way.
+
+### Démultiplexeurs Multi-Sorties
+
+#### DMux4Way : Router vers 4 destinations
+
+L'inverse du Mux : une entrée, 4 sorties possibles.
+
+| sel[1] | sel[0] | a | b | c | d |
+|:------:|:------:|:-:|:-:|:-:|:-:|
+| 0 | 0 | in | 0 | 0 | 0 |
+| 0 | 1 | 0 | in | 0 | 0 |
+| 1 | 0 | 0 | 0 | in | 0 |
+| 1 | 1 | 0 | 0 | 0 | in |
+
+**Construction** :
+
+```vhdl
+entity DMux4Way is
+  port(
+    input : in bit;
+    sel : in bits(1 downto 0);
+    a, b, c, d : out bit
+  );
+end entity;
+
+architecture rtl of DMux4Way is
+  component DMux
+    port(input : in bit; sel : in bit; a : out bit; b : out bit);
+  end component;
+  signal top, bottom : bit;
+begin
+  -- Niveau 1 : sel[1] divise en haut/bas
+  u_split: DMux port map (input => input, sel => sel(1), a => top, b => bottom);
+  -- Niveau 2 : sel[0] divise chaque moitié
+  u_top: DMux port map (input => top, sel => sel(0), a => a, b => b);
+  u_bot: DMux port map (input => bottom, sel => sel(0), a => c, b => d);
+end architecture;
+```
+
+### Portes sur N Bits (Bus)
+
+Pour traiter des mots de 16 ou 32 bits, on réplique la porte bit par bit :
+
+```vhdl
+-- And32 : ET bit-à-bit sur 32 bits
+entity And32 is
+  port(
+    a : in bits(31 downto 0);
+    b : in bits(31 downto 0);
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of And32 is
+  component And2
+    port(a : in bit; b : in bit; y : out bit);
+  end component;
+begin
+  -- Instancier 32 portes AND en parallèle
+  gen: for i in 0 to 31 generate
+    u: And2 port map (a => a(i), b => b(i), y => y(i));
+  end generate;
+end architecture;
+```
+
+**Note** : La construction `for ... generate` crée automatiquement 32 instances. C'est équivalent à écrire 32 lignes `port map`.
+
+### Pourquoi c'est Important ?
+
+Ces portes multi-entrées sont essentielles pour :
+
+| Composant | Utilisation |
+|-----------|-------------|
+| **Or8Way** | Tester si un registre est non-nul (flag Z de l'ALU) |
+| **Mux4Way/8Way** | Sélectionner un registre parmi 4, 8, ou 16 |
+| **DMux4Way/8Way** | Router un signal `load` vers le bon registre |
+| **And32, Or32** | Opérations bit-à-bit de l'ALU |
+| **Mux32** | Choisir entre deux bus 32 bits |
+
+Au chapitre 3 (Mémoire), vous utiliserez DMux8Way pour adresser 8 registres. Au chapitre 5 (CPU), Mux16Way sélectionnera parmi 16 registres.
+
+---
+
 ## Exercices Pratiques
 
 ### Exercices sur le Simulateur Web
