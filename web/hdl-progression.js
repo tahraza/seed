@@ -3242,34 +3242,111 @@ begin
   u_mux: Mux8Way16 port map (a => r0, b => r1, c => r2, d => r3, e => r4, f => r5, g => r6, h => r7, sel => addr(5 downto 3), y => dout);
 end architecture;
 `,
-        test: `load RAM64
-set din 0xABCD
+        test: `// Test file for RAM64 (64-word RAM)
+// 64 16-bit words addressable by 6-bit address
+
+load RAM64
+
+// Write to address 0
+set din 0x1111
 set addr 0b000000
 set we 1
 tick
-set we 0
-eval
-expect dout 0xABCD
-set din 0x1234
+tock
+expect dout 0x1111
+
+// Write to address 1
+set din 0x2222
+set addr 0b000001
+tick
+tock
+expect dout 0x2222
+
+// Write to address 8 (second RAM8 block)
+set din 0x8888
+set addr 0b001000
+tick
+tock
+expect dout 0x8888
+
+// Write to address 63
+set din 0xFFFF
 set addr 0b111111
-set we 1
 tick
+tock
+expect dout 0xFFFF
+
+// Read back address 0 (no write)
 set we 0
-eval
-expect dout 0x1234
 set addr 0b000000
-eval
-expect dout 0xABCD
-`,
+tick
+tock
+expect dout 0x1111
+
+// Read back address 1
+set addr 0b000001
+tick
+tock
+expect dout 0x2222
+
+// Read back address 8
+set addr 0b001000
+tick
+tock
+expect dout 0x8888
+
+// Read back address 63
+set addr 0b111111
+tick
+tock
+expect dout 0xFFFF
+
+// Write to different blocks
+set we 1
+set din 0xAAAA
+set addr 0b010000
+tick
+tock
+expect dout 0xAAAA
+
+set din 0xBBBB
+set addr 0b011000
+tick
+tock
+expect dout 0xBBBB
+
+set din 0xCCCC
+set addr 0b100000
+tick
+tock
+expect dout 0xCCCC
+
+// Verify previous writes preserved
+set we 0
+set addr 0b000000
+tick
+tock
+expect dout 0x1111
+
+set addr 0b010000
+tick
+tock
+expect dout 0xAAAA
+
+set addr 0b100000
+tick
+tock
+expect dout 0xCCCC`,
     },
 
     'RegFile': {
         project: 4,
         name: 'RegFile',
-        description: '16-register file',
-        dependencies: ['Register16', 'Mux16', 'DMux8Way'],
+        description: '16-register file with 2 read ports',
+        dependencies: ['Register16', 'Mux16', 'Mux8Way16', 'DMux8Way'],
         template: `-- 16-Register File
--- 2 read ports, 1 write port
+-- 2 independent read ports, 1 write port
+-- Uses 16 Register16 instances with mux/demux for addressing
 
 entity RegFile is
   port(
@@ -3285,16 +3362,25 @@ entity RegFile is
 end entity;
 
 architecture rtl of RegFile is
-  -- Use ram primitive for simplicity
-  component ram
-    port(clk : in bit; we : in bit; addr : in bits(3 downto 0);
-         din : in bits(15 downto 0); dout : out bits(15 downto 0));
+  component Register16
+    port(clk : in bit; d : in bits(15 downto 0); load : in bit; q : out bits(15 downto 0));
+  end component;
+  component DMux8Way
+    port(x : in bit; sel : in bits(2 downto 0); a,b,c,d,e,f,g,h : out bit);
+  end component;
+  component Mux8Way16
+    port(a,b,c,d,e,f,g,h : in bits(15 downto 0); sel : in bits(2 downto 0); y : out bits(15 downto 0));
+  end component;
+  component Mux16
+    port(a,b : in bits(15 downto 0); sel : in bit; y : out bits(15 downto 0));
   end component;
 begin
   -- YOUR CODE HERE
+  -- Hint: Use DMux8Way twice (for lower and upper 8 registers)
+  -- Use Mux8Way16 + Mux16 to build 16:1 read muxes
 end architecture;
 `,
-        solution: `-- 16-Register File using RAM primitive
+        solution: `-- 16-Register File with 2 independent read ports
 entity RegFile is
   port(
     clk   : in bit;
@@ -3309,24 +3395,80 @@ entity RegFile is
 end entity;
 
 architecture rtl of RegFile is
-  component ram
-    port(clk : in bit; we : in bit; addr : in bits(3 downto 0);
-         din : in bits(15 downto 0); dout : out bits(15 downto 0));
+  component Register16
+    port(clk : in bit; d : in bits(15 downto 0); load : in bit; q : out bits(15 downto 0));
   end component;
+  component DMux8Way
+    port(x : in bit; sel : in bits(2 downto 0); a,b,c,d,e,f,g,h : out bit);
+  end component;
+  component Mux8Way16
+    port(a,b,c,d,e,f,g,h : in bits(15 downto 0); sel : in bits(2 downto 0); y : out bits(15 downto 0));
+  end component;
+  component Mux16
+    port(a,b : in bits(15 downto 0); sel : in bit; y : out bits(15 downto 0));
+  end component;
+  component DMux
+    port(x : in bit; sel : in bit; a,b : out bit);
+  end component;
+
+  -- Write enable signals for each register
+  signal we_lo, we_hi : bit;
+  signal we0,we1,we2,we3,we4,we5,we6,we7 : bit;
+  signal we8,we9,we10,we11,we12,we13,we14,we15 : bit;
+
+  -- Register outputs
+  signal r0,r1,r2,r3,r4,r5,r6,r7 : bits(15 downto 0);
+  signal r8,r9,r10,r11,r12,r13,r14,r15 : bits(15 downto 0);
+
+  -- Intermediate mux outputs for read ports
+  signal rd1_lo, rd1_hi, rd2_lo, rd2_hi : bits(15 downto 0);
 begin
-  -- Use two RAM instances for dual read ports
-  u_ram1: ram port map (clk => clk, we => we, addr => waddr, din => wdata, dout => rdata1);
-  u_ram2: ram port map (clk => clk, we => we, addr => waddr, din => wdata, dout => rdata2);
-  -- Note: Simplified - real implementation would need proper read port addressing
+  -- Demux write enable: split by waddr(3), then by waddr(2:0)
+  u_we_split: DMux port map (x => we, sel => waddr(3), a => we_lo, b => we_hi);
+  u_we_lo: DMux8Way port map (x => we_lo, sel => waddr(2 downto 0),
+    a => we0, b => we1, c => we2, d => we3, e => we4, f => we5, g => we6, h => we7);
+  u_we_hi: DMux8Way port map (x => we_hi, sel => waddr(2 downto 0),
+    a => we8, b => we9, c => we10, d => we11, e => we12, f => we13, g => we14, h => we15);
+
+  -- 16 registers
+  reg0:  Register16 port map (clk => clk, d => wdata, load => we0, q => r0);
+  reg1:  Register16 port map (clk => clk, d => wdata, load => we1, q => r1);
+  reg2:  Register16 port map (clk => clk, d => wdata, load => we2, q => r2);
+  reg3:  Register16 port map (clk => clk, d => wdata, load => we3, q => r3);
+  reg4:  Register16 port map (clk => clk, d => wdata, load => we4, q => r4);
+  reg5:  Register16 port map (clk => clk, d => wdata, load => we5, q => r5);
+  reg6:  Register16 port map (clk => clk, d => wdata, load => we6, q => r6);
+  reg7:  Register16 port map (clk => clk, d => wdata, load => we7, q => r7);
+  reg8:  Register16 port map (clk => clk, d => wdata, load => we8, q => r8);
+  reg9:  Register16 port map (clk => clk, d => wdata, load => we9, q => r9);
+  reg10: Register16 port map (clk => clk, d => wdata, load => we10, q => r10);
+  reg11: Register16 port map (clk => clk, d => wdata, load => we11, q => r11);
+  reg12: Register16 port map (clk => clk, d => wdata, load => we12, q => r12);
+  reg13: Register16 port map (clk => clk, d => wdata, load => we13, q => r13);
+  reg14: Register16 port map (clk => clk, d => wdata, load => we14, q => r14);
+  reg15: Register16 port map (clk => clk, d => wdata, load => we15, q => r15);
+
+  -- Read port 1: 16:1 mux using two 8:1 muxes + 2:1 mux
+  u_rd1_lo: Mux8Way16 port map (a=>r0,b=>r1,c=>r2,d=>r3,e=>r4,f=>r5,g=>r6,h=>r7,
+    sel => raddr1(2 downto 0), y => rd1_lo);
+  u_rd1_hi: Mux8Way16 port map (a=>r8,b=>r9,c=>r10,d=>r11,e=>r12,f=>r13,g=>r14,h=>r15,
+    sel => raddr1(2 downto 0), y => rd1_hi);
+  u_rd1: Mux16 port map (a => rd1_lo, b => rd1_hi, sel => raddr1(3), y => rdata1);
+
+  -- Read port 2: same structure
+  u_rd2_lo: Mux8Way16 port map (a=>r0,b=>r1,c=>r2,d=>r3,e=>r4,f=>r5,g=>r6,h=>r7,
+    sel => raddr2(2 downto 0), y => rd2_lo);
+  u_rd2_hi: Mux8Way16 port map (a=>r8,b=>r9,c=>r10,d=>r11,e=>r12,f=>r13,g=>r14,h=>r15,
+    sel => raddr2(2 downto 0), y => rd2_hi);
+  u_rd2: Mux16 port map (a => rd2_lo, b => rd2_hi, sel => raddr2(3), y => rdata2);
 end architecture;
 `,
         test: `// Test file for RegFile (16-register file)
-// Note: This simplified implementation reads from waddr, not raddr
-// Tests verify write and read-back at same address
+// Tests 2 independent read ports and 1 write port
 
 load RegFile
 
-// Write to register 0 and verify
+// Write to register 0
 set we 1
 set waddr 0x0
 set wdata 0x1111
@@ -3337,47 +3479,82 @@ tock
 expect rdata1 0x1111
 expect rdata2 0x1111
 
-// Write to register 1 and verify
+// Write to register 1, verify reg 0 unchanged via raddr1
 set waddr 0x1
 set wdata 0x2222
+set raddr1 0x0
+set raddr2 0x1
+tick
+tock
+expect rdata1 0x1111
+expect rdata2 0x2222
+
+// Read both registers simultaneously
+set we 0
+set raddr1 0x1
+set raddr2 0x0
 tick
 tock
 expect rdata1 0x2222
-expect rdata2 0x2222
-
-// Write to register 5
-set waddr 0x5
-set wdata 0x5555
-tick
-tock
-expect rdata1 0x5555
-expect rdata2 0x5555
+expect rdata2 0x1111
 
 // Write to register 15
+set we 1
 set waddr 0xF
 set wdata 0xFFFF
 tick
 tock
-expect rdata1 0xFFFF
+
+// Read registers 0 and 15 simultaneously
+set we 0
+set raddr1 0x0
+set raddr2 0xF
+tick
+tock
+expect rdata1 0x1111
 expect rdata2 0xFFFF
 
-// Write disabled - value at waddr should still be readable
+// Write to register 8 (tests upper bank)
+set we 1
+set waddr 0x8
+set wdata 0x8888
+tick
+tock
+
+// Read from different banks simultaneously
 set we 0
-set waddr 0x5
+set raddr1 0x1
+set raddr2 0x8
+tick
+tock
+expect rdata1 0x2222
+expect rdata2 0x8888
+
+// Write disabled - value should not change
+set we 0
+set waddr 0x0
 set wdata 0x9999
 tick
 tock
-expect rdata1 0x5555
-expect rdata2 0x5555
-
-// Re-enable write
-set we 1
-set waddr 0x7
-set wdata 0x7777
+set raddr1 0x0
 tick
 tock
-expect rdata1 0x7777
-expect rdata2 0x7777`,
+expect rdata1 0x1111
+
+// Verify all written values are preserved
+set raddr1 0x0
+set raddr2 0x1
+tick
+tock
+expect rdata1 0x1111
+expect rdata2 0x2222
+
+set raddr1 0x8
+set raddr2 0xF
+tick
+tock
+expect rdata1 0x8888
+expect rdata2 0xFFFF`,
     },
 
     // =========================================================================
@@ -3602,19 +3779,68 @@ begin
   mux2: Mux port map (a => sel0, b => sel1, sel => cond(1), y => take);
 end architecture;
 `,
-        test: `load CondCheck
+        test: `// Test file for CondCheck (Condition Checker)
+// Checks ALU flags against condition codes
+// cond: 0000=EQ (zero), 0001=NE (!zero), 0010=LT (neg), 0011=GE (!neg)
+
+load CondCheck
+
+// Test EQ condition (cond=0000): take if zero=1
 set cond 0b0000
 set zero 1
+set neg 0
+set carry 0
+set ovf 0
 eval
 expect take 1
+
 set zero 0
 eval
 expect take 0
+
+// Test NE condition (cond=0001): take if zero=0
 set cond 0b0001
 set zero 0
 eval
 expect take 1
-`,
+
+set zero 1
+eval
+expect take 0
+
+// Test LT condition (cond=0010): take if neg=1
+set cond 0b0010
+set zero 0
+set neg 1
+eval
+expect take 1
+
+set neg 0
+eval
+expect take 0
+
+// Test GE condition (cond=0011): take if neg=0
+set cond 0b0011
+set neg 0
+eval
+expect take 1
+
+set neg 1
+eval
+expect take 0
+
+// Test with different flag combinations
+set cond 0b0000
+set zero 1
+set neg 1
+eval
+expect take 1
+
+set cond 0b0010
+set zero 1
+set neg 1
+eval
+expect take 1`,
     },
 
     'Control': {
@@ -3707,15 +3933,89 @@ begin
   u_and: And2 port map (a => branch_sig, b => cond_take, y => pc_src);
 end architecture;
 `,
-        test: `load Control
-set opcode 0b0000
-set cond 0b0000
+        test: `// Test file for Control (Control Unit)
+// Combines Decoder and CondCheck to generate control signals
+
+load Control
+
+// ALU ADD instruction (opcode=0x0)
+set opcode 0x0
+set cond 0x0
 set zero 0
 set neg 0
-eval
+tick
+tock
+expect alu_op 0b00
 expect reg_write 1
+expect mem_read 0
+expect mem_write 0
 expect pc_src 0
-`,
+
+// ALU SUB instruction (opcode=0x1)
+set opcode 0x1
+tick
+tock
+expect alu_op 0b01
+expect reg_write 1
+expect mem_read 0
+expect mem_write 0
+expect pc_src 0
+
+// ALU AND instruction (opcode=0x2)
+set opcode 0x2
+tick
+tock
+expect alu_op 0b10
+expect reg_write 1
+
+// ALU OR instruction (opcode=0x3)
+set opcode 0x3
+tick
+tock
+expect alu_op 0b11
+expect reg_write 1
+
+// LOAD instruction (opcode=0x4)
+set opcode 0x4
+tick
+tock
+expect mem_read 1
+expect mem_write 0
+
+// STORE instruction (opcode=0x5)
+set opcode 0x5
+tick
+tock
+expect mem_write 1
+
+// BRANCH instruction with condition EQ, zero=1 (take branch)
+set opcode 0x8
+set cond 0x0
+set zero 1
+tick
+tock
+expect pc_src 1
+expect reg_write 0
+
+// BRANCH instruction with condition EQ, zero=0 (don't take)
+set zero 0
+tick
+tock
+expect pc_src 0
+
+// BRANCH instruction with condition NE, zero=0 (take branch)
+set cond 0x1
+set zero 0
+tick
+tock
+expect pc_src 1
+
+// BRANCH instruction with condition LT, neg=1 (take branch)
+set cond 0x2
+set neg 1
+tick
+tock
+expect pc_src 1`,
     },
 
     'CPU': {
@@ -3860,14 +4160,73 @@ begin
   mem_we <= mem_wr;
 end architecture;
 `,
-        test: `load CPU
+        test: `// Test file for CPU (A32-Lite CPU)
+// Simple 16-bit RISC processor
+// Instruction format: [15:12]=opcode, [11:8]=rd, [7:4]=rs1, [3:0]=rs2
+
+load CPU
+
+// Reset the CPU
 set reset 1
+set instr 0x0000
+set mem_in 0x0000
 tick
+tock
 expect pc_out 0x0000
+
+// Release reset - PC should start incrementing
 set reset 0
+tick
+tock
+
+// Execute ADD r1, r0, r0 (0x0100: opcode=0, rd=1, rs1=0, rs2=0)
+// This should write r0+r0=0 into r1
+set instr 0x0100
+tick
+tock
+
+// Execute ADD r2, r1, r1 (0x0211: opcode=0, rd=2, rs1=1, rs2=1)
+set instr 0x0211
+tick
+tock
+
+// Test LOAD instruction - opcode 0x4
+// LOAD r3, [r0] (0x4300: load from address in r0 to r3)
+set instr 0x4300
+set mem_in 0x1234
+tick
+tock
+
+// Test STORE instruction - opcode 0x5
+// STORE r3, [r0] (0x5030: store r3 to address in r0)
+set instr 0x5030
+tick
+tock
+expect mem_we 1
+
+// Test that mem_we is cleared after non-store instruction
 set instr 0x0000
 tick
-`,
+tock
+expect mem_we 0
+
+// Test SUB instruction
+// SUB r4, r2, r1 (0x1421: opcode=1, rd=4, rs1=2, rs2=1)
+set instr 0x1421
+tick
+tock
+
+// Test AND instruction
+// AND r5, r3, r2 (0x2532: opcode=2, rd=5, rs1=3, rs2=2)
+set instr 0x2532
+tick
+tock
+
+// Test OR instruction
+// OR r6, r4, r3 (0x3643: opcode=3, rd=6, rs1=4, rs2=3)
+set instr 0x3643
+tick
+tock`,
     },
 
     // =========================================================================

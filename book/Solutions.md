@@ -1063,7 +1063,7 @@ end architecture;
 ### RegFile
 
 ```vhdl
--- 16-Register File using RAM primitive
+-- 16-Register File with 2 independent read ports
 entity RegFile is
   port(
     clk   : in bit;
@@ -1078,15 +1078,72 @@ entity RegFile is
 end entity;
 
 architecture rtl of RegFile is
-  component ram
-    port(clk : in bit; we : in bit; addr : in bits(3 downto 0);
-         din : in bits(15 downto 0); dout : out bits(15 downto 0));
+  component Register16
+    port(clk : in bit; d : in bits(15 downto 0); load : in bit; q : out bits(15 downto 0));
   end component;
+  component DMux8Way
+    port(x : in bit; sel : in bits(2 downto 0); a,b,c,d,e,f,g,h : out bit);
+  end component;
+  component Mux8Way16
+    port(a,b,c,d,e,f,g,h : in bits(15 downto 0); sel : in bits(2 downto 0); y : out bits(15 downto 0));
+  end component;
+  component Mux16
+    port(a,b : in bits(15 downto 0); sel : in bit; y : out bits(15 downto 0));
+  end component;
+  component DMux
+    port(x : in bit; sel : in bit; a,b : out bit);
+  end component;
+
+  -- Write enable signals for each register
+  signal we_lo, we_hi : bit;
+  signal we0,we1,we2,we3,we4,we5,we6,we7 : bit;
+  signal we8,we9,we10,we11,we12,we13,we14,we15 : bit;
+
+  -- Register outputs
+  signal r0,r1,r2,r3,r4,r5,r6,r7 : bits(15 downto 0);
+  signal r8,r9,r10,r11,r12,r13,r14,r15 : bits(15 downto 0);
+
+  -- Intermediate mux outputs for read ports
+  signal rd1_lo, rd1_hi, rd2_lo, rd2_hi : bits(15 downto 0);
 begin
-  -- Use two RAM instances for dual read ports
-  u_ram1: ram port map (clk => clk, we => we, addr => waddr, din => wdata, dout => rdata1);
-  u_ram2: ram port map (clk => clk, we => we, addr => waddr, din => wdata, dout => rdata2);
-  -- Note: Simplified - real implementation would need proper read port addressing
+  -- Demux write enable: split by waddr(3), then by waddr(2:0)
+  u_we_split: DMux port map (x => we, sel => waddr(3), a => we_lo, b => we_hi);
+  u_we_lo: DMux8Way port map (x => we_lo, sel => waddr(2 downto 0),
+    a => we0, b => we1, c => we2, d => we3, e => we4, f => we5, g => we6, h => we7);
+  u_we_hi: DMux8Way port map (x => we_hi, sel => waddr(2 downto 0),
+    a => we8, b => we9, c => we10, d => we11, e => we12, f => we13, g => we14, h => we15);
+
+  -- 16 registers
+  reg0:  Register16 port map (clk => clk, d => wdata, load => we0, q => r0);
+  reg1:  Register16 port map (clk => clk, d => wdata, load => we1, q => r1);
+  reg2:  Register16 port map (clk => clk, d => wdata, load => we2, q => r2);
+  reg3:  Register16 port map (clk => clk, d => wdata, load => we3, q => r3);
+  reg4:  Register16 port map (clk => clk, d => wdata, load => we4, q => r4);
+  reg5:  Register16 port map (clk => clk, d => wdata, load => we5, q => r5);
+  reg6:  Register16 port map (clk => clk, d => wdata, load => we6, q => r6);
+  reg7:  Register16 port map (clk => clk, d => wdata, load => we7, q => r7);
+  reg8:  Register16 port map (clk => clk, d => wdata, load => we8, q => r8);
+  reg9:  Register16 port map (clk => clk, d => wdata, load => we9, q => r9);
+  reg10: Register16 port map (clk => clk, d => wdata, load => we10, q => r10);
+  reg11: Register16 port map (clk => clk, d => wdata, load => we11, q => r11);
+  reg12: Register16 port map (clk => clk, d => wdata, load => we12, q => r12);
+  reg13: Register16 port map (clk => clk, d => wdata, load => we13, q => r13);
+  reg14: Register16 port map (clk => clk, d => wdata, load => we14, q => r14);
+  reg15: Register16 port map (clk => clk, d => wdata, load => we15, q => r15);
+
+  -- Read port 1: 16:1 mux using two 8:1 muxes + 2:1 mux
+  u_rd1_lo: Mux8Way16 port map (a=>r0,b=>r1,c=>r2,d=>r3,e=>r4,f=>r5,g=>r6,h=>r7,
+    sel => raddr1(2 downto 0), y => rd1_lo);
+  u_rd1_hi: Mux8Way16 port map (a=>r8,b=>r9,c=>r10,d=>r11,e=>r12,f=>r13,g=>r14,h=>r15,
+    sel => raddr1(2 downto 0), y => rd1_hi);
+  u_rd1: Mux16 port map (a => rd1_lo, b => rd1_hi, sel => raddr1(3), y => rdata1);
+
+  -- Read port 2: same structure
+  u_rd2_lo: Mux8Way16 port map (a=>r0,b=>r1,c=>r2,d=>r3,e=>r4,f=>r5,g=>r6,h=>r7,
+    sel => raddr2(2 downto 0), y => rd2_lo);
+  u_rd2_hi: Mux8Way16 port map (a=>r8,b=>r9,c=>r10,d=>r11,e=>r12,f=>r13,g=>r14,h=>r15,
+    sel => raddr2(2 downto 0), y => rd2_hi);
+  u_rd2: Mux16 port map (a => rd2_lo, b => rd2_hi, sel => raddr2(3), y => rdata2);
 end architecture;
 ```
 
