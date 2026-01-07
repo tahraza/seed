@@ -313,3 +313,173 @@
         height: 120px;
     }
 }
+
+/* ============================================
+   HDL Debugger Panel Styles
+   ============================================ */
+
+.hdl-debugger-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #1a1a2e;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.debugger-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #0f3460;
+    border-bottom: 1px solid #1a4a7a;
+    flex-wrap: wrap;
+}
+
+.debugger-toolbar button {
+    padding: 6px 12px;
+    font-size: 12px;
+    background: #16213e;
+    border: 1px solid #1a4a7a;
+    color: #e0e0e0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.debugger-toolbar button:hover {
+    background: #1a5a8a;
+    border-color: #2a6a9a;
+}
+
+.debugger-toolbar button:active {
+    transform: scale(0.95);
+}
+
+.debugger-toolbar .btn-step {
+    background: #1a5a2a;
+    border-color: #2a7a3a;
+}
+
+.debugger-toolbar .btn-step:hover {
+    background: #2a7a3a;
+}
+
+.debugger-toolbar .btn-run {
+    background: #1a4a7a;
+    border-color: #2a5a8a;
+}
+
+.debugger-toolbar .btn-run:hover {
+    background: #2a6a9a;
+}
+
+.debugger-toolbar .btn-reset {
+    background: #5a2a2a;
+    border-color: #7a3a3a;
+}
+
+.debugger-toolbar .btn-reset:hover {
+    background: #7a3a3a;
+}
+
+.debugger-toolbar .cycle-counter {
+    padding: 6px 12px;
+    background: #0a1628;
+    border-radius: 4px;
+    color: #00bfff;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.debugger-toolbar select {
+    padding: 6px 8px;
+    font-size: 11px;
+    background: #0a1628;
+    border: 1px solid #1a4a7a;
+    color: #e0e0e0;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.debugger-toolbar select:hover {
+    border-color: #2a6a9a;
+}
+
+.debugger-waveform {
+    flex: 1;
+    min-height: 200px;
+    background: #1a1a2e;
+}
+
+.debugger-waveform canvas {
+    display: block;
+}
+
+.debugger-status {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-family: monospace;
+    color: #888;
+    background: #0a1628;
+    border-top: 1px solid #1a4a7a;
+    min-height: 20px;
+}
+
+.debugger-status.breakpoint {
+    color: #ff6b6b;
+    background: #2a1a1a;
+    border-top-color: #5a3a3a;
+}
+
+/* Signal list for breakpoint configuration */
+.debugger-signals {
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 8px;
+    background: #12203a;
+    border-top: 1px solid #1a4a7a;
+}
+
+.debugger-signal-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-family: monospace;
+    color: #ccc;
+    border-radius: 3px;
+}
+
+.debugger-signal-item:hover {
+    background: #1a3a5a;
+}
+
+.debugger-signal-item input[type="checkbox"] {
+    accent-color: #00bfff;
+}
+
+.debugger-signal-item .signal-type {
+    font-size: 9px;
+    padding: 2px 4px;
+    border-radius: 2px;
+    text-transform: uppercase;
+}
+
+.debugger-signal-item .signal-type.input {
+    background: #1a5a2a;
+    color: #5cb85c;
+}
+
+.debugger-signal-item .signal-type.output {
+    background: #5a4a1a;
+    color: #f0ad4e;
+}
+
+.debugger-signal-item .signal-type.internal {
+    background: #3a3a5a;
+    color: #888;
+}

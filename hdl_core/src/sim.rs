@@ -70,6 +70,30 @@ impl Simulator {
         Ok(self.netlist.signals[id].value.clone())
     }
 
+    /// Returns all signal names in the circuit
+    pub fn signal_names(&self) -> Vec<String> {
+        self.netlist.signals.iter().map(|s| s.name.clone()).collect()
+    }
+
+    /// Returns all signal values as (name, value) pairs
+    pub fn dump_signals(&self) -> Vec<(String, BitVec)> {
+        self.netlist
+            .signals
+            .iter()
+            .map(|s| (s.name.clone(), s.value.clone()))
+            .collect()
+    }
+
+    /// Returns signal metadata: (width, is_input, is_output)
+    pub fn signal_info(&self, name: &str) -> Option<(usize, bool, bool)> {
+        use crate::ast::Direction;
+        let id = self.netlist.name_to_id.get(name).copied()?;
+        let sig = &self.netlist.signals[id];
+        let is_input = matches!(sig.port_dir, Some(Direction::In));
+        let is_output = matches!(sig.port_dir, Some(Direction::Out));
+        Some((sig.width, is_input, is_output))
+    }
+
     pub fn eval_comb(&mut self) -> Result<(), Error> {
         for _ in 0..self.max_comb_iters {
             let mut changed = false;

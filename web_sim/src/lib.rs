@@ -56,6 +56,29 @@ impl HdlSession {
         Ok(format_value(&v))
     }
 
+    /// Returns all signal names in the circuit
+    pub fn signal_names(&self) -> Result<Vec<String>, String> {
+        let sim = self.sim.as_ref().ok_or("simulator not loaded")?;
+        Ok(sim.signal_names())
+    }
+
+    /// Returns all signal values as JSON object
+    pub fn dump_signals(&self) -> Result<Vec<(String, String)>, String> {
+        let sim = self.sim.as_ref().ok_or("simulator not loaded")?;
+        Ok(sim
+            .dump_signals()
+            .into_iter()
+            .map(|(name, bits)| (name, format_value(&bits)))
+            .collect())
+    }
+
+    /// Returns signal metadata: (width, is_input, is_output)
+    pub fn signal_info(&self, name: &str) -> Result<(usize, bool, bool), String> {
+        let sim = self.sim.as_ref().ok_or("simulator not loaded")?;
+        sim.signal_info(name)
+            .ok_or_else(|| format!("unknown signal {}", name))
+    }
+
     pub fn eval(&mut self) -> Result<(), String> {
         let sim = self.sim.as_mut().ok_or("simulator not loaded")?;
         sim.eval_comb().map_err(|e| e.to_string())
@@ -336,6 +359,37 @@ mod wasm_api {
 
         pub fn get_signal(&self, name: &str) -> Result<String, JsValue> {
             self.inner.get_signal(name).map_err(js_err)
+        }
+
+        /// Get all signal names as JSON array
+        pub fn list_signals(&self) -> Result<String, JsValue> {
+            let names = self.inner.signal_names().map_err(js_err)?;
+            serde_json_wasm::to_string(&names)
+                .map_err(|e| js_err(format!("JSON error: {}", e)))
+        }
+
+        /// Get all signal values as JSON object { name: value, ... }
+        pub fn dump_signals(&self) -> Result<String, JsValue> {
+            let signals = self.inner.dump_signals().map_err(js_err)?;
+            let mut json = String::from("{");
+            for (i, (name, value)) in signals.iter().enumerate() {
+                if i > 0 {
+                    json.push(',');
+                }
+                json.push_str(&format!(r#""{}":{}"#, name,
+                    serde_json_wasm::to_string(value).unwrap_or_else(|_| format!("\"{}\"", value))));
+            }
+            json.push('}');
+            Ok(json)
+        }
+
+        /// Get signal info as JSON: { width, is_input, is_output }
+        pub fn get_signal_info(&self, name: &str) -> Result<String, JsValue> {
+            let (width, is_input, is_output) = self.inner.signal_info(name).map_err(js_err)?;
+            Ok(format!(
+                r#"{{"width":{},"is_input":{},"is_output":{}}}"#,
+                width, is_input, is_output
+            ))
         }
 
         pub fn eval(&mut self) -> Result<(), JsValue> {
