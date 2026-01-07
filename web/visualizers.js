@@ -223,6 +223,7 @@ export class VisualizerManager {
         if (this.visualizers.waveform && signals) {
             try {
                 this.visualizers.waveform.capture(signals);
+                this.visualizers.waveform.scrollToCurrent();
                 this.visualizers.waveform.render();
             } catch (e) {
                 console.warn('Waveform visualizer update error:', e);
