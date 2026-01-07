@@ -275,11 +275,14 @@ function updateModeSpecificUI() {
         screenWrapper.style.display = 'none';
         registersSection.style.display = 'none';
         if (hdlSignalsSection) hdlSignalsSection.style.display = 'block';
-        // Show HDL debugger for HDL mode
+        // Show chronogram for HDL mode
         if (visualizersSection) {
             visualizersSection.style.display = 'block';
-            // Switch to HDL debugger panel
-            switchVisualizerPanel('hdl-debugger');
+            // Switch to waveform tab for HDL mode (chronogram is more useful)
+            document.querySelectorAll('.viz-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('.viz-tab[data-viz="waveform"]')?.classList.add('active');
+            document.querySelectorAll('.viz-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('waveform-visualizer')?.classList.add('active');
         }
     } else {
         // Remove HDL mode class
@@ -292,8 +295,11 @@ function updateModeSpecificUI() {
         // Show memory visualizer for ASM/C
         if (visualizersSection) {
             visualizersSection.style.display = 'block';
-            // Switch to memory panel
-            switchVisualizerPanel('memory');
+            // Switch to memory tab for ASM/C mode
+            document.querySelectorAll('.viz-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('.viz-tab[data-viz="memory"]')?.classList.add('active');
+            document.querySelectorAll('.viz-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('memory-visualizer')?.classList.add('active');
         }
     }
 
@@ -461,43 +467,6 @@ function updateVisualizers() {
         } catch (e) {
             console.warn('Visualizer update error:', e);
         }
-    }
-}
-
-/**
- * Switch to a specific visualizer panel
- */
-function switchVisualizerPanel(vizType) {
-    // Update dropdown value
-    const vizSelector = document.getElementById('viz-selector');
-    if (vizSelector && vizSelector.value !== vizType) {
-        vizSelector.value = vizType;
-    }
-
-    // Update panel states
-    document.querySelectorAll('.viz-panel').forEach(p => p.classList.remove('active'));
-
-    // Map vizType to panel id
-    let panelId;
-    if (vizType === 'hdl-debugger') {
-        panelId = 'hdl-debugger-panel';
-    } else {
-        panelId = `${vizType}-visualizer`;
-    }
-
-    const panel = document.getElementById(panelId);
-    if (panel) {
-        panel.classList.add('active');
-    }
-
-    // Trigger render for the newly visible panel
-    if (state.visualizers) {
-        state.visualizers.renderAll();
-    }
-
-    // Initialize HDL debugger if switching to it
-    if (vizType === 'hdl-debugger') {
-        initHdlDebuggerIfNeeded();
     }
 }
 
@@ -3808,14 +3777,38 @@ function setupEventListeners() {
         updateMemory(addr);
     });
 
-    // Visualizer dropdown
-    const vizSelector = document.getElementById('viz-selector');
-    if (vizSelector) {
-        vizSelector.addEventListener('change', () => {
-            const vizType = vizSelector.value;
-            switchVisualizerPanel(vizType);
+    // Visualizer tabs
+    document.querySelectorAll('.viz-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const vizType = tab.dataset.viz;
+
+            // Update tab states
+            document.querySelectorAll('.viz-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            // Update panel states
+            document.querySelectorAll('.viz-panel').forEach(p => p.classList.remove('active'));
+
+            // Map vizType to panel id
+            let panelId;
+            if (vizType === 'hdl-debugger') {
+                panelId = 'hdl-debugger-panel';
+            } else {
+                panelId = `${vizType}-visualizer`;
+            }
+            document.getElementById(panelId)?.classList.add('active');
+
+            // Trigger render for the newly visible panel
+            if (state.visualizers) {
+                state.visualizers.renderAll();
+            }
+
+            // Initialize HDL debugger if switching to it
+            if (vizType === 'hdl-debugger') {
+                initHdlDebuggerIfNeeded();
+            }
         });
-    }
+    });
 
     // Keyboard capture
     setupKeyboardCapture();

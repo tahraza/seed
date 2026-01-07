@@ -36,46 +36,38 @@
 .visualizer-tabs {
     display: flex;
     gap: 2px;
-    padding: 8px;
+    padding: 0 8px;
     background: #0f3460;
     border-bottom: 1px solid #1a1a2e;
 }
 
-.viz-select {
+.viz-tab {
     padding: 6px 12px;
-    background: #1a1a2e;
-    border: 1px solid #333;
-    border-radius: 4px;
-    color: #e0e0e0;
+    background: transparent;
+    border: none;
+    color: #888;
     cursor: pointer;
-    font-size: 12px;
-    min-width: 150px;
+    font-size: 11px;
+    border-bottom: 2px solid transparent;
     transition: all 0.2s;
 }
 
-.viz-select:hover {
-    border-color: #4a90d9;
+.viz-tab:hover {
+    color: #ccc;
 }
 
-.viz-select:focus {
-    outline: none;
-    border-color: #4a90d9;
-    box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.2);
+.viz-tab.active {
+    color: #4a90d9;
+    border-bottom-color: #4a90d9;
 }
 
-.viz-select option {
-    background: #1a1a2e;
-    color: #e0e0e0;
-    padding: 8px;
-}
-
-/* Hide HDL option when not in HDL mode */
-.hdl-only-option {
+/* Hide HDL-only tabs when not in HDL mode */
+.viz-tab.hdl-only {
     display: none;
 }
 
-body.mode-hdl .hdl-only-option {
-    display: block;
+body.mode-hdl .viz-tab.hdl-only {
+    display: inline-block;
 }
 
 .visualizer-panels {
