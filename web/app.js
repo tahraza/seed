@@ -363,7 +363,8 @@ async function initSimulator() {
     initVisualizers();
 
     // Try to load the WASM module dynamically
-    const wasmPath = './pkg/web_sim.js';
+    // Use absolute path from site root to work in both dev and production
+    const wasmPath = new URL('/pkg/web_sim.js', window.location.origin).href;
 
     try {
         const response = await fetch(wasmPath, { method: 'HEAD' }).catch(() => null);
