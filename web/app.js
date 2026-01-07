@@ -965,31 +965,20 @@ function updateHdlOutputs() {
         }
     });
 
-    // Also update inputs display (in case they changed)
+    // Capture inputs from UI (don't overwrite user's selection!)
     const inputsList = document.getElementById('hdl-inputs-list');
     if (inputsList) {
-        // Capture single-bit inputs (toggle buttons)
+        // Capture single-bit inputs from toggle buttons (read UI state, not simulator)
         inputsList.querySelectorAll('.signal-toggle').forEach(el => {
             const name = el.dataset.signal;
-            try {
-                const value = state.hdlSim.get_signal(name);
-                el.dataset.value = value;
-                el.classList.toggle('active', value === '1' || value === 1);
-                signalValues[name] = value;
-            } catch (e) {}
+            const value = el.dataset.value || '0';
+            signalValues[name] = value;
         });
 
-        // Capture multi-bit inputs (text inputs)
+        // Capture multi-bit inputs from text inputs (read UI state, not simulator)
         inputsList.querySelectorAll('.signal-input').forEach(el => {
             const name = el.dataset.signal;
-            try {
-                const value = state.hdlSim.get_signal(name);
-                // Don't overwrite if user is editing
-                if (document.activeElement !== el) {
-                    el.value = value;
-                }
-                signalValues[name] = value;
-            } catch (e) {}
+            signalValues[name] = el.value || '0';
         });
     }
 
@@ -1170,6 +1159,24 @@ async function step() {
                 return;
             }
 
+            // Apply all current input values to the simulator before evaluation
+            function applyInputValues() {
+                document.querySelectorAll('#hdl-inputs-list .signal-toggle').forEach(toggle => {
+                    const name = toggle.dataset.signal;
+                    const value = toggle.dataset.value || '0';
+                    try {
+                        state.hdlSim.set_signal(name, value);
+                    } catch (e) {}
+                });
+                document.querySelectorAll('#hdl-inputs-list .signal-input').forEach(input => {
+                    const name = input.dataset.signal;
+                    const value = input.value || '0';
+                    try {
+                        state.hdlSim.set_signal(name, value);
+                    } catch (e) {}
+                });
+            }
+
             // Helper to save current input values before assemble() resets them
             function saveInputValues() {
                 const saved = {};
@@ -1201,6 +1208,9 @@ async function step() {
                 }
             }
 
+            // Apply current input values before evaluation
+            applyInputValues();
+
             // Try tick/tock for sequential chips, fall back to eval for combinational
             try {
                 state.hdlSim.tick();
@@ -1219,6 +1229,7 @@ async function step() {
                             const savedInputs = saveInputValues();
                             await assemble();
                             restoreInputValues(savedInputs);
+                            applyInputValues();
                             state.hdlSim.eval();
                             log('HDL: eval', 'info');
                         } else {
@@ -1231,6 +1242,7 @@ async function step() {
                     const savedInputs = saveInputValues();
                     await assemble();
                     restoreInputValues(savedInputs);
+                    applyInputValues();
                     // Try again
                     try {
                         state.hdlSim.eval();
