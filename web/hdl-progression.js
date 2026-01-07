@@ -4064,6 +4064,16 @@ end architecture;
         solution: `-- A32-Lite CPU
 -- Simple 16-bit RISC processor
 -- Instruction format: [15:12]=opcode, [11:8]=rd, [7:4]=rs1, [3:0]=rs2/imm
+--
+-- Opcodes:
+--   0x0 = ADD rd, rs1, rs2    (rd = rs1 + rs2)
+--   0x1 = SUB rd, rs1, rs2    (rd = rs1 - rs2)
+--   0x2 = AND rd, rs1, rs2    (rd = rs1 & rs2)
+--   0x3 = OR  rd, rs1, rs2    (rd = rs1 | rs2)
+--   0x4 = LOAD rd, [rs1]      (rd = MEM[rs1])
+--   0x5 = STORE [rs1], rs2    (MEM[rs1] = rs2)
+--   0x6 = MOVI rd, #imm8      (rd = imm8)  ** NEW **
+--   0x8+ = BRANCH             (conditional)
 
 entity CPU is
   port(
@@ -4097,21 +4107,31 @@ architecture rtl of CPU is
   component Mux16
     port(a,b : in bits(15 downto 0); sel : in bit; y : out bits(15 downto 0));
   end component;
+  component Inv
+    port(a : in bit; y : out bit);
+  end component;
+  component And2
+    port(a, b : in bit; y : out bit);
+  end component;
+  component Or2
+    port(a, b : in bit; y : out bit);
+  end component;
 
   -- Instruction decode
   signal opcode, rd, rs1, rs2 : bits(3 downto 0);
   -- Control signals
   signal alu_op : bits(1 downto 0);
-  signal reg_write, mem_rd, mem_wr, pc_src : bit;
+  signal reg_write_ctrl, mem_rd, mem_wr, pc_src : bit;
+  signal reg_write_final : bit;
   -- Datapath signals
   signal pc_val, branch_target : bits(15 downto 0);
   signal reg_data1, reg_data2, alu_result : bits(15 downto 0);
-  signal write_data : bits(15 downto 0);
+  signal write_data, write_data_alu_mem : bits(15 downto 0);
+  signal immediate : bits(15 downto 0);
   signal zero_flag, neg_flag : bit;
   signal not_reset : bit;
-  component Inv
-    port(a : in bit; y : out bit);
-  end component;
+  -- MOVI detection: opcode = 0110
+  signal is_movi, not_op3, not_op0, movi_t1, movi_t2 : bit;
 begin
   -- Instruction decode using slices
   opcode <= instr(15 downto 12);
@@ -4119,17 +4139,30 @@ begin
   rs1 <= instr(7 downto 4);
   rs2 <= instr(3 downto 0);
 
+  -- Immediate value for MOVI (zero-extended 8-bit)
+  immediate <= x"00" & instr(7 downto 0);
+
+  -- Detect MOVI: opcode = 0110 (0x6)
+  inv_op3: Inv port map (a => opcode(3), y => not_op3);
+  inv_op0: Inv port map (a => opcode(0), y => not_op0);
+  movi_a1: And2 port map (a => not_op3, b => opcode(2), y => movi_t1);
+  movi_a2: And2 port map (a => opcode(1), b => not_op0, y => movi_t2);
+  movi_a3: And2 port map (a => movi_t1, b => movi_t2, y => is_movi);
+
   -- Control unit
   u_ctrl: Control port map (
     clk => clk, opcode => opcode, cond => rs2,
     zero => zero_flag, neg => neg_flag,
-    alu_op => alu_op, reg_write => reg_write,
+    alu_op => alu_op, reg_write => reg_write_ctrl,
     mem_read => mem_rd, mem_write => mem_wr, pc_src => pc_src
   );
 
+  -- reg_write = reg_write_ctrl OR is_movi
+  u_reg_or: Or2 port map (a => reg_write_ctrl, b => is_movi, y => reg_write_final);
+
   -- Register file
   u_regs: RegFile port map (
-    clk => clk, we => reg_write,
+    clk => clk, we => reg_write_final,
     waddr => rd, raddr1 => rs1, raddr2 => rs2,
     wdata => write_data, rdata1 => reg_data1, rdata2 => reg_data2
   );
@@ -4140,9 +4173,14 @@ begin
     y => alu_result, zero => zero_flag, neg => neg_flag
   );
 
-  -- Write back mux (ALU result or memory)
-  u_wb_mux: Mux16 port map (
-    a => alu_result, b => mem_in, sel => mem_rd, y => write_data
+  -- Write back mux 1 (ALU result or memory)
+  u_wb_mux1: Mux16 port map (
+    a => alu_result, b => mem_in, sel => mem_rd, y => write_data_alu_mem
+  );
+
+  -- Write back mux 2 (ALU/MEM or immediate for MOVI)
+  u_wb_mux2: Mux16 port map (
+    a => write_data_alu_mem, b => immediate, sel => is_movi, y => write_data
   );
 
   -- Program counter
@@ -4225,6 +4263,22 @@ tock
 // Test OR instruction
 // OR r6, r4, r3 (0x3643: opcode=3, rd=6, rs1=4, rs2=3)
 set instr 0x3643
+tick
+tock
+
+// Test MOVI instruction - opcode 0x6
+// MOVI r7, #42 (0x672A: opcode=6, rd=7, imm8=42)
+set instr 0x672A
+tick
+tock
+
+// MOVI r8, #255 (0x68FF: opcode=6, rd=8, imm8=255)
+set instr 0x68FF
+tick
+tock
+
+// ADD r9, r7, r8 (0x0978: should be 42+255=297=0x129)
+set instr 0x0978
 tick
 tock`,
     },
@@ -5452,78 +5506,89 @@ end architecture;
 // 🎮 CAPSTONE: L'Ordinateur Complet en Action !
 // =====================================================
 //
-// Ce test démontre le cycle FETCH-EXECUTE complet :
+// Ce test démontre le cycle FETCH-EXECUTE complet.
+// C'est EXACTEMENT comme une Game Boy avec sa cartouche !
 //
 //   ┌──────────────────────────────────────────────────┐
-//   │  Le Flux de Compilation (comme la Game Boy!)    │
+//   │  🎮 CARTOUCHE (ROM) → CONSOLE (CPU) → MEMOIRE   │
 //   │                                                  │
-//   │   Code C          Assembleur        ROM          │
-//   │   snake.c   →    snake.a32    →   snake.bin    │
-//   │                                      │          │
-//   │   "Programme"    "Instructions"   "Cartouche"  │
-//   │                                      │          │
-//   │                                      ▼          │
-//   │                              ┌─────────────┐    │
-//   │                              │  Computer   │    │
-//   │                              │ ROM → CPU → RAM  │
-//   │                              └─────────────┘    │
+//   │   Programme en C:        Code Machine (ROM):    │
+//   │                                                  │
+//   │   int main() {           0x610A  // MOVI R1,10  │
+//   │     int a = 10;          0x6220  // MOVI R2,32  │
+//   │     int b = 32;          0x0312  // ADD R3,R1,R2│
+//   │     int c = a + b;       0x5030  // STORE [0],R3│
+//   │     RAM[0] = c;                                 │
+//   │     return c; // 42 !    Résultat: RAM[0] = 42  │
+//   │   }                                             │
 //   └──────────────────────────────────────────────────┘
 //
 // Format d'instruction A32-Lite (16 bits):
-//   [15:12] = opcode   (0=ADD, 1=SUB, 2=AND, 3=OR, 4=LOAD, 5=STORE)
-//   [11:8]  = rd       (registre destination)
-//   [7:4]   = rs1      (registre source 1)
-//   [3:0]   = rs2      (registre source 2)
+//   [15:12] = opcode
+//   [11:8]  = rd (registre destination)
+//   [7:0]   = rs1/rs2 ou imm8 (pour MOVI)
 //
-// Programme exemple: Additionner les valeurs en RAM[0] et RAM[1]
-// puis stocker le résultat en RAM[2]
-//
-//   Addr  | Hex    | Instruction           | Commentaire
-//   ------|--------|----------------------|------------------
-//   0x00  | 0x4100 | LOAD R1, [R0]        | R1 = RAM[0]
-//   0x01  | 0x0002 | ADD R0, R0, R2       | (NOP - prépare R0)
-//   0x02  | 0x0001 | ADD R0, R0, R1       | (avance PC)
-//   ...
-//
-// Note: Le vrai jeu Snake (snake.c) tourne sur c32_runner
-// qui émule le processeur A32 complet (32 bits).
-// Ici on démontre le principe avec notre CPU simplifié.
+// Opcodes:
+//   0x0 = ADD   rd = rs1 + rs2
+//   0x1 = SUB   rd = rs1 - rs2
+//   0x4 = LOAD  rd = RAM[rs1]
+//   0x5 = STORE RAM[rs1] = rs2
+//   0x6 = MOVI  rd = imm8  (charge constante!)
 // =====================================================
 
 load Computer
 
-// Charger un mini-programme dans la ROM
-// Instructions: quelques opérations ALU simples
-romload 0x0100 0x0211 0x0322 0x0433
+// =====================================================
+// Charger le programme dans la ROM (la "cartouche")
+// =====================================================
+// Addr | Hex    | Assembleur      | C équivalent
+// -----|--------|-----------------|---------------
+// 0x00 | 0x610A | MOVI R1, #10    | int a = 10;
+// 0x01 | 0x6220 | MOVI R2, #32    | int b = 32;
+// 0x02 | 0x0312 | ADD  R3, R1, R2 | int c = a + b;
+// 0x03 | 0x5030 | STORE [R0], R3  | RAM[0] = c;
+// =====================================================
+romload 0x610A 0x6220 0x0312 0x5030
 
-// Reset du Computer
+// Reset du Computer (comme appuyer sur Power)
 set reset 1
 tick
 tock
 set reset 0
 
-// Cycle 1: Fetch instruction 0x0100, Execute
-// ADD R1, R0, R0 (R1 = 0 + 0 = 0)
+// =====================================================
+// Exécution du programme - cycle par cycle
+// =====================================================
+
+// Cycle 1: MOVI R1, #10
+// CPU lit ROM[0]=0x610A, décode MOVI, R1 <- 10
 tick
 tock
 
-// Cycle 2: Fetch instruction 0x0211, Execute
-// ADD R2, R1, R1 (R2 = R1 + R1)
+// Cycle 2: MOVI R2, #32
+// CPU lit ROM[1]=0x6220, décode MOVI, R2 <- 32
 tick
 tock
 
-// Cycle 3: Fetch instruction 0x0322, Execute
-// ADD R3, R2, R2 (R3 = R2 + R2)
+// Cycle 3: ADD R3, R1, R2
+// CPU lit ROM[2]=0x0312, décode ADD, R3 <- R1 + R2 = 42
 tick
 tock
 
-// Cycle 4: Fetch instruction 0x0433, Execute
-// ADD R4, R3, R3 (R4 = R3 + R3)
+// Cycle 4: STORE [R0], R3
+// CPU lit ROM[3]=0x5030, écrit R3 (42) dans RAM[0]
 tick
 tock
 
-// Le Computer a exécuté 4 instructions automatiquement !
-// C'est le cycle fetch-execute en action.
+// =====================================================
+// 🎉 Le programme a calculé 10 + 32 = 42 !
+// Le résultat est maintenant stocké en RAM[0]
+//
+// C'est exactement ce qui se passe quand vous:
+// 1. Insérez une cartouche Game Boy (= romload)
+// 2. Appuyez sur Power (= reset)
+// 3. Le jeu s'exécute ! (= cycles tick/tock)
+// =====================================================
 `,
     },
 };

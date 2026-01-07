@@ -99,6 +99,13 @@ impl HdlSession {
             .map_err(|e| e.to_string())?;
         sim.tock().map_err(|e| e.to_string())
     }
+
+    /// Load hex data into ROM at given index
+    /// hex_data is space-separated hex values like "0x1234 0x5678"
+    pub fn load_rom(&mut self, rom_index: usize, hex_data: &str) -> Result<(), String> {
+        let sim = self.sim.as_mut().ok_or("simulator not loaded")?;
+        sim.load_rom_hex(rom_index, hex_data).map_err(|e| e.to_string())
+    }
 }
 
 pub struct A32Session {
@@ -402,6 +409,12 @@ mod wasm_api {
 
         pub fn tock(&mut self) -> Result<(), JsValue> {
             self.inner.tock().map_err(js_err)
+        }
+
+        /// Load hex data into ROM
+        /// hex_data is space-separated hex values like "0x1234 0x5678"
+        pub fn load_rom(&mut self, rom_index: usize, hex_data: &str) -> Result<(), JsValue> {
+            self.inner.load_rom(rom_index, hex_data).map_err(js_err)
         }
 
         /// Run a test script against HDL source
