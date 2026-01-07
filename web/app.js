@@ -993,9 +993,29 @@ function updateHdlOutputs() {
 }
 
 function updateRegisters() {
-    // Note: The current WASM API doesn't expose individual register values
-    // Registers display shows placeholder values
-    // TODO: Add get_registers() to WasmA32 API
+    if (!state.asmSim) return;
+
+    // Update all 16 registers (R0-R15)
+    for (let i = 0; i < CONFIG.NUM_REGISTERS; i++) {
+        const regEl = document.getElementById(`reg-${i}`);
+        if (regEl) {
+            try {
+                const val = state.asmSim.reg(i);
+                regEl.textContent = `0x${val.toString(16).toUpperCase().padStart(8, '0')}`;
+            } catch (e) {
+                // Ignore errors for registers that don't exist
+            }
+        }
+    }
+
+    // Also update PC and SP if displayed separately
+    const pcEl = document.getElementById('reg-pc');
+    if (pcEl) {
+        try {
+            const pc = state.asmSim.pc();
+            pcEl.textContent = `0x${pc.toString(16).toUpperCase().padStart(8, '0')}`;
+        } catch (e) {}
+    }
 }
 
 function updateMemory(baseAddr) {
