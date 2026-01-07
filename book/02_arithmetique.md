@@ -506,6 +506,30 @@ Les multiplicateurs modernes utilisent des techniques avancées :
 
 Notre implémentation pédagogique utilise l'approche simple des produits partiels avec addition en arbre ripple-carry.
 
+### Pourquoi MUL n'est pas dans l'ALU ?
+
+Dans notre architecture A32, la multiplication est une **instruction séparée** (classe 101) et non une opération de l'ALU. Ce choix reflète la réalité des processeurs modernes :
+
+| Aspect | ALU (ADD, SUB, AND...) | Multiplicateur (MUL) |
+|--------|------------------------|----------------------|
+| **Complexité** | 1 additionneur 32-bits | 31 additionneurs 32-bits |
+| **Portes logiques** | ~1000 portes | ~30,000 portes |
+| **Latence** | 1 cycle | 3-5 cycles |
+| **Pipeline** | Exécution simple | Souvent pipeliné en interne |
+
+**Conséquences architecturales :**
+
+1. **Unité séparée** : Les vrais CPU (ARM Cortex-M, x86) ont une unité MAC (Multiply-Accumulate) dédiée
+2. **Scheduling** : Le compilateur doit tenir compte de la latence de MUL
+3. **Optimisation** : Parfois `a * 8` est remplacé par `a << 3` (décalage, 1 cycle)
+
+**Dans notre simulateur :**
+- L'instruction `MUL Rd, Rn, Rm` utilise la classe d'instruction 101
+- Elle est décodée et exécutée séparément des opérations ALU (classe 000/001)
+- Le résultat est tronqué à 32 bits (pas de résultat 64 bits comme ARM)
+
+Cette séparation illustre un principe fondamental : **toutes les opérations arithmétiques ne sont pas égales** en termes de coût matériel.
+
 ---
 
 ## Architecture de l'ALU

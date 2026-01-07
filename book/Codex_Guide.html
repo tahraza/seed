@@ -660,6 +660,10 @@ class="toc-section-number">4.9.6</span> Extension à 32 bits
 id="toc-optimisations-dans-les-vrais-processeurs"><span
 class="toc-section-number">4.9.7</span> Optimisations dans les Vrais
 Processeurs</a></li>
+<li><a href="#pourquoi-mul-nest-pas-dans-lalu"
+id="toc-pourquoi-mul-nest-pas-dans-lalu"><span
+class="toc-section-number">4.9.8</span> Pourquoi MUL n’est pas dans
+l’ALU ?</a></li>
 </ul></li>
 <li><a href="#architecture-de-lalu" id="toc-architecture-de-lalu"><span
 class="toc-section-number">4.10</span> Architecture de l’ALU</a></li>
@@ -4994,6 +4998,60 @@ Processeurs</h3>
 </table>
 <p>Notre implémentation pédagogique utilise l’approche simple des
 produits partiels avec addition en arbre ripple-carry.</p>
+<h3 data-number="4.9.8" id="pourquoi-mul-nest-pas-dans-lalu"><span
+class="header-section-number">4.9.8</span> Pourquoi MUL n’est pas dans
+l’ALU ?</h3>
+<p>Dans notre architecture A32, la multiplication est une
+<strong>instruction séparée</strong> (classe 101) et non une opération
+de l’ALU. Ce choix reflète la réalité des processeurs modernes :</p>
+<table>
+<thead>
+<tr class="header">
+<th>Aspect</th>
+<th>ALU (ADD, SUB, AND…)</th>
+<th>Multiplicateur (MUL)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Complexité</strong></td>
+<td>1 additionneur 32-bits</td>
+<td>31 additionneurs 32-bits</td>
+</tr>
+<tr class="even">
+<td><strong>Portes logiques</strong></td>
+<td>~1000 portes</td>
+<td>~30,000 portes</td>
+</tr>
+<tr class="odd">
+<td><strong>Latence</strong></td>
+<td>1 cycle</td>
+<td>3-5 cycles</td>
+</tr>
+<tr class="even">
+<td><strong>Pipeline</strong></td>
+<td>Exécution simple</td>
+<td>Souvent pipeliné en interne</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conséquences architecturales :</strong></p>
+<ol type="1">
+<li><strong>Unité séparée</strong> : Les vrais CPU (ARM Cortex-M, x86)
+ont une unité MAC (Multiply-Accumulate) dédiée</li>
+<li><strong>Scheduling</strong> : Le compilateur doit tenir compte de la
+latence de MUL</li>
+<li><strong>Optimisation</strong> : Parfois <code>a * 8</code> est
+remplacé par <code>a &lt;&lt; 3</code> (décalage, 1 cycle)</li>
+</ol>
+<p><strong>Dans notre simulateur :</strong> - L’instruction
+<code>MUL Rd, Rn, Rm</code> utilise la classe d’instruction 101 - Elle
+est décodée et exécutée séparément des opérations ALU (classe 000/001) -
+Le résultat est tronqué à 32 bits (pas de résultat 64 bits comme
+ARM)</p>
+<p>Cette séparation illustre un principe fondamental : <strong>toutes
+les opérations arithmétiques ne sont pas égales</strong> en termes de
+coût matériel.</p>
 <hr />
 <h2 data-number="4.10" id="architecture-de-lalu"><span
 class="header-section-number">4.10</span> Architecture de l’ALU</h2>
