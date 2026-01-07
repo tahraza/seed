@@ -48,6 +48,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         visualizer: resolve(__dirname, 'visualizer.html'),
+        guide: resolve(__dirname, 'guide.html'),
       },
     },
   },
