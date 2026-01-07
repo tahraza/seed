@@ -949,12 +949,16 @@ function updateHdlOutputs() {
     const outputsList = document.getElementById('hdl-outputs-list');
     if (!outputsList) return;
 
+    // Collect all signal values for waveform
+    const signalValues = {};
+
     outputsList.querySelectorAll('.signal-value').forEach(el => {
         const name = el.dataset.signal;
         try {
             const value = state.hdlSim.get_signal(name);
             el.textContent = value;
             el.classList.remove('error');
+            signalValues[name] = value;
         } catch (e) {
             el.textContent = '?';
             el.classList.add('error');
@@ -972,8 +976,14 @@ function updateHdlOutputs() {
                 if (document.activeElement !== el) {
                     el.value = value;
                 }
+                signalValues[name] = value;
             } catch (e) {}
         });
+    }
+
+    // Update waveform visualizer with signal values
+    if (state.visualizers && Object.keys(signalValues).length > 0) {
+        state.visualizers.updateHdl(signalValues);
     }
 }
 
