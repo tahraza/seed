@@ -100,7 +100,9 @@ export class WaveformVisualizer {
                 // Déterminer la largeur du signal
                 let width = 1;
                 if (typeof value === 'string') {
-                    width = value.length;
+                    // Remove 0b prefix if present to get actual bit width
+                    const bits = value.replace(/^0b/, '');
+                    width = bits.length;
                 } else if (typeof value === 'number') {
                     width = value > 1 ? 32 : 1; // Approximation
                 }

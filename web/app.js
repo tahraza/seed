@@ -984,7 +984,6 @@ function updateHdlOutputs() {
 
     // Update waveform visualizer with signal values
     if (state.visualizers && Object.keys(signalValues).length > 0) {
-        console.log('Capturing signals for waveform:', Object.keys(signalValues));
         state.visualizers.updateHdl(signalValues);
     }
 }
@@ -1166,14 +1165,14 @@ async function step() {
                     const value = toggle.dataset.value || '0';
                     try {
                         state.hdlSim.set_signal(name, value);
-                    } catch (e) {}
+                    } catch (e) { /* ignore */ }
                 });
                 document.querySelectorAll('#hdl-inputs-list .signal-input').forEach(input => {
                     const name = input.dataset.signal;
                     const value = input.value || '0';
                     try {
                         state.hdlSim.set_signal(name, value);
-                    } catch (e) {}
+                    } catch (e) { /* ignore */ }
                 });
             }
 
