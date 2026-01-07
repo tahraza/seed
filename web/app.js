@@ -268,19 +268,39 @@ function updateModeSpecificUI() {
     const hdlSignalsSection = document.getElementById('hdl-signals');
 
     if (state.mode === 'hdl') {
+        // Add mode class to body for CSS selectors
+        document.body.classList.add('mode-hdl');
+        document.body.classList.remove('mode-asm', 'mode-c');
+
         screenWrapper.style.display = 'none';
         registersSection.style.display = 'none';
         if (hdlSignalsSection) hdlSignalsSection.style.display = 'block';
-        // Show waveform for HDL
+        // Show HDL debugger for HDL mode
         if (visualizersSection) {
             visualizersSection.style.display = 'block';
-            // Switch to waveform tab for HDL mode
+            // Switch to HDL debugger tab for HDL mode
             document.querySelectorAll('.viz-tab').forEach(t => t.classList.remove('active'));
-            document.querySelector('.viz-tab[data-viz="waveform"]')?.classList.add('active');
+            const debuggerTab = document.querySelector('.viz-tab[data-viz="hdl-debugger"]');
+            if (debuggerTab) {
+                debuggerTab.classList.add('active');
+            } else {
+                document.querySelector('.viz-tab[data-viz="waveform"]')?.classList.add('active');
+            }
             document.querySelectorAll('.viz-panel').forEach(p => p.classList.remove('active'));
-            document.getElementById('waveform-visualizer')?.classList.add('active');
+            const debuggerPanel = document.getElementById('hdl-debugger-panel');
+            if (debuggerPanel) {
+                debuggerPanel.classList.add('active');
+                // Initialize HDL debugger if not already done
+                initHdlDebuggerIfNeeded();
+            } else {
+                document.getElementById('waveform-visualizer')?.classList.add('active');
+            }
         }
     } else {
+        // Remove HDL mode class
+        document.body.classList.remove('mode-hdl');
+        document.body.classList.add(state.mode === 'asm' ? 'mode-asm' : 'mode-c');
+
         screenWrapper.style.display = 'block';
         registersSection.style.display = 'block';
         if (hdlSignalsSection) hdlSignalsSection.style.display = 'none';
@@ -458,6 +478,41 @@ function updateVisualizers() {
             state.visualizers.update();
         } catch (e) {
             console.warn('Visualizer update error:', e);
+        }
+    }
+}
+
+/**
+ * Initialize HDL debugger if not already done and HDL sim is available
+ */
+function initHdlDebuggerIfNeeded() {
+    if (!state.visualizers || !state.hdlSim) return;
+
+    // Check if already initialized
+    if (state.visualizers.getHdlDebugger()) return;
+
+    // Attach HDL simulator to visualizer manager
+    state.visualizers.attachHdlSimulator(state.hdlSim);
+
+    // Initialize the debugger panel
+    const debuggerContainer = document.getElementById('hdl-debugger-panel');
+    if (debuggerContainer) {
+        const debugger_ = state.visualizers.initHdlDebugger(debuggerContainer, {
+            onCycleChange: (cycle) => {
+                // Could update UI elements here
+            },
+            onBreakpoint: (bp) => {
+                log(`Breakpoint sur ${bp.signal} = ${bp.value} au cycle ${bp.cycle}`, 'warn');
+            }
+        });
+
+        if (debugger_) {
+            // Initialize with current circuit if loaded
+            debugger_.initialize().then(() => {
+                log('HDL Debugger initialisé', 'info');
+            }).catch(e => {
+                console.warn('HDL Debugger init error:', e);
+            });
         }
     }
 }

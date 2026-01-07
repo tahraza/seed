@@ -1896,3 +1896,37 @@ kbd {
 .hdl-outputs .signal-group-title {
     color: var(--success);
 }
+
+/* ==========================================================================
+   HDL-Only Elements - Visible uniquement en mode HDL
+   ========================================================================== */
+
+.hdl-only {
+    display: none !important;
+}
+
+body.mode-hdl .hdl-only {
+    display: flex !important;
+}
+
+body.mode-hdl .viz-tab.hdl-only {
+    display: inline-flex !important;
+}
+
+body.mode-hdl .viz-panel.hdl-only {
+    display: block !important;
+}
+
+body.mode-hdl .viz-panel.hdl-only.active {
+    display: flex !important;
+}
+
+/* HDL Debugger Panel */
+#hdl-debugger-panel {
+    flex-direction: column;
+    min-height: 300px;
+}
+
+#hdl-debugger-panel.active {
+    display: flex !important;
+}

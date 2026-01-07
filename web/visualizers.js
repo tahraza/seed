@@ -7,6 +7,7 @@ import { MemoryVisualizer, createMemoryVisualizer } from './memory-visualizer.js
 import { CallStackVisualizer, createCallStackVisualizer } from './callstack-visualizer.js';
 import { WaveformVisualizer, createWaveformVisualizer } from './waveform-visualizer.js';
 import { ALUVisualizer, createALUVisualizer } from './alu-visualizer.js';
+import { HdlDebugger, createDebuggerPanel } from './hdl-debugger.js';
 
 // Export individuel
 export {
@@ -18,6 +19,8 @@ export {
     createWaveformVisualizer,
     ALUVisualizer,
     createALUVisualizer,
+    HdlDebugger,
+    createDebuggerPanel,
 };
 
 /**
@@ -114,6 +117,47 @@ export class VisualizerManager {
             console.warn('Failed to initialize ALU visualizer:', e);
             return null;
         }
+    }
+
+    /**
+     * Initialise le debugger HDL avec waveforms
+     * @param {HTMLElement} container - Conteneur pour le debugger
+     * @param {Object} options - Options de configuration
+     * @returns {HdlDebugger|null} Instance du debugger ou null si erreur
+     */
+    initHdlDebugger(container, options = {}) {
+        if (!container || !this.hdlSim) {
+            console.warn('Cannot init HDL debugger: missing container or HDL simulator');
+            return null;
+        }
+        try {
+            const debugger_ = createDebuggerPanel(container, this.hdlSim, {
+                maxCycles: 500,
+                signalHeight: 28,
+                cycleWidth: 10,
+                onCycleChange: (cycle) => {
+                    // Mise à jour de l'interface si nécessaire
+                    if (options.onCycleChange) options.onCycleChange(cycle);
+                },
+                onBreakpoint: (bp) => {
+                    console.log('HDL Debugger breakpoint:', bp);
+                    if (options.onBreakpoint) options.onBreakpoint(bp);
+                },
+                ...options
+            });
+            this.visualizers.hdlDebugger = debugger_;
+            return debugger_;
+        } catch (e) {
+            console.warn('Failed to initialize HDL debugger:', e);
+            return null;
+        }
+    }
+
+    /**
+     * Retourne le debugger HDL s'il est initialisé
+     */
+    getHdlDebugger() {
+        return this.visualizers.hdlDebugger || null;
     }
 
     /**
