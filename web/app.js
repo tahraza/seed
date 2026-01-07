@@ -968,6 +968,18 @@ function updateHdlOutputs() {
     // Also update inputs display (in case they changed)
     const inputsList = document.getElementById('hdl-inputs-list');
     if (inputsList) {
+        // Capture single-bit inputs (toggle buttons)
+        inputsList.querySelectorAll('.signal-toggle').forEach(el => {
+            const name = el.dataset.signal;
+            try {
+                const value = state.hdlSim.get_signal(name);
+                el.dataset.value = value;
+                el.classList.toggle('active', value === '1' || value === 1);
+                signalValues[name] = value;
+            } catch (e) {}
+        });
+
+        // Capture multi-bit inputs (text inputs)
         inputsList.querySelectorAll('.signal-input').forEach(el => {
             const name = el.dataset.signal;
             try {
@@ -983,6 +995,7 @@ function updateHdlOutputs() {
 
     // Update waveform visualizer with signal values
     if (state.visualizers && Object.keys(signalValues).length > 0) {
+        console.log('Capturing signals for waveform:', Object.keys(signalValues));
         state.visualizers.updateHdl(signalValues);
     }
 }
@@ -3024,6 +3037,7 @@ function loadChip(chipName) {
     // Clear waveform when loading a new chip
     if (state.visualizers) {
         state.visualizers.clearWaveform();
+        console.log('Waveform cleared for new chip:', chipName);
     }
 
     state.currentChip = chipName;
