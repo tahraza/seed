@@ -62,9 +62,9 @@ Valeur   :   8    4    2    1
 Exemple : 1011₂ = 1×8 + 0×4 + 1×2 + 1×1 = 11₁₀
 ```
 
-### Taille des nombres dans Codex
+### Taille des nombres dans nand2c
 
-Notre ordinateur Codex travaille sur **32 bits**. Cela signifie :
+Notre ordinateur nand2c travaille sur **32 bits**. Cela signifie :
 - **Plage non-signée** : 0 à 2³² - 1 = 4 294 967 295 (≈ 4 milliards)
 - **Plage signée** : -2 147 483 648 à 2 147 483 647 (≈ ±2 milliards)
 
@@ -260,7 +260,7 @@ L'ALU est le **cœur calculatoire** du processeur. C'est elle qui effectue TOUTE
 
 Plutôt que d'avoir des circuits séparés pour l'addition, la soustraction, le AND, le OR, etc., l'ALU combine tout en un seul composant. Un signal de contrôle (`op`) lui dit quelle opération effectuer.
 
-### Interface de l'ALU Codex
+### Interface de l'ALU nand2c
 
 ![Interface de l'ALU](images/alu-interface.svg)
 

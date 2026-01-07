@@ -1,4 +1,4 @@
-# L'Architecture Codex : Guide de l'Étudiant
+# L'Architecture nand2c : Guide de l'Étudiant
 
 Ce livre vous guide pas à pas dans la construction d'un ordinateur complet, moderne et 32-bits, à partir de rien : des portes logiques jusqu'au système d'exploitation.
 
@@ -6,7 +6,7 @@ Ce livre vous guide pas à pas dans la construction d'un ordinateur complet, mod
 
 1.  **[Introduction](00_introduction.md)**
     *   La philosophie du projet.
-    *   L'architecture Codex A32.
+    *   L'architecture nand2c A32.
     *   Présentation des outils.
 
 2.  **[Chapitre 1 : Logique Booléenne](01_logique_booleenne.md)**

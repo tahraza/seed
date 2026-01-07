@@ -10,4 +10,4 @@ pub mod value;
 
 pub use error::{Error, Span};
 pub use error_messages::{ErrorCode, msg, detailed};
-pub use test_runner::{run_test, TestResult};
+pub use test_runner::{run_test, run_test_file, TestResult, TestFailure};

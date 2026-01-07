@@ -186,8 +186,6 @@ pub fn fmt_msg(code: ErrorCode, args: &[&str]) -> String {
 
 // Messages avec placeholders pour les noms
 pub mod detailed {
-    use super::*;
-
     pub fn duplicate_entity(name: &str) -> String {
         format!("[E301] L'entité '{}' est déjà définie. Chaque entité doit avoir un nom unique.", name)
     }

@@ -71,7 +71,7 @@ L'horloge est un signal qui oscille perpétuellement entre 0 et 1 à une fréque
 
 Le moment crucial est le **front montant** : le passage de 0 à 1.
 
-Dans le système Codex, les changements d'état se produisent sur le front montant. Cela signifie :
+Dans le système nand2c, les changements d'état se produisent sur le front montant. Cela signifie :
 
 - Pendant que l'horloge est à 0, les circuits combinatoires calculent
 - Quand l'horloge passe à 1, les résultats sont capturés dans les registres
@@ -165,7 +165,7 @@ Quand `load = 1`, les 32 bits sont capturés simultanément. C'est atomique.
 
 ### Le rôle des registres dans le CPU
 
-Le CPU Codex dispose de **16 registres** nommés R0 à R15 :
+Le CPU nand2c dispose de **16 registres** nommés R0 à R15 :
 
 | Registre | Rôle typique |
 |:--------:|:-------------|
@@ -275,7 +275,7 @@ Plus on monte dans la pyramide :
 - Plus c'est cher par octet
 - Plus la capacité est faible
 
-Dans le Codex, nous implémentons les registres et la RAM. Les caches et les disques sont des concepts plus avancés.
+Dans le nand2c, nous implémentons les registres et la RAM. Les caches et les disques sont des concepts plus avancés.
 
 ---
 

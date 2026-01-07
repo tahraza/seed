@@ -1,6 +1,6 @@
 # Livre des Solutions
 
-Ce document contient les solutions completes de tous les exercices du simulateur web Codex.
+Ce document contient les solutions completes de tous les exercices du simulateur web nand2c.
 
 **Note:** Ces solutions sont fournies pour reference apres avoir tente les exercices.
 

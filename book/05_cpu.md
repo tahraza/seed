@@ -18,7 +18,7 @@ Ce chapitre est le **point culminant** de tout le travail matériel. Après ce c
 
 ## Deux Implémentations du CPU
 
-Le projet Codex propose **deux implémentations** du CPU A32, chacune avec un objectif pédagogique différent :
+Le projet nand2c propose **deux implémentations** du CPU A32, chacune avec un objectif pédagogique différent :
 
 ### CPU Mono-cycle (Simulateur Rust)
 

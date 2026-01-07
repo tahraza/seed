@@ -244,7 +244,7 @@ result = add(5, 3);
 
 ## Le Compilateur C32
 
-Le compilateur C32 du projet Codex (`c32_cli`) implémente toutes ces transformations.
+Le compilateur C32 du projet nand2c (`c32_cli`) implémente toutes ces transformations.
 
 ### Utilisation
 

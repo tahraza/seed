@@ -20,7 +20,7 @@ Ce chapitre couvre :
 
 ## 1. Comprendre les Messages d'Erreur
 
-### Codes d'Erreur du Projet Codex
+### Codes d'Erreur du Projet nand2c
 
 Les outils du projet utilisent des codes d'erreur standardisés :
 

@@ -1,10 +1,10 @@
-# Référence Syntaxe HDL Codex
+# Référence Syntaxe HDL nand2c
 
-Ce document décrit la syntaxe complète du langage HDL utilisé dans le projet Codex.
+Ce document décrit la syntaxe complète du langage HDL utilisé dans le projet nand2c.
 
 ## Vue d'Ensemble
 
-Le HDL Codex est inspiré de VHDL mais simplifié pour l'apprentissage. Il supporte :
+Le HDL nand2c est inspiré de VHDL mais simplifié pour l'apprentissage. Il supporte :
 - Déclarations d'entité et d'architecture
 - Logique combinatoire (affectations concurrentes)
 - Logique séquentielle (processus synchrones)

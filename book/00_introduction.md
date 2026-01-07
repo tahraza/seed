@@ -1,6 +1,6 @@
 # Introduction
 
-Bienvenue dans le projet **Codex**. Si vous lisez ceci, c'est que vous avez l'ambition de comprendre comment fonctionnent les ordinateurs — non pas en lisant des théories abstraites, mais en en construisant un vous-même, de zéro.
+Bienvenue dans le projet **nand2c**. Si vous lisez ceci, c'est que vous avez l'ambition de comprendre comment fonctionnent les ordinateurs — non pas en lisant des théories abstraites, mais en en construisant un vous-même, de zéro.
 
 ## Le Mystère de l'Ordinateur
 
@@ -51,13 +51,13 @@ Chaque couche a une propriété remarquable : **elle n'a besoin de connaître qu
 
 Cette séparation des préoccupations est ce qui rend possible la construction de systèmes complexes.
 
-## L'Architecture Codex A32
+## L'Architecture nand2c A32
 
-L'ordinateur **Codex** est conçu pour être à la fois pédagogique et réaliste. Il s'inspire des architectures ARM modernes tout en restant accessible.
+L'ordinateur **nand2c** est conçu pour être à la fois pédagogique et réaliste. Il s'inspire des architectures ARM modernes tout en restant accessible.
 
-Comparé aux architectures pédagogiques classiques plus simples (comme Hack), Codex offre :
+Comparé aux architectures pédagogiques classiques plus simples (comme Hack), nand2c offre :
 
-| Caractéristique | Hack (Original) | Codex (Ce projet) |
+| Caractéristique | Hack (Original) | nand2c (Ce projet) |
 | :--- | :--- | :--- |
 | **Architecture** | 16-bits | **32-bits** |
 | **Registres** | 2 (A et D) | **16 (R0-R15)** style ARM |
@@ -69,7 +69,7 @@ Comparé aux architectures pédagogiques classiques plus simples (comme Hack), C
 
 1. **32 bits** : C'est la taille standard des machines modernes (avant 64 bits). Cela permet d'adresser 4 Go de mémoire et de manipuler des nombres plus grands.
 
-2. **16 registres** : Les processeurs ARM (smartphones, Raspberry Pi) utilisent aussi des registres R0-R15. Comprendre Codex, c'est comprendre ARM.
+2. **16 registres** : Les processeurs ARM (smartphones, Raspberry Pi) utilisent aussi des registres R0-R15. Comprendre nand2c, c'est comprendre ARM.
 
 3. **Architecture RISC** : Les instructions sont simples et régulières. Le CPU fait une chose à la fois, mais le fait vite.
 

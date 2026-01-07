@@ -279,11 +279,11 @@ XOR, Mux, DMux          ↓                   ↓                complet !
 - **Mux** : Tous les choix du CPU (quelle donnée ? quelle opération ?)
 - **DMux** : Adressage mémoire, routage des résultats
 
-Quand vous jouerez à un jeu sur votre ordinateur Codex au Chapitre 9, chaque pixel affiché à l'écran aura été calculé par des millions d'opérations utilisant ces portes élémentaires !
+Quand vous jouerez à un jeu sur votre ordinateur nand2c au Chapitre 9, chaque pixel affiché à l'écran aura été calculé par des millions d'opérations utilisant ces portes élémentaires !
 
 ---
 
-## Description Matérielle (Codex HDL)
+## Description Matérielle (nand2c HDL)
 
 Pour décrire nos circuits, nous utilisons un langage appelé **HDL** (Hardware Description Language). C'est un langage **déclaratif** : on décrit QUELS composants existent et COMMENT ils sont connectés, pas DANS QUEL ORDRE les exécuter.
 

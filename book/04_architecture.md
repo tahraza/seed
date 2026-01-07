@@ -38,9 +38,9 @@ C'est un **contrat** :
 - Le matériel **promet** d'exécuter les instructions comme spécifié
 - Le logiciel **s'engage** à n'utiliser que les instructions définies
 
-### Codex A32 : Une architecture RISC moderne
+### nand2c A32 : Une architecture RISC moderne
 
-L'architecture **Codex A32** est inspirée de ARM, l'architecture qui équipe la plupart des smartphones et le Raspberry Pi. Elle est :
+L'architecture **nand2c A32** est inspirée de ARM, l'architecture qui équipe la plupart des smartphones et le Raspberry Pi. Elle est :
 
 - **RISC** (Reduced Instruction Set Computer) : Instructions simples et rapides
 - **32 bits** : Registres et adresses sur 32 bits
@@ -52,7 +52,7 @@ L'architecture **Codex A32** est inspirée de ARM, l'architecture qui équipe la
 
 ### CISC vs RISC
 
-| CISC (x86, Intel) | RISC (ARM, Codex) |
+| CISC (x86, Intel) | RISC (ARM, nand2c) |
 |:------------------|:------------------|
 | Instructions complexes | Instructions simples |
 | `ADD [mem], reg` possible | Calcul uniquement entre registres |
@@ -138,13 +138,13 @@ C'est puissant mais dangereux — une erreur de calcul et le CPU saute n'importe
 
 La mémoire est un espace linéaire de 4 Go (2³² octets), mais toutes les adresses ne sont pas utilisables.
 
-### Organisation de la mémoire Codex
+### Organisation de la mémoire nand2c
 
-![Carte mémoire Codex](images/memory-map.svg)
+![Carte mémoire nand2c](images/memory-map.svg)
 
 ### Le Memory-Mapped I/O (MMIO)
 
-En Codex (comme en ARM), les périphériques sont accessibles **comme de la mémoire**. Il n'y a pas d'instructions spéciales `IN`/`OUT`.
+En nand2c (comme en ARM), les périphériques sont accessibles **comme de la mémoire**. Il n'y a pas d'instructions spéciales `IN`/`OUT`.
 
 **L'écran** :
 
@@ -180,7 +180,7 @@ Chaque instruction est encodée sur **32 bits**. La structure générale :
 
 ### Les bits de condition (31-28)
 
-**Fonctionnalité unique de ARM/Codex** : Toute instruction peut être conditionnelle !
+**Fonctionnalité unique de ARM/nand2c** : Toute instruction peut être conditionnelle !
 
 Au lieu de :
 ```asm
@@ -319,7 +319,7 @@ La pile **grandit vers le bas** (des adresses hautes vers les basses) :
 
 ### Push et Pop (manuel)
 
-Codex n'a pas d'instructions `PUSH`/`POP` natives. On les simule :
+nand2c n'a pas d'instructions `PUSH`/`POP` natives. On les simule :
 
 ```asm
 ; PUSH R0 (empiler R0)
