@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seed Course - Matériel Pédagogique</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .subtitle {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+
+        .chapters {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .chapter {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .chapter-number {
+            background: var(--primary);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .chapter-info h2 {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .chapter-info p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .chapter-links {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .chapter-links a {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-slides {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-slides:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-pdf {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        .btn-pdf:hover {
+            background: #cbd5e1;
+        }
+
+        .section-title {
+            margin: 3rem 0 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border);
+            color: var(--text-light);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tools {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .tool-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .tool-link:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        footer {
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .chapter {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .chapter-number {
+                margin: 0 auto;
+            }
+
+            .chapter-links {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Seed Course</h1>
+            <p class="subtitle">Du transistor au CPU - Matériel pédagogique</p>
+        </header>
+
+        <div class="chapters">
+            <div class="chapter">
+                <div class="chapter-number">00</div>
+                <div class="chapter-info">
+                    <h2>Introduction</h2>
+                    <p>Vue d'ensemble du cours et objectifs</p>
+                </div>
+                <div class="chapter-links">
+                    <a href="00_introduction/slides.html" class="btn-slides">Slides</a>
+                    <a href="00_introduction/slides.pdf" class="btn-pdf">PDF</a>
+                    <a href="00_introduction/td.pdf" class="btn-pdf">TD</a>
+                    <a href="00_introduction/tp.pdf" class="btn-pdf">TP</a>
+                </div>
+            </div>
+
+            <div class="chapter">
+                <div class="chapter-number">01</div>
+                <div class="chapter-info">
+                    <h2>Logique Booléenne</h2>
+                    <p>Portes logiques, NAND, tables de vérité</p>
+                </div>
+                <div class="chapter-links">
+                    <a href="01_logique_booleenne/slides.html" class="btn-slides">Slides</a>
+                    <a href="01_logique_booleenne/slides.pdf" class="btn-pdf">PDF</a>
+                    <a href="01_logique_booleenne/td.pdf" class="btn-pdf">TD</a>
+                    <a href="01_logique_booleenne/tp.pdf" class="btn-pdf">TP</a>
+                </div>
+            </div>
+
+            <div class="chapter">
+                <div class="chapter-number">02</div>
+                <div class="chapter-info">
+                    <h2>Arithmétique Binaire</h2>
+                    <p>Additionneurs, ALU, flags</p>
+                </div>
+                <div class="chapter-links">
+                    <a href="02_arithmetique/slides.html" class="btn-slides">Slides</a>
+                    <a href="02_arithmetique/slides.pdf" class="btn-pdf">PDF</a>
+                    <a href="02_arithmetique/td.pdf" class="btn-pdf">TD</a>
+                    <a href="02_arithmetique/tp.pdf" class="btn-pdf">TP</a>
+                </div>
+            </div>
+
+            <div class="chapter">
+                <div class="chapter-number">03</div>
+                <div class="chapter-info">
+                    <h2>Mémoire</h2>
+                    <p>DFF, registres, RAM, PC</p>
+                </div>
+                <div class="chapter-links">
+                    <a href="03_memoire/slides.html" class="btn-slides">Slides</a>
+                    <a href="03_memoire/slides.pdf" class="btn-pdf">PDF</a>
+                    <a href="03_memoire/td.pdf" class="btn-pdf">TD</a>
+                    <a href="03_memoire/tp.pdf" class="btn-pdf">TP</a>
+                </div>
+            </div>
+
+            <div class="chapter">
+                <div class="chapter-number">04</div>
+                <div class="chapter-info">
+                    <h2>Architecture (ISA)</h2>
+                    <p>Jeu d'instructions A32, Load/Store</p>
+                </div>
+                <div class="chapter-links">
+                    <a href="04_architecture/slides.html" class="btn-slides">Slides</a>
+                    <a href="04_architecture/slides.pdf" class="btn-pdf">PDF</a>
+                    <a href="04_architecture/td.pdf" class="btn-pdf">TD</a>
+                    <a href="04_architecture/tp.pdf" class="btn-pdf">TP</a>
+                </div>
+            </div>
+
+            <div class="chapter">
+                <div class="chapter-number">05</div>
+                <div class="chapter-info">
+                    <h2>Le Processeur (CPU)</h2>
+                    <p>Datapath, contrôle, pipeline</p>
+                </div>
+                <div class="chapter-links">
+                    <a href="05_cpu/slides.html" class="btn-slides">Slides</a>
+                    <a href="05_cpu/slides.pdf" class="btn-pdf">PDF</a>
+                    <a href="05_cpu/td.pdf" class="btn-pdf">TD</a>
+                    <a href="05_cpu/tp.pdf" class="btn-pdf">TP</a>
+                </div>
+            </div>
+
+            <div class="chapter">
+                <div class="chapter-number">06</div>
+                <div class="chapter-info">
+                    <h2>L'Assembleur</h2>
+                    <p>Encodage, symboles, literal pool</p>
+                </div>
+                <div class="chapter-links">
+                    <a href="06_assembleur/slides.html" class="btn-slides">Slides</a>
+                    <a href="06_assembleur/slides.pdf" class="btn-pdf">PDF</a>
+                    <a href="06_assembleur/td.pdf" class="btn-pdf">TD</a>
+                    <a href="06_assembleur/tp.pdf" class="btn-pdf">TP</a>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="section-title">Évaluations</h3>
+        <div class="chapters">
+            <div class="chapter">
+                <div class="chapter-number">E1</div>
+                <div class="chapter-info">
+                    <h2>Évaluation Intermédiaire 1</h2>
+                    <p>Chapitres 00-02 : Logique et Arithmétique</p>
+                </div>
+                <div class="chapter-links">
+                    <a href="evaluations/eval_inter_01.pdf" class="btn-pdf">PDF</a>
+                </div>
+            </div>
+
+            <div class="chapter">
+                <div class="chapter-number">E2</div>
+                <div class="chapter-info">
+                    <h2>Évaluation Intermédiaire 2</h2>
+                    <p>Chapitres 03-04 : Mémoire et Architecture</p>
+                </div>
+                <div class="chapter-links">
+                    <a href="evaluations/eval_inter_02.pdf" class="btn-pdf">PDF</a>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="section-title">Outils</h3>
+        <div class="tools">
+            <a href="https://seed.music-music.fr/" class="tool-link" target="_blank">
+                🔧 Simulateur HDL
+            </a>
+            <a href="https://seed.music-music.fr/visualizer.html" class="tool-link" target="_blank">
+                🖥️ CPU Visualizer
+            </a>
+        </div>
+
+        <footer>
+            <p>Seed Course &copy; 2026 - Du transistor au CPU</p>
+        </footer>
+    </div>
+</body>
+</html>
