@@ -1,0 +1,229 @@
+/* @theme seed-tp */
+
+/*
+ * Seed Course - Thème TP (Travaux Pratiques)
+ * Style pour les exercices pratiques avec visualiseur
+ */
+
+@import 'default';
+
+:root {
+  /* Couleurs Seed - TP en orange/ambre */
+  --seed-primary: #d97706;
+  --seed-primary-dark: #b45309;
+  --seed-secondary: #2563eb;
+  --seed-success: #059669;
+  --seed-accent: #dc2626;
+  --seed-background: #fffbeb;
+  --seed-surface: #ffffff;
+  --seed-text: #1e293b;
+  --seed-text-light: #64748b;
+  --seed-border: #fde68a;
+}
+
+section {
+  background: var(--seed-surface);
+  color: var(--seed-text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  padding: 40px 50px;
+  font-size: 0.95em;
+}
+
+/* Titres */
+h1 {
+  color: var(--seed-primary);
+  font-size: 2em;
+  font-weight: 700;
+  border-bottom: 3px solid var(--seed-primary);
+  padding-bottom: 0.3em;
+  margin-bottom: 0.6em;
+}
+
+h2 {
+  color: var(--seed-primary-dark);
+  font-size: 1.4em;
+  font-weight: 600;
+  margin-top: 0.8em;
+  padding: 0.3em 0.6em;
+  background: var(--seed-background);
+  border-left: 4px solid var(--seed-primary);
+  border-radius: 0 4px 4px 0;
+}
+
+h3 {
+  color: var(--seed-text);
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+/* Liens vers le visualiseur - style bouton */
+a[href*="visualizer"],
+a[href*="seed"] {
+  display: inline-block;
+  background: var(--seed-secondary);
+  color: white !important;
+  padding: 0.5em 1em;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  margin: 0.5em 0;
+  transition: background 0.2s;
+}
+
+a[href*="visualizer"]:hover,
+a[href*="seed"]:hover {
+  background: #1d4ed8;
+}
+
+/* Code - style terminal */
+code {
+  background: #fef3c7;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.9em;
+  color: var(--seed-primary-dark);
+}
+
+pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.85em;
+  border: 2px solid var(--seed-primary);
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+/* Blocs de validation */
+blockquote {
+  border-left: 4px solid var(--seed-success);
+  background: #ecfdf5;
+  padding: 0.8em 1.2em;
+  margin: 1em 0;
+  border-radius: 0 8px 8px 0;
+}
+
+/* Checkpoint - style important */
+h2:contains("Checkpoint"),
+h2:has(+ p:contains("Validation obligatoire")) {
+  background: #fef2f2;
+  border-left-color: var(--seed-accent);
+  color: var(--seed-accent);
+}
+
+/* Listes de validation avec checkboxes */
+ul li input[type="checkbox"] {
+  margin-right: 0.5em;
+  accent-color: var(--seed-success);
+}
+
+/* Étapes numérotées */
+ol {
+  counter-reset: step-counter;
+}
+
+ol li {
+  counter-increment: step-counter;
+  margin-bottom: 0.6em;
+  padding-left: 0.5em;
+}
+
+ol li::marker {
+  color: var(--seed-primary);
+  font-weight: 700;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 0.9em;
+}
+
+th {
+  background: var(--seed-primary);
+  color: white;
+  padding: 0.5em 0.8em;
+  text-align: left;
+}
+
+td {
+  padding: 0.4em 0.8em;
+  border-bottom: 1px solid var(--seed-border);
+}
+
+tr:nth-child(even) {
+  background: var(--seed-background);
+}
+
+/* Header et Footer */
+header {
+  color: var(--seed-text-light);
+  font-size: 0.75em;
+  background: var(--seed-background);
+  padding: 0.3em 0.6em;
+  border-radius: 4px;
+}
+
+footer {
+  color: var(--seed-text-light);
+  font-size: 0.65em;
+}
+
+/* Pagination */
+section::after {
+  color: var(--seed-text-light);
+  font-size: 0.75em;
+}
+
+/* Slide de titre */
+section:first-of-type h1 {
+  text-align: center;
+  border-bottom: none;
+  font-size: 2.2em;
+}
+
+/* Classes utilitaires */
+.etape {
+  display: inline-block;
+  background: var(--seed-primary);
+  color: white;
+  padding: 0.2em 0.5em;
+  border-radius: 50%;
+  font-weight: 700;
+  margin-right: 0.5em;
+  min-width: 1.5em;
+  text-align: center;
+}
+
+.validation {
+  background: #dcfce7;
+  border: 1px solid var(--seed-success);
+  padding: 1em;
+  border-radius: 8px;
+  margin: 1em 0;
+}
+
+.validation::before {
+  content: "✅ ";
+}
+
+.attention {
+  background: #fef2f2;
+  border: 1px solid var(--seed-accent);
+  padding: 1em;
+  border-radius: 8px;
+  margin: 1em 0;
+}
+
+.attention::before {
+  content: "⚠️ ";
+}

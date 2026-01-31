@@ -1,0 +1,184 @@
+/* @theme seed-slides */
+
+/*
+ * Seed Course - Thème Slides
+ * Style pour les présentations de cours
+ */
+
+@import 'default';
+
+:root {
+  /* Couleurs Seed */
+  --seed-primary: #2563eb;
+  --seed-primary-dark: #1d4ed8;
+  --seed-secondary: #059669;
+  --seed-accent: #dc2626;
+  --seed-warning: #f59e0b;
+  --seed-background: #f8fafc;
+  --seed-surface: #ffffff;
+  --seed-text: #1e293b;
+  --seed-text-light: #64748b;
+  --seed-border: #e2e8f0;
+}
+
+section {
+  background: var(--seed-surface);
+  color: var(--seed-text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  padding: 40px 60px;
+}
+
+/* Titres */
+h1 {
+  color: var(--seed-primary);
+  font-size: 2.2em;
+  font-weight: 700;
+  border-bottom: 3px solid var(--seed-primary);
+  padding-bottom: 0.3em;
+  margin-bottom: 0.8em;
+}
+
+h2 {
+  color: var(--seed-primary-dark);
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-top: 0.5em;
+}
+
+h3 {
+  color: var(--seed-text);
+  font-size: 1.2em;
+  font-weight: 600;
+}
+
+/* Listes */
+ul, ol {
+  margin-left: 1.5em;
+}
+
+li {
+  margin-bottom: 0.4em;
+  line-height: 1.5;
+}
+
+/* Code */
+code {
+  background: var(--seed-background);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.9em;
+}
+
+pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+/* Blockquotes - pour les ponts ARM/VHDL */
+blockquote {
+  border-left: 4px solid var(--seed-secondary);
+  background: #ecfdf5;
+  padding: 0.8em 1.2em;
+  margin: 1em 0;
+  border-radius: 0 8px 8px 0;
+}
+
+blockquote strong {
+  color: var(--seed-secondary);
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+th {
+  background: var(--seed-primary);
+  color: white;
+  padding: 0.6em 1em;
+  text-align: left;
+}
+
+td {
+  padding: 0.5em 1em;
+  border-bottom: 1px solid var(--seed-border);
+}
+
+tr:nth-child(even) {
+  background: var(--seed-background);
+}
+
+/* Slide de titre (première slide) */
+section.lead {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(135deg, var(--seed-primary) 0%, var(--seed-primary-dark) 100%);
+  color: white;
+}
+
+section.lead h1 {
+  color: white;
+  border-bottom: none;
+  font-size: 2.8em;
+}
+
+section.lead h2 {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Header et Footer */
+header {
+  color: var(--seed-text-light);
+  font-size: 0.8em;
+}
+
+footer {
+  color: var(--seed-text-light);
+  font-size: 0.7em;
+}
+
+/* Pagination */
+section::after {
+  color: var(--seed-text-light);
+  font-size: 0.8em;
+}
+
+/* Emojis et icônes */
+.emoji {
+  font-size: 1.2em;
+}
+
+/* Classes utilitaires */
+.center {
+  text-align: center;
+}
+
+.highlight {
+  background: #fef3c7;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+}
+
+.warning {
+  color: var(--seed-accent);
+  font-weight: 600;
+}
+
+.success {
+  color: var(--seed-secondary);
+  font-weight: 600;
+}

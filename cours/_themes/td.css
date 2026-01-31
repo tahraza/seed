@@ -1,0 +1,184 @@
+/* @theme seed-td */
+
+/*
+ * Seed Course - Thème TD (Travaux Dirigés)
+ * Style pour les exercices théoriques
+ */
+
+@import 'default';
+
+:root {
+  /* Couleurs Seed - TD en vert */
+  --seed-primary: #059669;
+  --seed-primary-dark: #047857;
+  --seed-secondary: #2563eb;
+  --seed-accent: #dc2626;
+  --seed-warning: #f59e0b;
+  --seed-background: #f0fdf4;
+  --seed-surface: #ffffff;
+  --seed-text: #1e293b;
+  --seed-text-light: #64748b;
+  --seed-border: #d1fae5;
+}
+
+section {
+  background: var(--seed-surface);
+  color: var(--seed-text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  padding: 40px 50px;
+  font-size: 0.95em;
+}
+
+/* Titres */
+h1 {
+  color: var(--seed-primary);
+  font-size: 2em;
+  font-weight: 700;
+  border-bottom: 3px solid var(--seed-primary);
+  padding-bottom: 0.3em;
+  margin-bottom: 0.6em;
+}
+
+h2 {
+  color: var(--seed-primary-dark);
+  font-size: 1.4em;
+  font-weight: 600;
+  margin-top: 0.8em;
+  padding: 0.3em 0.6em;
+  background: var(--seed-background);
+  border-left: 4px solid var(--seed-primary);
+  border-radius: 0 4px 4px 0;
+}
+
+h3 {
+  color: var(--seed-text);
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+/* Exercices - style "fiche" */
+h2:has(+ p strong:first-child) {
+  /* Style pour les titres d'exercices */
+}
+
+/* Contexte des exercices */
+p strong:first-child {
+  color: var(--seed-primary-dark);
+}
+
+/* Code */
+code {
+  background: #ecfdf5;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.9em;
+  color: var(--seed-primary-dark);
+}
+
+pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-size: 0.85em;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+/* Solutions masquées (details/summary) */
+details {
+  background: var(--seed-background);
+  border: 1px solid var(--seed-border);
+  border-radius: 8px;
+  padding: 0.8em 1em;
+  margin: 1em 0;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--seed-primary);
+}
+
+details summary:hover {
+  color: var(--seed-primary-dark);
+}
+
+details[open] summary {
+  margin-bottom: 0.5em;
+  border-bottom: 1px solid var(--seed-border);
+  padding-bottom: 0.5em;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 0.9em;
+}
+
+th {
+  background: var(--seed-primary);
+  color: white;
+  padding: 0.5em 0.8em;
+  text-align: left;
+}
+
+td {
+  padding: 0.4em 0.8em;
+  border-bottom: 1px solid var(--seed-border);
+}
+
+tr:nth-child(even) {
+  background: var(--seed-background);
+}
+
+/* Listes de validation */
+ul li input[type="checkbox"] {
+  margin-right: 0.5em;
+}
+
+/* Header et Footer */
+header {
+  color: var(--seed-text-light);
+  font-size: 0.75em;
+  background: var(--seed-background);
+  padding: 0.3em 0.6em;
+  border-radius: 4px;
+}
+
+footer {
+  color: var(--seed-text-light);
+  font-size: 0.65em;
+}
+
+/* Pagination */
+section::after {
+  color: var(--seed-text-light);
+  font-size: 0.75em;
+}
+
+/* Slide de titre */
+section:first-of-type h1 {
+  text-align: center;
+  border-bottom: none;
+  font-size: 2.2em;
+}
+
+/* Classes utilitaires */
+.exercice-numero {
+  display: inline-block;
+  background: var(--seed-primary);
+  color: white;
+  padding: 0.2em 0.6em;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-right: 0.5em;
+}
