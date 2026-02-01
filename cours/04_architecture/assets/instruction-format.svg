@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 550 150" width="550" height="150">
+  <defs>
+    <style>
+      .field { stroke: #374151; stroke-width: 2; }
+      .label { font-family: sans-serif; font-size: 11px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e3a8a; }
+      .bits { font-family: monospace; font-size: 9px; fill: #6b7280; }
+    </style>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="275" y="25" text-anchor="middle">Format d'Instruction A32 (32 bits)</text>
+
+  <!-- Condition field -->
+  <rect x="50" y="45" width="80" height="50" rx="4" fill="#fef3c7" class="field"/>
+  <text class="label" x="90" y="75" text-anchor="middle" font-weight="bold">Cond</text>
+  <text class="bits" x="90" y="110" text-anchor="middle">4 bits</text>
+  <text class="bits" x="90" y="122" text-anchor="middle">[31:28]</text>
+
+  <!-- Class field -->
+  <rect x="130" y="45" width="80" height="50" rx="4" fill="#dcfce7" class="field"/>
+  <text class="label" x="170" y="75" text-anchor="middle" font-weight="bold">Class</text>
+  <text class="bits" x="170" y="110" text-anchor="middle">4 bits</text>
+  <text class="bits" x="170" y="122" text-anchor="middle">[27:24]</text>
+
+  <!-- Opcode field -->
+  <rect x="210" y="45" width="80" height="50" rx="4" fill="#dbeafe" class="field"/>
+  <text class="label" x="250" y="75" text-anchor="middle" font-weight="bold">Opcode</text>
+  <text class="bits" x="250" y="110" text-anchor="middle">4 bits</text>
+  <text class="bits" x="250" y="122" text-anchor="middle">[23:20]</text>
+
+  <!-- Rd field -->
+  <rect x="290" y="45" width="60" height="50" rx="4" fill="#fce7f3" class="field"/>
+  <text class="label" x="320" y="75" text-anchor="middle" font-weight="bold">Rd</text>
+  <text class="bits" x="320" y="110" text-anchor="middle">4 bits</text>
+  <text class="bits" x="320" y="122" text-anchor="middle">[19:16]</text>
+
+  <!-- Rn field -->
+  <rect x="350" y="45" width="60" height="50" rx="4" fill="#e0e7ff" class="field"/>
+  <text class="label" x="380" y="75" text-anchor="middle" font-weight="bold">Rn</text>
+  <text class="bits" x="380" y="110" text-anchor="middle">4 bits</text>
+  <text class="bits" x="380" y="122" text-anchor="middle">[15:12]</text>
+
+  <!-- Operand2 field -->
+  <rect x="410" y="45" width="100" height="50" rx="4" fill="#f5f5f4" class="field"/>
+  <text class="label" x="460" y="70" text-anchor="middle" font-weight="bold">Operand2</text>
+  <text class="label" x="460" y="85" text-anchor="middle" font-size="9">(Rm ou Imm)</text>
+  <text class="bits" x="460" y="110" text-anchor="middle">12 bits</text>
+  <text class="bits" x="460" y="122" text-anchor="middle">[11:0]</text>
+
+  <!-- Bit markers -->
+  <text class="bits" x="50" y="40">31</text>
+  <text class="bits" x="500" y="40">0</text>
+</svg>

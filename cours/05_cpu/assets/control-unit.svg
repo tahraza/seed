@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 280" width="500" height="280">
+  <defs>
+    <style>
+      .box { stroke: #d97706; stroke-width: 2; fill: #fef3c7; }
+      .wire { stroke: #374151; stroke-width: 1.5; fill: none; }
+      .ctrl-wire { stroke: #d97706; stroke-width: 2; fill: none; }
+      .label { font-family: sans-serif; font-size: 11px; fill: #1f2937; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e3a8a; }
+      .signal { font-family: monospace; font-size: 10px; fill: #92400e; }
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#374151"/>
+    </marker>
+    <marker id="orgarr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="250" y="25" text-anchor="middle">Unite de Controle</text>
+
+  <!-- Input -->
+  <text class="label" x="250" y="50" text-anchor="middle">Opcode + Condition</text>
+  <line class="wire" x1="250" y1="55" x2="250" y2="75" marker-end="url(#arr)"/>
+
+  <!-- Control Unit box -->
+  <rect class="box" x="120" y="80" width="260" height="70" rx="6"/>
+  <text class="label" x="250" y="110" text-anchor="middle" font-weight="bold" fill="#92400e">UNITE DE CONTROLE</text>
+  <text class="label" x="250" y="130" text-anchor="middle" font-size="10">(logique de decision)</text>
+
+  <!-- Output signals -->
+  <line class="ctrl-wire" x1="150" y1="150" x2="150" y2="200" marker-end="url(#orgarr)"/>
+  <line class="ctrl-wire" x1="200" y1="150" x2="200" y2="200" marker-end="url(#orgarr)"/>
+  <line class="ctrl-wire" x1="250" y1="150" x2="250" y2="200" marker-end="url(#orgarr)"/>
+  <line class="ctrl-wire" x1="300" y1="150" x2="300" y2="200" marker-end="url(#orgarr)"/>
+  <line class="ctrl-wire" x1="350" y1="150" x2="350" y2="200" marker-end="url(#orgarr)"/>
+
+  <!-- Signal labels -->
+  <text class="signal" x="150" y="215" text-anchor="middle">reg_write</text>
+  <text class="label" x="150" y="230" text-anchor="middle" font-size="9">Ecrire registre?</text>
+
+  <text class="signal" x="200" y="215" text-anchor="middle">mem_read</text>
+  <text class="label" x="200" y="230" text-anchor="middle" font-size="9">Lire memoire?</text>
+
+  <text class="signal" x="250" y="215" text-anchor="middle">mem_write</text>
+  <text class="label" x="250" y="230" text-anchor="middle" font-size="9">Ecrire memoire?</text>
+
+  <text class="signal" x="300" y="215" text-anchor="middle">alu_op</text>
+  <text class="label" x="300" y="230" text-anchor="middle" font-size="9">Operation ALU</text>
+
+  <text class="signal" x="350" y="215" text-anchor="middle">branch</text>
+  <text class="label" x="350" y="230" text-anchor="middle" font-size="9">Branchement?</text>
+
+  <!-- Additional signals indicator -->
+  <text class="label" x="400" y="175" font-style="italic">...</text>
+
+  <!-- Flags input -->
+  <text class="label" x="420" y="110" font-size="10">Flags</text>
+  <line class="wire" x1="405" y1="115" x2="380" y2="115" marker-end="url(#arr)"/>
+  <text class="label" x="420" y="125" font-size="9">(N,Z,C,V)</text>
+</svg>

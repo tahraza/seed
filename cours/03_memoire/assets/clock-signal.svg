@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 80" width="350" height="80">
+  <defs>
+    <style>
+      .signal { stroke: #2563eb; stroke-width: 2; fill: none; }
+      .label { font-family: monospace; font-size: 12px; fill: #1f2937; }
+      .annotation { font-family: sans-serif; font-size: 10px; fill: #666; }
+      .marker { stroke: #999; stroke-width: 1; stroke-dasharray: 3,3; }
+    </style>
+  </defs>
+
+  <!-- Clock signal -->
+  <path class="signal" d="M 30 50 L 30 20 L 70 20 L 70 50 L 110 50 L 110 20 L 150 20 L 150 50 L 190 50 L 190 20 L 230 20 L 230 50 L 270 50 L 270 20 L 310 20 L 310 50 L 330 50"/>
+
+  <!-- Label -->
+  <text class="label" x="10" y="40">clk</text>
+
+  <!-- Cycle markers -->
+  <line class="marker" x1="70" y1="55" x2="70" y2="75"/>
+  <line class="marker" x1="150" y1="55" x2="150" y2="75"/>
+  <line class="marker" x1="230" y1="55" x2="230" y2="75"/>
+
+  <!-- Cycle labels -->
+  <text class="annotation" x="90" y="72">Cycle 1</text>
+  <text class="annotation" x="170" y="72">Cycle 2</text>
+</svg>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 140" width="280" height="140">
+  <defs>
+    <style>
+      .box { fill: #e8f4fc; stroke: #2563eb; stroke-width: 2; }
+      .wire { stroke: #374151; stroke-width: 2; fill: none; }
+      .bus { stroke: #374151; stroke-width: 4; fill: none; }
+      .label { font-family: monospace; font-size: 12px; fill: #1f2937; }
+      .box-label { font-family: sans-serif; font-size: 16px; font-weight: bold; fill: #1e40af; }
+    </style>
+  </defs>
+
+  <!-- RAM box -->
+  <rect class="box" x="80" y="15" width="120" height="110" rx="5"/>
+  <text class="box-label" x="118" y="75">RAM</text>
+
+  <!-- Input bus -->
+  <line class="bus" x1="20" y1="35" x2="80" y2="35"/>
+  <text class="label" x="5" y="30">in[31:0]</text>
+
+  <!-- Address bus -->
+  <line class="bus" x1="20" y1="65" x2="80" y2="65"/>
+  <text class="label" x="5" y="60">address</text>
+
+  <!-- load wire -->
+  <line class="wire" x1="20" y1="95" x2="80" y2="95"/>
+  <text class="label" x="5" y="99">load</text>
+
+  <!-- clk wire -->
+  <line class="wire" x1="20" y1="115" x2="80" y2="115"/>
+  <text class="label" x="5" y="119">clk</text>
+
+  <!-- Output bus -->
+  <line class="bus" x1="200" y1="70" x2="260" y2="70"/>
+  <text class="label" x="215" y="65">out[31:0]</text>
+</svg>

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280" width="400" height="280">
+  <defs>
+    <style>
+      .section { stroke: #2563eb; stroke-width: 1; }
+      .ram { fill: #e8f4fc; }
+      .screen { fill: #d1fae5; }
+      .keyboard { fill: #fef3c7; }
+      .mmio { fill: #fee2e2; }
+      .unused { fill: #f3f4f6; }
+      .addr { font-family: monospace; font-size: 10px; fill: #374151; }
+      .label { font-family: sans-serif; font-size: 11px; fill: #1f2937; }
+      .comment { font-family: sans-serif; font-size: 9px; fill: #666; font-style: italic; }
+    </style>
+  </defs>
+
+  <!-- MMIO section -->
+  <rect class="section mmio" x="100" y="10" width="180" height="30"/>
+  <text class="label" x="135" y="30">MMIO (Entrées/Sorties)</text>
+  <text class="addr" x="20" y="25">0xFFFFFFFF</text>
+  <text class="addr" x="20" y="45">0xFFFF0000</text>
+  <text class="comment" x="290" y="30">← HALT, etc.</text>
+
+  <!-- Unused section -->
+  <rect class="section unused" x="100" y="40" width="180" height="70"/>
+  <text class="label" x="155" y="80">(Non utilisé)</text>
+
+  <!-- Keyboard section -->
+  <rect class="section keyboard" x="100" y="110" width="180" height="25"/>
+  <text class="label" x="140" y="127">Clavier (4 octets)</text>
+  <text class="addr" x="20" y="125">0x00402600</text>
+  <text class="comment" x="290" y="127">← Touche pressée</text>
+
+  <!-- Screen section -->
+  <rect class="section screen" x="100" y="135" width="180" height="60"/>
+  <text class="label" x="135" y="160">Écran (9600 octets)</text>
+  <text class="comment" x="130" y="178">320×240 pixels, 1 bit/px</text>
+  <text class="addr" x="20" y="160">0x00400000</text>
+  <text class="comment" x="290" y="165">← Pixels!</text>
+
+  <!-- RAM section -->
+  <rect class="section ram" x="100" y="195" width="180" height="70"/>
+  <text class="label" x="145" y="225">RAM Système</text>
+  <text class="comment" x="130" y="245">Code + Données + Pile</text>
+  <text class="comment" x="160" y="258">(4 Mo)</text>
+  <text class="addr" x="20" y="270">0x00000000</text>
+</svg>

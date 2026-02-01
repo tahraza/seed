@@ -23,7 +23,8 @@ CHAPTERS = 00_introduction \
            06_assembleur
 
 # Options Marp communes
-MARP_OPTS = --allow-local-files
+# --html enables HTML tags for Mermaid diagrams and custom divs
+MARP_OPTS = --allow-local-files --html
 
 # =============================================================================
 # TARGETS PRINCIPALES

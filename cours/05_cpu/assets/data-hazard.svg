@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 220" width="650" height="220">
+  <defs>
+    <style>
+      .cell { stroke: #374151; stroke-width: 1; }
+      .label { font-family: sans-serif; font-size: 10px; fill: #1f2937; }
+      .header { font-family: sans-serif; font-size: 10px; fill: #6b7280; font-weight: bold; }
+      .title { font-family: sans-serif; font-size: 12px; font-weight: bold; fill: #1e3a8a; }
+      .code { font-family: monospace; font-size: 10px; fill: #1f2937; }
+      .danger { font-family: sans-serif; font-size: 9px; fill: #dc2626; font-weight: bold; }
+      .arrow { stroke: #dc2626; stroke-width: 2; fill: none; }
+    </style>
+    <marker id="redarr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#dc2626"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="325" y="20" text-anchor="middle">Alea de Donnees (Data Hazard)</text>
+
+  <!-- Code example -->
+  <text class="code" x="30" y="50">ADD R1, R2, R3   ; R1 = R2 + R3</text>
+  <text class="code" x="30" y="65">SUB R4, R1, R5   ; R4 = R1 - R5 (utilise R1!)</text>
+
+  <!-- Column headers -->
+  <text class="header" x="130" y="95" text-anchor="middle">Cycle 1</text>
+  <text class="header" x="210" y="95" text-anchor="middle">Cycle 2</text>
+  <text class="header" x="290" y="95" text-anchor="middle">Cycle 3</text>
+  <text class="header" x="370" y="95" text-anchor="middle">Cycle 4</text>
+  <text class="header" x="450" y="95" text-anchor="middle">Cycle 5</text>
+
+  <!-- Row labels -->
+  <text class="label" x="30" y="120">ADD R1</text>
+  <text class="label" x="30" y="150">SUB R4,R1</text>
+
+  <!-- ADD instruction pipeline -->
+  <rect x="90" y="105" width="75" height="22" fill="#fef3c7" class="cell"/>
+  <text class="label" x="128" y="120" text-anchor="middle">IF</text>
+  <rect x="170" y="105" width="75" height="22" fill="#dcfce7" class="cell"/>
+  <text class="label" x="208" y="120" text-anchor="middle">ID</text>
+  <rect x="250" y="105" width="75" height="22" fill="#dbeafe" class="cell"/>
+  <text class="label" x="288" y="120" text-anchor="middle">EX</text>
+  <rect x="330" y="105" width="75" height="22" fill="#e0e7ff" class="cell"/>
+  <text class="label" x="368" y="120" text-anchor="middle">MEM</text>
+  <rect x="410" y="105" width="75" height="22" fill="#fce7f3" class="cell"/>
+  <text class="label" x="448" y="120" text-anchor="middle">WB</text>
+
+  <!-- SUB instruction pipeline -->
+  <rect x="170" y="135" width="75" height="22" fill="#fef3c7" class="cell"/>
+  <text class="label" x="208" y="150" text-anchor="middle">IF</text>
+  <rect x="250" y="135" width="75" height="22" fill="#fee2e2" class="cell"/>
+  <text class="label" x="288" y="150" text-anchor="middle">ID</text>
+
+  <!-- Arrows showing the hazard -->
+  <path class="arrow" d="M 448 127 L 448 175 L 288 175 L 288 157" marker-end="url(#redarr)"/>
+
+  <!-- Annotations -->
+  <text class="danger" x="460" y="125">R1 ecrit ici</text>
+  <text class="danger" x="295" y="150">R1 lu ici!</text>
+
+  <!-- Problem explanation -->
+  <rect x="30" y="185" width="590" height="30" fill="#fee2e2" rx="4" stroke="#dc2626" stroke-width="1"/>
+  <text class="danger" x="325" y="205" text-anchor="middle">PROBLEME: SUB lit R1 au cycle 3, mais ADD n'ecrit R1 qu'au cycle 5!</text>
+</svg>

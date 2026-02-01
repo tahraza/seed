@@ -182,3 +182,502 @@ section::after {
   color: var(--seed-secondary);
   font-weight: 600;
 }
+
+/* =============================================================================
+   CALLOUTS / ADMONITIONS
+   ============================================================================= */
+
+/* Base callout style */
+.callout {
+  padding: 0.8em 1em;
+  margin: 0.8em 0;
+  border-radius: 8px;
+  border-left: 4px solid;
+  font-size: 0.95em;
+}
+
+.callout-title {
+  font-weight: 700;
+  margin-bottom: 0.3em;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+/* Note - Blue */
+.callout-note {
+  background: #eff6ff;
+  border-left-color: #3b82f6;
+}
+.callout-note .callout-title {
+  color: #1d4ed8;
+}
+
+/* Tip - Green */
+.callout-tip {
+  background: #ecfdf5;
+  border-left-color: #10b981;
+}
+.callout-tip .callout-title {
+  color: #059669;
+}
+
+/* Warning - Orange */
+.callout-warning {
+  background: #fffbeb;
+  border-left-color: #f59e0b;
+}
+.callout-warning .callout-title {
+  color: #d97706;
+}
+
+/* ARM Bridge - Teal */
+.callout-arm {
+  background: #f0fdfa;
+  border-left-color: #14b8a6;
+}
+.callout-arm .callout-title {
+  color: #0d9488;
+}
+.callout-arm::before {
+  content: "🔗 ARM";
+  font-weight: 700;
+  color: #0d9488;
+  display: block;
+  margin-bottom: 0.3em;
+}
+
+/* VHDL Bridge - Purple */
+.callout-vhdl {
+  background: #faf5ff;
+  border-left-color: #8b5cf6;
+}
+.callout-vhdl .callout-title {
+  color: #7c3aed;
+}
+.callout-vhdl::before {
+  content: "💾 VHDL";
+  font-weight: 700;
+  color: #7c3aed;
+  display: block;
+  margin-bottom: 0.3em;
+}
+
+/* =============================================================================
+   FIGURES
+   ============================================================================= */
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 1em 0;
+}
+
+.figure img,
+.figure svg {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+}
+
+.figure-caption {
+  font-size: 0.85em;
+  color: var(--seed-text-light);
+  font-style: italic;
+  margin-top: 0.5em;
+  text-align: center;
+}
+
+.figure-half {
+  max-width: 50%;
+  margin: 0 auto;
+}
+
+.figure-half img,
+.figure-half svg {
+  max-height: 300px;
+}
+
+.figure-full {
+  width: 100%;
+}
+
+.figure-full img,
+.figure-full svg {
+  max-height: 500px;
+}
+
+/* Side-by-side figures */
+.figures-row {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  gap: 1em;
+  margin: 1em 0;
+}
+
+.figures-row .figure {
+  flex: 1;
+  margin: 0;
+}
+
+.figures-row .figure img,
+.figures-row .figure svg {
+  max-height: 280px;
+}
+
+/* =============================================================================
+   LAYOUTS
+   ============================================================================= */
+
+/* Two-column layout */
+.columns {
+  display: flex;
+  gap: 2em;
+  align-items: flex-start;
+}
+
+.columns > * {
+  flex: 1;
+}
+
+/* Asymmetric columns */
+.col-60 {
+  flex: 3 !important;
+}
+
+.col-40 {
+  flex: 2 !important;
+}
+
+.col-70 {
+  flex: 7 !important;
+}
+
+.col-30 {
+  flex: 3 !important;
+}
+
+/* Three-column layout */
+.columns-3 {
+  display: flex;
+  gap: 1.5em;
+  align-items: flex-start;
+}
+
+.columns-3 > * {
+  flex: 1;
+}
+
+/* =============================================================================
+   TABLES - Truth Tables & Encoding Tables
+   ============================================================================= */
+
+/* Compact truth table */
+table.truth-table {
+  width: auto;
+  margin: 0.5em auto;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.9em;
+}
+
+table.truth-table th,
+table.truth-table td {
+  padding: 0.3em 0.8em;
+  text-align: center;
+}
+
+table.truth-table th {
+  background: var(--seed-primary);
+  color: white;
+}
+
+table.truth-table td {
+  border: 1px solid var(--seed-border);
+}
+
+table.truth-table tr:nth-child(even) td {
+  background: var(--seed-background);
+}
+
+/* Highlight output column */
+table.truth-table td:last-child {
+  font-weight: 700;
+}
+
+/* Encoding table for instruction formats */
+table.encoding {
+  width: 100%;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.85em;
+  border-collapse: collapse;
+}
+
+table.encoding th {
+  background: #1e293b;
+  color: white;
+  padding: 0.4em 0.6em;
+  font-weight: 500;
+}
+
+table.encoding td {
+  padding: 0.4em 0.6em;
+  border: 1px solid var(--seed-border);
+  text-align: center;
+}
+
+table.encoding .bits {
+  font-size: 0.75em;
+  color: var(--seed-text-light);
+}
+
+/* Register table */
+table.registers {
+  font-size: 0.85em;
+}
+
+table.registers th:first-child,
+table.registers td:first-child {
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-weight: 600;
+  color: var(--seed-primary);
+}
+
+/* =============================================================================
+   KEY CONCEPTS & DEFINITIONS
+   ============================================================================= */
+
+.key-concept {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+  padding: 1em 1.2em;
+  margin: 1em 0;
+}
+
+.key-concept-title {
+  font-weight: 700;
+  color: #b45309;
+  margin-bottom: 0.4em;
+  font-size: 1.05em;
+}
+
+.definition {
+  background: #f8fafc;
+  border: 1px solid var(--seed-border);
+  border-left: 4px solid var(--seed-primary);
+  border-radius: 0 8px 8px 0;
+  padding: 0.8em 1em;
+  margin: 0.8em 0;
+}
+
+.definition-term {
+  font-weight: 700;
+  color: var(--seed-primary);
+}
+
+.definition-text {
+  margin-top: 0.3em;
+  font-size: 0.95em;
+}
+
+/* =============================================================================
+   CODE IMPROVEMENTS
+   ============================================================================= */
+
+/* Assembly/instruction highlighting */
+code.asm {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 0.2em 0.5em;
+}
+
+code.register {
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+code.binary {
+  background: #f0fdf4;
+  color: #166534;
+  letter-spacing: 0.05em;
+}
+
+code.hex {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* =============================================================================
+   PROCESS FLOWS & STEPS
+   ============================================================================= */
+
+.process-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1em;
+  margin: 0.8em 0;
+}
+
+.step-number {
+  background: var(--seed-primary);
+  color: white;
+  width: 2em;
+  height: 2em;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 600;
+  color: var(--seed-text);
+  margin-bottom: 0.2em;
+}
+
+/* =============================================================================
+   MERMAID DIAGRAMS
+   ============================================================================= */
+
+.mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1em 0;
+}
+
+/* =============================================================================
+   SPECIAL SLIDE TYPES
+   ============================================================================= */
+
+/* Section divider */
+section.divider {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  color: white;
+}
+
+section.divider h1,
+section.divider h2 {
+  color: white;
+  border: none;
+}
+
+/* Summary slide */
+section.summary {
+  background: #f8fafc;
+}
+
+section.summary h1 {
+  font-size: 1.8em;
+}
+
+/* Question slide */
+section.question {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+section.question h1 {
+  border: none;
+  font-size: 2.2em;
+}
+
+/* =============================================================================
+   UTILITIES
+   ============================================================================= */
+
+.small {
+  font-size: 0.85em;
+}
+
+.smaller {
+  font-size: 0.75em;
+}
+
+.large {
+  font-size: 1.15em;
+}
+
+.bold {
+  font-weight: 700;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.text-primary {
+  color: var(--seed-primary);
+}
+
+.text-secondary {
+  color: var(--seed-secondary);
+}
+
+.text-warning {
+  color: var(--seed-warning);
+}
+
+.text-accent {
+  color: var(--seed-accent);
+}
+
+.text-muted {
+  color: var(--seed-text-light);
+}
+
+.mt-1 { margin-top: 0.5em; }
+.mt-2 { margin-top: 1em; }
+.mb-1 { margin-bottom: 0.5em; }
+.mb-2 { margin-bottom: 1em; }
+
+/* Horizontal rule styling */
+hr {
+  border: none;
+  border-top: 2px solid var(--seed-border);
+  margin: 1em 0;
+}
+
+/* Arrow indicator */
+.arrow {
+  color: var(--seed-primary);
+  font-size: 1.2em;
+}
+
+/* Badge/tag */
+.badge {
+  display: inline-block;
+  padding: 0.15em 0.5em;
+  border-radius: 4px;
+  font-size: 0.8em;
+  font-weight: 600;
+}
+
+.badge-primary {
+  background: var(--seed-primary);
+  color: white;
+}
+
+.badge-secondary {
+  background: var(--seed-secondary);
+  color: white;
+}
+
+.badge-warning {
+  background: var(--seed-warning);
+  color: white;
+}

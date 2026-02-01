@@ -6,6 +6,8 @@ header: "Seed - Chapitre 05"
 footer: "Le Processeur (CPU)"
 ---
 
+<!-- _class: lead -->
+
 # Chapitre 05 : Le Processeur (CPU)
 
 > "Si vous ne pouvez pas le construire, vous ne le comprenez pas." — Feynman
@@ -14,21 +16,12 @@ footer: "Le Processeur (CPU)"
 
 # 🎯 Où en sommes-nous ?
 
-```
-┌─────────────────────────────────┐
-│  8. Applications                │
-├─────────────────────────────────┤
-│  ...                            │
-├─────────────────────────────────┤
-│  5. CPU              ◀── NOUS   │
-├─────────────────────────────────┤
-│  4. Architecture (ISA) ✓        │
-├─────────────────────────────────┤
-│  3. Mémoire ✓  │  2. ALU ✓      │
-└─────────────────────────────────┘
-```
+<div class="figure">
+<img src="assets/cpu-datapath.svg" alt="CPU Datapath">
+<div class="figure-caption">Le CPU — point culminant du matériel</div>
+</div>
 
-Le **point culminant** du matériel !
+Nous assemblons toutes les pièces !
 
 ---
 
@@ -36,12 +29,37 @@ Le **point culminant** du matériel !
 
 Le CPU (Central Processing Unit) :
 
-1. **Lit** les instructions depuis la mémoire
-2. **Décode** pour comprendre quoi faire
-3. **Exécute** les opérations
-4. **Répète** à l'infini (jusqu'à HALT)
+<div class="process-step">
+<div class="step-number">1</div>
+<div class="step-content">
+<div class="step-title">Lit</div>
+les instructions depuis la mémoire
+</div>
+</div>
 
-C'est une **machine à états** infatigable.
+<div class="process-step">
+<div class="step-number">2</div>
+<div class="step-content">
+<div class="step-title">Décode</div>
+pour comprendre quoi faire
+</div>
+</div>
+
+<div class="process-step">
+<div class="step-number">3</div>
+<div class="step-content">
+<div class="step-title">Exécute</div>
+les opérations
+</div>
+</div>
+
+<div class="process-step">
+<div class="step-number">4</div>
+<div class="step-content">
+<div class="step-title">Répète</div>
+à l'infini (jusqu'à HALT)
+</div>
+</div>
 
 ---
 
@@ -60,10 +78,25 @@ C'est une **machine à états** infatigable.
 
 # Ce qu'il reste à construire
 
+<div class="columns">
+<div>
+
 - **Décodeur** : Analyse les bits
 - **Unité de contrôle** : Décide quoi activer
+
+</div>
+<div>
+
 - **Multiplexeurs** : Routent les données
 - **Le CPU** : L'assemblage final !
+
+</div>
+</div>
+
+<div class="key-concept">
+<div class="key-concept-title">Assemblage</div>
+Connecter les composants existants avec la logique de contrôle
+</div>
 
 ---
 
@@ -83,6 +116,15 @@ C'est une **machine à états** infatigable.
 
 # Architecture du CPU (Datapath)
 
+<div class="figure">
+<img src="assets/cpu-datapath.svg" alt="Datapath complet">
+<div class="figure-caption">Le datapath — chemin des données à travers le CPU</div>
+</div>
+
+---
+
+# Vue Schématique du Datapath
+
 ```
      PC ──► Mém Instr ──► Décodeur
                               │
@@ -100,69 +142,124 @@ C'est une **machine à états** infatigable.
 
 ---
 
-# Phase 1 : Fetch
+# Étage 1 : Fetch (IF)
+
+<div class="columns">
+<div>
 
 ```
-PC ──► Mémoire Instructions ──► instruction (32 bits)
+PC ──► Mémoire Instructions
+         │
+         ▼
+    instruction (32 bits)
 ```
 
-Le PC envoie l'adresse, la mémoire renvoie l'instruction.
+**Actions :**
+- PC envoie l'adresse
+- Mémoire renvoie l'instruction
+- PC préparé pour PC+4
+
+</div>
+<div>
+
+<div class="callout callout-note">
+<div class="callout-title">Instruction Fetch</div>
+Lecture de 32 bits à l'adresse pointée par PC
+</div>
+
+</div>
+</div>
 
 ---
 
-# Phase 2 : Decode
+# Étage 2 : Decode (ID)
+
+<div class="columns">
+<div>
 
 ```
-instruction ──► Décodeur ──► cond, class, op, Rn, Rd, Rm, imm
+instruction ──► Décodeur
                    │
-                   └──► Contrôle ──► signaux
+    ┌──────────────┼──────────────┐
+    ▼              ▼              ▼
+  cond, class    Rn, Rd, Rm    imm
+    │
+    ▼
+Contrôle ──► signaux
 ```
 
-Le décodeur **découpe** les 32 bits.
-L'unité de contrôle **décide** quoi activer.
+</div>
+<div>
+
+**Découpe les champs :**
+- Condition (4 bits)
+- Classe d'instruction
+- Registres sources/dest
+- Immédiat étendu
+
+</div>
+</div>
 
 ---
 
-# Le Décodeur
+# Le Décodeur — Détail des Champs
 
-Découpe les bits de l'instruction :
-
-| Signal | Bits | Description |
-|:-------|:-----|:------------|
-| cond | 31-28 | Condition (EQ, NE...) |
-| class | 27-25 | Type (ALU, MEM, BRANCH) |
-| op | 24-21 | Opération ALU |
-| S | 20 | Mettre à jour flags ? |
-| Rn | 19-16 | Source 1 |
-| Rd | 15-12 | Destination |
+<table class="encoding">
+<tr><th>Signal</th><th>Bits</th><th>Description</th></tr>
+<tr><td>cond</td><td>31-28</td><td>Condition (EQ, NE...)</td></tr>
+<tr><td>class</td><td>27-25</td><td>Type (ALU, MEM, BRANCH)</td></tr>
+<tr><td>op</td><td>24-21</td><td>Opération ALU</td></tr>
+<tr><td>S</td><td>20</td><td>Mettre à jour flags ?</td></tr>
+<tr><td>Rn</td><td>19-16</td><td>Source 1</td></tr>
+<tr><td>Rd</td><td>15-12</td><td>Destination</td></tr>
+<tr><td>Rm/Imm</td><td>11-0</td><td>Source 2 / Immédiat</td></tr>
+</table>
 
 ---
 
 # L'Unité de Contrôle
 
-Génère les **signaux de contrôle** :
+<div class="columns">
+<div class="figure">
+<img src="assets/control-unit.svg" alt="Control Unit">
+<div class="figure-caption">L'unité de contrôle génère les signaux</div>
+</div>
+<div>
 
-| Instruction | reg_write | mem_read | mem_write |
-|:------------|:---------:|:--------:|:---------:|
-| ADD | 1 | 0 | 0 |
-| LDR | 1 | 1 | 0 |
-| STR | 0 | 0 | 1 |
-| B | 0 | 0 | 0 |
-| CMP | 0 | 0 | 0 |
+Génère les **signaux de contrôle** basés sur l'opcode.
+
+</div>
+</div>
 
 ---
 
-# Phase 3 : Register Read
+# Signaux de Contrôle
+
+| Instruction | reg_write | mem_read | mem_write | alu_src |
+|:------------|:---------:|:--------:|:---------:|:-------:|
+| ADD | 1 | 0 | 0 | reg |
+| ADD #imm | 1 | 0 | 0 | imm |
+| LDR | 1 | 1 | 0 | imm |
+| STR | 0 | 0 | 1 | imm |
+| B | 0 | 0 | 0 | — |
+| CMP | 0 | 0 | 0 | reg |
+
+---
+
+# Étage 3 : Register Read (ID suite)
 
 ```
 Rn, Rm ──► Banc de Registres ──► Data_A, Data_B
 ```
 
-On lit les valeurs des registres sources.
+<div class="callout callout-tip">
+<div class="callout-title">Lecture simultanée</div>
+Le banc de registres a 2 ports de lecture, on lit Rn et Rm en parallèle.
+</div>
 
 ---
 
-# Phase 4 : Execute
+# Étage 4 : Execute (EX)
 
 ```
 Data_A ──────────┐
@@ -170,58 +267,97 @@ Data_A ──────────┐
 Data_B ou Imm ───┘
 ```
 
-L'ALU effectue l'opération.
-Les flags (N, Z, C, V) sont mis à jour si S=1.
+**Actions :**
+- L'ALU effectue l'opération (ADD, SUB, AND...)
+- Les flags (N, Z, C, V) sont calculés
+- Les flags sont mis à jour si S=1
 
 ---
 
-# Phase 5 : Memory
+# Étage 5 : Memory (MEM)
 
+<div class="columns">
+<div>
+
+**Pour LDR :**
 ```
-Si LDR : MEM[adresse] → valeur
-Si STR : valeur → MEM[adresse]
-Sinon  : (rien)
+MEM[adresse] → valeur
 ```
 
-Accès mémoire pour LDR/STR uniquement.
+**Pour STR :**
+```
+valeur → MEM[adresse]
+```
+
+**Sinon :** (rien)
+
+</div>
+<div>
+
+<div class="callout callout-note">
+<div class="callout-title">Accès mémoire</div>
+Uniquement pour les instructions Load/Store
+</div>
+
+</div>
+</div>
 
 ---
 
-# Phase 6 : Writeback
+# Étage 6 : Writeback (WB)
 
 ```
 Résultat ──► MUX ──► Banc de Registres ──► Rd
+                │
+            ALU_out ou MEM_out ?
 ```
 
 Si `reg_write = 1` ET `cond_ok = 1`, on écrit dans Rd.
 
 ---
 
-# Le CondCheck
+# Le CondCheck — Exécution Conditionnelle
 
-Vérifie si la condition est satisfaite :
-
+```mermaid
+flowchart LR
+    COND[cond 4 bits] --> CHECK[CondCheck]
+    FLAGS[N,Z,C,V] --> CHECK
+    CHECK --> OK{ok?}
+    OK -->|1| EXEC[Exécuter]
+    OK -->|0| SKIP[Annuler]
 ```
-cond = 0000 (EQ) et Z = 1  →  ok = 1
-cond = 0000 (EQ) et Z = 0  →  ok = 0
-cond = 1110 (AL)           →  ok = 1 (toujours)
-```
 
-Si `ok = 0`, l'instruction est **annulée**.
+Si la condition n'est pas satisfaite, l'instruction est **annulée**.
 
 ---
 
-# Les Multiplexeurs
+# Logique CondCheck
 
-| Mux | Choix | Signification |
-|:----|:------|:--------------|
-| ALU_src | 0: Rm, 1: Imm | 2ème opérande |
-| Writeback | 0: ALU, 1: MEM | Source du résultat |
-| PC_src | 0: PC+4, 1: Branch | Prochaine adresse |
+```vhdl
+case cond is
+  when "0000" => ok := Z;           -- EQ
+  when "0001" => ok := not Z;       -- NE
+  when "1010" => ok := (N = V);     -- GE
+  when "1011" => ok := (N /= V);    -- LT
+  when "1100" => ok := (Z='0') and (N=V); -- GT
+  when "1110" => ok := '1';         -- AL
+  when others => ok := '0';
+end case;
+```
 
 ---
 
-# Exemple : ADD R1, R2, R3
+# Les Multiplexeurs du CPU
+
+| Mux | Choix 0 | Choix 1 | Contrôle |
+|:----|:--------|:--------|:---------|
+| ALU_src | Rm | Imm | imm_src |
+| Writeback | ALU_out | MEM_out | mem_to_reg |
+| PC_src | PC+4 | Branch_target | branch_taken |
+
+---
+
+# Exemple Complet : ADD R1, R2, R3
 
 ```
 1110 000 0100 0 0010 0001 00000000 0011
@@ -239,31 +375,73 @@ Si `ok = 0`, l'instruction est **annulée**.
 
 # Parcours de ADD R1, R2, R3
 
-1. **Fetch** : Lire l'instruction à PC
-2. **Decode** : class=ALU, reg_write=1
-3. **RegRead** : Lire R2 et R3
-4. **Execute** : ALU calcule R2 + R3
-5. **Memory** : (rien)
-6. **Writeback** : Écrire dans R1
+<div class="process-step">
+<div class="step-number">IF</div>
+<div class="step-content">Lire l'instruction à PC</div>
+</div>
+
+<div class="process-step">
+<div class="step-number">ID</div>
+<div class="step-content">Décoder : class=ALU, reg_write=1, lire R2 et R3</div>
+</div>
+
+<div class="process-step">
+<div class="step-number">EX</div>
+<div class="step-content">ALU calcule R2 + R3</div>
+</div>
+
+<div class="process-step">
+<div class="step-number">MEM</div>
+<div class="step-content">(rien)</div>
+</div>
+
+<div class="process-step">
+<div class="step-number">WB</div>
+<div class="step-content">Écrire résultat dans R1</div>
+</div>
 
 ---
 
 # Exemple : LDR R0, [R1, #8]
 
-1. **Decode** : class=MEM, mem_read=1
-2. **RegRead** : Lire R1
-3. **Execute** : ALU calcule R1 + 8
-4. **Memory** : Lire MEM[R1+8]
-5. **Writeback** : Écrire dans R0
+<div class="process-step">
+<div class="step-number">ID</div>
+<div class="step-content">class=MEM, mem_read=1</div>
+</div>
+
+<div class="process-step">
+<div class="step-number">EX</div>
+<div class="step-content">ALU calcule R1 + 8</div>
+</div>
+
+<div class="process-step">
+<div class="step-number">MEM</div>
+<div class="step-content">Lire MEM[R1+8]</div>
+</div>
+
+<div class="process-step">
+<div class="step-number">WB</div>
+<div class="step-content">Écrire dans R0</div>
+</div>
 
 ---
 
 # Exemple : B.EQ label
 
-1. **Decode** : class=BRANCH
-2. **CondCheck** : Vérifier Z = 1 ?
-3. Si oui : PC ← adresse cible
-4. Si non : PC ← PC + 4
+<div class="process-step">
+<div class="step-number">ID</div>
+<div class="step-content">class=BRANCH, calcul adresse cible</div>
+</div>
+
+<div class="process-step">
+<div class="step-number">EX</div>
+<div class="step-content">CondCheck vérifie Z = 1 ?</div>
+</div>
+
+<div class="process-step">
+<div class="step-number">PC</div>
+<div class="step-content">Si ok : PC ← cible, sinon PC ← PC+4</div>
+</div>
 
 ---
 
@@ -272,26 +450,65 @@ Si `ok = 0`, l'instruction est **annulée**.
 | Mono-cycle | Pipeline |
 |:-----------|:---------|
 | 1 instruction à la fois | 5 en parallèle |
-| Cycle long | Cycles courts |
-| Simple | Plus complexe |
-| Notre implémentation | Vrais CPU |
+| Cycle long (toutes les phases) | Cycles courts (1 phase) |
+| Simple à concevoir | Plus complexe |
+| Notre implémentation | Processeurs réels |
+
+---
+
+# Analogie du Pipeline : La Laverie
+
+<div class="figure">
+<img src="assets/laundry-analogy.svg" alt="Analogie laverie">
+<div class="figure-caption">Pipeline = plusieurs charges en parallèle</div>
+</div>
 
 ---
 
 # Pipeline 5 Étages
 
-```
-         IF    ID    EX   MEM   WB
-Instr 1  [====][====][====][====][====]
-Instr 2       [====][====][====][====][====]
-Instr 3            [====][====][====][====][====]
+<div class="figure">
+<img src="assets/pipeline-5-stages.svg" alt="Pipeline 5 étages">
+<div class="figure-caption">IF → ID → EX → MEM → WB</div>
+</div>
+
+---
+
+# Vue Temporelle du Pipeline
+
+```mermaid
+gantt
+    title Pipeline 5 étages
+    dateFormat X
+    axisFormat %s
+    section Instr 1
+    IF :a1, 0, 1
+    ID :a2, 1, 2
+    EX :a3, 2, 3
+    MEM :a4, 3, 4
+    WB :a5, 4, 5
+    section Instr 2
+    IF :b1, 1, 2
+    ID :b2, 2, 3
+    EX :b3, 3, 4
+    MEM :b4, 4, 5
+    WB :b5, 5, 6
+    section Instr 3
+    IF :c1, 2, 3
+    ID :c2, 3, 4
+    EX :c3, 4, 5
+    MEM :c4, 5, 6
+    WB :c5, 6, 7
 ```
 
-Jusqu'à 5× plus rapide !
+Débit = 1 instruction/cycle (après remplissage)
 
 ---
 
 # Hazards (Problèmes Pipeline)
+
+<div class="columns">
+<div>
 
 **Data Hazard :**
 ```asm
@@ -299,9 +516,50 @@ ADD R1, R2, R3    ; Écrit R1
 SUB R4, R1, R5    ; Lit R1 → Problème !
 ```
 
-**Solutions :**
-- **Forwarding** : Bypass direct
-- **Stall** : Attendre si nécessaire
+R1 n'est pas encore écrit quand SUB le lit !
+
+</div>
+<div class="figure">
+<img src="assets/data-hazard.svg" alt="Data Hazard">
+<div class="figure-caption">Dépendance de données</div>
+</div>
+</div>
+
+---
+
+# Solutions aux Hazards
+
+```mermaid
+flowchart TD
+    HAZ[Data Hazard détecté] --> FWD{Forwarding possible?}
+    FWD -->|Oui| BYPASS[Bypass direct]
+    FWD -->|Non| STALL[Stall pipeline]
+    BYPASS --> CONT[Continuer]
+    STALL --> WAIT[Attendre 1 cycle]
+    WAIT --> CONT
+```
+
+---
+
+# Forwarding (Bypass)
+
+<div class="columns">
+<div>
+
+```asm
+ADD R1, R2, R3
+SUB R4, R1, R5
+```
+
+Le résultat de ADD est disponible à la sortie de l'ALU **avant** d'être écrit dans R1.
+
+</div>
+<div>
+
+**Forwarding** : Envoyer le résultat directement à l'entrée de l'ALU pour l'instruction suivante.
+
+</div>
+</div>
 
 ---
 
@@ -309,25 +567,63 @@ SUB R4, R1, R5    ; Lit R1 → Problème !
 
 👉 [Ouvrir le CPU Visualizer](https://seed.music-music.fr/visualizer.html)
 
+<div class="columns">
+<div>
+
 **Fonctionnalités :**
 - Vue pipeline (5 étapes)
 - Registres R0-R15
 - Flags NZCV
+
+</div>
+<div>
+
 - Code source avec surlignage
+- Mode pas-à-pas
 - 7 démos interactives
 
+</div>
+</div>
+
 ---
+
+# Questions de Réflexion
+
+<div class="columns">
+<div>
+
+1. Combien de MUX minimum faut-il dans un CPU simple ?
+
+2. Pourquoi le PC est-il incrémenté de 4 et pas de 1 ?
+
+3. Que se passe-t-il si on charge une instruction invalide ?
+
+</div>
+<div>
+
+4. Pourquoi le forwarding ne résout-il pas tous les hazards ?
+
+5. Comment le pipeline gère-t-il un branchement ?
+
+</div>
+</div>
+
+---
+
+<!-- _class: summary -->
 
 # Ce qu'il faut retenir
 
 1. **Fetch → Decode → Execute → Mem → WB**
-2. **Décodeur** analyse les bits
-3. **Contrôle** décide quoi activer
-4. **MUX** routent les données
-5. **CondCheck** permet la prédication
-6. **Pipeline** = performances
+2. **Décodeur** analyse les bits de l'instruction
+3. **Contrôle** génère les signaux d'activation
+4. **MUX** routent les données selon le contexte
+5. **CondCheck** permet l'exécution conditionnelle
+6. **Pipeline** = performances (5× potentiel)
 
 ---
+
+<!-- _class: question -->
 
 # Questions ?
 

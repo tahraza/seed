@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 340" width="520" height="340">
+  <defs>
+    <style>
+      .alu-body { fill: #dbeafe; stroke: #1e40af; stroke-width: 3; }
+      .wire { stroke: #374151; stroke-width: 2; fill: none; }
+      .bus { stroke: #1e40af; stroke-width: 4; fill: none; }
+      .label { font-family: sans-serif; font-size: 11px; fill: #1f2937; }
+      .label-bold { font-family: sans-serif; font-size: 11px; fill: #1f2937; font-weight: bold; }
+      .alu-label { font-family: sans-serif; font-size: 24px; font-weight: bold; fill: #1e40af; }
+      .bits { font-family: monospace; font-size: 9px; fill: #6b7280; }
+      .flag-box { fill: #dcfce7; stroke: #16a34a; stroke-width: 1.5; rx: 4; }
+      .input-box { fill: #fef3c7; stroke: #d97706; stroke-width: 1.5; rx: 4; }
+      .output-box { fill: #e0e7ff; stroke: #4f46e5; stroke-width: 1.5; rx: 4; }
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; fill: #1e40af; }
+      .op-label { font-family: monospace; font-size: 9px; fill: #374151; }
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#374151"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#1e40af"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text class="title" x="260" y="20" text-anchor="middle">Interface de l'ALU 32 bits</text>
+
+  <!-- Input A box -->
+  <rect class="input-box" x="20" y="50" width="80" height="50"/>
+  <text class="label-bold" x="60" y="72" text-anchor="middle">Operande A</text>
+  <text class="bits" x="60" y="88" text-anchor="middle">(32 bits)</text>
+
+  <!-- Input B box -->
+  <rect class="input-box" x="420" y="50" width="80" height="50"/>
+  <text class="label-bold" x="460" y="72" text-anchor="middle">Operande B</text>
+  <text class="bits" x="460" y="88" text-anchor="middle">(32 bits)</text>
+
+  <!-- Bus A to ALU -->
+  <line class="bus" x1="100" y1="75" x2="150" y2="95" marker-end="url(#arrow-blue)"/>
+  <text class="label" x="105" y="70">a[31:0]</text>
+
+  <!-- Bus B to ALU -->
+  <line class="bus" x1="420" y1="75" x2="370" y2="95" marker-end="url(#arrow-blue)"/>
+  <text class="label" x="385" y="70">b[31:0]</text>
+
+  <!-- ALU trapezoid body -->
+  <path class="alu-body" d="M 130 90 L 390 90 L 350 200 L 170 200 Z"/>
+  <text class="alu-label" x="260" y="155" text-anchor="middle">ALU</text>
+
+  <!-- Operation code input -->
+  <rect class="input-box" x="20" y="120" width="80" height="70"/>
+  <text class="label-bold" x="60" y="140" text-anchor="middle">Operation</text>
+  <text class="bits" x="60" y="155" text-anchor="middle">(4 bits)</text>
+  <text class="op-label" x="60" y="175" text-anchor="middle">op[3:0]</text>
+
+  <line class="wire" x1="100" y1="145" x2="145" y2="145" marker-end="url(#arrow)"/>
+
+  <!-- Output Y bus -->
+  <line class="bus" x1="260" y1="200" x2="260" y2="250" marker-end="url(#arrow-blue)"/>
+
+  <rect class="output-box" x="210" y="255" width="100" height="50"/>
+  <text class="label-bold" x="260" y="277" text-anchor="middle">Resultat Y</text>
+  <text class="bits" x="260" y="293" text-anchor="middle">y[31:0] (32 bits)</text>
+
+  <!-- Flags output section -->
+  <rect class="flag-box" x="380" y="160" width="120" height="130"/>
+  <text class="label-bold" x="440" y="180" text-anchor="middle">Flags (NZCV)</text>
+
+  <!-- Individual flags -->
+  <line class="wire" x1="350" y1="180" x2="380" y2="200"/>
+  <line class="wire" x1="350" y1="180" x2="380" y2="225"/>
+  <line class="wire" x1="350" y1="180" x2="380" y2="250"/>
+  <line class="wire" x1="350" y1="180" x2="380" y2="275"/>
+
+  <text class="label-bold" x="390" y="204">N</text>
+  <text class="label" x="410" y="204">Negative (y[31])</text>
+
+  <text class="label-bold" x="390" y="229">Z</text>
+  <text class="label" x="410" y="229">Zero (y == 0)</text>
+
+  <text class="label-bold" x="390" y="254">C</text>
+  <text class="label" x="410" y="254">Carry</text>
+
+  <text class="label-bold" x="390" y="279">V</text>
+  <text class="label" x="410" y="279">Overflow</text>
+
+  <!-- Operations table -->
+  <rect x="20" y="215" width="160" height="115" fill="#f9fafb" stroke="#d1d5db" rx="4"/>
+  <text class="label-bold" x="100" y="232" text-anchor="middle">Operations (op)</text>
+  <line x1="25" y1="238" x2="175" y2="238" stroke="#d1d5db"/>
+
+  <text class="op-label" x="30" y="252">0000: AND</text>
+  <text class="op-label" x="100" y="252">0100: ADD</text>
+  <text class="op-label" x="30" y="267">0001: OR</text>
+  <text class="op-label" x="100" y="267">0101: SUB</text>
+  <text class="op-label" x="30" y="282">0010: XOR</text>
+  <text class="op-label" x="100" y="282">0110: SLT</text>
+  <text class="op-label" x="30" y="297">0011: NOT</text>
+  <text class="op-label" x="100" y="297">0111: SLL</text>
+  <text class="op-label" x="30" y="312">1000: SRL</text>
+  <text class="op-label" x="100" y="312">1001: SRA</text>
+  <text class="op-label" x="30" y="327">1010: MUL</text>
+</svg>

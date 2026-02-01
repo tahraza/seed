@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 140" width="350" height="140">
+  <defs>
+    <style>
+      .box { fill: #e8f4fc; stroke: #2563eb; stroke-width: 2; }
+      .wire { stroke: #374151; stroke-width: 2; fill: none; }
+      .label { font-family: monospace; font-size: 12px; fill: #1f2937; }
+      .box-label { font-family: sans-serif; font-size: 11px; font-weight: bold; fill: #1e40af; }
+      .junction { fill: #374151; }
+      .feedback { stroke: #2563eb; stroke-width: 2; fill: none; stroke-dasharray: 5,3; }
+    </style>
+  </defs>
+
+  <!-- Input in -->
+  <line class="wire" x1="20" y1="80" x2="80" y2="80"/>
+
+  <!-- MUX -->
+  <path class="box" d="M 80 30 L 130 45 L 130 95 L 80 110 Z"/>
+  <text class="box-label" x="92" y="75">MUX</text>
+
+  <!-- MUX labels -->
+  <text class="label" x="65" y="45">0</text>
+  <text class="label" x="65" y="95">1</text>
+
+  <!-- Wire from MUX to DFF -->
+  <line class="wire" x1="130" y1="70" x2="180" y2="70"/>
+
+  <!-- DFF -->
+  <rect class="box" x="180" y="45" width="60" height="50" rx="4"/>
+  <text class="box-label" x="197" y="75">DFF</text>
+
+  <!-- Output wire -->
+  <line class="wire" x1="240" y1="70" x2="300" y2="70"/>
+  <circle class="junction" cx="280" cy="70" r="3"/>
+
+  <!-- Feedback loop -->
+  <path class="feedback" d="M 280 70 L 280 20 L 60 20 L 60 50 L 80 50"/>
+
+  <!-- Load input -->
+  <line class="wire" x1="105" y1="130" x2="105" y2="110"/>
+
+  <!-- Labels -->
+  <text class="label" x="10" y="84">in</text>
+  <text class="label" x="95" y="128">load</text>
+  <text class="label" x="285" y="74">out</text>
+</svg>

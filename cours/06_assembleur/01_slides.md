@@ -6,6 +6,8 @@ header: "Seed - Chapitre 06"
 footer: "L'Assembleur"
 ---
 
+<!-- _class: lead -->
+
 # Chapitre 06 : L'Assembleur
 
 > "Traduire, c'est trahir ?" — Pas ici.
@@ -18,7 +20,7 @@ footer: "L'Assembleur"
 ┌─────────────────────────────────┐
 │  8. Applications                │
 ├─────────────────────────────────┤
-│  ...                            │
+│  7. OS                          │
 ├─────────────────────────────────┤
 │  6. Assembleur        ◀── NOUS  │
 ├─────────────────────────────────┤
@@ -43,13 +45,19 @@ Première étape dans le monde du **logiciel** !
 0xEAFFFFFE
 ```
 
-C'est **illisible** et source d'erreurs !
+<div class="callout callout-warning">
+<div class="callout-title">Illisible</div>
+C'est source d'erreurs et impossible à maintenir !
+</div>
 
 ---
 
 # La Solution : L'Assembleur
 
 Un **programme** qui traduit :
+
+<div class="columns">
+<div>
 
 ```asm
     ADD R1, R1, #1
@@ -58,7 +66,8 @@ Un **programme** qui traduit :
     B loop
 ```
 
-en :
+</div>
+<div>
 
 ```
 0xE2811001
@@ -66,6 +75,9 @@ en :
 0xE0813002
 0xEAFFFFFE
 ```
+
+</div>
+</div>
 
 ---
 
@@ -80,20 +92,38 @@ en :
    B loop              →     0xEAFFFFFE
 ```
 
-L'assembleur est un **traducteur**.
+<div class="key-concept">
+<div class="key-concept-title">L'assembleur</div>
+Un traducteur fidèle : 1 instruction assembleur = 1 instruction machine
+</div>
 
 ---
 
-# Les Trois Tâches
+# Les Trois Tâches de l'Assembleur
 
-1. **Analyse (Parsing)**
-   Lire et comprendre les instructions
+<div class="process-step">
+<div class="step-number">1</div>
+<div class="step-content">
+<div class="step-title">Analyse (Parsing)</div>
+Lire et comprendre les instructions
+</div>
+</div>
 
-2. **Résolution des Symboles**
-   Transformer les labels en adresses
+<div class="process-step">
+<div class="step-number">2</div>
+<div class="step-content">
+<div class="step-title">Résolution des Symboles</div>
+Transformer les labels en adresses
+</div>
+</div>
 
-3. **Encodage**
-   Générer le binaire 32 bits
+<div class="process-step">
+<div class="step-number">3</div>
+<div class="step-content">
+<div class="step-title">Encodage</div>
+Générer le binaire 32 bits
+</div>
+</div>
 
 ---
 
@@ -108,13 +138,27 @@ suite:
 
 À la ligne 1, l'assembleur ne connaît pas l'adresse de `suite`.
 
-C'est une **référence vers l'avant**.
+<div class="definition">
+<div class="definition-term">Référence vers l'avant (Forward Reference)</div>
+<div class="definition-text">Un symbole utilisé avant d'être défini</div>
+</div>
 
 ---
 
 # La Solution : Deux Passes
 
-## Passe 1 : Table des Symboles
+```mermaid
+flowchart LR
+    SRC[Code source] --> P1[Passe 1]
+    P1 --> TAB[Table des symboles]
+    SRC --> P2[Passe 2]
+    TAB --> P2
+    P2 --> BIN[Code binaire]
+```
+
+---
+
+# Passe 1 : Table des Symboles
 
 Parcourir le fichier et noter chaque label :
 
@@ -124,7 +168,10 @@ Adresse 0x0004 : MOV R0, #1      (4 octets)
 Adresse 0x0008 : suite:          ← Note : suite = 0x0008
 ```
 
-**Table** : `{ "suite": 0x0008 }`
+<div class="callout callout-note">
+<div class="callout-title">Table des symboles</div>
+<code>{ "suite": 0x0008 }</code>
+</div>
 
 ---
 
@@ -141,6 +188,24 @@ offset = (0x0008 - 0x0000 - 8) / 4 = -2
 ```
 
 Maintenant toutes les références sont résolues !
+
+---
+
+# Processus du Tokenizer
+
+```mermaid
+stateDiagram-v2
+    [*] --> START
+    START --> LABEL : identifiant suivi de ':'
+    START --> MNEM : mot-clé instruction
+    START --> DIR : '.' + mot
+    LABEL --> MNEM
+    MNEM --> OPERAND : virgule
+    OPERAND --> OPERAND : virgule
+    OPERAND --> [*] : newline
+    DIR --> VALUE : argument
+    VALUE --> [*] : newline
+```
 
 ---
 
@@ -164,38 +229,57 @@ Maintenant toutes les références sont résolues !
 
 # Les Directives
 
-| Directive | Effet |
-|:----------|:------|
-| `.text` | Section code |
-| `.data` | Section données |
-| `.global sym` | Exporte un symbole |
-| `.word 123` | Réserve 4 octets |
-| `.asciz "Hello"` | Chaîne + '\0' |
-| `.align 2` | Aligne sur 4 octets |
+<table class="encoding">
+<tr><th>Directive</th><th>Effet</th><th>Exemple</th></tr>
+<tr><td>.text</td><td>Section code</td><td>.text</td></tr>
+<tr><td>.data</td><td>Section données</td><td>.data</td></tr>
+<tr><td>.global</td><td>Exporte un symbole</td><td>.global main</td></tr>
+<tr><td>.word</td><td>Réserve 4 octets</td><td>.word 42</td></tr>
+<tr><td>.asciz</td><td>Chaîne + '\0'</td><td>.asciz "Hello"</td></tr>
+<tr><td>.align</td><td>Aligne en mémoire</td><td>.align 2</td></tr>
+</table>
 
 ---
 
 # Exemple : Encoder ADD R1, R2, #10
 
-## Étape 1 : Identifier
+**Étape 1 : Identifier les composants**
 
-- Mnémonique : `ADD` → opcode = 0100
-- Rd = R1, Rn = R2
-- Immédiat : #10
+| Champ | Valeur |
+|:------|:-------|
+| Mnémonique | ADD → opcode = 0100 |
+| Rd | R1 → 0001 |
+| Rn | R2 → 0010 |
+| Immédiat | #10 → 0x00A |
 
-## Étape 2 : Classe
-
-- Classe `001` (immédiat)
+**Classe** : `001` (data processing immédiat)
 
 ---
 
-# Étape 3 : Assembler les Bits
+# Étape 2 : Assembler les Bits
 
 ```
 31-28  27-25  24-21  20   19-16  15-12  11-0
 Cond   Class   Op    S     Rn     Rd    Imm12
 1110   001    0100   0    0010   0001   000000001010
 ```
+
+<div class="columns">
+<div>
+
+- Cond = 1110 (AL)
+- Class = 001 (imm)
+- Op = 0100 (ADD)
+
+</div>
+<div>
+
+- S = 0 (pas de flags)
+- Rn = 0010 (R2)
+- Rd = 0001 (R1)
+
+</div>
+</div>
 
 **Résultat** : `0xE2821010`
 
@@ -205,11 +289,14 @@ Cond   Class   Op    S     Rn     Rd    Imm12
 
 12 bits d'immédiat maximum !
 
-Comment charger `0xDEADBEEF` (32 bits) ?
-
 ```asm
 MOV R0, #0xDEADBEEF   ; ERREUR ! Trop grand
 ```
+
+<div class="callout callout-warning">
+<div class="callout-title">Limitation</div>
+Impossible d'encoder plus de 12 bits d'immédiat
+</div>
 
 ---
 
@@ -242,11 +329,86 @@ Adresse   Contenu
 0x000C    0xDEADBEEF          ; ← Literal pool
 ```
 
-La valeur est **stockée après le code**.
+<div class="key-concept">
+<div class="key-concept-title">Literal Pool</div>
+Zone de données après le code où sont stockées les grandes constantes
+</div>
 
 ---
 
-# Résumé du Pipeline
+# Patterns Idiomatiques en Assembleur
+
+<div class="columns">
+<div>
+
+**Boucle for :**
+```asm
+    MOV R0, #0       ; i = 0
+loop:
+    CMP R0, #10
+    B.GE done
+    ; ... corps
+    ADD R0, R0, #1
+    B loop
+done:
+```
+
+</div>
+<div>
+
+**If/else :**
+```asm
+    CMP R0, #0
+    B.EQ else
+    ; ... then
+    B endif
+else:
+    ; ... else
+endif:
+```
+
+</div>
+</div>
+
+---
+
+# Pattern : Appel de Fonction
+
+```asm
+; Appelant
+    MOV R0, #5       ; argument 1
+    MOV R1, #3       ; argument 2
+    BL ma_fonction   ; appel
+    ; R0 contient le retour
+
+ma_fonction:
+    PUSH {LR}        ; sauver l'adresse de retour
+    ADD R0, R0, R1   ; R0 = arg1 + arg2
+    POP {PC}         ; retour
+```
+
+---
+
+# Pattern : Sauvegarde Registres
+
+```asm
+ma_fonction:
+    PUSH {R4-R7, LR}  ; sauver callee-saved
+
+    ; utiliser R4-R7 librement
+    MOV R4, R0
+    ...
+
+    POP {R4-R7, PC}   ; restaurer et retourner
+```
+
+<div class="callout callout-arm">
+Convention ARM : R4-R11 doivent être préservés par l'appelé (callee-saved).
+</div>
+
+---
+
+# Résumé du Pipeline Assembleur
 
 ```
    Code source (.s)
@@ -254,7 +416,7 @@ La valeur est **stockée après le code**.
         ▼
    ┌──────────┐
    │ Passe 1  │───► Table des symboles
-   └──────────┘
+   └──────────┘      { main: 0x0000, loop: 0x0010, ... }
         │
         ▼
    ┌──────────┐
@@ -273,27 +435,79 @@ cargo run -p a32_cli -- assemble prog.s -o prog.bin
 # Examiner le binaire
 hexdump -C prog.bin
 
+# Désassembler
+cargo run -p a32_cli -- disasm prog.bin
+
 # Simuler l'exécution
 cargo run -p a32_cli -- run prog.bin
 ```
 
 ---
 
-# Ce qu'il faut retenir
+# Exemple Complet : Somme 1 à N
 
-1. **Assembleur = Traducteur** : Texte → Binaire
-2. **Deux passes** : Symboles puis code
-3. **Directives** : `.text`, `.data`, `.word`
-4. **Literal pool** : Pour les grandes constantes
-5. **Label = Adresse** : Un nom devient un nombre
+```asm
+.text
+.global main
+
+main:
+    MOV R0, #0       ; sum = 0
+    MOV R1, #1       ; i = 1
+    LDR R2, =10      ; n = 10
+loop:
+    CMP R1, R2
+    B.GT done
+    ADD R0, R0, R1   ; sum += i
+    ADD R1, R1, #1   ; i++
+    B loop
+done:
+    HALT             ; R0 = 55
+```
 
 ---
 
+# Questions de Réflexion
+
+<div class="columns">
+<div>
+
+1. Pourquoi deux passes et pas une seule ?
+
+2. Que se passe-t-il si on référence un label non défini ?
+
+3. Pourquoi l'offset des branches est-il divisé par 4 ?
+
+</div>
+<div>
+
+4. Comment l'assembleur gère-t-il les erreurs de syntaxe ?
+
+5. Quelle est la taille maximale d'un literal pool ?
+
+</div>
+</div>
+
+---
+
+<!-- _class: summary -->
+
+# Ce qu'il faut retenir
+
+1. **Assembleur = Traducteur** : Texte → Binaire (1:1)
+2. **Deux passes** : Symboles puis code
+3. **Directives** : `.text`, `.data`, `.word`, `.align`
+4. **Literal pool** : Pour les grandes constantes
+5. **Label = Adresse** : Un nom devient un nombre
+6. **Patterns** : Boucles, conditions, appels standardisés
+
+---
+
+<!-- _class: question -->
+
 # Questions ?
 
-Référence : Livre Seed, Chapitre 06 - Assembleur
+📚 **Référence :** Livre Seed, Chapitre 06 - Assembleur
 
-Exercices : TD et TP + Simulateur Web
+👉 **Exercices :** TD et TP + Simulateur Web
 
-**Prochain chapitre** : Compilateur (C32 → Assembleur)
-
+**Prochain chapitre :** Compilateur (C32 → Assembleur)
