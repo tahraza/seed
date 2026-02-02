@@ -86,7 +86,7 @@ tp: $(foreach ch,$(CHAPTERS),tp-$(ch))
 ch00: slides-00_introduction td-00_introduction tp-00_introduction
 	@echo "✅ Chapitre 00 généré"
 
-ch01: slides-01_logique_booleenne td-01_logique_booleenne tp-01_logique_booleenne
+ch01: slides-01_logique_booleenne hdl-01_logique_booleenne td-01_logique_booleenne tp-01_logique_booleenne
 	@echo "✅ Chapitre 01 généré"
 
 ch02: slides-02_arithmetique td-02_arithmetique tp-02_arithmetique
@@ -145,6 +145,21 @@ tp-%:
 		$(MARP) $(MARP_OPTS) --pdf -o $(OUT_DIR)/$*/tp.pdf $*/03_tp.md; \
 	else \
 		echo "⏭️  TP $* : fichier source manquant (03_tp.md)"; \
+	fi
+
+# Pattern pour les cours HDL (HTML + PDF)
+hdl-%:
+	@if [ -f "$*/05_hdl_slides.md" ]; then \
+		echo "💾 Génération HDL $*..."; \
+		mkdir -p $(OUT_DIR)/$*; \
+		$(MARP) $(MARP_OPTS) --theme $(THEME_DIR)/slides.css \
+			-o $(OUT_DIR)/$*/hdl.html $*/05_hdl_slides.md 2>/dev/null || \
+		$(MARP) $(MARP_OPTS) -o $(OUT_DIR)/$*/hdl.html $*/05_hdl_slides.md; \
+		$(MARP) $(MARP_OPTS) --theme $(THEME_DIR)/slides.css --pdf \
+			-o $(OUT_DIR)/$*/hdl.pdf $*/05_hdl_slides.md 2>/dev/null || \
+		$(MARP) $(MARP_OPTS) --pdf -o $(OUT_DIR)/$*/hdl.pdf $*/05_hdl_slides.md; \
+	else \
+		echo "⏭️  HDL $* : fichier source manquant (05_hdl_slides.md)"; \
 	fi
 
 # =============================================================================
