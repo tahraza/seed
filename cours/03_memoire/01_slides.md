@@ -187,13 +187,15 @@ La sortie est "en retard" d'un cycle — c'est la mémoire !
 
 # Diagramme d'États de la DFF
 
-```mermaid
-stateDiagram-v2
-    [*] --> Q0 : Reset
-    Q0 --> Q0 : d=0 sur ↑clk
-    Q0 --> Q1 : d=1 sur ↑clk
-    Q1 --> Q0 : d=0 sur ↑clk
-    Q1 --> Q1 : d=1 sur ↑clk
+```
+              d=0            d=1
+             ┌───┐          ┌───┐
+             │   ▼          │   ▼
+Reset ──►  ┌───────┐      ┌───────┐
+           │  Q=0  │◄────►│  Q=1  │
+           └───────┘ d=1  └───────┘
+              ▲     d=0      ▲
+              └──────────────┘
 ```
 
 La DFF a exactement 2 états : Q=0 ou Q=1
@@ -415,18 +417,19 @@ address─┤ RAM ├── out
 
 # Décodage d'Adresse RAM8
 
-```mermaid
-flowchart TB
-    ADDR[address 3 bits] --> DMUX[DMux8Way]
-    LOAD[load] --> DMUX
-    DMUX --> |load0| R0[Reg 0]
-    DMUX --> |load1| R1[Reg 1]
-    DMUX --> |load7| R7[Reg 7]
-    R0 --> MUX[Mux8Way]
-    R1 --> MUX
-    R7 --> MUX
-    ADDR --> MUX
-    MUX --> OUT[out]
+```
+ address ──┬──────────────────────────┐
+ (3 bits)  │                          │
+           ▼                          ▼
+      ┌─────────┐               ┌──────────┐
+load─►│ DMux8Way│               │ Mux8Way  │──► out
+      └────┬────┘               └────┬─────┘
+           │                         ▲
+    ┌──────┼──────┐           ┌──────┼──────┐
+    ▼      ▼      ▼           │      │      │
+ ┌─────┐┌─────┐┌─────┐        │      │      │
+ │Reg 0││Reg 1││Reg 7│────────┴──────┴──────┘
+ └─────┘└─────┘└─────┘
 ```
 
 ---
@@ -465,15 +468,21 @@ Le PC contient l'adresse de la **prochaine instruction**.
 
 # Diagramme d'États du PC
 
-```mermaid
-stateDiagram-v2
-    [*] --> RESET : power on
-    RESET --> FETCH : reset=0
-    FETCH --> FETCH : inc=1 (PC++)
-    FETCH --> BRANCH : load=1 (PC=target)
-    BRANCH --> FETCH : load=0
-    FETCH --> STALL : hold=1
-    STALL --> FETCH : hold=0
+```
+                    ┌────────────────┐
+    power on        │                │ inc=1
+        │           ▼     ┌──────────┤ (PC++)
+        ▼      ┌─────────┐│          │
+     ┌───────┐ │         ││  ┌───────┴───────┐
+     │ RESET │─┼►│ FETCH │◄──┤    STALL      │
+     └───────┘ │ │       │   └───────────────┘
+    reset=0    │ └───┬───┘        ▲
+               │     │            │ hold=1
+               │     │ load=1     │
+               │     ▼            │
+               │ ┌────────┐       │
+               └─┤ BRANCH │───────┘
+                 └────────┘  load=0
 ```
 
 ---

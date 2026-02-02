@@ -139,20 +139,16 @@ CISC le fait en 1 instruction, mais le matériel est plus complexe
 
 # Détail du Cycle
 
-```mermaid
-sequenceDiagram
-    participant PC as Program Counter
-    participant MEM as Mémoire
-    participant DEC as Décodeur
-    participant ALU as ALU
-    participant REG as Registres
-
-    PC->>MEM: Adresse instruction
-    MEM->>DEC: Instruction 32 bits
-    DEC->>REG: Lecture registres
-    REG->>ALU: Opérandes
-    ALU->>REG: Résultat
-    PC->>PC: PC++
+```
+    PC         MEM        DEC        REG        ALU
+    │           │          │          │          │
+    │──Adresse─►│          │          │          │
+    │           │─Instr32─►│          │          │
+    │           │          │──Read───►│          │
+    │           │          │          │─Opérand─►│
+    │           │          │          │◄─Result──│
+    │◄──PC++────│          │          │          │
+    ▼           ▼          ▼          ▼          ▼
 ```
 
 ---

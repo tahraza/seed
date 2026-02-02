@@ -25,40 +25,41 @@ section {
   background: var(--seed-surface);
   color: var(--seed-text);
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  padding: 40px 60px;
+  padding: 30px 50px;
+  font-size: 22px;
 }
 
 /* Titres */
 h1 {
   color: var(--seed-primary);
-  font-size: 2.2em;
+  font-size: 1.6em;
   font-weight: 700;
   border-bottom: 3px solid var(--seed-primary);
-  padding-bottom: 0.3em;
-  margin-bottom: 0.8em;
+  padding-bottom: 0.2em;
+  margin-bottom: 0.5em;
 }
 
 h2 {
   color: var(--seed-primary-dark);
-  font-size: 1.5em;
+  font-size: 1.2em;
   font-weight: 600;
-  margin-top: 0.5em;
+  margin-top: 0.3em;
 }
 
 h3 {
   color: var(--seed-text);
-  font-size: 1.2em;
+  font-size: 1.05em;
   font-weight: 600;
 }
 
 /* Listes */
 ul, ol {
-  margin-left: 1.5em;
+  margin-left: 1.2em;
 }
 
 li {
-  margin-bottom: 0.4em;
-  line-height: 1.5;
+  margin-bottom: 0.25em;
+  line-height: 1.4;
 }
 
 /* Code */
@@ -73,9 +74,11 @@ code {
 pre {
   background: #1e293b;
   color: #e2e8f0;
-  padding: 1em;
+  padding: 0.8em;
   border-radius: 8px;
   overflow-x: auto;
+  font-size: 0.85em;
+  line-height: 1.3;
 }
 
 pre code {
@@ -189,11 +192,11 @@ section::after {
 
 /* Base callout style */
 .callout {
-  padding: 0.8em 1em;
-  margin: 0.8em 0;
+  padding: 0.5em 0.8em;
+  margin: 0.5em 0;
   border-radius: 8px;
   border-left: 4px solid;
-  font-size: 0.95em;
+  font-size: 0.85em;
 }
 
 .callout-title {
@@ -452,8 +455,9 @@ table.registers td:first-child {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   border: 2px solid #f59e0b;
   border-radius: 12px;
-  padding: 1em 1.2em;
-  margin: 1em 0;
+  padding: 0.6em 1em;
+  margin: 0.6em 0;
+  font-size: 0.9em;
 }
 
 .key-concept-title {
@@ -468,8 +472,9 @@ table.registers td:first-child {
   border: 1px solid var(--seed-border);
   border-left: 4px solid var(--seed-primary);
   border-radius: 0 8px 8px 0;
-  padding: 0.8em 1em;
-  margin: 0.8em 0;
+  padding: 0.5em 0.8em;
+  margin: 0.5em 0;
+  font-size: 0.9em;
 }
 
 .definition-term {
@@ -517,21 +522,23 @@ code.hex {
 .process-step {
   display: flex;
   align-items: flex-start;
-  gap: 1em;
-  margin: 0.8em 0;
+  gap: 0.8em;
+  margin: 0.5em 0;
+  font-size: 0.9em;
 }
 
 .step-number {
   background: var(--seed-primary);
   color: white;
-  width: 2em;
-  height: 2em;
+  width: 1.8em;
+  height: 1.8em;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   flex-shrink: 0;
+  font-size: 0.9em;
 }
 
 .step-content {

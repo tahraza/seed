@@ -147,13 +147,15 @@ suite:
 
 # La Solution : Deux Passes
 
-```mermaid
-flowchart LR
-    SRC[Code source] --> P1[Passe 1]
-    P1 --> TAB[Table des symboles]
-    SRC --> P2[Passe 2]
-    TAB --> P2
-    P2 --> BIN[Code binaire]
+```
+                 ┌─────────┐
+                 │ Passe 1 │──► Table des symboles
+                 └────┬────┘           │
+                      │                │
+Code source ──────────┤                ▼
+                      │          ┌─────────┐
+                      └─────────►│ Passe 2 │──► Code binaire
+                                 └─────────┘
 ```
 
 ---
@@ -193,18 +195,23 @@ Maintenant toutes les références sont résolues !
 
 # Processus du Tokenizer
 
-```mermaid
-stateDiagram-v2
-    [*] --> START
-    START --> LABEL : identifiant suivi de ':'
-    START --> MNEM : mot-clé instruction
-    START --> DIR : '.' + mot
-    LABEL --> MNEM
-    MNEM --> OPERAND : virgule
-    OPERAND --> OPERAND : virgule
-    OPERAND --> [*] : newline
-    DIR --> VALUE : argument
-    VALUE --> [*] : newline
+```
+             ┌───────────────────────────────────────┐
+             │                                       │
+ ┌───────┐   │  identifiant:   ┌───────┐            │
+ │ START │───┼────────────────►│ LABEL │────┐       │
+ └───┬───┘   │                 └───────┘    │       │
+     │       │                              ▼       │
+     │       │  mot-clé      ┌───────┐  ┌─────────┐ │
+     │       ├──────────────►│ MNEM  │─►│ OPERAND │─┤
+     │       │               └───────┘  └────┬────┘ │
+     │       │                    virgule    │      │
+     │       │                       └───────┘      │
+     │       │  '.' + mot    ┌───────┐  ┌───────┐  │
+     │       └──────────────►│  DIR  │─►│ VALUE │──┤
+     │                       └───────┘  └───────┘  │
+     └─────────────────────────────────────────────┘
+                        newline → FIN
 ```
 
 ---

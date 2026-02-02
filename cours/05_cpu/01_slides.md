@@ -318,13 +318,14 @@ Si `reg_write = 1` ET `cond_ok = 1`, on écrit dans Rd.
 
 # Le CondCheck — Exécution Conditionnelle
 
-```mermaid
-flowchart LR
-    COND[cond 4 bits] --> CHECK[CondCheck]
-    FLAGS[N,Z,C,V] --> CHECK
-    CHECK --> OK{ok?}
-    OK -->|1| EXEC[Exécuter]
-    OK -->|0| SKIP[Annuler]
+```
+cond (4 bits) ───┐
+                 │    ┌─────────────┐
+                 └───►│             │──► ok=1 ──► Exécuter
+                      │  CondCheck  │
+                 ┌───►│             │──► ok=0 ──► Annuler
+                 │    └─────────────┘
+N,Z,C,V (flags)──┘
 ```
 
 Si la condition n'est pas satisfaite, l'instruction est **annulée**.
@@ -476,29 +477,15 @@ end case;
 
 # Vue Temporelle du Pipeline
 
-```mermaid
-gantt
-    title Pipeline 5 étages
-    dateFormat X
-    axisFormat %s
-    section Instr 1
-    IF :a1, 0, 1
-    ID :a2, 1, 2
-    EX :a3, 2, 3
-    MEM :a4, 3, 4
-    WB :a5, 4, 5
-    section Instr 2
-    IF :b1, 1, 2
-    ID :b2, 2, 3
-    EX :b3, 3, 4
-    MEM :b4, 4, 5
-    WB :b5, 5, 6
-    section Instr 3
-    IF :c1, 2, 3
-    ID :c2, 3, 4
-    EX :c3, 4, 5
-    MEM :c4, 5, 6
-    WB :c5, 6, 7
+```
+Cycle:     1     2     3     4     5     6     7
+         ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┐
+Instr 1  │ IF  │ ID  │ EX  │ MEM │ WB  │     │     │
+         ├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+Instr 2  │     │ IF  │ ID  │ EX  │ MEM │ WB  │     │
+         ├─────┼─────┼─────┼─────┼─────┼─────┼─────┤
+Instr 3  │     │     │ IF  │ ID  │ EX  │ MEM │ WB  │
+         └─────┴─────┴─────┴─────┴─────┴─────┴─────┘
 ```
 
 Débit = 1 instruction/cycle (après remplissage)
@@ -529,14 +516,32 @@ R1 n'est pas encore écrit quand SUB le lit !
 
 # Solutions aux Hazards
 
-```mermaid
-flowchart TD
-    HAZ[Data Hazard détecté] --> FWD{Forwarding possible?}
-    FWD -->|Oui| BYPASS[Bypass direct]
-    FWD -->|Non| STALL[Stall pipeline]
-    BYPASS --> CONT[Continuer]
-    STALL --> WAIT[Attendre 1 cycle]
-    WAIT --> CONT
+```
+        ┌─────────────────────┐
+        │ Data Hazard détecté │
+        └──────────┬──────────┘
+                   ▼
+          ┌───────────────┐
+          │  Forwarding   │
+          │   possible?   │
+          └───────┬───────┘
+           Oui    │    Non
+          ┌───────┴───────┐
+          ▼               ▼
+    ┌───────────┐   ┌───────────┐
+    │  Bypass   │   │   Stall   │
+    │  direct   │   │  pipeline │
+    └─────┬─────┘   └─────┬─────┘
+          │               ▼
+          │         ┌───────────┐
+          │         │ Attendre  │
+          │         │  1 cycle  │
+          │         └─────┬─────┘
+          └───────┬───────┘
+                  ▼
+           ┌────────────┐
+           │ Continuer  │
+           └────────────┘
 ```
 
 ---

@@ -116,19 +116,13 @@ On retrouve <code>'0'</code> et <code>'1'</code> comme valeurs de type <code>std
 
 # Universalité du NAND
 
-```mermaid
-flowchart LR
-    NAND[NAND] --> NOT[NOT]
-    NAND --> AND[AND]
-    NAND --> OR[OR]
-    NOT --> XOR[XOR]
-    AND --> XOR
-    OR --> XOR
-    AND --> MUX[MUX]
-    OR --> MUX
-    NOT --> MUX
-    NOT --> DMUX[DMUX]
-    AND --> DMUX
+```
+            ┌───► NOT ───┐
+            │            ├───► XOR
+NAND ───────┼───► AND ───┤
+            │            ├───► MUX
+            └───► OR ────┤
+                         └───► DMUX
 ```
 
 <div class="callout callout-tip">

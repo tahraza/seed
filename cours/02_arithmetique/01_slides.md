@@ -200,21 +200,17 @@ Le <strong>Complément à 2</strong>
 
 # Roue du Complément à 2
 
-```mermaid
-flowchart LR
-    subgraph Positifs
-        P0[0000 = 0]
-        P1[0001 = +1]
-        P2[0010 = +2]
-        P7[0111 = +7]
-    end
-    subgraph Négatifs
-        N1[1111 = -1]
-        N2[1110 = -2]
-        N8[1000 = -8]
-    end
-    P7 --> N8
-    N1 --> P0
+```
+        ┌── Positifs ──┐     ┌── Négatifs ──┐
+        │              │     │              │
+  +1 ◄──┤  0001        │     │  1111  ├──► -1
+  +2 ◄──┤  0010        │     │  1110  ├──► -2
+  ...   │  ...         │     │  ...   │   ...
+  +7 ◄──┤  0111 ───────┼─────┼► 1000  ├──► -8
+        │              │     │              │
+   0 ◄──┤  0000 ◄──────┼─────┼─ 1111  ├──► -1
+        └──────────────┘     └──────────────┘
+             ▲ Overflow au passage +7 → -8
 ```
 
 Le passage de +7 à -8 est le **point de débordement** (overflow).
@@ -436,22 +432,24 @@ L'**ALU** effectue TOUTES les opérations arithmétiques et logiques.
 
 # Principe de l'ALU
 
-```mermaid
-flowchart LR
-    A[a] --> AND[AND]
-    B[b] --> AND
-    A --> OR[OR]
-    B --> OR
-    A --> ADD[ADD]
-    B --> ADD
-    A --> XOR[XOR]
-    B --> XOR
-    AND --> MUX[MUX]
-    OR --> MUX
-    ADD --> MUX
-    XOR --> MUX
-    OP[op] --> MUX
-    MUX --> Y[y]
+```
+        ┌───────────────────────┐
+        │  a     b              │
+        │  │     │              │
+        │  ├──┬──┤              │
+        │  ▼  ▼  ▼              │
+        │ ┌──┐ ┌──┐ ┌───┐ ┌───┐│
+        │ │& │ │| │ │ + │ │ ^ ││
+        │ └┬─┘ └┬─┘ └─┬─┘ └─┬─┘│
+        │  │    │     │     │  │
+        │  └────┴──┬──┴─────┘  │
+        │          ▼           │
+        │       ┌─────┐        │
+   op ──┼──────►│ MUX │        │
+        │       └──┬──┘        │
+        │          ▼           │
+        │          y           │
+        └───────────────────────┘
 ```
 
 **Calculer TOUS les résultats, puis Mux pour choisir.**
