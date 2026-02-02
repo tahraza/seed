@@ -20,7 +20,8 @@ CHAPTERS = 00_introduction \
            03_memoire \
            04_architecture \
            05_cpu \
-           06_assembleur
+           06_assembleur \
+           07_compilateur
 
 # Options Marp communes
 # --html enables HTML tags for Mermaid diagrams and custom divs
@@ -31,7 +32,7 @@ MARP_OPTS = --allow-local-files --html
 # =============================================================================
 
 .PHONY: all clean slides td tp eval help
-.PHONY: ch00 ch01 ch02 ch03 ch04 ch05 ch06
+.PHONY: ch00 ch01 ch02 ch03 ch04 ch05 ch06 ch07
 
 # Target par défaut
 all: slides td tp
@@ -101,8 +102,11 @@ ch04: slides-04_architecture td-04_architecture tp-04_architecture
 ch05: slides-05_cpu td-05_cpu tp-05_cpu
 	@echo "✅ Chapitre 05 généré"
 
-ch06: slides-06_assembleur td-06_assembleur tp-06_assembleur
+ch06: slides-06_assembleur asm-06_assembleur td-06_assembleur tp-06_assembleur
 	@echo "✅ Chapitre 06 généré"
+
+ch07: c32-07_compilateur
+	@echo "✅ Chapitre 07 généré"
 
 # =============================================================================
 # RÈGLES DE GÉNÉRATION
@@ -160,6 +164,36 @@ hdl-%:
 		$(MARP) $(MARP_OPTS) --pdf -o $(OUT_DIR)/$*/hdl.pdf $*/05_hdl_slides.md; \
 	else \
 		echo "⏭️  HDL $* : fichier source manquant (05_hdl_slides.md)"; \
+	fi
+
+# Pattern pour les cours ASM (HTML + PDF)
+asm-%:
+	@if [ -f "$*/05_asm_slides.md" ]; then \
+		echo "🔧 Génération ASM $*..."; \
+		mkdir -p $(OUT_DIR)/$*; \
+		$(MARP) $(MARP_OPTS) --theme $(THEME_DIR)/slides.css \
+			-o $(OUT_DIR)/$*/asm.html $*/05_asm_slides.md 2>/dev/null || \
+		$(MARP) $(MARP_OPTS) -o $(OUT_DIR)/$*/asm.html $*/05_asm_slides.md; \
+		$(MARP) $(MARP_OPTS) --theme $(THEME_DIR)/slides.css --pdf \
+			-o $(OUT_DIR)/$*/asm.pdf $*/05_asm_slides.md 2>/dev/null || \
+		$(MARP) $(MARP_OPTS) --pdf -o $(OUT_DIR)/$*/asm.pdf $*/05_asm_slides.md; \
+	else \
+		echo "⏭️  ASM $* : fichier source manquant (05_asm_slides.md)"; \
+	fi
+
+# Pattern pour les cours C32 (HTML + PDF)
+c32-%:
+	@if [ -f "$*/05_c32_slides.md" ]; then \
+		echo "📝 Génération C32 $*..."; \
+		mkdir -p $(OUT_DIR)/$*; \
+		$(MARP) $(MARP_OPTS) --theme $(THEME_DIR)/slides.css \
+			-o $(OUT_DIR)/$*/c32.html $*/05_c32_slides.md 2>/dev/null || \
+		$(MARP) $(MARP_OPTS) -o $(OUT_DIR)/$*/c32.html $*/05_c32_slides.md; \
+		$(MARP) $(MARP_OPTS) --theme $(THEME_DIR)/slides.css --pdf \
+			-o $(OUT_DIR)/$*/c32.pdf $*/05_c32_slides.md 2>/dev/null || \
+		$(MARP) $(MARP_OPTS) --pdf -o $(OUT_DIR)/$*/c32.pdf $*/05_c32_slides.md; \
+	else \
+		echo "⏭️  C32 $* : fichier source manquant (05_c32_slides.md)"; \
 	fi
 
 # =============================================================================
