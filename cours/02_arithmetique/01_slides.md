@@ -547,43 +547,167 @@ V = 1 car deux positifs donnent un négatif
 
 ---
 
-# Drapeaux et Branchements
+# Des Flags aux Décisions
 
-| Instruction | Condition | Test | Usage |
-|:------------|:----------|:-----|:------|
-| B.EQ | Equal | Z = 1 | Égalité |
-| B.NE | Not Equal | Z = 0 | Différence |
-| B.LT | Less Than | N ≠ V | Moins que (signé) |
-| B.GE | Greater/Equal | N = V | Plus ou égal (signé) |
-| B.LO | Lower | C = 0 | Moins que (non-signé) |
-| B.HS | Higher/Same | C = 1 | Plus ou égal (non-signé) |
+**Question fondamentale :** Comment un programme prend-il des décisions ?
 
----
-
-# Exemple : CMP et Branchement
-
-```asm
-    CMP R0, R1      ; Calcule R0 - R1, met à jour flags
-    B.EQ egaux      ; Si Z=1, sauter à 'egaux'
-    B.LT plus_petit ; Si N≠V, sauter à 'plus_petit'
+```c
+if (x == 5) {
+    faire_quelque_chose();
+}
 ```
 
 <div class="columns">
 <div>
 
-**Si R0 = 5, R1 = 5 :**
-- R0 - R1 = 0
-- Z = 1 → B.EQ pris
+**Le CPU ne comprend pas "if" !**
+
+Il utilise un mécanisme plus simple :
+1. Calculer (comparer x et 5)
+2. Regarder les flags résultants
+3. **Sauter** (ou non) à une autre instruction
 
 </div>
 <div>
 
-**Si R0 = 3, R1 = 5 :**
-- R0 - R1 = -2
-- N = 1, V = 0, N≠V → B.LT pris
+<div class="key-concept">
+<div class="key-concept-title">Les flags = mémoire du calcul</div>
+Après chaque opération, les flags N, Z, C, V gardent la trace du résultat.
+</div>
 
 </div>
 </div>
+
+---
+
+# Le Branchement — Changer le Flux
+
+**Normalement :** Le CPU exécute les instructions une par une, dans l'ordre.
+
+```
+Adresse 100:  instruction A
+Adresse 104:  instruction B  ← après A, on exécute B
+Adresse 108:  instruction C  ← après B, on exécute C
+```
+
+**Avec un branchement conditionnel :** Le CPU peut "sauter" ailleurs.
+
+```
+Adresse 100:  CMP R0, #5       ; compare R0 avec 5
+Adresse 104:  B.EQ label       ; SI égal, sauter à label
+Adresse 108:  instruction X    ; SINON, continuer ici
+    ...
+Adresse 200:  label: instruction Y  ; destination du saut
+```
+
+<div class="callout callout-tip">
+<div class="callout-title">C'est ainsi que le CPU implémente if, while, for !</div>
+</div>
+
+---
+
+# CMP — Comparer sans Garder
+
+**L'instruction CMP** effectue une soustraction "invisible" :
+
+<div class="columns">
+<div>
+
+```asm
+CMP R0, R1    ; Calcule R0 - R1
+              ; Met à jour N, Z, C, V
+              ; Jette le résultat !
+```
+
+**Pourquoi jeter le résultat ?**
+On veut juste savoir la *relation* entre R0 et R1, pas la différence.
+
+</div>
+<div>
+
+| Situation | Résultat | Flags |
+|-----------|----------|-------|
+| R0 = R1 | 0 | **Z=1** |
+| R0 > R1 | positif | Z=0, N=0 |
+| R0 < R1 | négatif | Z=0, **N=1** |
+
+</div>
+</div>
+
+<div class="callout callout-arm">
+CMP = SUB mais sans écrire dans un registre de destination.
+</div>
+
+---
+
+# Les Instructions de Branchement
+
+Après CMP, on utilise un **branchement conditionnel** :
+
+| Instruction | Signification | Condition testée |
+|:------------|:--------------|:-----------------|
+| **B.EQ** | Branch if Equal | Z = 1 |
+| **B.NE** | Branch if Not Equal | Z = 0 |
+| **B.LT** | Branch if Less Than (signé) | N ≠ V |
+| **B.GE** | Branch if Greater or Equal (signé) | N = V |
+| **B.LO** | Branch if Lower (non-signé) | C = 0 |
+| **B.HS** | Branch if Higher or Same (non-signé) | C = 1 |
+
+<div class="callout callout-tip">
+<div class="callout-title">B = Branch = Branchement = Saut conditionnel</div>
+</div>
+
+---
+
+# Exemple Complet : if (x == 5)
+
+**Code C :**
+```c
+if (R0 == 5) {
+    R1 = 10;
+}
+R2 = 20;  // toujours exécuté
+```
+
+**Code assembleur équivalent :**
+```asm
+    CMP R0, #5        ; Compare R0 avec 5 → flags mis à jour
+    B.NE skip         ; Si R0 ≠ 5, sauter à skip
+    MOV R1, #10       ; R0 == 5 : exécuter le "then"
+skip:
+    MOV R2, #20       ; Suite du programme
+```
+
+<div class="callout callout-warning">
+<div class="callout-title">Attention à la logique inversée !</div>
+On teste la condition <strong>opposée</strong> pour sauter par-dessus le bloc "then".
+</div>
+
+---
+
+# Résumé : Du Calcul à la Décision
+
+```
+    ┌─────────┐
+    │   CMP   │  Compare deux valeurs (soustraction invisible)
+    └────┬────┘
+         │
+         ▼
+    ┌─────────┐
+    │  Flags  │  N, Z, C, V mémorisent le résultat
+    └────┬────┘
+         │
+         ▼
+    ┌─────────┐
+    │  B.xx   │  Teste les flags et décide : sauter ou continuer ?
+    └────┬────┘
+         │
+    ┌────┴────┐
+    ▼         ▼
+ Sauter    Continuer
+```
+
+C'est le mécanisme fondamental de **tout programme** !
 
 ---
 
