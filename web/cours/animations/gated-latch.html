@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gated D Latch - Animation Interactive</title>
+    <link rel="stylesheet" href="common.css">
+    <style>
+        .transparency-warning {
+            background: #744210;
+            border: 2px solid #f6ad55;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #fbd38d;
+            text-align: center;
+        }
+        .state-display {
+            text-align: center;
+            padding: 20px;
+            background: #2d3748;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .state-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .state-badges {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .state-badge {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .problem-section {
+            background: #1a202c;
+            border: 2px solid #e53e3e;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .problem-section h3 {
+            color: #fc8181;
+            margin-top: 0;
+        }
+        .problem-section p {
+            color: #a0aec0;
+            line-height: 1.6;
+        }
+        .timeline {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 15px 0;
+            padding: 15px;
+            background: #2d3748;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .timeline-item {
+            min-width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .construction-section { margin-top: 30px; border: 2px solid #4a5568; border-radius: 12px; overflow: hidden; }
+        .construction-header { background: #2d3748; padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .construction-header:hover { background: #4a5568; }
+        .construction-header h3 { margin: 0; color: #e2e8f0; font-size: 1.1rem; }
+        .construction-toggle { color: #4299e1; font-size: 1.5rem; transition: transform 0.3s; }
+        .construction-content { display: none; padding: 20px; background: #1a202c; }
+        .construction-content.open { display: block; }
+        .construction-toggle.open { transform: rotate(180deg); }
+        .construction-explanation { color: #a0aec0; font-size: 14px; line-height: 1.6; margin: 15px 0; }
+        .component-links { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
+        .component-link { padding: 8px 16px; background: #4299e1; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
+        .component-link:hover { background: #3182ce; }
+    </style>
+</head>
+<body>
+    <h1>Gated D Latch (Verrou D)</h1>
+    <p class="subtitle">SR Latch + Enable + entree D unique - elimine l'etat interdit</p>
+
+    <div class="container">
+        <p class="instructions">Cliquez sur D et Enable pour voir le comportement</p>
+
+        <svg class="circuit-svg" viewBox="0 0 480 220" xmlns="http://www.w3.org/2000/svg">
+            <!-- NOT gate for D -->
+            <polygon id="notGate" points="80,130 80,160 110,145" fill="#2d3748" stroke="#f6ad55" stroke-width="2"/>
+            <circle cx="115" cy="145" r="5" fill="#2d3748" stroke="#f6ad55" stroke-width="2"/>
+
+            <!-- AND gates -->
+            <path class="gate-body" d="M 140 50 L 140 90 L 175 90 Q 210 90 210 70 Q 210 50 175 50 Z" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+            <text x="175" y="75" text-anchor="middle" fill="#4299e1" font-size="9">AND</text>
+
+            <path class="gate-body" d="M 140 130 L 140 170 L 175 170 Q 210 170 210 150 Q 210 130 175 130 Z" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+            <text x="175" y="155" text-anchor="middle" fill="#4299e1" font-size="9">AND</text>
+
+            <!-- SR Latch box -->
+            <rect x="260" y="60" width="100" height="100" rx="8" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
+            <text x="310" y="115" text-anchor="middle" fill="#48bb78" font-size="11">SR Latch</text>
+            <text x="270" y="85" fill="#718096" font-size="9">S</text>
+            <text x="270" y="145" fill="#718096" font-size="9">R</text>
+
+            <!-- D input wire -->
+            <path id="wireD" class="wire off" d="M 40 70 L 140 60"/>
+            <path id="wireDtoNot" class="wire off" d="M 40 70 L 60 70 L 60 145 L 80 145"/>
+            <path id="wireNotOut" class="wire on" d="M 120 145 L 140 145"/>
+
+            <!-- Enable wires -->
+            <path id="wireE" class="wire off" d="M 40 190 L 100 190"/>
+            <path id="wireEtoAnd1" class="wire off" d="M 100 190 L 100 80 L 140 80"/>
+            <path id="wireEtoAnd2" class="wire off" d="M 100 190 L 100 160 L 140 160"/>
+
+            <!-- AND to SR wires -->
+            <path id="wireAnd1Out" class="wire off" d="M 210 70 L 260 80"/>
+            <path id="wireAnd2Out" class="wire off" d="M 210 150 L 260 140"/>
+
+            <!-- Output wires -->
+            <path id="wireQ" class="wire on" d="M 360 90 L 440 90"/>
+            <path id="wireQn" class="wire off" d="M 360 130 L 440 130"/>
+
+            <!-- D input toggle -->
+            <g class="input-toggle" onclick="toggleInput('D')">
+                <circle id="inputD" cx="40" cy="70" r="18" fill="#e53e3e"/>
+                <text id="inputDText" x="40" y="76" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Enable toggle -->
+            <g class="input-toggle" onclick="toggleInput('E')">
+                <circle id="inputE" cx="40" cy="190" r="18" fill="#4299e1"/>
+                <text id="inputEText" x="40" y="196" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Output Q -->
+            <circle id="outputQ" cx="440" cy="90" r="18" fill="#48bb78"/>
+            <text id="outputQText" x="440" y="96" text-anchor="middle" fill="white" font-weight="bold" font-size="14">1</text>
+
+            <!-- Output Q' -->
+            <circle id="outputQn" cx="440" cy="130" r="18" fill="#e53e3e"/>
+            <text id="outputQnText" x="440" y="136" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+
+            <!-- Labels -->
+            <text class="label" x="40" y="45" text-anchor="middle" fill="#fc8181">D (Data)</text>
+            <text class="label" x="40" y="215" text-anchor="middle" fill="#4299e1">E (Enable)</text>
+            <text class="label label-output" x="440" y="65" text-anchor="middle">Q</text>
+            <text class="label label-output" x="440" y="165" text-anchor="middle">Q'</text>
+        </svg>
+
+        <div class="state-display">
+            <div class="state-name" id="stateName">Mode: VERROUILLE</div>
+            <div class="state-badges">
+                <div class="state-badge" id="enableBadge" style="background: #742a2a; color: #fc8181;">
+                    Enable = 0 (Verrouille)
+                </div>
+                <div class="state-badge" id="memoryBadge" style="background: #276749; color: #48bb78;">
+                    Q = 1
+                </div>
+            </div>
+        </div>
+
+        <div class="transparency-warning" id="transparencyWarning" style="display: none;">
+            <strong>Mode TRANSPARENT!</strong> Quand Enable=1, toute modification de D se repercute
+            immediatement sur Q. C'est le "probleme de transparence" qui motive l'invention du DFF.
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <span>D =</span>
+                <span id="statusD" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>E =</span>
+                <span id="statusE" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>Q =</span>
+                <span id="statusQ" class="status-value on">1</span>
+            </div>
+        </div>
+
+        <h3 style="text-align: center; color: #a0aec0; margin-top: 20px;">Historique (D en haut, Q en bas)</h3>
+        <div style="text-align: center; color: #718096; font-size: 12px; margin-bottom: 10px;">
+            Vert = Enable actif (transparent) | Gris = Enable inactif (verrouille)
+        </div>
+        <div class="timeline" id="timelineD"></div>
+        <div class="timeline" id="timelineQ"></div>
+
+        <div class="problem-section">
+            <h3>Le Probleme de Transparence</h3>
+            <p>
+                Quand <strong>Enable = 1</strong>, le latch est "transparent": Q suit D instantanement.
+                C'est un probleme dans un circuit sequentiel car:
+            </p>
+            <ul style="color: #a0aec0;">
+                <li>Si D change plusieurs fois pendant Enable=1, Q change aussi</li>
+                <li>On ne peut pas controler precisement QUAND capturer la valeur</li>
+                <li>Des oscillations peuvent se propager dans le circuit</li>
+            </ul>
+            <p>
+                <strong>Solution:</strong> Le DFF (D Flip-Flop) capture D seulement au moment precis
+                du front montant de l'horloge, pas pendant toute la duree ou l'horloge est haute.
+            </p>
+        </div>
+
+        <table class="truth-table">
+            <thead>
+                <tr><th>E</th><th>D</th><th>Q (apres)</th><th>Mode</th></tr>
+            </thead>
+            <tbody id="truthTable">
+                <tr><td>0</td><td>X</td><td>Q</td><td>Verrouille (memoire)</td></tr>
+                <tr><td>1</td><td>0</td><td>0</td><td>Transparent</td></tr>
+                <tr><td>1</td><td>1</td><td>1</td><td>Transparent</td></tr>
+            </tbody>
+        </table>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="reset()">Reset</button>
+            <button id="animBtn" class="btn btn-primary" onclick="animate()">Demo Transparence</button>
+        </div>
+
+        <!-- Construction Section -->
+        <div class="construction-section">
+            <div class="construction-header" onclick="toggleConstruction()">
+                <h3>Voir la Construction</h3>
+                <span class="construction-toggle" id="constructionToggle">&#9660;</span>
+            </div>
+            <div class="construction-content" id="constructionContent">
+                <p class="construction-explanation">
+                    Le Gated D Latch resout le probleme de l'etat interdit du SR Latch en utilisant
+                    une seule entree D (Data) et son complement NOT(D):
+                </p>
+
+                <svg viewBox="0 0 400 140" xmlns="http://www.w3.org/2000/svg" style="max-width: 400px; margin: 0 auto; display: block;">
+                    <!-- D input -->
+                    <path class="wire off" d="M 30 50 L 80 50"/>
+                    <path class="wire off" d="M 50 50 L 50 90 L 80 90"/>
+
+                    <!-- NOT for D -->
+                    <polygon points="80,82 80,98 100,90" fill="#2d3748" stroke="#f6ad55" stroke-width="1.5"/>
+                    <circle cx="103" cy="90" r="4" fill="#2d3748" stroke="#f6ad55" stroke-width="1.5"/>
+
+                    <!-- AND gates -->
+                    <path d="M 130 35 L 130 65 L 155 65 Q 175 65 175 50 Q 175 35 155 35 Z" fill="#2d3748" stroke="#4299e1" stroke-width="1.5"/>
+                    <path d="M 130 75 L 130 105 L 155 105 Q 175 105 175 90 Q 175 75 155 75 Z" fill="#2d3748" stroke="#4299e1" stroke-width="1.5"/>
+
+                    <!-- Wires to AND -->
+                    <path class="wire off" d="M 80 50 L 130 45"/>
+                    <path class="wire on" d="M 107 90 L 130 85"/>
+                    <path class="wire off" d="M 110 120 L 110 55 L 130 55"/>
+                    <path class="wire off" d="M 110 120 L 130 95"/>
+
+                    <!-- SR Latch -->
+                    <rect x="220" y="40" width="80" height="60" rx="5" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
+                    <text x="260" y="75" text-anchor="middle" fill="#48bb78" font-size="9">SR Latch</text>
+
+                    <!-- Wires to SR -->
+                    <path class="wire off" d="M 175 50 L 220 55"/>
+                    <path class="wire off" d="M 175 90 L 220 85"/>
+
+                    <!-- Output -->
+                    <path class="wire on" d="M 300 70 L 370 70"/>
+                    <circle cx="370" cy="70" r="12" fill="#48bb78"/>
+                    <text x="370" y="74" text-anchor="middle" fill="white" font-size="10">Q</text>
+
+                    <!-- Labels -->
+                    <circle cx="30" cy="50" r="10" fill="#e53e3e"/>
+                    <text x="30" y="54" text-anchor="middle" fill="white" font-size="9">D</text>
+                    <circle cx="110" cy="120" r="10" fill="#4299e1"/>
+                    <text x="110" y="124" text-anchor="middle" fill="white" font-size="8">E</text>
+
+                    <text x="175" y="30" fill="#718096" font-size="8">S = D AND E</text>
+                    <text x="175" y="115" fill="#718096" font-size="8">R = NOT(D) AND E</text>
+                </svg>
+
+                <p class="construction-explanation" style="text-align: center; margin-top: 15px;">
+                    <strong>Garantie:</strong> S et R ne peuvent jamais etre 1 en meme temps<br>
+                    car S = D.E et R = (NOT D).E → si E=1, soit S=1 soit R=1, jamais les deux!
+                </p>
+
+                <div class="component-links">
+                    <a href="sr-latch.html" class="component-link">Voir SR Latch</a>
+                    <a href="and.html" class="component-link">Voir AND</a>
+                    <a href="dff.html" class="component-link">Voir DFF</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav" style="margin-top: 20px;">
+        <a href="index.html">Index</a>
+        <a href="sr-latch.html">SR Latch</a>
+        <a href="dff.html">DFF</a>
+        <a href="register.html">Registre</a>
+    </nav>
+
+    <script>
+        let D = 0, E = 0;
+        let Q = 1;
+        let animating = false;
+        let historyD = [];
+        let historyQ = [];
+        let historyE = [];
+        const maxHistory = 15;
+
+        function updateAnimBtn() {
+            const btn = document.getElementById('animBtn');
+            btn.textContent = animating ? 'Stop' : 'Demo Transparence';
+            btn.classList.toggle('animating', animating);
+        }
+
+        function toggleInput(input) {
+            if (animating) return;
+            if (input === 'D') D = 1 - D;
+            else E = 1 - E;
+            addHistory();
+            updateCircuit();
+        }
+
+        function addHistory() {
+            historyD.push(D);
+            historyQ.push(Q);
+            historyE.push(E);
+            if (historyD.length > maxHistory) {
+                historyD.shift();
+                historyQ.shift();
+                historyE.shift();
+            }
+        }
+
+        function updateCircuit() {
+            // Gated D Latch logic
+            if (E === 1) {
+                Q = D; // Transparent mode
+            }
+            // else: Q stays as it is (latched)
+
+            const Qn = 1 - Q;
+            const notD = 1 - D;
+            const S = D & E;
+            const R = notD & E;
+
+            // Update visuals
+            document.getElementById('inputD').setAttribute('fill', D ? '#48bb78' : '#e53e3e');
+            document.getElementById('inputDText').textContent = D;
+            document.getElementById('inputE').setAttribute('fill', E ? '#48bb78' : '#4299e1');
+            document.getElementById('inputEText').textContent = E;
+
+            document.getElementById('wireD').className.baseVal = 'wire ' + (D ? 'on' : 'off');
+            document.getElementById('wireDtoNot').className.baseVal = 'wire ' + (D ? 'on' : 'off');
+            document.getElementById('wireNotOut').className.baseVal = 'wire ' + (notD ? 'on' : 'off');
+            document.getElementById('wireE').className.baseVal = 'wire ' + (E ? 'on' : 'off');
+            document.getElementById('wireEtoAnd1').className.baseVal = 'wire ' + (E ? 'on' : 'off');
+            document.getElementById('wireEtoAnd2').className.baseVal = 'wire ' + (E ? 'on' : 'off');
+            document.getElementById('wireAnd1Out').className.baseVal = 'wire ' + (S ? 'on' : 'off');
+            document.getElementById('wireAnd2Out').className.baseVal = 'wire ' + (R ? 'on' : 'off');
+            document.getElementById('wireQ').className.baseVal = 'wire ' + (Q ? 'on' : 'off');
+            document.getElementById('wireQn').className.baseVal = 'wire ' + (Qn ? 'on' : 'off');
+
+            document.getElementById('outputQ').setAttribute('fill', Q ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputQText').textContent = Q;
+            document.getElementById('outputQn').setAttribute('fill', Qn ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputQnText').textContent = Qn;
+
+            // Status
+            document.getElementById('statusD').textContent = D;
+            document.getElementById('statusD').className = 'status-value ' + (D ? 'on' : 'off');
+            document.getElementById('statusE').textContent = E;
+            document.getElementById('statusE').className = 'status-value ' + (E ? 'on' : 'off');
+            document.getElementById('statusQ').textContent = Q;
+            document.getElementById('statusQ').className = 'status-value ' + (Q ? 'on' : 'off');
+
+            // State display
+            if (E === 1) {
+                document.getElementById('stateName').textContent = 'Mode: TRANSPARENT';
+                document.getElementById('stateName').style.color = '#f6ad55';
+                document.getElementById('enableBadge').style.background = '#744210';
+                document.getElementById('enableBadge').style.color = '#fbd38d';
+                document.getElementById('enableBadge').textContent = 'Enable = 1 (Transparent)';
+                document.getElementById('transparencyWarning').style.display = 'block';
+            } else {
+                document.getElementById('stateName').textContent = 'Mode: VERROUILLE';
+                document.getElementById('stateName').style.color = '#4299e1';
+                document.getElementById('enableBadge').style.background = '#2c5282';
+                document.getElementById('enableBadge').style.color = '#90cdf4';
+                document.getElementById('enableBadge').textContent = 'Enable = 0 (Verrouille)';
+                document.getElementById('transparencyWarning').style.display = 'none';
+            }
+
+            document.getElementById('memoryBadge').style.background = Q ? '#276749' : '#742a2a';
+            document.getElementById('memoryBadge').style.color = Q ? '#48bb78' : '#fc8181';
+            document.getElementById('memoryBadge').textContent = 'Q = ' + Q;
+
+            updateTimelines();
+        }
+
+        function updateTimelines() {
+            const timelineD = document.getElementById('timelineD');
+            const timelineQ = document.getElementById('timelineQ');
+            timelineD.innerHTML = '<span style="color:#718096;min-width:30px;">D:</span>';
+            timelineQ.innerHTML = '<span style="color:#718096;min-width:30px;">Q:</span>';
+
+            for (let i = 0; i < historyD.length; i++) {
+                const isEnabled = historyE[i] === 1;
+                const bgColor = isEnabled ? '#276749' : '#4a5568';
+
+                const dItem = document.createElement('div');
+                dItem.className = 'timeline-item';
+                dItem.style.background = bgColor;
+                dItem.style.color = historyD[i] ? '#48bb78' : '#fc8181';
+                dItem.textContent = historyD[i];
+                timelineD.appendChild(dItem);
+
+                const qItem = document.createElement('div');
+                qItem.className = 'timeline-item';
+                qItem.style.background = bgColor;
+                qItem.style.color = historyQ[i] ? '#48bb78' : '#fc8181';
+                qItem.textContent = historyQ[i];
+                timelineQ.appendChild(qItem);
+            }
+        }
+
+        function reset() {
+            animating = false;
+            updateAnimBtn();
+            D = 0; E = 0; Q = 1;
+            historyD = []; historyQ = []; historyE = [];
+            addHistory();
+            updateCircuit();
+        }
+
+        function toggleConstruction() {
+            document.getElementById('constructionContent').classList.toggle('open');
+            document.getElementById('constructionToggle').classList.toggle('open');
+        }
+
+        async function animate() {
+            if (animating) {
+                animating = false;
+                updateAnimBtn();
+                return;
+            }
+            animating = true;
+            updateAnimBtn();
+
+            // Demo: show transparency problem
+            const sequence = [
+                { E: 1, wait: 500 },  // Enable
+                { D: 1, wait: 500 },  // D changes -> Q follows
+                { D: 0, wait: 500 },  // D changes -> Q follows
+                { D: 1, wait: 500 },  // D changes -> Q follows
+                { D: 0, wait: 500 },  // Multiple changes while enabled!
+                { D: 1, wait: 500 },
+                { E: 0, wait: 800 },  // Disable - Q is now latched
+                { D: 0, wait: 500 },  // D changes but Q doesn't!
+                { D: 1, wait: 500 },  // D changes but Q doesn't!
+                { D: 0, wait: 500 },  // Q stays at 1
+                { E: 1, wait: 500 },  // Enable again - Q immediately becomes 0
+                { wait: 1000 },
+            ];
+
+            for (const step of sequence) {
+                if (!animating) break;
+                if (step.D !== undefined) D = step.D;
+                if (step.E !== undefined) E = step.E;
+                addHistory();
+                updateCircuit();
+                if (step.wait) await new Promise(r => setTimeout(r, step.wait));
+            }
+
+            animating = false;
+            updateAnimBtn();
+        }
+
+        // Initialize
+        addHistory();
+        updateCircuit();
+    </script>
+</body>
+</html>

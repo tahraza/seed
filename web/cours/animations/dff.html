@@ -86,6 +86,15 @@
     <h1>DFF - Data Flip-Flop</h1>
     <p class="subtitle">Element de memoire de base - stocke 1 bit</p>
 
+    <div style="background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); border-radius: 10px; padding: 15px 20px; margin: 20px auto; max-width: 700px; border-left: 4px solid #9f7aea;">
+        <p style="color: #e2e8f0; margin: 0 0 10px 0; font-size: 14px;"><strong>Prerequis recommandes:</strong> Pour comprendre le DFF, voyez d'abord comment fonctionne la memoire:</p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="sr-latch.html" style="padding: 8px 16px; background: #4a5568; color: #e2e8f0; text-decoration: none; border-radius: 6px; font-size: 13px;">1. SR Latch (verrou de base)</a>
+            <a href="gated-latch.html" style="padding: 8px 16px; background: #4a5568; color: #e2e8f0; text-decoration: none; border-radius: 6px; font-size: 13px;">2. Gated D Latch (+ Enable)</a>
+            <span style="padding: 8px 16px; background: #9f7aea; color: white; border-radius: 6px; font-size: 13px;">3. DFF (vous etes ici)</span>
+        </div>
+    </div>
+
     <div class="container">
         <p class="instructions">Cliquez sur D pour changer l'entree, puis sur CLK pour capturer la valeur</p>
 
@@ -204,66 +213,100 @@
             </div>
             <div class="construction-content" id="constructionContent">
                 <div class="construction-formula">
-                    <span class="highlight">DFF</span> = SR Latch + Detection de front montant
+                    <span class="highlight">DFF</span> = 2 × Gated D Latch (Master + Slave) avec horloges inversees
+                </div>
+
+                <div style="background: #2d3748; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <p class="construction-explanation" style="margin: 0;">
+                        <strong style="color: #f6ad55;">Pourquoi le DFF?</strong> Le <a href="gated-latch.html" style="color: #4299e1;">Gated D Latch</a> a un probleme:
+                        quand Enable=1, il est "transparent" - les changements de D passent directement a Q.
+                        Dans un circuit synchrone, ca cree des courses (race conditions) car un signal peut traverser plusieurs latches en un seul cycle.
+                    </p>
                 </div>
 
                 <p class="construction-explanation">
-                    Le DFF (D Flip-Flop) est construit a partir de portes NAND formant un verrou SR (Set-Reset)
-                    avec une logique de detection du front montant de l'horloge.
-                    C'est l'element de base de toute memoire sequentielle.
+                    <strong>Solution Master-Slave:</strong> On enchaine 2 latches avec des signaux Enable <em>opposes</em>.
+                    Quand CLK=0, le Master capture D mais le Slave est ferme.
+                    Quand CLK=1, le Master est ferme et le Slave copie ce que le Master a capture.
+                    Resultat: Q ne change qu'au moment precis du front montant!
                 </p>
 
-                <svg viewBox="0 0 420 140" xmlns="http://www.w3.org/2000/svg" style="max-width: 420px; margin: 0 auto; display: block;">
+                <svg viewBox="0 0 520 180" xmlns="http://www.w3.org/2000/svg" style="max-width: 520px; margin: 0 auto; display: block;">
                     <!-- Master latch -->
-                    <rect x="80" y="30" width="80" height="60" rx="6" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
-                    <text x="120" y="65" text-anchor="middle" fill="#4299e1" font-size="10">MASTER</text>
-                    <text x="120" y="78" text-anchor="middle" fill="#718096" font-size="8">(SR Latch)</text>
+                    <rect x="100" y="30" width="100" height="70" rx="8" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+                    <text x="150" y="55" text-anchor="middle" fill="#4299e1" font-size="12" font-weight="bold">MASTER</text>
+                    <text x="150" y="72" text-anchor="middle" fill="#718096" font-size="10">(Gated D Latch)</text>
+                    <text x="150" y="88" text-anchor="middle" fill="#f6ad55" font-size="9">E = NOT(CLK)</text>
 
                     <!-- Slave latch -->
-                    <rect x="220" y="30" width="80" height="60" rx="6" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
-                    <text x="260" y="65" text-anchor="middle" fill="#48bb78" font-size="10">SLAVE</text>
-                    <text x="260" y="78" text-anchor="middle" fill="#718096" font-size="8">(SR Latch)</text>
+                    <rect x="280" y="30" width="100" height="70" rx="8" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
+                    <text x="330" y="55" text-anchor="middle" fill="#48bb78" font-size="12" font-weight="bold">SLAVE</text>
+                    <text x="330" y="72" text-anchor="middle" fill="#718096" font-size="10">(Gated D Latch)</text>
+                    <text x="330" y="88" text-anchor="middle" fill="#f6ad55" font-size="9">E = CLK</text>
 
-                    <!-- Wires -->
-                    <path class="wire off" d="M 30 50 L 80 50"/>
-                    <path class="wire on" d="M 160 60 L 220 60"/>
-                    <path class="wire on" d="M 300 60 L 390 60"/>
+                    <!-- D input -->
+                    <path class="wire off" d="M 40 55 L 100 55" stroke-width="3"/>
+                    <circle cx="40" cy="55" r="14" fill="#e53e3e"/>
+                    <text x="40" y="60" text-anchor="middle" fill="white" font-size="11" font-weight="bold">D</text>
 
-                    <!-- Clock distribution -->
-                    <path class="wire off" d="M 30 110 L 60 110"/>
-                    <path class="wire off" d="M 60 110 L 60 80 L 80 80"/>
-                    <path class="wire on" d="M 60 110 L 180 110"/>
-                    <path class="wire on" d="M 180 110 L 180 80 L 220 80"/>
+                    <!-- Master to Slave wire -->
+                    <path class="wire on" d="M 200 65 L 280 65" stroke-width="3"/>
 
-                    <!-- NOT for inverted clock -->
-                    <polygon points="165,105 165,115 180,110" fill="#2d3748" stroke="#f6ad55" stroke-width="1.5"/>
+                    <!-- Q output -->
+                    <path class="wire on" d="M 380 65 L 480 65" stroke-width="3"/>
+                    <circle cx="480" cy="65" r="14" fill="#48bb78"/>
+                    <text x="480" y="70" text-anchor="middle" fill="white" font-size="11" font-weight="bold">Q</text>
 
-                    <!-- Inputs -->
-                    <circle cx="30" cy="50" r="10" fill="#e53e3e"/>
-                    <text x="30" y="54" text-anchor="middle" fill="white" font-size="9">D</text>
-                    <circle cx="30" cy="110" r="10" fill="#4299e1"/>
-                    <text x="30" y="114" text-anchor="middle" fill="white" font-size="8">CLK</text>
+                    <!-- Clock input -->
+                    <circle cx="40" cy="140" r="14" fill="#4299e1"/>
+                    <text x="40" y="145" text-anchor="middle" fill="white" font-size="9" font-weight="bold">CLK</text>
 
-                    <!-- Output -->
-                    <circle cx="390" cy="60" r="12" fill="#48bb78"/>
-                    <text x="390" y="64" text-anchor="middle" fill="white" font-size="9">Q</text>
+                    <!-- Clock to NOT -->
+                    <path class="wire off" d="M 54 140 L 130 140" stroke-width="2"/>
 
-                    <!-- Labels -->
-                    <text x="120" y="22" fill="#718096" font-size="8" text-anchor="middle">Transparent quand CLK=0</text>
-                    <text x="260" y="22" fill="#718096" font-size="8" text-anchor="middle">Transparent quand CLK=1</text>
+                    <!-- NOT gate -->
+                    <polygon points="130,132 130,148 150,140" fill="#2d3748" stroke="#f6ad55" stroke-width="2"/>
+                    <circle cx="153" cy="140" r="4" fill="none" stroke="#f6ad55" stroke-width="2"/>
+
+                    <!-- NOT CLK to Master -->
+                    <path class="wire on" d="M 157 140 L 170 140 L 170 100 L 150 100" stroke-width="2"/>
+                    <circle cx="150" cy="100" r="4" fill="#f6ad55"/>
+
+                    <!-- CLK to Slave -->
+                    <path class="wire off" d="M 130 140 L 130 155 L 350 155 L 350 100 L 330 100" stroke-width="2"/>
+                    <circle cx="330" cy="100" r="4" fill="#4299e1"/>
+
+                    <!-- State annotations -->
+                    <text x="150" y="18" fill="#4299e1" font-size="9" text-anchor="middle">Ouvert quand CLK=0</text>
+                    <text x="330" y="18" fill="#48bb78" font-size="9" text-anchor="middle">Ouvert quand CLK=1</text>
                 </svg>
 
-                <p class="construction-explanation" style="text-align: center; margin-top: 15px;">
-                    <strong>Fonctionnement Master-Slave:</strong><br>
-                    CLK=0: Master capture D, Slave maintient<br>
-                    CLK=1: Master maintient, Slave copie Master<br>
-                    → Q change seulement au front montant de CLK
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+                    <div style="background: #1e3a5f; padding: 12px; border-radius: 8px; border-left: 3px solid #4299e1;">
+                        <p style="color: #4299e1; font-weight: bold; margin: 0 0 5px 0; font-size: 13px;">CLK = 0 (bas)</p>
+                        <p style="color: #a0aec0; margin: 0; font-size: 12px;">
+                            Master OUVERT → capture D<br>
+                            Slave FERME → maintient Q
+                        </p>
+                    </div>
+                    <div style="background: #1e4a3f; padding: 12px; border-radius: 8px; border-left: 3px solid #48bb78;">
+                        <p style="color: #48bb78; font-weight: bold; margin: 0 0 5px 0; font-size: 13px;">CLK = 1 (haut)</p>
+                        <p style="color: #a0aec0; margin: 0; font-size: 12px;">
+                            Master FERME → maintient<br>
+                            Slave OUVERT → copie Master → Q
+                        </p>
+                    </div>
+                </div>
+
+                <p class="construction-explanation" style="text-align: center; margin-top: 15px; padding: 10px; background: #2d3748; border-radius: 8px;">
+                    <strong style="color: #48bb78;">Resultat:</strong> Q change uniquement au <strong>front montant</strong> (0→1) de CLK.<br>
+                    C'est cette propriete qui rend les circuits synchrones fiables!
                 </p>
 
                 <div class="component-links">
-                    <a href="nand.html" class="component-link">Voir NAND</a>
+                    <a href="sr-latch.html" class="component-link">Voir SR Latch</a>
+                    <a href="gated-latch.html" class="component-link">Voir Gated D Latch</a>
                     <a href="register.html" class="component-link">Voir Registre</a>
-                    <a href="ram.html" class="component-link">Voir RAM</a>
                 </div>
             </div>
         </div>
@@ -271,8 +314,9 @@
 
     <nav class="nav" style="margin-top: 20px;">
         <a href="index.html">Index</a>
+        <a href="sr-latch.html">SR Latch</a>
+        <a href="gated-latch.html">Gated D Latch</a>
         <a href="register.html">Registre 1-bit</a>
-        <a href="register32.html">Registre 32-bit</a>
         <a href="ram.html">RAM</a>
     </nav>
 

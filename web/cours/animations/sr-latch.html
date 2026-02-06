@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SR Latch - Animation Interactive</title>
+    <link rel="stylesheet" href="common.css">
+    <style>
+        .warning-box {
+            background: #742a2a;
+            border: 2px solid #e53e3e;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #feb2b2;
+            text-align: center;
+            display: none;
+        }
+        .warning-box.show { display: block; }
+        .state-display {
+            text-align: center;
+            padding: 20px;
+            background: #2d3748;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .state-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .state-description {
+            color: #a0aec0;
+            font-size: 14px;
+        }
+        .memory-indicator {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+        .step-explanation {
+            background: #1a202c;
+            border-left: 4px solid #4299e1;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .step-explanation h4 {
+            color: #4299e1;
+            margin: 0 0 10px 0;
+        }
+        .step-explanation p {
+            color: #a0aec0;
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <h1>SR Latch (Verrou Set-Reset)</h1>
+    <p class="subtitle">L'element de memoire le plus simple - 2 NAND croisees</p>
+
+    <div class="container">
+        <p class="instructions">Cliquez sur S (Set) ou R (Reset) pour changer l'etat</p>
+
+        <svg class="circuit-svg" viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg">
+            <!-- NAND 1 (top) -->
+            <path id="nand1" class="gate-body" d="M 150 40 L 150 90 L 190 90 Q 230 90 230 65 Q 230 40 190 40 Z" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+            <circle cx="240" cy="65" r="8" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+
+            <!-- NAND 2 (bottom) -->
+            <path id="nand2" class="gate-body" d="M 150 110 L 150 160 L 190 160 Q 230 160 230 135 Q 230 110 190 110 Z" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
+            <circle cx="240" cy="135" r="8" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
+
+            <!-- S input wire -->
+            <path id="wireS" class="wire off" d="M 40 50 L 150 50"/>
+
+            <!-- R input wire -->
+            <path id="wireR" class="wire off" d="M 40 150 L 150 150"/>
+
+            <!-- Cross-coupling wires -->
+            <path id="wireCross1" class="wire on" d="M 248 65 L 280 65 L 280 120 L 150 120"/>
+            <path id="wireCross2" class="wire off" d="M 248 135 L 280 135 L 280 180 L 120 180 L 120 80 L 150 80"/>
+
+            <!-- Output Q wire -->
+            <path id="wireQ" class="wire on" d="M 280 65 L 380 65"/>
+
+            <!-- Output Q' wire -->
+            <path id="wireQn" class="wire off" d="M 280 135 L 380 135"/>
+
+            <!-- S input toggle -->
+            <g class="input-toggle" onclick="setInput('S', 1)">
+                <circle id="inputS" cx="40" cy="50" r="18" fill="#e53e3e"/>
+                <text id="inputSText" x="40" y="56" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- R input toggle -->
+            <g class="input-toggle" onclick="setInput('R', 1)">
+                <circle id="inputR" cx="40" cy="150" r="18" fill="#e53e3e"/>
+                <text id="inputRText" x="40" y="156" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Output Q -->
+            <circle id="outputQ" cx="380" cy="65" r="18" fill="#48bb78"/>
+            <text id="outputQText" x="380" y="71" text-anchor="middle" fill="white" font-weight="bold" font-size="14">1</text>
+
+            <!-- Output Q' -->
+            <circle id="outputQn" cx="380" cy="135" r="18" fill="#e53e3e"/>
+            <text id="outputQnText" x="380" y="141" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+
+            <!-- Labels -->
+            <text class="label" x="40" y="25" text-anchor="middle" fill="#fc8181">S (Set)</text>
+            <text class="label" x="40" y="185" text-anchor="middle" fill="#fc8181">R (Reset)</text>
+            <text class="label label-output" x="380" y="40" text-anchor="middle">Q</text>
+            <text class="label label-output" x="380" y="170" text-anchor="middle">Q'</text>
+
+            <!-- Gate labels -->
+            <text x="190" y="70" text-anchor="middle" fill="#4299e1" font-size="10">NAND</text>
+            <text x="190" y="140" text-anchor="middle" fill="#48bb78" font-size="10">NAND</text>
+
+            <!-- Note about active low -->
+            <text x="100" y="50" text-anchor="middle" fill="#718096" font-size="9">(actif bas)</text>
+            <text x="100" y="150" text-anchor="middle" fill="#718096" font-size="9">(actif bas)</text>
+        </svg>
+
+        <div class="warning-box" id="warningBox">
+            <strong>Etat interdit!</strong> S=0 et R=0 force Q=Q'=1, ce qui est incoherent.
+            En pratique, cet etat doit etre evite.
+        </div>
+
+        <div class="state-display">
+            <div class="state-name" id="stateName">Etat: MAINTIEN</div>
+            <div>
+                <span class="memory-indicator" id="memIndicator" style="background: #276749; color: #48bb78;">
+                    Memoire: Q = 1
+                </span>
+            </div>
+            <div class="state-description" id="stateDesc">
+                S=1, R=1: Le latch conserve son etat actuel
+            </div>
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <span>S =</span>
+                <span id="statusS" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>R =</span>
+                <span id="statusR" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>Q =</span>
+                <span id="statusQ" class="status-value on">1</span>
+            </div>
+            <div class="status-item">
+                <span>Q' =</span>
+                <span id="statusQn" class="status-value off">0</span>
+            </div>
+        </div>
+
+        <div class="step-explanation">
+            <h4>Comment ca marche ?</h4>
+            <p id="explanation">
+                Le SR Latch utilise le principe de <strong>retro-action</strong>: la sortie de chaque NAND
+                est connectee a l'entree de l'autre. Cette boucle permet de "memoriser" un bit.
+                <br><br>
+                <strong>NAND(0, x) = 1</strong> toujours, donc mettre S=0 force Q=1 (SET).<br>
+                <strong>NAND(0, x) = 1</strong> toujours, donc mettre R=0 force Q'=1, donc Q=0 (RESET).
+            </p>
+        </div>
+
+        <table class="truth-table">
+            <thead>
+                <tr><th>S</th><th>R</th><th>Q</th><th>Q'</th><th>Action</th></tr>
+            </thead>
+            <tbody id="truthTable">
+                <tr><td>1</td><td>1</td><td>Q</td><td>Q'</td><td>Maintien (memoire)</td></tr>
+                <tr><td>0</td><td>1</td><td>1</td><td>0</td><td>SET (Q=1)</td></tr>
+                <tr><td>1</td><td>0</td><td>0</td><td>1</td><td>RESET (Q=0)</td></tr>
+                <tr class="forbidden"><td>0</td><td>0</td><td>1</td><td>1</td><td>INTERDIT</td></tr>
+            </tbody>
+        </table>
+
+        <style>
+            .forbidden { background: #742a2a !important; color: #feb2b2; }
+        </style>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="reset()">Reset</button>
+            <button id="animBtn" class="btn btn-primary" onclick="animate()">Demo</button>
+        </div>
+    </div>
+
+    <nav class="nav" style="margin-top: 20px;">
+        <a href="index.html">Index</a>
+        <a href="nand.html">NAND</a>
+        <a href="gated-latch.html">Gated Latch</a>
+        <a href="dff.html">DFF</a>
+    </nav>
+
+    <script>
+        // Note: S=0 means SET active, S=1 means SET inactive (active low)
+        let S = 1, R = 1;  // Both inactive
+        let Q = 1, Qn = 0; // Initial state
+        let animating = false;
+
+        function updateAnimBtn() {
+            const btn = document.getElementById('animBtn');
+            btn.textContent = animating ? 'Stop' : 'Demo';
+            btn.classList.toggle('animating', animating);
+        }
+
+        function setInput(input, pulse) {
+            if (animating) return;
+
+            if (input === 'S') {
+                S = 0; // Activate SET
+                setTimeout(() => { S = 1; updateCircuit(); }, 500);
+            } else {
+                R = 0; // Activate RESET
+                setTimeout(() => { R = 1; updateCircuit(); }, 500);
+            }
+            updateCircuit();
+        }
+
+        function updateCircuit() {
+            // SR Latch logic (active low inputs)
+            if (S === 0 && R === 0) {
+                // Forbidden state
+                Q = 1;
+                Qn = 1;
+            } else if (S === 0) {
+                // SET
+                Q = 1;
+                Qn = 0;
+            } else if (R === 0) {
+                // RESET
+                Q = 0;
+                Qn = 1;
+            }
+            // else: HOLD - Q and Qn stay as they are
+
+            // Update visuals
+            document.getElementById('inputS').setAttribute('fill', S === 0 ? '#48bb78' : '#e53e3e');
+            document.getElementById('inputSText').textContent = S === 0 ? '0' : '1';
+            document.getElementById('inputR').setAttribute('fill', R === 0 ? '#48bb78' : '#e53e3e');
+            document.getElementById('inputRText').textContent = R === 0 ? '0' : '1';
+
+            document.getElementById('wireS').className.baseVal = 'wire ' + (S === 0 ? 'on' : 'off');
+            document.getElementById('wireR').className.baseVal = 'wire ' + (R === 0 ? 'on' : 'off');
+            document.getElementById('wireQ').className.baseVal = 'wire ' + (Q ? 'on' : 'off');
+            document.getElementById('wireQn').className.baseVal = 'wire ' + (Qn ? 'on' : 'off');
+            document.getElementById('wireCross1').className.baseVal = 'wire ' + (Q ? 'on' : 'off');
+            document.getElementById('wireCross2').className.baseVal = 'wire ' + (Qn ? 'on' : 'off');
+
+            document.getElementById('outputQ').setAttribute('fill', Q ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputQText').textContent = Q;
+            document.getElementById('outputQn').setAttribute('fill', Qn ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputQnText').textContent = Qn;
+
+            // Status display with active-low logic shown
+            document.getElementById('statusS').textContent = S === 0 ? '0 (actif)' : '1';
+            document.getElementById('statusS').className = 'status-value ' + (S === 0 ? 'on' : 'off');
+            document.getElementById('statusR').textContent = R === 0 ? '0 (actif)' : '1';
+            document.getElementById('statusR').className = 'status-value ' + (R === 0 ? 'on' : 'off');
+            document.getElementById('statusQ').textContent = Q;
+            document.getElementById('statusQ').className = 'status-value ' + (Q ? 'on' : 'off');
+            document.getElementById('statusQn').textContent = Qn;
+            document.getElementById('statusQn').className = 'status-value ' + (Qn ? 'on' : 'off');
+
+            // State display
+            let stateName, stateDesc, memColor, memText;
+
+            if (S === 0 && R === 0) {
+                stateName = 'Etat: INTERDIT';
+                stateDesc = 'S=0, R=0: Les deux sorties sont forcees a 1 - etat incoherent!';
+                memColor = '#742a2a';
+                memText = 'color: #feb2b2';
+                document.getElementById('warningBox').classList.add('show');
+            } else if (S === 0) {
+                stateName = 'Etat: SET';
+                stateDesc = 'S=0 force Q=1. Le latch "memorise" la valeur 1.';
+                memColor = '#276749';
+                memText = 'color: #48bb78';
+                document.getElementById('warningBox').classList.remove('show');
+            } else if (R === 0) {
+                stateName = 'Etat: RESET';
+                stateDesc = 'R=0 force Q=0. Le latch "memorise" la valeur 0.';
+                memColor = '#742a2a';
+                memText = 'color: #fc8181';
+                document.getElementById('warningBox').classList.remove('show');
+            } else {
+                stateName = 'Etat: MAINTIEN';
+                stateDesc = 'S=1, R=1: Le latch conserve son etat actuel (Q=' + Q + ')';
+                memColor = Q ? '#276749' : '#742a2a';
+                memText = Q ? 'color: #48bb78' : 'color: #fc8181';
+                document.getElementById('warningBox').classList.remove('show');
+            }
+
+            document.getElementById('stateName').textContent = stateName;
+            document.getElementById('stateDesc').textContent = stateDesc;
+            document.getElementById('memIndicator').style.background = memColor;
+            document.getElementById('memIndicator').style.cssText = memText + '; background: ' + memColor;
+            document.getElementById('memIndicator').textContent = 'Memoire: Q = ' + Q;
+
+            // Highlight truth table
+            const rows = document.querySelectorAll('#truthTable tr');
+            rows.forEach((row, i) => {
+                if (i === 3 && S === 0 && R === 0) row.classList.add('active');
+                else if (i === 1 && S === 0 && R === 1) row.classList.add('active');
+                else if (i === 2 && S === 1 && R === 0) row.classList.add('active');
+                else if (i === 0 && S === 1 && R === 1) row.classList.add('active');
+                else row.classList.remove('active');
+            });
+        }
+
+        function reset() {
+            animating = false;
+            updateAnimBtn();
+            S = 1; R = 1;
+            Q = 1; Qn = 0;
+            updateCircuit();
+        }
+
+        async function animate() {
+            if (animating) {
+                animating = false;
+                updateAnimBtn();
+                return;
+            }
+            animating = true;
+            updateAnimBtn();
+
+            const sequence = [
+                { desc: 'Etat initial: Q=1' },
+                { S: 0, wait: 800 },  // SET pulse
+                { S: 1, wait: 1000 }, // Release
+                { R: 0, wait: 800 },  // RESET pulse
+                { R: 1, wait: 1000 }, // Release
+                { S: 0, wait: 800 },  // SET again
+                { S: 1, wait: 1000 }, // Release
+                { S: 0, R: 0, wait: 1000 }, // Forbidden
+                { S: 1, R: 1, wait: 500 }, // Release
+            ];
+
+            for (const step of sequence) {
+                if (!animating) break;
+                if (step.S !== undefined) S = step.S;
+                if (step.R !== undefined) R = step.R;
+                updateCircuit();
+                if (step.wait) await new Promise(r => setTimeout(r, step.wait));
+            }
+
+            animating = false;
+            updateAnimBtn();
+        }
+
+        updateCircuit();
+    </script>
+</body>
+</html>
