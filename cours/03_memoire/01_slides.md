@@ -241,9 +241,48 @@ L'horloge transforme un simple fil en <strong>mémoire</strong>
 
 ---
 
+# Comment Construire une Mémoire ?
+
+**Problème :** Comment créer un circuit qui "retient" une valeur ?
+
+<div class="columns">
+<div>
+
+**L'idée clé : la rétroaction**
+
+Si la sortie d'une porte revient à son entrée, le circuit peut "se souvenir" de son état.
+
+```
+    ┌─────┐
+ ───┤     ├───┬───► sortie
+    │     │   │
+    └─────┘   │
+        ▲     │
+        └─────┘
+      rétroaction
+```
+
+</div>
+<div>
+
+<div class="callout callout-tip">
+<div class="callout-title">Progression pédagogique</div>
+Pour comprendre en détail, voir les animations :
+<ol style="font-size: 0.9em; margin: 5px 0;">
+<li><strong>SR Latch</strong> — verrou de base</li>
+<li><strong>Gated D Latch</strong> — avec Enable</li>
+<li><strong>DFF</strong> — déclenché par front</li>
+</ol>
+</div>
+
+</div>
+</div>
+
+---
+
 # La Bascule D (DFF)
 
-**DFF** = Data Flip-Flop = atome de mémoire
+**DFF** = Data Flip-Flop = notre **brique de base** pour la mémoire
 
 <div class="columns">
 <div class="figure">
@@ -257,7 +296,12 @@ L'horloge transforme un simple fil en <strong>mémoire</strong>
 q(t) = d(t-1)
 ```
 
-La sortie = l'entrée du cycle précédent
+La sortie = l'entrée **au front montant précédent**
+
+<div class="callout callout-note">
+<div class="callout-title">Abstraction</div>
+On utilise le DFF comme "atome" sans détailler son intérieur (voir animations pour les curieux)
+</div>
 
 </div>
 </div>
@@ -409,21 +453,43 @@ Tous les bits sont capturés **simultanément** sur le front montant.
 
 ---
 
-# Banc de Registres
+# Banc de Registres : Pourquoi 2 Ports Lecture ?
+
+**Considérons une instruction ALU :**
+
+```asm
+ADD R2, R0, R1    ; R2 = R0 + R1
+```
 
 <div class="columns">
-<div class="figure">
-<img src="assets/register-bank.svg" alt="Banc de registres">
-<div class="figure-caption">16 registres avec 2 ports lecture, 1 port écriture</div>
+<div>
+
+**Besoin en UN cycle :**
+1. Lire R0 (premier opérande)
+2. Lire R1 (deuxième opérande)
+3. Calculer R0 + R1
+4. Écrire le résultat dans R2
+
 </div>
 <div>
 
-**Interface :**
-- 2 ports de lecture (Ra, Rb)
-- 1 port d'écriture (Rd)
-- Signal write enable
+```
+       ┌──────────┐
+  Ra ──┤          ├──► DataA ──┐
+       │ Register │            │
+  Rb ──┤   File   ├──► DataB ──┼──► ALU
+       │          │            │
+  Rd ──┤          │◄── Result ─┘
+  WE ──┤          │
+       └──────────┘
+```
 
 </div>
+</div>
+
+<div class="key-concept">
+<div class="key-concept-title">2 lectures simultanées</div>
+Pour faire A op B en un cycle, il faut lire A ET B en même temps !
 </div>
 
 ---
@@ -440,6 +506,43 @@ Tous les bits sont capturés **simultanément** sur le front montant.
 
 <div class="callout callout-arm">
 Même organisation que ARM ! L'ABI est compatible.
+</div>
+
+---
+
+# La RAM : Une Bibliothèque Numérique
+
+**Analogie : La RAM est comme une bibliothèque**
+
+<div class="columns">
+<div>
+
+```
+Bibliothèque           RAM
+─────────────          ────
+Numéro étagère    =    Adresse
+Livre             =    Donnée (32 bits)
+Ranger un livre   =    Écriture (load=1)
+Consulter         =    Lecture (load=0)
+```
+
+</div>
+<div>
+
+```
+     Adresse 0 → [████████████]
+     Adresse 1 → [████████████]
+     Adresse 2 → [████████████]
+        ...
+     Adresse N → [████████████]
+```
+
+</div>
+</div>
+
+<div class="key-concept">
+<div class="key-concept-title">Random Access = Accès Direct</div>
+On peut accéder à N'IMPORTE quelle adresse directement, sans parcourir les autres
 </div>
 
 ---
@@ -550,16 +653,82 @@ RAM512 = 8 × RAM64, RAM4K = 8 × RAM512, etc.
 
 # Le Compteur de Programme (PC)
 
-Le PC contient l'adresse de la **prochaine instruction**.
+**Le PC = le "doigt" qui suit le programme**
 
-**Modes (par priorité) :**
+<div class="columns">
+<div>
+
+```
+Adresse  Instruction
+───────  ───────────
+  0      MOV R0, #5
+  1      MOV R1, #3    ◄── PC = 1
+  2      ADD R2, R0, R1
+  3      ...
+```
+
+Le PC pointe vers l'instruction **en cours** (ou la suivante selon l'architecture).
+
+</div>
+<div>
+
+**Question clé :**
+Comment le PC sait-il quelle sera la prochaine instruction ?
+
+- Normalement : PC + 1 (séquentiel)
+- Parfois : sauter ailleurs (branchement)
+- Au démarrage : commencer à 0 (reset)
+
+</div>
+</div>
+
+---
+
+# Modes du PC (par priorité)
 
 | Priorité | Mode | Action | Usage |
 |:--------:|:-----|:-------|:------|
-| 1 | reset | PC ← 0 | Démarrage |
-| 2 | load | PC ← in | Branchement |
-| 3 | inc | PC ← PC + 1 | Séquentiel |
-| 4 | hold | PC ← PC | Stall |
+| 1 | reset | PC ← 0 | Démarrage du CPU |
+| 2 | load | PC ← in | Branchement (B, BL) |
+| 3 | inc | PC ← PC + 1 | Exécution séquentielle |
+| 4 | hold | PC ← PC | Attente (stall) |
+
+<div class="callout callout-warning">
+<div class="callout-title">Priorité importante !</div>
+Si reset=1, on ignore tout le reste. Si load=1, on ignore inc. Etc.
+</div>
+
+---
+
+# Exemple : Suivons le PC !
+
+```asm
+Addr  Instruction         ; PC après exécution
+────  ───────────         ; ──────────────────
+ 0    MOV R0, #10         ; PC = 1 (inc)
+ 1    MOV R1, #0          ; PC = 2 (inc)
+ 2    CMP R0, #0          ; PC = 3 (inc)
+ 3    B.EQ fin            ; PC = 6 (load!) ou 4 (inc)
+ 4    ADD R1, R1, R0      ; PC = 5 (inc)
+ 5    B boucle            ; PC = 2 (load!)
+ 6    fin: ...
+```
+
+<div class="columns">
+<div>
+
+**Exécution séquentielle :**
+PC = 0 → 1 → 2 → 3 (inc, inc, inc)
+
+</div>
+<div>
+
+**Branchement :**
+PC = 3 → 6 si condition vraie (load)
+PC = 5 → 2 toujours (load)
+
+</div>
+</div>
 
 ---
 
@@ -642,6 +811,80 @@ Incrémenter ou sauter
 
 ---
 
+# Le Compromis Fondamental : Vitesse vs Taille
+
+**Problème : On ne peut pas tout avoir !**
+
+<div class="columns">
+<div>
+
+```
+        Rapide
+           ▲
+           │    ✗ Impossible
+           │      (trop cher)
+  Registres│●
+           │
+     Cache │  ●
+           │
+       RAM │      ●
+           │
+       SSD │          ●
+           └──────────────► Grand
+```
+
+</div>
+<div>
+
+**Pourquoi ?**
+- Mémoire rapide = transistors complexes = cher
+- Mémoire grande = transistors simples = lent
+
+**Solution :** Utiliser PLUSIEURS niveaux !
+
+</div>
+</div>
+
+---
+
+# Le Principe de Localité
+
+**Observation clé : Les programmes n'accèdent pas à la mémoire au hasard**
+
+<div class="columns">
+<div>
+
+**Localité temporelle :**
+Si on accède à une donnée, on y accèdera probablement **bientôt** à nouveau.
+
+```c
+for (i = 0; i < 1000; i++) {
+    sum += i;  // 'sum' accédé 1000 fois !
+}
+```
+
+</div>
+<div>
+
+**Localité spatiale :**
+Si on accède à une adresse, on accèdera probablement aux adresses **voisines**.
+
+```c
+for (i = 0; i < 100; i++) {
+    sum += tab[i];  // tab[0], tab[1], tab[2]...
+}
+```
+
+</div>
+</div>
+
+<div class="key-concept">
+<div class="key-concept-title">Idée du cache</div>
+Garder les données récentes/voisines dans une mémoire rapide
+</div>
+
+---
+
 # Hiérarchie Mémoire
 
 <div class="figure">
@@ -661,6 +904,11 @@ Incrémenter ou sauter
 | RAM | ~8 GB | 100-300 cycles | DRAM |
 | SSD | ~1 TB | 10K+ cycles | Flash |
 
+<div class="callout callout-tip">
+<div class="callout-title">Illusion de performance</div>
+Grâce à la localité, le CPU "voit" souvent une mémoire rapide (cache hit ~95%)
+</div>
+
 ---
 
 # Timing Détaillé : Écriture Registre
@@ -679,6 +927,36 @@ q:      ──────────┐     ┌─────
 ```
 
 La nouvelle valeur apparaît après le front montant suivant.
+
+---
+
+# Vue d'Ensemble : Du Bit au Système
+
+```
+                         ┌─────────────────────────────────────┐
+                         │              CPU                    │
+                         │  ┌─────────┐      ┌─────────────┐   │
+                         │  │   PC    │─────►│ Instruction │   │
+                         │  │(compteur)│     │   Memory    │   │
+                         │  └─────────┘      └─────────────┘   │
+                         │       │                  │          │
+                         │       ▼                  ▼          │
+                         │  ┌─────────┐      ┌─────────────┐   │
+              Données ◄──┼──┤Register │◄────►│     ALU     │   │
+                         │  │  File   │      └─────────────┘   │
+                         │  │(16×32b) │                        │
+                         │  └─────────┘                        │
+                         └───────┼─────────────────────────────┘
+                                 │
+                                 ▼
+                         ┌─────────────┐
+                         │     RAM     │  ◄── Stockage principal
+                         │ (données +  │
+                         │ programmes) │
+                         └─────────────┘
+```
+
+**Tous construits avec des DFF + logique combinatoire !**
 
 ---
 
