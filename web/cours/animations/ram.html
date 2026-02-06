@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAM - Animation Interactive</title>
+    <link rel="stylesheet" href="common.css">
+    <style>
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #1a202c;
+            border-radius: 8px;
+        }
+        .memory-cell {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #2d3748;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+            cursor: pointer;
+            min-height: 60px;
+        }
+        .memory-cell:hover {
+            background: #4a5568;
+        }
+        .memory-cell.selected {
+            background: #4299e1;
+            transform: scale(1.05);
+        }
+        .memory-cell.writing {
+            background: #48bb78;
+            animation: pulse 0.5s;
+        }
+        .cell-addr {
+            font-size: 10px;
+            color: #718096;
+        }
+        .cell-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e2e8f0;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .ram-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .control-group {
+            background: #2d3748;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a0aec0;
+            font-size: 14px;
+        }
+        .control-group input, .control-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #4a5568;
+            border-radius: 4px;
+            background: #1a202c;
+            color: #e2e8f0;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+        }
+        .binary-display {
+            font-size: 11px;
+            color: #718096;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>RAM - Memoire Vive</h1>
+    <p class="subtitle">8 mots de 8 bits avec lecture/ecriture</p>
+
+    <div class="container">
+        <svg class="circuit-svg" viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg">
+            <!-- RAM box -->
+            <rect class="gate-body" x="150" y="40" width="200" height="200" rx="15" stroke-width="3"/>
+
+            <!-- Address decoder representation -->
+            <rect x="170" y="60" width="60" height="160" rx="5" fill="#4a5568" stroke="#718096"/>
+            <text x="200" y="145" text-anchor="middle" fill="#a0aec0" font-size="10" transform="rotate(-90, 200, 145)">DECODER</text>
+
+            <!-- Memory cells representation -->
+            <g transform="translate(250, 70)">
+                <rect id="memCell0" x="0" y="0" width="80" height="16" rx="3" fill="#2d3748" stroke="#4a5568"/>
+                <rect id="memCell1" x="0" y="20" width="80" height="16" rx="3" fill="#2d3748" stroke="#4a5568"/>
+                <rect id="memCell2" x="0" y="40" width="80" height="16" rx="3" fill="#2d3748" stroke="#4a5568"/>
+                <rect id="memCell3" x="0" y="60" width="80" height="16" rx="3" fill="#2d3748" stroke="#4a5568"/>
+                <rect id="memCell4" x="0" y="80" width="80" height="16" rx="3" fill="#2d3748" stroke="#4a5568"/>
+                <rect id="memCell5" x="0" y="100" width="80" height="16" rx="3" fill="#2d3748" stroke="#4a5568"/>
+                <rect id="memCell6" x="0" y="120" width="80" height="16" rx="3" fill="#2d3748" stroke="#4a5568"/>
+                <rect id="memCell7" x="0" y="140" width="80" height="16" rx="3" fill="#2d3748" stroke="#4a5568"/>
+            </g>
+
+            <!-- Input wires -->
+            <path id="wireAddr" class="wire on" d="M 50 80 L 150 80"/>
+            <path id="wireIn" class="wire off" d="M 50 140 L 150 140"/>
+            <path id="wireLoad" class="wire off" d="M 50 200 L 150 200"/>
+
+            <!-- Output wire -->
+            <path id="wireOut" class="wire off" d="M 350 140 L 450 140"/>
+
+            <!-- Input indicators -->
+            <g>
+                <rect x="20" y="60" width="60" height="40" rx="8" fill="#4299e1"/>
+                <text id="addrText" x="50" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="14">000</text>
+            </g>
+
+            <g>
+                <rect x="20" y="120" width="60" height="40" rx="8" fill="#48bb78"/>
+                <text id="inText" x="50" y="145" text-anchor="middle" fill="white" font-weight="bold" font-size="14">00</text>
+            </g>
+
+            <g class="input-toggle" onclick="toggleLoad()">
+                <circle id="loadCircle" cx="50" cy="200" r="18" fill="#e53e3e"/>
+                <text x="50" y="205" text-anchor="middle" fill="white" font-weight="bold" font-size="12">W</text>
+            </g>
+
+            <!-- Clock button -->
+            <g class="input-toggle" onclick="clockPulse()">
+                <rect id="clockBtn" x="20" y="235" width="60" height="35" rx="8" fill="#f6ad55"/>
+                <text x="50" y="258" text-anchor="middle" fill="white" font-weight="bold" font-size="12">CLK</text>
+            </g>
+
+            <!-- Output indicator -->
+            <rect x="420" y="120" width="60" height="40" rx="8" fill="#63b3ed"/>
+            <text id="outText" x="450" y="145" text-anchor="middle" fill="white" font-weight="bold" font-size="14">00</text>
+
+            <!-- Labels -->
+            <text class="label" x="50" y="50" fill="#4299e1" text-anchor="middle">ADDR</text>
+            <text class="label" x="50" y="115" fill="#48bb78" text-anchor="middle">IN</text>
+            <text class="label" x="50" y="230" fill="#f6ad55" text-anchor="middle">LOAD</text>
+            <text class="label label-output" x="450" y="115" text-anchor="middle">OUT</text>
+
+            <text x="250" y="30" text-anchor="middle" fill="#a0aec0" font-size="14">RAM8 (8 x 8-bit)</text>
+        </svg>
+
+        <div class="ram-controls">
+            <div class="control-group">
+                <label>Adresse (0-7)</label>
+                <input type="number" id="address" value="0" min="0" max="7" onchange="updateRAM()">
+                <div class="binary-display" id="binAddr">000</div>
+            </div>
+            <div class="control-group">
+                <label>Donnee a ecrire (0-255)</label>
+                <input type="number" id="dataIn" value="0" min="0" max="255" onchange="updateRAM()">
+                <div class="binary-display" id="binIn">00000000</div>
+            </div>
+            <div class="control-group">
+                <label>Mode</label>
+                <select id="loadMode" onchange="updateRAM()">
+                    <option value="0">Lecture (load=0)</option>
+                    <option value="1">Ecriture (load=1)</option>
+                </select>
+            </div>
+        </div>
+
+        <h3 style="text-align: center; color: #a0aec0;">Contenu de la Memoire</h3>
+        <div class="memory-grid" id="memoryGrid"></div>
+
+        <div class="status">
+            <div class="status-item">
+                <span>Adresse =</span>
+                <span id="statusAddr" class="status-value" style="color: #4299e1;">0</span>
+            </div>
+            <div class="status-item">
+                <span>Donnee =</span>
+                <span id="statusIn" class="status-value" style="color: #48bb78;">0</span>
+            </div>
+            <div class="status-item">
+                <span>Load =</span>
+                <span id="statusLoad" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>Sortie =</span>
+                <span id="statusOut" class="status-value" style="color: #63b3ed;">0</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0; padding: 15px; background: #2d3748; border-radius: 8px;">
+            <p style="color: #a0aec0; margin-bottom: 10px;">Comportement de la RAM:</p>
+            <p style="color: #e2e8f0; font-family: 'Courier New', monospace;">
+                OUT = RAM[address] <span style="color: #718096;">// Lecture immediate</span><br>
+                if (load) RAM[address] = IN <span style="color: #718096;">// Ecriture au front montant</span>
+            </p>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="reset()">Reset Memoire</button>
+            <button id="animBtn" class="btn btn-primary" onclick="animate()">Demo</button>
+        </div>
+    </div>
+
+    <nav class="nav" style="margin-top: 20px;">
+        <a href="index.html">Index</a>
+        <a href="register.html">Registre</a>
+        <a href="pc.html">Program Counter</a>
+        <a href="dff.html">DFF</a>
+    </nav>
+
+    <script>
+        let memory = new Array(8).fill(0);
+        let address = 0;
+        let dataIn = 0;
+        let load = 0;
+        let animating = false;
+
+        function updateAnimBtn() {
+            const btn = document.getElementById('animBtn');
+            btn.textContent = animating ? 'Stop' : 'Demo';
+            btn.classList.toggle('animating', animating);
+        }
+
+
+        function toBinary(n, bits) {
+            return n.toString(2).padStart(bits, '0');
+        }
+
+        function toggleLoad() {
+            load = 1 - load;
+            document.getElementById('loadMode').value = load;
+            updateRAM();
+        }
+
+        function selectCell(addr) {
+            address = addr;
+            document.getElementById('address').value = addr;
+            updateRAM();
+        }
+
+        async function clockPulse() {
+            if (animating) return;
+
+            const clockBtn = document.getElementById('clockBtn');
+            clockBtn.setAttribute('fill', '#48bb78');
+
+            // On clock: write if load=1
+            if (load === 1) {
+                memory[address] = dataIn;
+
+                // Visual feedback for write
+                const cells = document.querySelectorAll('.memory-cell');
+                cells[address].classList.add('writing');
+                setTimeout(() => cells[address].classList.remove('writing'), 500);
+            }
+
+            updateRAM();
+            renderMemoryGrid();
+
+            await new Promise(r => setTimeout(r, 300));
+            clockBtn.setAttribute('fill', '#f6ad55');
+        }
+
+        function updateRAM() {
+            address = parseInt(document.getElementById('address').value) || 0;
+            address = Math.max(0, Math.min(7, address));
+            document.getElementById('address').value = address;
+
+            dataIn = parseInt(document.getElementById('dataIn').value) || 0;
+            dataIn = Math.max(0, Math.min(255, dataIn));
+            document.getElementById('dataIn').value = dataIn;
+
+            load = parseInt(document.getElementById('loadMode').value);
+
+            // Update binary displays
+            document.getElementById('binAddr').textContent = toBinary(address, 3);
+            document.getElementById('binIn').textContent = toBinary(dataIn, 8);
+
+            // Update SVG display
+            document.getElementById('addrText').textContent = toBinary(address, 3);
+            document.getElementById('inText').textContent = dataIn.toString(16).toUpperCase().padStart(2, '0');
+
+            // Update load indicator
+            document.getElementById('loadCircle').setAttribute('fill', load ? '#48bb78' : '#e53e3e');
+            document.getElementById('wireLoad').className.baseVal = 'wire ' + (load ? 'on' : 'off');
+            document.getElementById('wireIn').className.baseVal = 'wire ' + (dataIn > 0 ? 'on' : 'off');
+
+            // Output is always the value at current address (combinational read)
+            const output = memory[address];
+            document.getElementById('outText').textContent = output.toString(16).toUpperCase().padStart(2, '0');
+            document.getElementById('wireOut').className.baseVal = 'wire ' + (output > 0 ? 'on' : 'off');
+
+            // Update SVG memory cells
+            for (let i = 0; i < 8; i++) {
+                const cell = document.getElementById('memCell' + i);
+                if (i === address) {
+                    cell.setAttribute('fill', load ? '#276749' : '#2c5282');
+                    cell.setAttribute('stroke', '#48bb78');
+                } else {
+                    cell.setAttribute('fill', memory[i] > 0 ? '#4a5568' : '#2d3748');
+                    cell.setAttribute('stroke', '#4a5568');
+                }
+            }
+
+            // Update status
+            document.getElementById('statusAddr').textContent = address;
+            document.getElementById('statusIn').textContent = dataIn;
+            document.getElementById('statusLoad').textContent = load;
+            document.getElementById('statusLoad').className = 'status-value ' + (load ? 'on' : 'off');
+            document.getElementById('statusOut').textContent = output;
+
+            renderMemoryGrid();
+        }
+
+        function renderMemoryGrid() {
+            const grid = document.getElementById('memoryGrid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 8; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'memory-cell' + (i === address ? ' selected' : '');
+                cell.onclick = () => selectCell(i);
+
+                const addrSpan = document.createElement('span');
+                addrSpan.className = 'cell-addr';
+                addrSpan.textContent = '[' + i + ']';
+
+                const valueSpan = document.createElement('span');
+                valueSpan.className = 'cell-value';
+                valueSpan.textContent = memory[i].toString(16).toUpperCase().padStart(2, '0');
+
+                cell.appendChild(addrSpan);
+                cell.appendChild(valueSpan);
+                grid.appendChild(cell);
+            }
+        }
+
+        function reset() {
+            animating = false;
+            updateAnimBtn();
+            memory = new Array(8).fill(0);
+            address = 0;
+            dataIn = 0;
+            load = 0;
+            document.getElementById('address').value = 0;
+            document.getElementById('dataIn').value = 0;
+            document.getElementById('loadMode').value = 0;
+            updateRAM();
+        }
+
+        async function animate() {
+            if (animating) {
+                animating = false;
+                updateAnimBtn();
+                return;
+            }
+            animating = true;
+            updateAnimBtn();
+
+            // Demo: write different values to different addresses
+            const demos = [
+                { addr: 0, data: 0xAB },
+                { addr: 1, data: 0xCD },
+                { addr: 2, data: 0xEF },
+                { addr: 3, data: 0x42 },
+                { addr: 4, data: 0xFF },
+            ];
+
+            // Write phase
+            document.getElementById('loadMode').value = 1;
+            load = 1;
+
+            for (const demo of demos) {
+                if (!animating) break;
+
+                document.getElementById('address').value = demo.addr;
+                document.getElementById('dataIn').value = demo.data;
+                updateRAM();
+                await new Promise(r => setTimeout(r, 500));
+
+                await clockPulse();
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            // Read phase
+            document.getElementById('loadMode').value = 0;
+            load = 0;
+            updateRAM();
+
+            for (let i = 0; i < 5; i++) {
+                if (!animating) break;
+
+                document.getElementById('address').value = i;
+                updateRAM();
+                await new Promise(r => setTimeout(r, 800));
+            }
+
+            animating = false;
+            updateAnimBtn();
+        }
+
+        // Initialize
+        renderMemoryGrid();
+        updateRAM();
+    </script>
+</body>
+</html>

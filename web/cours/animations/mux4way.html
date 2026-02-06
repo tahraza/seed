@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplexeur 4 voies (MUX4Way) - Animation Interactive</title>
+    <link rel="stylesheet" href="common.css">
+</head>
+<body>
+    <h1>Multiplexeur 4 voies (MUX4Way)</h1>
+    <p class="subtitle">Selectionne une entree parmi 4 selon 2 bits de selection</p>
+
+    <div class="container">
+        <p class="instructions">Cliquez sur les entrees et les bits de selection</p>
+
+        <svg class="circuit-svg" viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg">
+            <!-- Input wires with right angles -->
+            <path id="wire0" class="wire on" d="M 50 50 L 100 50 L 100 70 L 140 70"/>
+            <path id="wire1" class="wire off" d="M 50 90 L 100 90 L 100 95 L 140 95"/>
+            <path id="wire2" class="wire off" d="M 50 130 L 100 130 L 100 120 L 140 120"/>
+            <path id="wire3" class="wire off" d="M 50 170 L 100 170 L 100 145 L 140 145"/>
+
+            <!-- Selection wires -->
+            <path id="wireSel" class="wire off" d="M 200 230 L 200 180"/>
+
+            <!-- Output wire -->
+            <path id="wireOut" class="wire on" d="M 260 108 L 350 108"/>
+
+            <!-- MUX body (trapezoid) -->
+            <path class="gate-body" d="M 140 50 L 260 70 L 260 145 L 140 165 Z"/>
+
+            <!-- Input toggles -->
+            <g class="input-toggle" onclick="toggleInput(0)">
+                <circle id="input0" cx="50" cy="50" r="16" fill="#48bb78"/>
+                <text x="50" y="55" text-anchor="middle" fill="white" font-weight="bold" font-size="14">1</text>
+            </g>
+            <g class="input-toggle" onclick="toggleInput(1)">
+                <circle id="input1" cx="50" cy="90" r="16" fill="#e53e3e"/>
+                <text x="50" y="95" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+            <g class="input-toggle" onclick="toggleInput(2)">
+                <circle id="input2" cx="50" cy="130" r="16" fill="#e53e3e"/>
+                <text x="50" y="135" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+            <g class="input-toggle" onclick="toggleInput(3)">
+                <circle id="input3" cx="50" cy="170" r="16" fill="#e53e3e"/>
+                <text x="50" y="175" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Selection toggles -->
+            <g class="input-toggle" onclick="toggleSel(1)">
+                <rect id="selRect1" x="170" y="215" width="26" height="26" rx="4" fill="#4299e1"/>
+                <text x="183" y="233" text-anchor="middle" fill="white" font-weight="bold" font-size="12">0</text>
+            </g>
+            <g class="input-toggle" onclick="toggleSel(0)">
+                <rect id="selRect0" x="200" y="215" width="26" height="26" rx="4" fill="#4299e1"/>
+                <text x="213" y="233" text-anchor="middle" fill="white" font-weight="bold" font-size="12">0</text>
+            </g>
+
+            <!-- Output indicator -->
+            <circle id="outputCircle" cx="350" cy="108" r="16" fill="#48bb78"/>
+            <text id="outputText" x="350" y="113" text-anchor="middle" fill="white" font-weight="bold" font-size="14">1</text>
+
+            <!-- Labels -->
+            <text class="label label-input" x="25" y="55" text-anchor="middle">A</text>
+            <text class="label label-input" x="25" y="95" text-anchor="middle">B</text>
+            <text class="label label-input" x="25" y="135" text-anchor="middle">C</text>
+            <text class="label label-input" x="25" y="175" text-anchor="middle">D</text>
+            <text class="label" x="198" y="255" text-anchor="middle" fill="#4299e1">SEL[1:0]</text>
+            <text class="label label-output" x="350" y="86" text-anchor="middle">OUT</text>
+            <text x="200" y="112" text-anchor="middle" fill="#a0aec0" font-size="12">MUX4</text>
+        </svg>
+
+        <div class="status">
+            <div class="status-item">
+                <span>A =</span>
+                <span id="statusA" class="status-value on">1</span>
+            </div>
+            <div class="status-item">
+                <span>B =</span>
+                <span id="statusB" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>C =</span>
+                <span id="statusC" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>D =</span>
+                <span id="statusD" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>SEL =</span>
+                <span id="statusSel" style="color: #4299e1;">00</span>
+            </div>
+            <div class="status-item">
+                <span>OUT =</span>
+                <span id="statusOut" class="status-value on">1</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0; padding: 15px; background: #2d3748; border-radius: 8px;">
+            <p style="color: #e2e8f0; font-family: 'Courier New', monospace;">
+                SEL=00 → A | SEL=01 → B | SEL=10 → C | SEL=11 → D
+            </p>
+        </div>
+
+        <table class="truth-table">
+            <thead>
+                <tr><th>SEL[1]</th><th>SEL[0]</th><th>OUT</th></tr>
+            </thead>
+            <tbody id="truthTable">
+                <tr class="active"><td>0</td><td>0</td><td>A</td></tr>
+                <tr><td>0</td><td>1</td><td>B</td></tr>
+                <tr><td>1</td><td>0</td><td>C</td></tr>
+                <tr><td>1</td><td>1</td><td>D</td></tr>
+            </tbody>
+        </table>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="reset()">Reset</button>
+            <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
+        </div>
+    </div>
+
+    <nav class="nav" style="margin-top: 20px;">
+        <a href="index.html">Index</a>
+        <a href="mux.html">MUX 2-Way</a>
+        <a href="dmux.html">DMUX</a>
+        <a href="dmux8way.html">DMUX 8-Way</a>
+    </nav>
+
+    <script>
+        let inputs = [1, 0, 0, 0];
+        let sel = [0, 0];
+        let animating = false;
+        const names = ['A', 'B', 'C', 'D'];
+
+        function updateAnimBtn() {
+            const btn = document.getElementById('animBtn');
+            btn.textContent = animating ? 'Stop' : 'Animation Auto';
+            btn.classList.toggle('animating', animating);
+        }
+
+        function toggleInput(i) {
+            if (animating) return;
+            inputs[i] = 1 - inputs[i];
+            updateCircuit();
+        }
+
+        function toggleSel(bit) {
+            if (animating) return;
+            sel[bit] = 1 - sel[bit];
+            updateCircuit();
+        }
+
+        function getSelectedIndex() {
+            return sel[1] * 2 + sel[0];
+        }
+
+        function updateCircuit() {
+            const selIndex = getSelectedIndex();
+            const output = inputs[selIndex];
+
+            for (let i = 0; i < 4; i++) {
+                const circle = document.getElementById('input' + i);
+                const isSelected = i === selIndex;
+                circle.setAttribute('fill', inputs[i] ? '#48bb78' : '#e53e3e');
+                circle.setAttribute('stroke', isSelected ? '#f6ad55' : 'none');
+                circle.setAttribute('stroke-width', isSelected ? '3' : '0');
+                document.querySelector('#input' + i + ' + text').textContent = inputs[i];
+                document.getElementById('wire' + i).className.baseVal = 'wire ' + (inputs[i] && i === selIndex ? 'on' : 'off');
+            }
+
+            document.getElementById('selRect0').setAttribute('fill', sel[0] ? '#48bb78' : '#4299e1');
+            document.getElementById('selRect1').setAttribute('fill', sel[1] ? '#48bb78' : '#4299e1');
+            document.querySelector('#selRect0 + text').textContent = sel[0];
+            document.querySelector('#selRect1 + text').textContent = sel[1];
+            document.getElementById('wireSel').className.baseVal = 'wire ' + (selIndex > 0 ? 'on' : 'off');
+
+            document.getElementById('wireOut').className.baseVal = 'wire ' + (output ? 'on' : 'off');
+            document.getElementById('outputCircle').setAttribute('fill', output ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputText').textContent = output;
+
+            ['A', 'B', 'C', 'D'].forEach((name, i) => {
+                document.getElementById('status' + name).textContent = inputs[i];
+                document.getElementById('status' + name).className = 'status-value ' + (inputs[i] ? 'on' : 'off');
+            });
+            document.getElementById('statusSel').textContent = sel[1].toString() + sel[0].toString();
+            document.getElementById('statusOut').textContent = output;
+            document.getElementById('statusOut').className = 'status-value ' + (output ? 'on' : 'off');
+
+            const rows = document.querySelectorAll('#truthTable tr');
+            rows.forEach((row, i) => row.className = i === selIndex ? 'active' : '');
+        }
+
+        function reset() {
+            animating = false;
+            updateAnimBtn();
+            inputs = [1, 0, 0, 0];
+            sel = [0, 0];
+            updateCircuit();
+        }
+
+        async function animate() {
+            if (animating) {
+                animating = false;
+                updateAnimBtn();
+                return;
+            }
+            animating = true;
+            updateAnimBtn();
+
+            const demos = [
+                { inputs: [1, 0, 0, 0], sel: [0, 0] },
+                { inputs: [0, 1, 0, 0], sel: [0, 1] },
+                { inputs: [0, 0, 1, 0], sel: [1, 0] },
+                { inputs: [0, 0, 0, 1], sel: [1, 1] },
+                { inputs: [1, 1, 1, 1], sel: [0, 0] },
+                { inputs: [1, 1, 1, 1], sel: [0, 1] },
+                { inputs: [1, 1, 1, 1], sel: [1, 0] },
+                { inputs: [1, 1, 1, 1], sel: [1, 1] },
+            ];
+
+            while (animating) {
+                for (const demo of demos) {
+                    if (!animating) break;
+                    inputs = [...demo.inputs];
+                    sel = [...demo.sel];
+                    updateCircuit();
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+            updateAnimBtn();
+        }
+
+        updateCircuit();
+    </script>
+</body>
+</html>

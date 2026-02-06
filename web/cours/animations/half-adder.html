@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demi-Additionneur (Half Adder) - Animation Interactive</title>
+    <link rel="stylesheet" href="common.css">
+</head>
+<body>
+    <h1>Demi-Additionneur (Half Adder)</h1>
+    <p class="subtitle">Additionne deux bits - SUM et CARRY</p>
+
+    <div class="container">
+        <p class="instructions">Cliquez sur les entrees A et B pour changer leur valeur</p>
+
+        <svg class="circuit-svg" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Input wires with right angles -->
+            <path id="wireA" class="wire off" d="M 40 60 L 80 60"/>
+            <path id="wireB" class="wire off" d="M 40 140 L 80 140"/>
+
+            <!-- Split wires to gates -->
+            <path id="wireAXor" class="wire off" d="M 80 60 L 80 75 L 120 75"/>
+            <path id="wireBXor" class="wire off" d="M 80 140 L 80 105 L 120 105"/>
+            <path id="wireAAnd" class="wire off" d="M 80 60 L 80 40 L 240 40 L 240 75 L 260 75"/>
+            <path id="wireBAnd" class="wire off" d="M 80 140 L 80 160 L 240 160 L 240 105 L 260 105"/>
+
+            <!-- Output wires -->
+            <path id="wireSum" class="wire off" d="M 210 90 L 360 60"/>
+            <path id="wireCarry" class="wire off" d="M 350 90 L 360 140"/>
+
+            <!-- XOR gate (for SUM) -->
+            <path class="gate-body" d="M 110 60 Q 130 90 110 120"/>
+            <path class="gate-body" d="M 120 60 Q 140 90 120 120 Q 160 120 190 120 Q 220 90 190 60 Q 160 60 120 60 Z"/>
+
+            <!-- AND gate (for CARRY) -->
+            <path class="gate-body" d="M 260 60 L 260 120 L 300 120 Q 340 120 340 90 Q 340 60 300 60 Z"/>
+
+            <!-- Input A toggle -->
+            <g class="input-toggle" onclick="toggleInput('A')">
+                <circle id="inputA" cx="40" cy="60" r="16" fill="#e53e3e"/>
+                <text x="40" y="65" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Input B toggle -->
+            <g class="input-toggle" onclick="toggleInput('B')">
+                <circle id="inputB" cx="40" cy="140" r="16" fill="#e53e3e"/>
+                <text x="40" y="145" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Sum output indicator -->
+            <circle id="outputSum" cx="360" cy="60" r="16" fill="#e53e3e"/>
+            <text id="outputSumText" x="360" y="65" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+
+            <!-- Carry output indicator -->
+            <circle id="outputCarry" cx="360" cy="140" r="16" fill="#e53e3e"/>
+            <text id="outputCarryText" x="360" y="145" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+
+            <!-- Labels -->
+            <text class="label label-input" x="40" y="38" text-anchor="middle">A</text>
+            <text class="label label-input" x="40" y="172" text-anchor="middle">B</text>
+            <text class="label label-output" x="360" y="38" text-anchor="middle">SUM</text>
+            <text class="label label-output" x="360" y="172" text-anchor="middle">CARRY</text>
+            <text x="165" y="95" text-anchor="middle" fill="#a0aec0" font-size="10">XOR</text>
+            <text x="300" y="95" text-anchor="middle" fill="#a0aec0" font-size="10">AND</text>
+        </svg>
+
+        <div style="text-align: center; margin: 20px 0; font-family: 'Courier New', monospace; font-size: 24px;">
+            <span id="visualA" style="color: #fc8181;">0</span>
+            <span style="color: #a0aec0;"> + </span>
+            <span id="visualB" style="color: #fc8181;">0</span>
+            <span style="color: #a0aec0;"> = </span>
+            <span id="visualCarry" style="color: #63b3ed;">0</span>
+            <span id="visualSum" style="color: #48bb78;">0</span>
+            <span style="color: #718096; font-size: 14px;"> (binaire)</span>
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <span>A =</span>
+                <span id="statusA" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>B =</span>
+                <span id="statusB" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>SUM =</span>
+                <span id="statusSum" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>CARRY =</span>
+                <span id="statusCarry" class="status-value off">0</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0; padding: 15px; background: #2d3748; border-radius: 8px;">
+            <p style="color: #e2e8f0; font-family: 'Courier New', monospace;">
+                SUM = A XOR B | CARRY = A AND B
+            </p>
+        </div>
+
+        <table class="truth-table">
+            <thead>
+                <tr><th>A</th><th>B</th><th>SUM</th><th>CARRY</th></tr>
+            </thead>
+            <tbody id="truthTable">
+                <tr class="active"><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+                <tr><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+                <tr><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+            </tbody>
+        </table>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="reset()">Reset</button>
+            <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
+        </div>
+    </div>
+
+    <nav class="nav" style="margin-top: 20px;">
+        <a href="index.html">Index</a>
+        <a href="full-adder.html">Additionneur Complet</a>
+        <a href="add16.html">Additionneur 16-bit</a>
+        <a href="alu.html">ALU</a>
+    </nav>
+
+    <script>
+        let inputs = { A: 0, B: 0 };
+        let animating = false;
+
+        function updateAnimBtn() {
+            const btn = document.getElementById('animBtn');
+            btn.textContent = animating ? 'Stop' : 'Animation Auto';
+            btn.classList.toggle('animating', animating);
+        }
+
+        function halfAdder(a, b) {
+            return { sum: a ^ b, carry: a & b };
+        }
+
+        function toggleInput(input) {
+            if (animating) return;
+            inputs[input] = 1 - inputs[input];
+            updateCircuit();
+        }
+
+        function updateCircuit() {
+            const result = halfAdder(inputs.A, inputs.B);
+
+            document.getElementById('inputA').setAttribute('fill', inputs.A ? '#48bb78' : '#e53e3e');
+            document.getElementById('inputB').setAttribute('fill', inputs.B ? '#48bb78' : '#e53e3e');
+            document.querySelector('#inputA + text').textContent = inputs.A;
+            document.querySelector('#inputB + text').textContent = inputs.B;
+
+            document.getElementById('wireA').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('wireB').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('wireAXor').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('wireBXor').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('wireAAnd').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('wireBAnd').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('wireSum').className.baseVal = 'wire ' + (result.sum ? 'on' : 'off');
+            document.getElementById('wireCarry').className.baseVal = 'wire ' + (result.carry ? 'on' : 'off');
+
+            document.getElementById('outputSum').setAttribute('fill', result.sum ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputSumText').textContent = result.sum;
+            document.getElementById('outputCarry').setAttribute('fill', result.carry ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputCarryText').textContent = result.carry;
+
+            document.getElementById('visualA').textContent = inputs.A;
+            document.getElementById('visualB').textContent = inputs.B;
+            document.getElementById('visualSum').textContent = result.sum;
+            document.getElementById('visualCarry').textContent = result.carry;
+
+            document.getElementById('statusA').textContent = inputs.A;
+            document.getElementById('statusA').className = 'status-value ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('statusB').textContent = inputs.B;
+            document.getElementById('statusB').className = 'status-value ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('statusSum').textContent = result.sum;
+            document.getElementById('statusSum').className = 'status-value ' + (result.sum ? 'on' : 'off');
+            document.getElementById('statusCarry').textContent = result.carry;
+            document.getElementById('statusCarry').className = 'status-value ' + (result.carry ? 'on' : 'off');
+
+            const rows = document.querySelectorAll('#truthTable tr');
+            const index = inputs.A * 2 + inputs.B;
+            rows.forEach((row, i) => row.className = i === index ? 'active' : '');
+        }
+
+        function reset() {
+            animating = false;
+            updateAnimBtn();
+            inputs = { A: 0, B: 0 };
+            updateCircuit();
+        }
+
+        async function animate() {
+            if (animating) {
+                animating = false;
+                updateAnimBtn();
+                return;
+            }
+            animating = true;
+            updateAnimBtn();
+
+            const states = [[0, 0], [0, 1], [1, 0], [1, 1]];
+            while (animating) {
+                for (const [a, b] of states) {
+                    if (!animating) break;
+                    inputs.A = a;
+                    inputs.B = b;
+                    updateCircuit();
+                    await new Promise(r => setTimeout(r, 1200));
+                }
+            }
+            updateAnimBtn();
+        }
+
+        updateCircuit();
+    </script>
+</body>
+</html>

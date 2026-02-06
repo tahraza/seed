@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Additionneur Complet (Full Adder) - Animation Interactive</title>
+    <link rel="stylesheet" href="common.css">
+</head>
+<body>
+    <h1>Additionneur Complet (Full Adder)</h1>
+    <p class="subtitle">Additionne trois bits - A, B et Carry-In</p>
+
+    <div class="container">
+        <p class="instructions">Cliquez sur les entrees A, B et Cin pour changer leur valeur</p>
+
+        <svg class="circuit-svg" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Main box representation -->
+            <rect class="gate-body" x="140" y="50" width="120" height="100" rx="8"/>
+
+            <!-- Input wires with right angles -->
+            <path id="wireA" class="wire off" d="M 40 70 L 100 70 L 100 75 L 140 75"/>
+            <path id="wireB" class="wire off" d="M 40 100 L 100 100 L 100 100 L 140 100"/>
+            <path id="wireCin" class="wire off" d="M 40 130 L 100 130 L 100 125 L 140 125"/>
+
+            <!-- Output wires -->
+            <path id="wireSum" class="wire off" d="M 260 80 L 360 80"/>
+            <path id="wireCout" class="wire off" d="M 260 120 L 360 120"/>
+
+            <!-- Input A toggle -->
+            <g class="input-toggle" onclick="toggleInput('A')">
+                <circle id="inputA" cx="40" cy="70" r="16" fill="#e53e3e"/>
+                <text x="40" y="75" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Input B toggle -->
+            <g class="input-toggle" onclick="toggleInput('B')">
+                <circle id="inputB" cx="40" cy="100" r="16" fill="#e53e3e"/>
+                <text x="40" y="105" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Input Cin toggle -->
+            <g class="input-toggle" onclick="toggleInput('C')">
+                <circle id="inputCin" cx="40" cy="130" r="16" fill="#4299e1"/>
+                <text x="40" y="135" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Sum output indicator -->
+            <circle id="outputSum" cx="360" cy="80" r="16" fill="#e53e3e"/>
+            <text id="outputSumText" x="360" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+
+            <!-- Carry out output indicator -->
+            <circle id="outputCout" cx="360" cy="120" r="16" fill="#e53e3e"/>
+            <text id="outputCoutText" x="360" y="125" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+
+            <!-- Labels -->
+            <text class="label label-input" x="40" y="48" text-anchor="middle">A</text>
+            <text class="label label-input" x="15" y="105" text-anchor="middle">B</text>
+            <text class="label" x="40" y="162" text-anchor="middle" fill="#4299e1">Cin</text>
+            <text class="label label-output" x="360" y="58" text-anchor="middle">SUM</text>
+            <text class="label label-output" x="360" y="152" text-anchor="middle">Cout</text>
+            <text x="200" y="105" text-anchor="middle" fill="#a0aec0" font-size="12">FULL ADDER</text>
+        </svg>
+
+        <div style="text-align: center; margin: 20px 0; font-family: 'Courier New', monospace;">
+            <div style="font-size: 24px;">
+                <span id="visualA" style="color: #fc8181;">0</span>
+                <span style="color: #a0aec0;"> + </span>
+                <span id="visualB" style="color: #fc8181;">0</span>
+                <span style="color: #a0aec0;"> + </span>
+                <span id="visualCin" style="color: #4299e1;">0</span>
+                <span style="color: #a0aec0;"> = </span>
+                <span id="visualCout" style="color: #f6ad55;">0</span>
+                <span id="visualSum" style="color: #48bb78;">0</span>
+            </div>
+            <div style="font-size: 14px; color: #718096; margin-top: 5px;">
+                Resultat decimal: <span id="decResult" style="color: #48bb78;">0</span>
+            </div>
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <span>A =</span>
+                <span id="statusA" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>B =</span>
+                <span id="statusB" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>Cin =</span>
+                <span id="statusCin" class="status-value off" style="color: #4299e1;">0</span>
+            </div>
+            <div class="status-item">
+                <span>SUM =</span>
+                <span id="statusSum" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>Cout =</span>
+                <span id="statusCout" class="status-value off">0</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0; padding: 15px; background: #2d3748; border-radius: 8px;">
+            <p style="color: #e2e8f0; font-family: 'Courier New', monospace;">
+                SUM = A XOR B XOR Cin | Cout = (A AND B) OR (Cin AND (A XOR B))
+            </p>
+        </div>
+
+        <table class="truth-table">
+            <thead>
+                <tr><th>A</th><th>B</th><th>Cin</th><th>SUM</th><th>Cout</th></tr>
+            </thead>
+            <tbody id="truthTable">
+                <tr class="active"><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+                <tr><td>0</td><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+                <tr><td>0</td><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+                <tr><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+                <tr><td>1</td><td>0</td><td>1</td><td>0</td><td>1</td></tr>
+                <tr><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td></tr>
+                <tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+            </tbody>
+        </table>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="reset()">Reset</button>
+            <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
+        </div>
+    </div>
+
+    <nav class="nav" style="margin-top: 20px;">
+        <a href="index.html">Index</a>
+        <a href="half-adder.html">Demi-Additionneur</a>
+        <a href="add16.html">Additionneur 16-bit</a>
+        <a href="alu.html">ALU</a>
+    </nav>
+
+    <script>
+        let inputs = { A: 0, B: 0, C: 0 };
+        let animating = false;
+
+        function updateAnimBtn() {
+            const btn = document.getElementById('animBtn');
+            btn.textContent = animating ? 'Stop' : 'Animation Auto';
+            btn.classList.toggle('animating', animating);
+        }
+
+        function fullAdder(a, b, cin) {
+            const sum = a ^ b ^ cin;
+            const cout = (a & b) | (cin & (a ^ b));
+            return { sum, cout };
+        }
+
+        function toggleInput(input) {
+            if (animating) return;
+            inputs[input] = 1 - inputs[input];
+            updateCircuit();
+        }
+
+        function updateCircuit() {
+            const result = fullAdder(inputs.A, inputs.B, inputs.C);
+            const total = inputs.A + inputs.B + inputs.C;
+
+            document.getElementById('inputA').setAttribute('fill', inputs.A ? '#48bb78' : '#e53e3e');
+            document.getElementById('inputB').setAttribute('fill', inputs.B ? '#48bb78' : '#e53e3e');
+            document.getElementById('inputCin').setAttribute('fill', inputs.C ? '#48bb78' : '#4299e1');
+            document.querySelector('#inputA + text').textContent = inputs.A;
+            document.querySelector('#inputB + text').textContent = inputs.B;
+            document.querySelector('#inputCin + text').textContent = inputs.C;
+
+            document.getElementById('wireA').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('wireB').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('wireCin').className.baseVal = 'wire ' + (inputs.C ? 'on' : 'off');
+            document.getElementById('wireSum').className.baseVal = 'wire ' + (result.sum ? 'on' : 'off');
+            document.getElementById('wireCout').className.baseVal = 'wire ' + (result.cout ? 'on' : 'off');
+
+            document.getElementById('outputSum').setAttribute('fill', result.sum ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputSumText').textContent = result.sum;
+            document.getElementById('outputCout').setAttribute('fill', result.cout ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputCoutText').textContent = result.cout;
+
+            document.getElementById('visualA').textContent = inputs.A;
+            document.getElementById('visualB').textContent = inputs.B;
+            document.getElementById('visualCin').textContent = inputs.C;
+            document.getElementById('visualSum').textContent = result.sum;
+            document.getElementById('visualCout').textContent = result.cout;
+            document.getElementById('decResult').textContent = total;
+
+            document.getElementById('statusA').textContent = inputs.A;
+            document.getElementById('statusA').className = 'status-value ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('statusB').textContent = inputs.B;
+            document.getElementById('statusB').className = 'status-value ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('statusCin').textContent = inputs.C;
+            document.getElementById('statusSum').textContent = result.sum;
+            document.getElementById('statusSum').className = 'status-value ' + (result.sum ? 'on' : 'off');
+            document.getElementById('statusCout').textContent = result.cout;
+            document.getElementById('statusCout').className = 'status-value ' + (result.cout ? 'on' : 'off');
+
+            const rows = document.querySelectorAll('#truthTable tr');
+            const index = inputs.A * 4 + inputs.B * 2 + inputs.C;
+            rows.forEach((row, i) => row.className = i === index ? 'active' : '');
+        }
+
+        function reset() {
+            animating = false;
+            updateAnimBtn();
+            inputs = { A: 0, B: 0, C: 0 };
+            updateCircuit();
+        }
+
+        async function animate() {
+            if (animating) {
+                animating = false;
+                updateAnimBtn();
+                return;
+            }
+            animating = true;
+            updateAnimBtn();
+
+            while (animating) {
+                for (let i = 0; i < 8; i++) {
+                    if (!animating) break;
+                    inputs.A = (i >> 2) & 1;
+                    inputs.B = (i >> 1) & 1;
+                    inputs.C = i & 1;
+                    updateCircuit();
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+            updateAnimBtn();
+        }
+
+        updateCircuit();
+    </script>
+</body>
+</html>

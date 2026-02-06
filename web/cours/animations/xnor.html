@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porte XNOR - Animation Interactive</title>
+    <link rel="stylesheet" href="common.css">
+    <style>
+        .construction-section {
+            margin-top: 30px;
+            border: 2px solid #4a5568;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .construction-header {
+            background: #2d3748;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .construction-header:hover { background: #4a5568; }
+        .construction-header h3 { margin: 0; color: #e2e8f0; font-size: 1.1rem; }
+        .construction-toggle { color: #4299e1; font-size: 1.5rem; transition: transform 0.3s; }
+        .construction-content { display: none; padding: 20px; background: #1a202c; }
+        .construction-content.open { display: block; }
+        .construction-toggle.open { transform: rotate(180deg); }
+        .construction-formula {
+            text-align: center; padding: 15px; background: #2d3748; border-radius: 8px;
+            margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 1.2rem; color: #e2e8f0;
+        }
+        .construction-formula .highlight { color: #48bb78; font-weight: bold; }
+        .component-links { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+        .component-link {
+            padding: 8px 16px; background: #4299e1; color: white; text-decoration: none;
+            border-radius: 6px; font-size: 14px;
+        }
+        .component-link:hover { background: #3182ce; }
+        .construction-explanation { color: #a0aec0; font-size: 14px; line-height: 1.6; margin: 15px 0; }
+        .intermediate-value {
+            font-family: 'Courier New', monospace; font-size: 10px; fill: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <h1>Porte XNOR (Equivalence)</h1>
+    <p class="subtitle">Sortie 1 si les entrees sont egales</p>
+
+    <div class="container">
+        <p class="instructions">Cliquez sur les entrees A et B pour changer leur valeur</p>
+
+        <svg class="circuit-svg" viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- Input wires -->
+            <path id="wireA" class="wire off" d="M 40 50 L 100 50 L 100 65 L 135 65"/>
+            <path id="wireB" class="wire off" d="M 40 110 L 100 110 L 100 95 L 135 95"/>
+
+            <!-- Output wire -->
+            <path id="wireOut" class="wire on" d="M 230 80 L 320 80"/>
+
+            <!-- XNOR Gate body (XOR shape with bubble) -->
+            <path class="gate-body" d="M 120 45 Q 140 80 120 115"/>
+            <path class="gate-body" d="M 130 45 Q 150 80 130 115 Q 180 115 210 115 Q 240 80 210 45 Q 180 45 130 45 Z"/>
+            <circle class="gate-body" cx="220" cy="80" r="10"/>
+
+            <!-- Input A toggle -->
+            <g class="input-toggle" onclick="toggleInput('A')">
+                <circle id="inputA" cx="40" cy="50" r="16" fill="#e53e3e"/>
+                <text x="40" y="55" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Input B toggle -->
+            <g class="input-toggle" onclick="toggleInput('B')">
+                <circle id="inputB" cx="40" cy="110" r="16" fill="#e53e3e"/>
+                <text x="40" y="115" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Output indicator -->
+            <circle id="outputCircle" cx="320" cy="80" r="16" fill="#48bb78"/>
+            <text id="outputText" x="320" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="14">1</text>
+
+            <!-- Labels -->
+            <text class="label label-input" x="40" y="28" text-anchor="middle">A</text>
+            <text class="label label-input" x="40" y="140" text-anchor="middle">B</text>
+            <text class="label label-output" x="320" y="58" text-anchor="middle">OUT</text>
+        </svg>
+
+        <div class="status">
+            <div class="status-item">
+                <span>A =</span>
+                <span id="statusA" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>B =</span>
+                <span id="statusB" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>OUT =</span>
+                <span id="statusOut" class="status-value on">1</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0; padding: 15px; background: #2d3748; border-radius: 8px;">
+            <p style="color: #e2e8f0; font-family: 'Courier New', monospace;">
+                OUT = NOT(A XOR B) = (A == B)
+            </p>
+        </div>
+
+        <table class="truth-table">
+            <thead>
+                <tr><th>A</th><th>B</th><th>XNOR</th></tr>
+            </thead>
+            <tbody id="truthTable">
+                <tr class="active"><td>0</td><td>0</td><td>1</td></tr>
+                <tr><td>0</td><td>1</td><td>0</td></tr>
+                <tr><td>1</td><td>0</td><td>0</td></tr>
+                <tr><td>1</td><td>1</td><td>1</td></tr>
+            </tbody>
+        </table>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="reset()">Reset</button>
+            <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
+        </div>
+
+        <!-- Construction Section -->
+        <div class="construction-section">
+            <div class="construction-header" onclick="toggleConstruction()">
+                <h3>Voir la Construction</h3>
+                <span class="construction-toggle" id="constructionToggle">&#9660;</span>
+            </div>
+            <div class="construction-content" id="constructionContent">
+                <div class="construction-formula">
+                    <span class="highlight">XNOR(A, B)</span> = NOT(XOR(A, B))
+                </div>
+
+                <p class="construction-explanation">
+                    La porte XNOR (equivalence) est une porte XOR suivie d'un inverseur.
+                    Elle retourne 1 quand les deux entrees sont egales (toutes deux 0 ou toutes deux 1).
+                </p>
+
+                <svg viewBox="0 0 480 140" xmlns="http://www.w3.org/2000/svg" style="max-width: 480px; margin: 0 auto; display: block;">
+                    <!-- Input wires -->
+                    <path id="consWireA" class="wire off" d="M 40 45 L 95 45 L 95 55 L 125 55"/>
+                    <path id="consWireB" class="wire off" d="M 40 95 L 95 95 L 95 85 L 125 85"/>
+                    <!-- XOR to NOT wire -->
+                    <path id="consWireXor" class="wire off" d="M 220 70 L 280 70"/>
+                    <!-- NOT splitting -->
+                    <path id="consWireNotA" class="wire off" d="M 280 70 L 280 55 L 300 55"/>
+                    <path id="consWireNotB" class="wire off" d="M 280 70 L 280 85 L 300 85"/>
+                    <!-- Output wire -->
+                    <path id="consWireOut" class="wire on" d="M 395 70 L 440 70"/>
+
+                    <!-- XOR Gate -->
+                    <path class="gate-body" d="M 110 40 Q 130 70 110 100" fill="none" stroke="#4299e1" stroke-width="2"/>
+                    <path class="gate-body" d="M 120 40 Q 140 70 120 100 Q 170 100 195 100 Q 220 70 195 40 Q 170 40 120 40 Z" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+                    <text x="165" y="75" text-anchor="middle" fill="#4299e1" font-size="11" font-weight="bold">XOR</text>
+
+                    <!-- NAND as NOT (input tied together) -->
+                    <path class="gate-body" d="M 300 45 L 300 95 L 330 95 Q 360 95 360 70 Q 360 45 330 45 Z" fill="#2d3748" stroke="#f6ad55" stroke-width="2"/>
+                    <circle cx="370" cy="70" r="8" fill="#2d3748" stroke="#f6ad55" stroke-width="2"/>
+                    <text x="330" y="75" text-anchor="middle" fill="#f6ad55" font-size="9" font-weight="bold">NAND</text>
+                    <text x="330" y="110" text-anchor="middle" fill="#718096" font-size="9">(NOT)</text>
+
+                    <!-- Intermediate value -->
+                    <text id="consXorValue" class="intermediate-value" x="250" y="62">0</text>
+
+                    <!-- Input toggles -->
+                    <g class="input-toggle" onclick="toggleConstructionInput('A')">
+                        <circle id="consInputA" cx="40" cy="45" r="14" fill="#e53e3e"/>
+                        <text id="consInputTextA" x="40" y="50" text-anchor="middle" fill="white" font-weight="bold" font-size="12">0</text>
+                    </g>
+                    <g class="input-toggle" onclick="toggleConstructionInput('B')">
+                        <circle id="consInputB" cx="40" cy="95" r="14" fill="#e53e3e"/>
+                        <text id="consInputTextB" x="40" y="100" text-anchor="middle" fill="white" font-weight="bold" font-size="12">0</text>
+                    </g>
+
+                    <!-- Output indicator -->
+                    <circle id="consOutputCircle" cx="440" cy="70" r="14" fill="#48bb78"/>
+                    <text id="consOutputText" x="440" y="75" text-anchor="middle" fill="white" font-weight="bold" font-size="12">1</text>
+
+                    <!-- Labels -->
+                    <text x="40" y="25" text-anchor="middle" fill="#a0aec0" font-size="11">A</text>
+                    <text x="40" y="120" text-anchor="middle" fill="#a0aec0" font-size="11">B</text>
+                    <text x="440" y="50" text-anchor="middle" fill="#48bb78" font-size="11">OUT</text>
+                </svg>
+
+                <p class="construction-explanation" style="text-align: center; margin-top: 20px;">
+                    <strong>Verification:</strong><br>
+                    XOR(0, 0) = 0 → NOT(0) = 1 (egaux) ✓<br>
+                    XOR(0, 1) = 1 → NOT(1) = 0 (differents) ✓<br>
+                    XOR(1, 0) = 1 → NOT(1) = 0 (differents) ✓<br>
+                    XOR(1, 1) = 0 → NOT(0) = 1 (egaux) ✓
+                </p>
+
+                <div class="component-links">
+                    <a href="xor.html" class="component-link">Voir XOR</a>
+                    <a href="not.html" class="component-link">Voir NOT</a>
+                    <a href="nand.html" class="component-link">Voir NAND</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav" style="margin-top: 20px;">
+        <a href="index.html">Index</a>
+        <a href="xor.html">XOR</a>
+        <a href="nor.html">NOR</a>
+        <a href="nand.html">NAND</a>
+    </nav>
+
+    <script>
+        let inputs = { A: 0, B: 0 };
+        let animating = false;
+
+        function updateAnimBtn() {
+            const btn = document.getElementById('animBtn');
+            btn.textContent = animating ? 'Stop' : 'Animation Auto';
+            btn.classList.toggle('animating', animating);
+        }
+
+        function toggleInput(input) {
+            if (animating) return;
+            inputs[input] = 1 - inputs[input];
+            updateCircuit();
+        }
+
+        function updateCircuit() {
+            const output = (inputs.A === inputs.B) ? 1 : 0;
+
+            document.getElementById('inputA').setAttribute('fill', inputs.A ? '#48bb78' : '#e53e3e');
+            document.getElementById('inputB').setAttribute('fill', inputs.B ? '#48bb78' : '#e53e3e');
+            document.querySelector('#inputA + text').textContent = inputs.A;
+            document.querySelector('#inputB + text').textContent = inputs.B;
+
+            document.getElementById('wireA').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('wireB').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('wireOut').className.baseVal = 'wire ' + (output ? 'on' : 'off');
+
+            document.getElementById('outputCircle').setAttribute('fill', output ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputText').textContent = output;
+
+            document.getElementById('statusA').textContent = inputs.A;
+            document.getElementById('statusA').className = 'status-value ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('statusB').textContent = inputs.B;
+            document.getElementById('statusB').className = 'status-value ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('statusOut').textContent = output;
+            document.getElementById('statusOut').className = 'status-value ' + (output ? 'on' : 'off');
+
+            const rows = document.querySelectorAll('#truthTable tr');
+            const index = inputs.A * 2 + inputs.B;
+            rows.forEach((row, i) => row.className = i === index ? 'active' : '');
+        }
+
+        function reset() {
+            animating = false;
+            updateAnimBtn();
+            inputs = { A: 0, B: 0 };
+            updateCircuit();
+        }
+
+        async function animate() {
+            if (animating) {
+                animating = false;
+                updateAnimBtn();
+                return;
+            }
+            animating = true;
+            updateAnimBtn();
+
+            const states = [[0, 0], [0, 1], [1, 0], [1, 1]];
+            while (animating) {
+                for (const [a, b] of states) {
+                    if (!animating) break;
+                    inputs.A = a;
+                    inputs.B = b;
+                    updateCircuit();
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+            updateAnimBtn();
+        }
+
+        // Construction section
+        function toggleConstruction() {
+            const content = document.getElementById('constructionContent');
+            const toggle = document.getElementById('constructionToggle');
+            content.classList.toggle('open');
+            toggle.classList.toggle('open');
+        }
+
+        function toggleConstructionInput(input) {
+            if (animating) return;
+            inputs[input] = 1 - inputs[input];
+            updateCircuit();
+        }
+
+        function updateConstructionCircuit() {
+            const xorResult = inputs.A ^ inputs.B;
+            const output = xorResult ? 0 : 1;
+
+            document.getElementById('consInputA').setAttribute('fill', inputs.A ? '#48bb78' : '#e53e3e');
+            document.getElementById('consInputTextA').textContent = inputs.A;
+            document.getElementById('consInputB').setAttribute('fill', inputs.B ? '#48bb78' : '#e53e3e');
+            document.getElementById('consInputTextB').textContent = inputs.B;
+
+            document.getElementById('consWireA').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('consWireB').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('consWireXor').className.baseVal = 'wire ' + (xorResult ? 'on' : 'off');
+            document.getElementById('consWireNotA').className.baseVal = 'wire ' + (xorResult ? 'on' : 'off');
+            document.getElementById('consWireNotB').className.baseVal = 'wire ' + (xorResult ? 'on' : 'off');
+            document.getElementById('consWireOut').className.baseVal = 'wire ' + (output ? 'on' : 'off');
+
+            document.getElementById('consXorValue').textContent = xorResult;
+
+            document.getElementById('consOutputCircle').setAttribute('fill', output ? '#48bb78' : '#e53e3e');
+            document.getElementById('consOutputText').textContent = output;
+        }
+
+        // Add to updateCircuit
+        const originalUpdateCircuit = updateCircuit;
+        updateCircuit = function() {
+            originalUpdateCircuit();
+            updateConstructionCircuit();
+        };
+
+        updateCircuit();
+    </script>
+</body>
+</html>

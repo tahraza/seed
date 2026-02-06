@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DFF (Data Flip-Flop) - Animation Interactive</title>
+    <link rel="stylesheet" href="common.css">
+    <style>
+        .timing-diagram {
+            background: #1a202c;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .clock-display {
+            text-align: center;
+            font-size: 3rem;
+            margin: 20px 0;
+        }
+        .clock-indicator {
+            display: inline-block;
+            padding: 10px 30px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.2s;
+        }
+        .clock-high {
+            background: #48bb78;
+            color: white;
+        }
+        .clock-low {
+            background: #e53e3e;
+            color: white;
+        }
+        .timing-row {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .timing-label {
+            width: 80px;
+            color: #a0aec0;
+            font-family: 'Courier New', monospace;
+        }
+        .timing-wave {
+            display: flex;
+            flex: 1;
+        }
+        .timing-cell {
+            width: 40px;
+            height: 30px;
+            border-right: 1px solid #4a5568;
+            display: flex;
+            align-items: flex-end;
+        }
+        .timing-cell.high {
+            background: linear-gradient(to bottom, #48bb78 0%, #48bb78 50%, transparent 50%);
+        }
+        .timing-cell.low {
+            background: linear-gradient(to bottom, transparent 50%, #e53e3e 50%, #e53e3e 100%);
+        }
+        .timing-cell.rising {
+            background: linear-gradient(to top right, #e53e3e 49%, #48bb78 51%);
+        }
+        .timing-cell.current {
+            border: 2px solid #f6ad55;
+        }
+    </style>
+</head>
+<body>
+    <h1>DFF - Data Flip-Flop</h1>
+    <p class="subtitle">Element de memoire de base - stocke 1 bit</p>
+
+    <div class="container">
+        <p class="instructions">Cliquez sur D pour changer l'entree, puis sur CLK pour capturer la valeur</p>
+
+        <svg class="circuit-svg" viewBox="0 0 450 220" xmlns="http://www.w3.org/2000/svg">
+            <!-- DFF box -->
+            <rect class="gate-body" x="150" y="50" width="150" height="120" rx="10" stroke-width="3"/>
+
+            <!-- Clock triangle -->
+            <polygon points="150,140 170,150 150,160" fill="#4a5568" stroke="#a0aec0"/>
+
+            <!-- Input D wire -->
+            <path id="wireD" class="wire off" d="M 50 90 L 150 90"/>
+
+            <!-- Clock wire -->
+            <path id="wireClk" class="wire off" d="M 50 150 L 150 150"/>
+
+            <!-- Output Q wire -->
+            <path id="wireQ" class="wire off" d="M 300 110 L 400 110"/>
+
+            <!-- Input D toggle -->
+            <g class="input-toggle" onclick="toggleD()">
+                <circle id="inputD" cx="50" cy="90" r="22" fill="#e53e3e"/>
+                <text id="inputDText" x="50" y="96" text-anchor="middle" fill="white" font-weight="bold" font-size="18">0</text>
+            </g>
+
+            <!-- Clock toggle -->
+            <g class="input-toggle" onclick="clockPulse()">
+                <rect id="clockBtn" x="28" y="128" width="44" height="44" rx="8" fill="#4299e1"/>
+                <text x="50" y="155" text-anchor="middle" fill="white" font-weight="bold" font-size="12">CLK</text>
+            </g>
+
+            <!-- Output Q indicator -->
+            <circle id="outputQ" cx="400" cy="110" r="22" fill="#e53e3e"/>
+            <text id="outputQText" x="400" y="116" text-anchor="middle" fill="white" font-weight="bold" font-size="18">0</text>
+
+            <!-- Labels -->
+            <text class="label label-input" x="50" y="55">D (data)</text>
+            <text class="label" x="50" y="190" fill="#4299e1">Clock</text>
+            <text class="label label-output" x="400" y="75">Q (output)</text>
+
+            <!-- Internal labels -->
+            <text x="165" y="98" fill="#718096" font-size="12">D</text>
+            <text x="280" y="118" fill="#718096" font-size="12">Q</text>
+            <text x="165" y="158" fill="#718096" font-size="12">CLK</text>
+
+            <text x="225" y="115" text-anchor="middle" fill="#a0aec0" font-size="14">DFF</text>
+        </svg>
+
+        <div class="clock-display">
+            <div class="clock-indicator" id="clockIndicator">
+                <span id="clockState">IDLE</span>
+            </div>
+        </div>
+
+        <div class="status">
+            <div class="status-item">
+                <span>D (entree) =</span>
+                <span id="statusD" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>Q (sortie) =</span>
+                <span id="statusQ" class="status-value off">0</span>
+            </div>
+        </div>
+
+        <h3 style="text-align: center; margin-top: 30px; color: #a0aec0;">Diagramme Temporel</h3>
+        <div class="timing-diagram">
+            <div class="timing-row">
+                <span class="timing-label">CLK</span>
+                <div class="timing-wave" id="clkWave"></div>
+            </div>
+            <div class="timing-row">
+                <span class="timing-label">D</span>
+                <div class="timing-wave" id="dWave"></div>
+            </div>
+            <div class="timing-row">
+                <span class="timing-label">Q</span>
+                <div class="timing-wave" id="qWave"></div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0; padding: 15px; background: #2d3748; border-radius: 8px;">
+            <p style="color: #a0aec0; margin-bottom: 10px;">Comportement du DFF:</p>
+            <p style="color: #e2e8f0; font-family: 'Courier New', monospace;">
+                Q(t+1) = D(t) <span style="color: #718096;">// La sortie prend la valeur de D au front montant</span>
+            </p>
+        </div>
+
+        <table class="truth-table">
+            <thead>
+                <tr>
+                    <th>CLK</th>
+                    <th>D</th>
+                    <th>Q (apres)</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>0</td><td>X</td><td>Q</td><td>Pas de changement (horloge basse)</td></tr>
+                <tr><td>↑</td><td>0</td><td>0</td><td>Front montant: memorise 0</td></tr>
+                <tr><td>↑</td><td>1</td><td>1</td><td>Front montant: memorise 1</td></tr>
+                <tr><td>1</td><td>X</td><td>Q</td><td>Pas de changement (horloge haute)</td></tr>
+            </tbody>
+        </table>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="reset()">Reset</button>
+            <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
+        </div>
+    </div>
+
+    <nav class="nav" style="margin-top: 20px;">
+        <a href="index.html">Index</a>
+        <a href="register.html">Registre 1-bit</a>
+        <a href="register32.html">Registre 32-bit</a>
+        <a href="ram.html">RAM</a>
+    </nav>
+
+    <script>
+        let d = 0;
+        let q = 0;
+        let history = [];
+        let animating = false;
+        const maxHistory = 12;
+
+        function updateAnimBtn() {
+            const btn = document.getElementById('animBtn');
+            btn.textContent = animating ? 'Stop' : 'Animation Auto';
+            btn.classList.toggle('animating', animating);
+        }
+
+
+        function toggleD() {
+            if (animating) return;
+            d = 1 - d;
+            updateDisplay();
+        }
+
+        function clockPulse() {
+            if (animating) return;
+            performClockPulse();
+        }
+
+        async function performClockPulse() {
+            // Rising edge - capture D
+            const indicator = document.getElementById('clockIndicator');
+            const clockBtn = document.getElementById('clockBtn');
+
+            indicator.className = 'clock-indicator clock-high';
+            document.getElementById('clockState').textContent = 'RISING ↑';
+            clockBtn.setAttribute('fill', '#48bb78');
+            document.getElementById('wireClk').className.baseVal = 'wire on';
+
+            // Capture value on rising edge
+            q = d;
+
+            // Add to history
+            history.push({ clk: 'rising', d: d, q: q });
+            if (history.length > maxHistory) history.shift();
+
+            updateDisplay();
+            updateTimingDiagram();
+
+            await new Promise(r => setTimeout(r, 300));
+
+            // High state
+            document.getElementById('clockState').textContent = 'HIGH';
+            history.push({ clk: 'high', d: d, q: q });
+            if (history.length > maxHistory) history.shift();
+            updateTimingDiagram();
+
+            await new Promise(r => setTimeout(r, 300));
+
+            // Falling edge
+            indicator.className = 'clock-indicator clock-low';
+            document.getElementById('clockState').textContent = 'LOW';
+            clockBtn.setAttribute('fill', '#4299e1');
+            document.getElementById('wireClk').className.baseVal = 'wire off';
+
+            history.push({ clk: 'low', d: d, q: q });
+            if (history.length > maxHistory) history.shift();
+            updateTimingDiagram();
+        }
+
+        function updateDisplay() {
+            // Update D input
+            document.getElementById('inputD').setAttribute('fill', d ? '#48bb78' : '#e53e3e');
+            document.getElementById('inputDText').textContent = d;
+            document.getElementById('wireD').className.baseVal = 'wire ' + (d ? 'on' : 'off');
+
+            // Update Q output
+            document.getElementById('outputQ').setAttribute('fill', q ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputQText').textContent = q;
+            document.getElementById('wireQ').className.baseVal = 'wire ' + (q ? 'on' : 'off');
+
+            // Update status
+            document.getElementById('statusD').textContent = d;
+            document.getElementById('statusD').className = 'status-value ' + (d ? 'on' : 'off');
+            document.getElementById('statusQ').textContent = q;
+            document.getElementById('statusQ').className = 'status-value ' + (q ? 'on' : 'off');
+        }
+
+        function updateTimingDiagram() {
+            const clkWave = document.getElementById('clkWave');
+            const dWave = document.getElementById('dWave');
+            const qWave = document.getElementById('qWave');
+
+            clkWave.innerHTML = '';
+            dWave.innerHTML = '';
+            qWave.innerHTML = '';
+
+            history.forEach((h, i) => {
+                const isCurrent = i === history.length - 1;
+
+                // Clock
+                const clkCell = document.createElement('div');
+                clkCell.className = 'timing-cell ' +
+                    (h.clk === 'high' ? 'high' : h.clk === 'rising' ? 'rising' : 'low') +
+                    (isCurrent ? ' current' : '');
+                clkWave.appendChild(clkCell);
+
+                // D
+                const dCell = document.createElement('div');
+                dCell.className = 'timing-cell ' + (h.d ? 'high' : 'low') + (isCurrent ? ' current' : '');
+                dWave.appendChild(dCell);
+
+                // Q
+                const qCell = document.createElement('div');
+                qCell.className = 'timing-cell ' + (h.q ? 'high' : 'low') + (isCurrent ? ' current' : '');
+                qWave.appendChild(qCell);
+            });
+        }
+
+        function reset() {
+            animating = false;
+            updateAnimBtn();
+            d = 0;
+            q = 0;
+            history = [];
+            const indicator = document.getElementById('clockIndicator');
+            indicator.className = 'clock-indicator clock-low';
+            document.getElementById('clockState').textContent = 'IDLE';
+            document.getElementById('clockBtn').setAttribute('fill', '#4299e1');
+            document.getElementById('wireClk').className.baseVal = 'wire off';
+            updateDisplay();
+            updateTimingDiagram();
+        }
+
+        async function animate() {
+            if (animating) {
+                animating = false;
+                updateAnimBtn();
+                return;
+            }
+            animating = true;
+            updateAnimBtn();
+            const sequence = [
+                { setD: 0 }, { clock: true },
+                { setD: 1 }, { clock: true },
+                { setD: 1 }, { clock: true },
+                { setD: 0 }, { clock: true },
+                { setD: 1 }, { clock: true },
+                { setD: 0 }, { clock: true },
+            ];
+
+            for (const action of sequence) {
+                if (!animating) break;
+
+                if (action.setD !== undefined) {
+                    d = action.setD;
+                    updateDisplay();
+                    await new Promise(r => setTimeout(r, 500));
+                }
+
+                if (action.clock) {
+                    await performClockPulse();
+                    await new Promise(r => setTimeout(r, 500));
+                }
+            }
+
+            animating = false;
+            updateAnimBtn();
+        }
+
+        // Initialize
+        history.push({ clk: 'low', d: 0, q: 0 });
+        updateDisplay();
+        updateTimingDiagram();
+    </script>
+</body>
+</html>

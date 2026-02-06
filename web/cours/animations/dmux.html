@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demultiplexeur (DMUX) - Animation Interactive</title>
+    <link rel="stylesheet" href="common.css">
+</head>
+<body>
+    <h1>Demultiplexeur 1 vers 2 (DMUX)</h1>
+    <p class="subtitle">Route le signal d'entree vers une des sorties selon SEL</p>
+
+    <div class="container">
+        <p class="instructions">Cliquez sur les entrees IN et SEL pour changer leur valeur</p>
+
+        <svg class="circuit-svg" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Input wire -->
+            <path id="wireIn" class="wire off" d="M 50 100 L 130 100"/>
+
+            <!-- Selector wire -->
+            <path id="wireSel" class="wire off" d="M 200 180 L 200 140"/>
+
+            <!-- Output wires -->
+            <path id="wireA" class="wire off" d="M 270 80 L 350 80"/>
+            <path id="wireB" class="wire off" d="M 270 120 L 350 120"/>
+
+            <!-- DMUX body (inverted trapezoid) -->
+            <path class="gate-body" d="M 130 60 L 270 75 L 270 125 L 130 140 Z"/>
+
+            <!-- Input toggle -->
+            <g class="input-toggle" onclick="toggleInput('I')">
+                <circle id="inputIn" cx="50" cy="100" r="16" fill="#e53e3e"/>
+                <text x="50" y="105" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Selector toggle -->
+            <g class="input-toggle" onclick="toggleInput('S')">
+                <circle id="inputSel" cx="200" cy="180" r="16" fill="#4299e1"/>
+                <text x="200" y="185" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Output A indicator -->
+            <circle id="outputA" cx="350" cy="80" r="16" fill="#e53e3e"/>
+            <text id="outputAText" x="350" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+
+            <!-- Output B indicator -->
+            <circle id="outputB" cx="350" cy="120" r="16" fill="#e53e3e"/>
+            <text id="outputBText" x="350" y="125" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+
+            <!-- Labels -->
+            <text class="label label-input" x="50" y="75" text-anchor="middle">IN</text>
+            <text class="label" x="200" y="210" text-anchor="middle" fill="#4299e1">SEL</text>
+            <text class="label label-output" x="350" y="58" text-anchor="middle">A</text>
+            <text class="label label-output" x="350" y="150" text-anchor="middle">B</text>
+            <text x="200" y="105" text-anchor="middle" fill="#a0aec0" font-size="12">DMUX</text>
+        </svg>
+
+        <div class="status">
+            <div class="status-item">
+                <span>IN =</span>
+                <span id="statusIn" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>SEL =</span>
+                <span id="statusSel" class="status-value off" style="color: #4299e1;">0</span>
+            </div>
+            <div class="status-item">
+                <span>A =</span>
+                <span id="statusA" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>B =</span>
+                <span id="statusB" class="status-value off">0</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0; padding: 15px; background: #2d3748; border-radius: 8px;">
+            <p style="color: #e2e8f0; font-family: 'Courier New', monospace;">
+                if (SEL == 0) A = IN, B = 0<br>
+                if (SEL == 1) A = 0, B = IN
+            </p>
+        </div>
+
+        <table class="truth-table">
+            <thead>
+                <tr><th>IN</th><th>SEL</th><th>A</th><th>B</th></tr>
+            </thead>
+            <tbody id="truthTable">
+                <tr class="active"><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+                <tr><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+                <tr><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+            </tbody>
+        </table>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="reset()">Reset</button>
+            <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
+        </div>
+    </div>
+
+    <nav class="nav" style="margin-top: 20px;">
+        <a href="index.html">Index</a>
+        <a href="mux.html">MUX</a>
+        <a href="dmux8way.html">DMUX 8-Way</a>
+        <a href="mux4way.html">MUX 4-Way</a>
+    </nav>
+
+    <script>
+        let inputs = { I: 0, S: 0 };
+        let animating = false;
+
+        function updateAnimBtn() {
+            const btn = document.getElementById('animBtn');
+            btn.textContent = animating ? 'Stop' : 'Animation Auto';
+            btn.classList.toggle('animating', animating);
+        }
+
+        function dmux(input, sel) {
+            return {
+                a: sel === 0 ? input : 0,
+                b: sel === 1 ? input : 0
+            };
+        }
+
+        function toggleInput(input) {
+            if (animating) return;
+            inputs[input] = 1 - inputs[input];
+            updateCircuit();
+        }
+
+        function updateCircuit() {
+            const result = dmux(inputs.I, inputs.S);
+
+            document.getElementById('inputIn').setAttribute('fill', inputs.I ? '#48bb78' : '#e53e3e');
+            document.getElementById('inputSel').setAttribute('fill', inputs.S ? '#48bb78' : '#4299e1');
+            document.querySelector('#inputIn + text').textContent = inputs.I;
+            document.querySelector('#inputSel + text').textContent = inputs.S;
+
+            document.getElementById('wireIn').className.baseVal = 'wire ' + (inputs.I ? 'on' : 'off');
+            document.getElementById('wireSel').className.baseVal = 'wire ' + (inputs.S ? 'on' : 'off');
+            document.getElementById('wireA').className.baseVal = 'wire ' + (result.a ? 'on' : 'off');
+            document.getElementById('wireB').className.baseVal = 'wire ' + (result.b ? 'on' : 'off');
+
+            document.getElementById('outputA').setAttribute('fill', result.a ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputAText').textContent = result.a;
+            document.getElementById('outputB').setAttribute('fill', result.b ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputBText').textContent = result.b;
+
+            document.getElementById('statusIn').textContent = inputs.I;
+            document.getElementById('statusIn').className = 'status-value ' + (inputs.I ? 'on' : 'off');
+            document.getElementById('statusSel').textContent = inputs.S;
+            document.getElementById('statusA').textContent = result.a;
+            document.getElementById('statusA').className = 'status-value ' + (result.a ? 'on' : 'off');
+            document.getElementById('statusB').textContent = result.b;
+            document.getElementById('statusB').className = 'status-value ' + (result.b ? 'on' : 'off');
+
+            const rows = document.querySelectorAll('#truthTable tr');
+            const index = inputs.I * 2 + inputs.S;
+            rows.forEach((row, i) => row.className = i === index ? 'active' : '');
+        }
+
+        function reset() {
+            animating = false;
+            updateAnimBtn();
+            inputs = { I: 0, S: 0 };
+            updateCircuit();
+        }
+
+        async function animate() {
+            if (animating) {
+                animating = false;
+                updateAnimBtn();
+                return;
+            }
+            animating = true;
+            updateAnimBtn();
+
+            const states = [[0, 0], [1, 0], [0, 1], [1, 1]];
+            while (animating) {
+                for (const [i, s] of states) {
+                    if (!animating) break;
+                    inputs.I = i;
+                    inputs.S = s;
+                    updateCircuit();
+                    await new Promise(r => setTimeout(r, 1200));
+                }
+            }
+            updateAnimBtn();
+        }
+
+        updateCircuit();
+    </script>
+</body>
+</html>

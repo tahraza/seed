@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demultiplexeur 8 voies (DMUX8Way) - Animation Interactive</title>
+    <link rel="stylesheet" href="common.css">
+    <style>
+        .output-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+        .output-cell {
+            padding: 12px;
+            background: #2d3748;
+            border-radius: 6px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .output-cell.active {
+            background: #276749;
+        }
+        .output-cell .label { font-size: 11px; color: #718096; }
+        .output-cell .value { font-size: 20px; font-weight: bold; color: #e2e8f0; }
+        .output-cell.active .value { color: #48bb78; }
+    </style>
+</head>
+<body>
+    <h1>Demultiplexeur 8 voies (DMUX8Way)</h1>
+    <p class="subtitle">Route le signal d'entree vers une des 8 sorties selon 3 bits de selection</p>
+
+    <div class="container">
+        <p class="instructions">Cliquez sur IN et les bits de selection</p>
+
+        <svg class="circuit-svg" viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg">
+            <!-- Input wire -->
+            <path id="wireIn" class="wire off" d="M 40 120 L 120 120"/>
+
+            <!-- Selection wires -->
+            <path id="wireSel" class="wire on" d="M 180 250 L 180 200"/>
+
+            <!-- Output wires -->
+            <path id="wireO0" class="wire off" d="M 240 55 L 360 40"/>
+            <path id="wireO1" class="wire off" d="M 240 75 L 360 65"/>
+            <path id="wireO2" class="wire off" d="M 240 95 L 360 90"/>
+            <path id="wireO3" class="wire off" d="M 240 115 L 360 115"/>
+            <path id="wireO4" class="wire off" d="M 240 135 L 360 140"/>
+            <path id="wireO5" class="wire off" d="M 240 155 L 360 165"/>
+            <path id="wireO6" class="wire off" d="M 240 175 L 360 190"/>
+            <path id="wireO7" class="wire off" d="M 240 195 L 360 215"/>
+
+            <!-- DMUX body -->
+            <path class="gate-body" d="M 120 40 L 240 30 L 240 210 L 120 200 Z"/>
+
+            <!-- Input toggle -->
+            <g class="input-toggle" onclick="toggleInput()">
+                <circle id="inputCircle" cx="40" cy="120" r="16" fill="#e53e3e"/>
+                <text id="inputText" x="40" y="125" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Selection toggles -->
+            <g class="input-toggle" onclick="toggleSel(2)">
+                <rect id="selRect2" x="140" y="230" width="24" height="24" rx="4" fill="#4299e1"/>
+                <text x="152" y="247" text-anchor="middle" fill="white" font-weight="bold" font-size="11">0</text>
+            </g>
+            <g class="input-toggle" onclick="toggleSel(1)">
+                <rect id="selRect1" x="168" y="230" width="24" height="24" rx="4" fill="#4299e1"/>
+                <text x="180" y="247" text-anchor="middle" fill="white" font-weight="bold" font-size="11">0</text>
+            </g>
+            <g class="input-toggle" onclick="toggleSel(0)">
+                <rect id="selRect0" x="196" y="230" width="24" height="24" rx="4" fill="#4299e1"/>
+                <text x="208" y="247" text-anchor="middle" fill="white" font-weight="bold" font-size="11">0</text>
+            </g>
+
+            <!-- Output indicators -->
+            <circle id="out0" cx="360" cy="40" r="12" fill="#e53e3e"/>
+            <circle id="out1" cx="360" cy="65" r="12" fill="#e53e3e"/>
+            <circle id="out2" cx="360" cy="90" r="12" fill="#e53e3e"/>
+            <circle id="out3" cx="360" cy="115" r="12" fill="#e53e3e"/>
+            <circle id="out4" cx="360" cy="140" r="12" fill="#e53e3e"/>
+            <circle id="out5" cx="360" cy="165" r="12" fill="#e53e3e"/>
+            <circle id="out6" cx="360" cy="190" r="12" fill="#e53e3e"/>
+            <circle id="out7" cx="360" cy="215" r="12" fill="#e53e3e"/>
+
+            <!-- Labels -->
+            <text class="label label-input" x="40" y="95" text-anchor="middle">IN</text>
+            <text class="label" x="180" y="270" text-anchor="middle" fill="#4299e1">SEL[2:0]</text>
+            <text x="380" y="45" fill="#a0aec0" font-size="10">O0</text>
+            <text x="380" y="70" fill="#a0aec0" font-size="10">O1</text>
+            <text x="380" y="95" fill="#a0aec0" font-size="10">O2</text>
+            <text x="380" y="120" fill="#a0aec0" font-size="10">O3</text>
+            <text x="380" y="145" fill="#a0aec0" font-size="10">O4</text>
+            <text x="380" y="170" fill="#a0aec0" font-size="10">O5</text>
+            <text x="380" y="195" fill="#a0aec0" font-size="10">O6</text>
+            <text x="380" y="220" fill="#a0aec0" font-size="10">O7</text>
+            <text x="180" y="125" text-anchor="middle" fill="#a0aec0" font-size="12">DMUX8</text>
+        </svg>
+
+        <h3 style="text-align: center; color: #a0aec0;">Sorties</h3>
+        <div class="output-grid" id="outputGrid"></div>
+
+        <div class="status">
+            <div class="status-item">
+                <span>IN =</span>
+                <span id="statusIn" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>SEL =</span>
+                <span id="statusSel" style="color: #4299e1;">000</span>
+            </div>
+            <div class="status-item">
+                <span>Active =</span>
+                <span id="statusActive" style="color: #48bb78;">O0</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="reset()">Reset</button>
+            <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
+        </div>
+    </div>
+
+    <nav class="nav" style="margin-top: 20px;">
+        <a href="index.html">Index</a>
+        <a href="dmux.html">DMUX 2-Way</a>
+        <a href="mux.html">MUX</a>
+        <a href="mux4way.html">MUX 4-Way</a>
+    </nav>
+
+    <script>
+        let input = 0;
+        let sel = [0, 0, 0];
+        let animating = false;
+
+        function updateAnimBtn() {
+            const btn = document.getElementById('animBtn');
+            btn.textContent = animating ? 'Stop' : 'Animation Auto';
+            btn.classList.toggle('animating', animating);
+        }
+
+        function toggleInput() {
+            if (animating) return;
+            input = 1 - input;
+            updateCircuit();
+        }
+
+        function toggleSel(bit) {
+            if (animating) return;
+            sel[bit] = 1 - sel[bit];
+            updateCircuit();
+        }
+
+        function getSelectedIndex() {
+            return sel[2] * 4 + sel[1] * 2 + sel[0];
+        }
+
+        function renderOutputGrid() {
+            const grid = document.getElementById('outputGrid');
+            grid.innerHTML = '';
+            const selIndex = getSelectedIndex();
+
+            for (let i = 0; i < 8; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'output-cell' + (i === selIndex ? ' active' : '');
+                cell.innerHTML = `<div class="label">O${i} (${i.toString(2).padStart(3, '0')})</div><div class="value">${(i === selIndex && input === 1) ? '1' : '0'}</div>`;
+                grid.appendChild(cell);
+            }
+        }
+
+        function updateCircuit() {
+            const selIndex = getSelectedIndex();
+
+            document.getElementById('inputCircle').setAttribute('fill', input ? '#48bb78' : '#e53e3e');
+            document.getElementById('inputText').textContent = input;
+            document.getElementById('wireIn').className.baseVal = 'wire ' + (input ? 'on' : 'off');
+
+            for (let i = 0; i < 3; i++) {
+                document.getElementById('selRect' + i).setAttribute('fill', sel[i] ? '#48bb78' : '#4299e1');
+                document.querySelector('#selRect' + i + ' + text').textContent = sel[i];
+            }
+
+            for (let i = 0; i < 8; i++) {
+                const isActive = i === selIndex && input === 1;
+                document.getElementById('out' + i).setAttribute('fill', isActive ? '#48bb78' : '#e53e3e');
+                document.getElementById('wireO' + i).className.baseVal = 'wire ' + (isActive ? 'on' : 'off');
+            }
+
+            document.getElementById('statusIn').textContent = input;
+            document.getElementById('statusIn').className = 'status-value ' + (input ? 'on' : 'off');
+            document.getElementById('statusSel').textContent = sel[2].toString() + sel[1].toString() + sel[0].toString();
+            document.getElementById('statusActive').textContent = 'O' + selIndex;
+
+            renderOutputGrid();
+        }
+
+        function reset() {
+            animating = false;
+            updateAnimBtn();
+            input = 0;
+            sel = [0, 0, 0];
+            updateCircuit();
+        }
+
+        async function animate() {
+            if (animating) {
+                animating = false;
+                updateAnimBtn();
+                return;
+            }
+            animating = true;
+            updateAnimBtn();
+
+            input = 1;
+            while (animating) {
+                for (let i = 0; i < 8; i++) {
+                    if (!animating) break;
+                    sel = [(i >> 0) & 1, (i >> 1) & 1, (i >> 2) & 1];
+                    updateCircuit();
+                    await new Promise(r => setTimeout(r, 800));
+                }
+            }
+            updateAnimBtn();
+        }
+
+        updateCircuit();
+    </script>
+</body>
+</html>

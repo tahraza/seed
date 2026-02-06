@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porte XOR - Animation Interactive</title>
+    <link rel="stylesheet" href="common.css">
+    <style>
+        .construction-section {
+            margin-top: 30px;
+            border: 2px solid #4a5568;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .construction-header {
+            background: #2d3748;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .construction-header:hover { background: #4a5568; }
+        .construction-header h3 { margin: 0; color: #e2e8f0; font-size: 1.1rem; }
+        .construction-toggle { color: #4299e1; font-size: 1.5rem; transition: transform 0.3s; }
+        .construction-content { display: none; padding: 20px; background: #1a202c; }
+        .construction-content.open { display: block; }
+        .construction-toggle.open { transform: rotate(180deg); }
+        .construction-formula {
+            text-align: center; padding: 15px; background: #2d3748; border-radius: 8px;
+            margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 1rem; color: #e2e8f0;
+        }
+        .construction-formula .highlight { color: #48bb78; font-weight: bold; }
+        .component-links { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
+        .component-link {
+            padding: 8px 16px; background: #4299e1; color: white; text-decoration: none;
+            border-radius: 6px; font-size: 14px;
+        }
+        .component-link:hover { background: #3182ce; }
+        .construction-explanation { color: #a0aec0; font-size: 14px; line-height: 1.6; margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <h1>Porte XOR (OU Exclusif)</h1>
+    <p class="subtitle">Sortie 1 si les entrees sont differentes</p>
+
+    <div class="container">
+        <p class="instructions">Cliquez sur les entrees A et B pour changer leur valeur</p>
+
+        <svg class="circuit-svg" viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- Input wires -->
+            <path id="wireA" class="wire off" d="M 40 50 L 100 50 L 100 65 L 135 65"/>
+            <path id="wireB" class="wire off" d="M 40 110 L 100 110 L 100 95 L 135 95"/>
+            <!-- Output wire -->
+            <path id="wireOut" class="wire off" d="M 220 80 L 320 80"/>
+            <!-- XOR Gate body -->
+            <path class="gate-body" d="M 120 45 Q 140 80 120 115"/>
+            <path class="gate-body" d="M 130 45 Q 150 80 130 115 Q 180 115 210 115 Q 240 80 210 45 Q 180 45 130 45 Z"/>
+            <!-- Input toggles -->
+            <g class="input-toggle" onclick="toggleInput('A')">
+                <circle id="inputA" cx="40" cy="50" r="16" fill="#e53e3e"/>
+                <text x="40" y="55" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+            <g class="input-toggle" onclick="toggleInput('B')">
+                <circle id="inputB" cx="40" cy="110" r="16" fill="#e53e3e"/>
+                <text x="40" y="115" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+            <!-- Output indicator -->
+            <circle id="outputCircle" cx="320" cy="80" r="16" fill="#e53e3e"/>
+            <text id="outputText" x="320" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            <!-- Labels -->
+            <text class="label label-input" x="40" y="28" text-anchor="middle">A</text>
+            <text class="label label-input" x="40" y="140" text-anchor="middle">B</text>
+            <text class="label label-output" x="320" y="58" text-anchor="middle">OUT</text>
+        </svg>
+
+        <div class="status">
+            <div class="status-item"><span>A =</span><span id="statusA" class="status-value off">0</span></div>
+            <div class="status-item"><span>B =</span><span id="statusB" class="status-value off">0</span></div>
+            <div class="status-item"><span>OUT =</span><span id="statusOut" class="status-value off">0</span></div>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0; padding: 15px; background: #2d3748; border-radius: 8px;">
+            <p style="color: #e2e8f0; font-family: 'Courier New', monospace;">OUT = A XOR B</p>
+        </div>
+
+        <table class="truth-table">
+            <thead><tr><th>A</th><th>B</th><th>XOR</th></tr></thead>
+            <tbody id="truthTable">
+                <tr class="active"><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>0</td><td>1</td><td>1</td></tr>
+                <tr><td>1</td><td>0</td><td>1</td></tr>
+                <tr><td>1</td><td>1</td><td>0</td></tr>
+            </tbody>
+        </table>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="reset()">Reset</button>
+            <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
+        </div>
+
+        <!-- Construction Section -->
+        <div class="construction-section">
+            <div class="construction-header" onclick="toggleConstruction()">
+                <h3>Voir la Construction</h3>
+                <span class="construction-toggle" id="constructionToggle">&#9660;</span>
+            </div>
+            <div class="construction-content" id="constructionContent">
+                <div class="construction-formula">
+                    <span class="highlight">XOR(A, B)</span> = OR( AND(A, NOT(B)), AND(NOT(A), B) )<br>
+                    <span style="font-size: 0.85rem; color: #718096;">= (A ET non-B) OU (non-A ET B)</span>
+                </div>
+
+                <p class="construction-explanation">
+                    La porte XOR detecte quand les entrees sont differentes. Elle combine :
+                    <br>• A=1 et B=0 → sortie 1
+                    <br>• A=0 et B=1 → sortie 1
+                    <br>On utilise AND, OR et NOT pour construire cette logique.
+                </p>
+
+                <svg viewBox="0 0 580 220" xmlns="http://www.w3.org/2000/svg" style="max-width: 580px; margin: 0 auto; display: block;">
+                    <!-- Input A distribution -->
+                    <path id="consWireA" class="wire off" d="M 40 60 L 80 60"/>
+                    <path id="consWireAtoNotA" class="wire off" d="M 80 60 L 80 160 L 110 160"/>
+                    <path id="consWireAtoAnd1" class="wire off" d="M 80 60 L 200 60"/>
+
+                    <!-- Input B distribution -->
+                    <path id="consWireB" class="wire off" d="M 40 160 L 60 160"/>
+                    <path id="consWireBtoNotB" class="wire off" d="M 60 160 L 60 60 L 110 60"/>
+                    <path id="consWireBtoAnd2" class="wire off" d="M 60 160 L 200 160"/>
+
+                    <!-- NOT gates outputs -->
+                    <path id="consWireNotAout" class="wire on" d="M 170 160 L 200 160 L 200 130"/>
+                    <path id="consWireNotBout" class="wire on" d="M 170 60 L 200 60 L 200 90"/>
+
+                    <!-- AND gates outputs -->
+                    <path id="consWireAnd1out" class="wire off" d="M 290 75 L 340 75 L 340 100 L 380 100"/>
+                    <path id="consWireAnd2out" class="wire off" d="M 290 145 L 340 145 L 340 120 L 380 120"/>
+
+                    <!-- Final OR output -->
+                    <path id="consWireOut" class="wire off" d="M 470 110 L 540 110"/>
+
+                    <!-- NOT B gate -->
+                    <polygon points="110,45 110,75 150,60" fill="#2d3748" stroke="#9f7aea" stroke-width="2"/>
+                    <circle cx="160" cy="60" r="8" fill="#2d3748" stroke="#9f7aea" stroke-width="2"/>
+                    <text x="128" y="64" text-anchor="middle" fill="#9f7aea" font-size="8">NOT</text>
+
+                    <!-- NOT A gate -->
+                    <polygon points="110,145 110,175 150,160" fill="#2d3748" stroke="#9f7aea" stroke-width="2"/>
+                    <circle cx="160" cy="160" r="8" fill="#2d3748" stroke="#9f7aea" stroke-width="2"/>
+                    <text x="128" y="164" text-anchor="middle" fill="#9f7aea" font-size="8">NOT</text>
+
+                    <!-- AND gate 1 (A AND NOT B) -->
+                    <path d="M 220 55 L 220 95 L 250 95 Q 280 95 280 75 Q 280 55 250 55 Z" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
+                    <text x="250" y="79" text-anchor="middle" fill="#48bb78" font-size="8">AND</text>
+
+                    <!-- AND gate 2 (NOT A AND B) -->
+                    <path d="M 220 125 L 220 165 L 250 165 Q 280 165 280 145 Q 280 125 250 125 Z" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
+                    <text x="250" y="149" text-anchor="middle" fill="#48bb78" font-size="8">AND</text>
+
+                    <!-- OR gate -->
+                    <path d="M 380 85 Q 400 110 380 135 Q 420 135 450 135 Q 480 110 450 85 Q 420 85 380 85 Z" fill="#2d3748" stroke="#f6ad55" stroke-width="2"/>
+                    <text x="425" y="114" text-anchor="middle" fill="#f6ad55" font-size="9">OR</text>
+
+                    <!-- Intermediate indicators -->
+                    <circle id="consNotBOut" cx="185" cy="60" r="8" fill="#48bb78"/>
+                    <text id="consNotBText" x="185" y="64" text-anchor="middle" fill="white" font-size="8">1</text>
+                    <circle id="consNotAOut" cx="185" cy="160" r="8" fill="#48bb78"/>
+                    <text id="consNotAText" x="185" y="164" text-anchor="middle" fill="white" font-size="8">1</text>
+                    <circle id="consAnd1Out" cx="310" cy="75" r="8" fill="#e53e3e"/>
+                    <text id="consAnd1Text" x="310" y="79" text-anchor="middle" fill="white" font-size="8">0</text>
+                    <circle id="consAnd2Out" cx="310" cy="145" r="8" fill="#e53e3e"/>
+                    <text id="consAnd2Text" x="310" y="149" text-anchor="middle" fill="white" font-size="8">0</text>
+
+                    <!-- Input toggles -->
+                    <g class="input-toggle" onclick="toggleConstructionInput('A')">
+                        <circle id="consInputA" cx="40" cy="60" r="14" fill="#e53e3e"/>
+                        <text id="consInputAText" x="40" y="65" text-anchor="middle" fill="white" font-weight="bold" font-size="11">0</text>
+                    </g>
+                    <g class="input-toggle" onclick="toggleConstructionInput('B')">
+                        <circle id="consInputB" cx="40" cy="160" r="14" fill="#e53e3e"/>
+                        <text id="consInputBText" x="40" y="165" text-anchor="middle" fill="white" font-weight="bold" font-size="11">0</text>
+                    </g>
+
+                    <!-- Output indicator -->
+                    <circle id="consOutputCircle" cx="540" cy="110" r="14" fill="#e53e3e"/>
+                    <text id="consOutputText" x="540" y="115" text-anchor="middle" fill="white" font-weight="bold" font-size="11">0</text>
+
+                    <!-- Labels -->
+                    <text x="40" y="40" text-anchor="middle" fill="#a0aec0" font-size="10">A</text>
+                    <text x="40" y="185" text-anchor="middle" fill="#a0aec0" font-size="10">B</text>
+                    <text x="540" y="90" text-anchor="middle" fill="#48bb78" font-size="10">OUT</text>
+                </svg>
+
+                <div class="component-links">
+                    <a href="and.html" class="component-link">Voir AND</a>
+                    <a href="or.html" class="component-link">Voir OR</a>
+                    <a href="not.html" class="component-link">Voir NOT</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav" style="margin-top: 20px;">
+        <a href="index.html">Index</a>
+        <a href="nand.html">NAND</a>
+        <a href="and.html">AND</a>
+        <a href="or.html">OR</a>
+        <a href="xnor.html">XNOR</a>
+    </nav>
+
+    <script>
+        let inputs = { A: 0, B: 0 };
+        let animating = false;
+
+        function updateAnimBtn() {
+            const btn = document.getElementById('animBtn');
+            btn.textContent = animating ? 'Stop' : 'Animation Auto';
+            btn.classList.toggle('animating', animating);
+        }
+
+        function toggleInput(input) {
+            if (animating) return;
+            inputs[input] = 1 - inputs[input];
+            updateCircuit();
+        }
+
+        function updateCircuit() {
+            const output = inputs.A ^ inputs.B;
+
+            document.getElementById('inputA').setAttribute('fill', inputs.A ? '#48bb78' : '#e53e3e');
+            document.getElementById('inputB').setAttribute('fill', inputs.B ? '#48bb78' : '#e53e3e');
+            document.querySelector('#inputA + text').textContent = inputs.A;
+            document.querySelector('#inputB + text').textContent = inputs.B;
+
+            document.getElementById('wireA').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('wireB').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('wireOut').className.baseVal = 'wire ' + (output ? 'on' : 'off');
+
+            document.getElementById('outputCircle').setAttribute('fill', output ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputText').textContent = output;
+
+            document.getElementById('statusA').textContent = inputs.A;
+            document.getElementById('statusA').className = 'status-value ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('statusB').textContent = inputs.B;
+            document.getElementById('statusB').className = 'status-value ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('statusOut').textContent = output;
+            document.getElementById('statusOut').className = 'status-value ' + (output ? 'on' : 'off');
+
+            const rows = document.querySelectorAll('#truthTable tr');
+            const index = inputs.A * 2 + inputs.B;
+            rows.forEach((row, i) => row.className = i === index ? 'active' : '');
+
+            updateConstructionCircuit();
+        }
+
+        function reset() { animating = false; updateAnimBtn(); inputs = { A: 0, B: 0 }; updateCircuit(); }
+
+        async function animate() {
+            if (animating) { animating = false; updateAnimBtn(); return; }
+            animating = true; updateAnimBtn();
+            const states = [[0, 0], [0, 1], [1, 0], [1, 1]];
+            while (animating) {
+                for (const [a, b] of states) {
+                    if (!animating) break;
+                    inputs.A = a; inputs.B = b; updateCircuit();
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+            updateAnimBtn();
+        }
+
+        function toggleConstruction() {
+            document.getElementById('constructionContent').classList.toggle('open');
+            document.getElementById('constructionToggle').classList.toggle('open');
+        }
+
+        function toggleConstructionInput(input) {
+            if (animating) return;
+            inputs[input] = 1 - inputs[input];
+            updateCircuit();
+        }
+
+        function updateConstructionCircuit() {
+            const notA = 1 - inputs.A;
+            const notB = 1 - inputs.B;
+            const and1 = inputs.A & notB;  // A AND NOT B
+            const and2 = notA & inputs.B;  // NOT A AND B
+            const output = and1 | and2;    // OR
+
+            // Update inputs
+            document.getElementById('consInputA').setAttribute('fill', inputs.A ? '#48bb78' : '#e53e3e');
+            document.getElementById('consInputAText').textContent = inputs.A;
+            document.getElementById('consInputB').setAttribute('fill', inputs.B ? '#48bb78' : '#e53e3e');
+            document.getElementById('consInputBText').textContent = inputs.B;
+
+            // Update wires
+            document.getElementById('consWireA').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('consWireAtoNotA').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('consWireAtoAnd1').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('consWireB').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('consWireBtoNotB').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('consWireBtoAnd2').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('consWireNotAout').className.baseVal = 'wire ' + (notA ? 'on' : 'off');
+            document.getElementById('consWireNotBout').className.baseVal = 'wire ' + (notB ? 'on' : 'off');
+            document.getElementById('consWireAnd1out').className.baseVal = 'wire ' + (and1 ? 'on' : 'off');
+            document.getElementById('consWireAnd2out').className.baseVal = 'wire ' + (and2 ? 'on' : 'off');
+            document.getElementById('consWireOut').className.baseVal = 'wire ' + (output ? 'on' : 'off');
+
+            // Update intermediates
+            document.getElementById('consNotAOut').setAttribute('fill', notA ? '#48bb78' : '#e53e3e');
+            document.getElementById('consNotAText').textContent = notA;
+            document.getElementById('consNotBOut').setAttribute('fill', notB ? '#48bb78' : '#e53e3e');
+            document.getElementById('consNotBText').textContent = notB;
+            document.getElementById('consAnd1Out').setAttribute('fill', and1 ? '#48bb78' : '#e53e3e');
+            document.getElementById('consAnd1Text').textContent = and1;
+            document.getElementById('consAnd2Out').setAttribute('fill', and2 ? '#48bb78' : '#e53e3e');
+            document.getElementById('consAnd2Text').textContent = and2;
+
+            // Update output
+            document.getElementById('consOutputCircle').setAttribute('fill', output ? '#48bb78' : '#e53e3e');
+            document.getElementById('consOutputText').textContent = output;
+        }
+
+        updateCircuit();
+    </script>
+</body>
+</html>

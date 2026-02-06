@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porte AND - Animation Interactive</title>
+    <link rel="stylesheet" href="common.css">
+    <style>
+        .construction-section {
+            margin-top: 30px;
+            border: 2px solid #4a5568;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .construction-header {
+            background: #2d3748;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .construction-header:hover {
+            background: #4a5568;
+        }
+        .construction-header h3 {
+            margin: 0;
+            color: #e2e8f0;
+            font-size: 1.1rem;
+        }
+        .construction-toggle {
+            color: #4299e1;
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+        }
+        .construction-content {
+            display: none;
+            padding: 20px;
+            background: #1a202c;
+        }
+        .construction-content.open {
+            display: block;
+        }
+        .construction-toggle.open {
+            transform: rotate(180deg);
+        }
+        .construction-formula {
+            text-align: center;
+            padding: 15px;
+            background: #2d3748;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            color: #e2e8f0;
+        }
+        .construction-formula .highlight {
+            color: #48bb78;
+            font-weight: bold;
+        }
+        .component-links {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        .component-link {
+            padding: 8px 16px;
+            background: #4299e1;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .component-link:hover {
+            background: #3182ce;
+        }
+        .construction-explanation {
+            color: #a0aec0;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4a5568;
+            transition: all 0.3s;
+        }
+        .step-dot.active {
+            background: #48bb78;
+            transform: scale(1.2);
+        }
+        .step-label {
+            text-align: center;
+            color: #a0aec0;
+            font-size: 14px;
+            min-height: 40px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Porte AND</h1>
+    <p class="subtitle">ET logique - Sortie 1 si les deux entrees sont 1</p>
+
+    <div class="container">
+        <p class="instructions">Cliquez sur les entrees A et B pour changer leur valeur</p>
+
+        <svg class="circuit-svg" viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- Input wires -->
+            <path id="wireA" class="wire off" d="M 40 50 L 100 50 L 100 65 L 130 65"/>
+            <path id="wireB" class="wire off" d="M 40 110 L 100 110 L 100 95 L 130 95"/>
+
+            <!-- Output wire -->
+            <path id="wireOut" class="wire off" d="M 210 80 L 320 80"/>
+
+            <!-- AND Gate body -->
+            <path class="gate-body" d="M 130 45 L 130 115 L 170 115 Q 210 115 210 80 Q 210 45 170 45 Z"/>
+
+            <!-- Input A toggle -->
+            <g class="input-toggle" onclick="toggleInput('A')">
+                <circle id="inputA" cx="40" cy="50" r="16" fill="#e53e3e"/>
+                <text x="40" y="55" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Input B toggle -->
+            <g class="input-toggle" onclick="toggleInput('B')">
+                <circle id="inputB" cx="40" cy="110" r="16" fill="#e53e3e"/>
+                <text x="40" y="115" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+            </g>
+
+            <!-- Output indicator -->
+            <circle id="outputCircle" cx="320" cy="80" r="16" fill="#e53e3e"/>
+            <text id="outputText" x="320" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="14">0</text>
+
+            <!-- Labels -->
+            <text class="label label-input" x="40" y="28" text-anchor="middle">A</text>
+            <text class="label label-input" x="40" y="140" text-anchor="middle">B</text>
+            <text class="label label-output" x="320" y="58" text-anchor="middle">OUT</text>
+        </svg>
+
+        <div class="status">
+            <div class="status-item">
+                <span>A =</span>
+                <span id="statusA" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>B =</span>
+                <span id="statusB" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>OUT =</span>
+                <span id="statusOut" class="status-value off">0</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0; padding: 15px; background: #2d3748; border-radius: 8px;">
+            <p style="color: #e2e8f0; font-family: 'Courier New', monospace;">
+                OUT = A AND B
+            </p>
+        </div>
+
+        <table class="truth-table">
+            <thead>
+                <tr><th>A</th><th>B</th><th>AND</th></tr>
+            </thead>
+            <tbody id="truthTable">
+                <tr class="active"><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>0</td><td>1</td><td>0</td></tr>
+                <tr><td>1</td><td>0</td><td>0</td></tr>
+                <tr><td>1</td><td>1</td><td>1</td></tr>
+            </tbody>
+        </table>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="reset()">Reset</button>
+            <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
+        </div>
+
+        <!-- Construction Section -->
+        <div class="construction-section">
+            <div class="construction-header" onclick="toggleConstruction()">
+                <h3>Voir la Construction</h3>
+                <span class="construction-toggle" id="constructionToggle">&#9660;</span>
+            </div>
+            <div class="construction-content" id="constructionContent">
+                <div class="construction-formula">
+                    <span class="highlight">AND(A, B)</span> = NOT( NAND(A, B) )
+                </div>
+
+                <p class="construction-explanation">
+                    La porte AND peut etre construite en utilisant une porte NAND suivie d'une porte NOT.
+                    Puisque NAND retourne l'inverse de AND, il suffit d'inverser sa sortie pour obtenir AND.
+                </p>
+
+                <svg viewBox="0 0 500 160" xmlns="http://www.w3.org/2000/svg" style="max-width: 500px; margin: 0 auto; display: block;">
+                    <!-- Input A wire -->
+                    <path id="consWireA" class="wire off" d="M 40 50 L 100 50 L 100 65 L 130 65"/>
+                    <!-- Input B wire -->
+                    <path id="consWireB" class="wire off" d="M 40 110 L 100 110 L 100 95 L 130 95"/>
+
+                    <!-- NAND to NOT wire -->
+                    <path id="consWireNand" class="wire off" d="M 225 80 L 290 80"/>
+
+                    <!-- Output wire -->
+                    <path id="consWireOut" class="wire off" d="M 355 80 L 460 80"/>
+
+                    <!-- NAND Gate body -->
+                    <path class="gate-body" d="M 130 45 L 130 115 L 170 115 Q 210 115 210 80 Q 210 45 170 45 Z" fill="#2d3748" stroke="#f6ad55" stroke-width="2"/>
+                    <!-- NAND bubble -->
+                    <circle cx="218" cy="80" r="8" fill="#2d3748" stroke="#f6ad55" stroke-width="2"/>
+                    <text x="170" y="85" text-anchor="middle" fill="#f6ad55" font-size="12" font-weight="bold">NAND</text>
+
+                    <!-- NOT Gate (triangle + bubble) -->
+                    <path class="gate-body" d="M 290 55 L 290 105 L 340 80 Z" fill="#2d3748" stroke="#9f7aea" stroke-width="2"/>
+                    <circle cx="348" cy="80" r="8" fill="#2d3748" stroke="#9f7aea" stroke-width="2"/>
+                    <text x="310" y="85" text-anchor="middle" fill="#9f7aea" font-size="10" font-weight="bold">NOT</text>
+
+                    <!-- Input A toggle -->
+                    <g class="input-toggle" onclick="toggleConstructionInput('A')">
+                        <circle id="consInputA" cx="40" cy="50" r="14" fill="#e53e3e"/>
+                        <text id="consInputAText" x="40" y="55" text-anchor="middle" fill="white" font-weight="bold" font-size="12">0</text>
+                    </g>
+
+                    <!-- Input B toggle -->
+                    <g class="input-toggle" onclick="toggleConstructionInput('B')">
+                        <circle id="consInputB" cx="40" cy="110" r="14" fill="#e53e3e"/>
+                        <text id="consInputBText" x="40" y="115" text-anchor="middle" fill="white" font-weight="bold" font-size="12">0</text>
+                    </g>
+
+                    <!-- Intermediate result indicator -->
+                    <circle id="consNandOut" cx="255" cy="80" r="12" fill="#e53e3e"/>
+                    <text id="consNandOutText" x="255" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="10">1</text>
+
+                    <!-- Output indicator -->
+                    <circle id="consOutputCircle" cx="460" cy="80" r="14" fill="#e53e3e"/>
+                    <text id="consOutputText" x="460" y="85" text-anchor="middle" fill="white" font-weight="bold" font-size="12">0</text>
+
+                    <!-- Labels -->
+                    <text x="40" y="30" text-anchor="middle" fill="#a0aec0" font-size="11">A</text>
+                    <text x="40" y="138" text-anchor="middle" fill="#a0aec0" font-size="11">B</text>
+                    <text x="255" y="60" text-anchor="middle" fill="#718096" font-size="9">NAND</text>
+                    <text x="460" y="60" text-anchor="middle" fill="#48bb78" font-size="11">OUT</text>
+                </svg>
+
+                <div class="step-indicator">
+                    <div class="step-dot" id="step1"></div>
+                    <div class="step-dot" id="step2"></div>
+                    <div class="step-dot" id="step3"></div>
+                </div>
+                <div class="step-label" id="stepLabel">Cliquez sur les entrees ou lancez l'animation</div>
+
+                <div class="controls" style="margin-top: 15px;">
+                    <button class="btn btn-primary" onclick="animateConstruction()">Animer la Construction</button>
+                </div>
+
+                <div class="component-links">
+                    <a href="nand.html" class="component-link">Voir NAND</a>
+                    <a href="not.html" class="component-link">Voir NOT</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav" style="margin-top: 20px;">
+        <a href="index.html">Index</a>
+        <a href="nand.html">NAND</a>
+        <a href="not.html">NOT</a>
+        <a href="or.html">OR</a>
+        <a href="xor.html">XOR</a>
+    </nav>
+
+    <script>
+        let inputs = { A: 0, B: 0 };
+        let animating = false;
+        let constructionAnimating = false;
+
+        function updateAnimBtn() {
+            const btn = document.getElementById('animBtn');
+            btn.textContent = animating ? 'Stop' : 'Animation Auto';
+            btn.classList.toggle('animating', animating);
+        }
+
+        function toggleInput(input) {
+            if (animating) return;
+            inputs[input] = 1 - inputs[input];
+            updateCircuit();
+        }
+
+        function updateCircuit() {
+            const output = inputs.A & inputs.B;
+
+            document.getElementById('inputA').setAttribute('fill', inputs.A ? '#48bb78' : '#e53e3e');
+            document.getElementById('inputB').setAttribute('fill', inputs.B ? '#48bb78' : '#e53e3e');
+            document.querySelector('#inputA + text').textContent = inputs.A;
+            document.querySelector('#inputB + text').textContent = inputs.B;
+
+            document.getElementById('wireA').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('wireB').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('wireOut').className.baseVal = 'wire ' + (output ? 'on' : 'off');
+
+            document.getElementById('outputCircle').setAttribute('fill', output ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputText').textContent = output;
+
+            document.getElementById('statusA').textContent = inputs.A;
+            document.getElementById('statusA').className = 'status-value ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('statusB').textContent = inputs.B;
+            document.getElementById('statusB').className = 'status-value ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('statusOut').textContent = output;
+            document.getElementById('statusOut').className = 'status-value ' + (output ? 'on' : 'off');
+
+            const rows = document.querySelectorAll('#truthTable tr');
+            const index = inputs.A * 2 + inputs.B;
+            rows.forEach((row, i) => row.className = i === index ? 'active' : '');
+
+            // Also update construction diagram
+            updateConstructionCircuit();
+        }
+
+        function reset() {
+            animating = false;
+            updateAnimBtn();
+            inputs = { A: 0, B: 0 };
+            updateCircuit();
+        }
+
+        async function animate() {
+            if (animating) {
+                animating = false;
+                updateAnimBtn();
+                return;
+            }
+            animating = true;
+            updateAnimBtn();
+
+            const states = [[0, 0], [0, 1], [1, 0], [1, 1]];
+            while (animating) {
+                for (const [a, b] of states) {
+                    if (!animating) break;
+                    inputs.A = a;
+                    inputs.B = b;
+                    updateCircuit();
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+            updateAnimBtn();
+        }
+
+        // Construction section
+        function toggleConstruction() {
+            const content = document.getElementById('constructionContent');
+            const toggle = document.getElementById('constructionToggle');
+            content.classList.toggle('open');
+            toggle.classList.toggle('open');
+        }
+
+        function toggleConstructionInput(input) {
+            if (constructionAnimating) return;
+            inputs[input] = 1 - inputs[input];
+            updateCircuit();
+        }
+
+        function updateConstructionCircuit() {
+            const nandOut = !(inputs.A && inputs.B) ? 1 : 0;
+            const output = inputs.A & inputs.B;
+
+            // Update inputs
+            document.getElementById('consInputA').setAttribute('fill', inputs.A ? '#48bb78' : '#e53e3e');
+            document.getElementById('consInputAText').textContent = inputs.A;
+            document.getElementById('consInputB').setAttribute('fill', inputs.B ? '#48bb78' : '#e53e3e');
+            document.getElementById('consInputBText').textContent = inputs.B;
+
+            // Update wires
+            document.getElementById('consWireA').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('consWireB').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('consWireNand').className.baseVal = 'wire ' + (nandOut ? 'on' : 'off');
+            document.getElementById('consWireOut').className.baseVal = 'wire ' + (output ? 'on' : 'off');
+
+            // Update intermediate
+            document.getElementById('consNandOut').setAttribute('fill', nandOut ? '#48bb78' : '#e53e3e');
+            document.getElementById('consNandOutText').textContent = nandOut;
+
+            // Update output
+            document.getElementById('consOutputCircle').setAttribute('fill', output ? '#48bb78' : '#e53e3e');
+            document.getElementById('consOutputText').textContent = output;
+        }
+
+        function setStep(step, label) {
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById('step' + i).classList.toggle('active', i <= step);
+            }
+            document.getElementById('stepLabel').textContent = label;
+        }
+
+        async function animateConstruction() {
+            if (constructionAnimating) return;
+            constructionAnimating = true;
+
+            // Open the construction section if closed
+            const content = document.getElementById('constructionContent');
+            if (!content.classList.contains('open')) {
+                toggleConstruction();
+            }
+
+            const states = [[0, 0], [0, 1], [1, 0], [1, 1]];
+
+            for (const [a, b] of states) {
+                if (!constructionAnimating) break;
+
+                inputs.A = a;
+                inputs.B = b;
+
+                // Step 1: Show inputs
+                setStep(1, `Etape 1: Entrees A=${a}, B=${b}`);
+                updateCircuit();
+                await new Promise(r => setTimeout(r, 800));
+
+                // Step 2: Show NAND result
+                const nandResult = !(a && b) ? 1 : 0;
+                setStep(2, `Etape 2: NAND(${a},${b}) = ${nandResult}`);
+                await new Promise(r => setTimeout(r, 800));
+
+                // Step 3: Show NOT result
+                const andResult = a & b;
+                setStep(3, `Etape 3: NOT(${nandResult}) = ${andResult} (resultat final)`);
+                await new Promise(r => setTimeout(r, 1200));
+            }
+
+            setStep(0, 'Animation terminee - Cliquez pour recommencer');
+            constructionAnimating = false;
+        }
+
+        updateCircuit();
+    </script>
+</body>
+</html>

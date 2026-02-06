@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registre 1-bit - Animation Interactive</title>
+    <link rel="stylesheet" href="common.css">
+    <style>
+        .timing-diagram {
+            background: #1a202c;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+        .timing-row {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+        .timing-label {
+            width: 80px;
+            color: #a0aec0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .timing-wave {
+            display: flex;
+            flex: 1;
+        }
+        .timing-cell {
+            width: 35px;
+            height: 25px;
+            border-right: 1px solid #4a5568;
+        }
+        .timing-cell.high {
+            background: linear-gradient(to bottom, #48bb78 0%, #48bb78 50%, transparent 50%);
+        }
+        .timing-cell.low {
+            background: linear-gradient(to bottom, transparent 50%, #e53e3e 50%, #e53e3e 100%);
+        }
+        .timing-cell.rising {
+            background: linear-gradient(to top right, #e53e3e 49%, #48bb78 51%);
+        }
+        .timing-cell.current {
+            border: 2px solid #f6ad55;
+        }
+    </style>
+</head>
+<body>
+    <h1>Registre 1-bit (Bit)</h1>
+    <p class="subtitle">DFF avec controle de chargement (load)</p>
+
+    <div class="container">
+        <p class="instructions">Cliquez sur IN et LOAD, puis sur CLK pour voir le comportement</p>
+
+        <svg class="circuit-svg" viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg">
+            <!-- Register box -->
+            <rect class="gate-body" x="180" y="60" width="140" height="160" rx="10" stroke-width="3"/>
+
+            <!-- MUX inside (conceptual) -->
+            <path d="M 200 100 L 240 110 L 240 150 L 200 160 Z" fill="#4a5568" stroke="#718096"/>
+            <text x="220" y="135" text-anchor="middle" fill="#a0aec0" font-size="8">MUX</text>
+
+            <!-- DFF inside -->
+            <rect x="260" y="105" width="45" height="50" rx="5" fill="#4a5568" stroke="#718096"/>
+            <text x="282" y="135" text-anchor="middle" fill="#a0aec0" font-size="8">DFF</text>
+
+            <!-- Feedback loop -->
+            <path id="wireFeedback" class="wire off" d="M 305 130 L 330 130 L 330 200 L 190 200 L 190 150 L 200 150"
+                  stroke-dasharray="4"/>
+
+            <!-- Input wire -->
+            <path id="wireIn" class="wire off" d="M 50 100 L 200 110"/>
+
+            <!-- Load wire -->
+            <path id="wireLoad" class="wire off" d="M 50 170 L 140 170 L 140 130 L 180 130"/>
+            <path id="wireLoadMux" class="wire off" d="M 180 130 L 220 130"/>
+
+            <!-- Clock wire -->
+            <path id="wireClk" class="wire off" d="M 50 240 L 282 240 L 282 155"/>
+
+            <!-- Output wire -->
+            <path id="wireOut" class="wire off" d="M 305 130 L 450 130"/>
+
+            <!-- Input toggle -->
+            <g class="input-toggle" onclick="toggleInput('I')">
+                <circle id="inputIn" cx="50" cy="100" r="20" fill="#e53e3e"/>
+                <text x="50" y="106" text-anchor="middle" fill="white" font-weight="bold" font-size="16">0</text>
+            </g>
+
+            <!-- Load toggle -->
+            <g class="input-toggle" onclick="toggleInput('L')">
+                <circle id="inputLoad" cx="50" cy="170" r="20" fill="#4299e1"/>
+                <text x="50" y="176" text-anchor="middle" fill="white" font-weight="bold" font-size="16">0</text>
+            </g>
+
+            <!-- Clock button -->
+            <g class="input-toggle" onclick="clockPulse()">
+                <rect id="clockBtn" x="28" y="218" width="44" height="44" rx="8" fill="#f6ad55"/>
+                <text x="50" y="245" text-anchor="middle" fill="white" font-weight="bold" font-size="12">CLK</text>
+            </g>
+
+            <!-- Output indicator -->
+            <circle id="outputOut" cx="450" cy="130" r="22" fill="#e53e3e"/>
+            <text id="outputText" x="450" y="136" text-anchor="middle" fill="white" font-weight="bold" font-size="18">0</text>
+
+            <!-- Labels -->
+            <text class="label label-input" x="50" y="70">IN</text>
+            <text class="label" x="50" y="140" fill="#4299e1">LOAD</text>
+            <text class="label" x="50" y="275" fill="#f6ad55">Clock</text>
+            <text class="label label-output" x="450" y="95">OUT</text>
+
+            <text x="250" y="85" text-anchor="middle" fill="#a0aec0" font-size="12">REGISTER (1-bit)</text>
+        </svg>
+
+        <div class="status">
+            <div class="status-item">
+                <span>IN =</span>
+                <span id="statusIn" class="status-value off">0</span>
+            </div>
+            <div class="status-item">
+                <span>LOAD =</span>
+                <span id="statusLoad" class="status-value off" style="color: #4299e1;">0</span>
+            </div>
+            <div class="status-item">
+                <span>OUT =</span>
+                <span id="statusOut" class="status-value off">0</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0; padding: 15px; background: #2d3748; border-radius: 8px;">
+            <p style="color: #a0aec0; margin-bottom: 10px;">Comportement du Registre:</p>
+            <p style="color: #e2e8f0; font-family: 'Courier New', monospace;">
+                if (load) Q(t+1) = IN(t) <span style="color: #718096;">// Charge nouvelle valeur</span><br>
+                else Q(t+1) = Q(t) <span style="color: #718096;">// Conserve valeur actuelle</span>
+            </p>
+        </div>
+
+        <h3 style="text-align: center; margin-top: 20px; color: #a0aec0;">Diagramme Temporel</h3>
+        <div class="timing-diagram">
+            <div class="timing-row">
+                <span class="timing-label">CLK</span>
+                <div class="timing-wave" id="clkWave"></div>
+            </div>
+            <div class="timing-row">
+                <span class="timing-label">IN</span>
+                <div class="timing-wave" id="inWave"></div>
+            </div>
+            <div class="timing-row">
+                <span class="timing-label">LOAD</span>
+                <div class="timing-wave" id="loadWave"></div>
+            </div>
+            <div class="timing-row">
+                <span class="timing-label">OUT</span>
+                <div class="timing-wave" id="outWave"></div>
+            </div>
+        </div>
+
+        <table class="truth-table">
+            <thead>
+                <tr>
+                    <th>CLK</th>
+                    <th>LOAD</th>
+                    <th>IN</th>
+                    <th>OUT (apres)</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>↑</td><td>0</td><td>X</td><td>Q</td><td>Maintient la valeur</td></tr>
+                <tr><td>↑</td><td>1</td><td>0</td><td>0</td><td>Charge 0</td></tr>
+                <tr><td>↑</td><td>1</td><td>1</td><td>1</td><td>Charge 1</td></tr>
+            </tbody>
+        </table>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="reset()">Reset</button>
+            <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
+        </div>
+    </div>
+
+    <nav class="nav" style="margin-top: 20px;">
+        <a href="index.html">Index</a>
+        <a href="dff.html">DFF</a>
+        <a href="register32.html">Registre 32-bit</a>
+        <a href="ram.html">RAM</a>
+    </nav>
+
+    <script>
+        let inputs = { I: 0, L: 0 };
+        let output = 0;
+        let history = [];
+        let animating = false;
+        const maxHistory = 12;
+
+        function updateAnimBtn() {
+            const btn = document.getElementById('animBtn');
+            btn.textContent = animating ? 'Stop' : 'Animation Auto';
+            btn.classList.toggle('animating', animating);
+        }
+
+
+        function toggleInput(input) {
+            if (animating) return;
+            inputs[input] = 1 - inputs[input];
+            updateDisplay();
+        }
+
+        function clockPulse() {
+            if (animating) return;
+            performClockPulse();
+        }
+
+        async function performClockPulse() {
+            const clockBtn = document.getElementById('clockBtn');
+            clockBtn.setAttribute('fill', '#48bb78');
+            document.getElementById('wireClk').className.baseVal = 'wire on';
+
+            // On rising edge: if load=1, capture input; else keep current
+            if (inputs.L === 1) {
+                output = inputs.I;
+            }
+            // else output stays the same
+
+            history.push({ clk: 'rising', i: inputs.I, l: inputs.L, o: output });
+            if (history.length > maxHistory) history.shift();
+
+            updateDisplay();
+            updateTimingDiagram();
+
+            await new Promise(r => setTimeout(r, 400));
+
+            clockBtn.setAttribute('fill', '#f6ad55');
+            document.getElementById('wireClk').className.baseVal = 'wire off';
+
+            history.push({ clk: 'low', i: inputs.I, l: inputs.L, o: output });
+            if (history.length > maxHistory) history.shift();
+            updateTimingDiagram();
+        }
+
+        function updateDisplay() {
+            // Update inputs
+            document.getElementById('inputIn').setAttribute('fill', inputs.I ? '#48bb78' : '#e53e3e');
+            document.querySelector('#inputIn + text').textContent = inputs.I;
+            document.getElementById('inputLoad').setAttribute('fill', inputs.L ? '#48bb78' : '#4299e1');
+            document.querySelector('#inputLoad + text').textContent = inputs.L;
+
+            // Update wires
+            document.getElementById('wireIn').className.baseVal = 'wire ' + (inputs.I ? 'on' : 'off');
+            document.getElementById('wireLoad').className.baseVal = 'wire ' + (inputs.L ? 'on' : 'off');
+            document.getElementById('wireLoadMux').className.baseVal = 'wire ' + (inputs.L ? 'on' : 'off');
+            document.getElementById('wireOut').className.baseVal = 'wire ' + (output ? 'on' : 'off');
+            document.getElementById('wireFeedback').className.baseVal = 'wire ' + (output ? 'on' : 'off');
+
+            // Update output
+            document.getElementById('outputOut').setAttribute('fill', output ? '#48bb78' : '#e53e3e');
+            document.getElementById('outputText').textContent = output;
+
+            // Update status
+            document.getElementById('statusIn').textContent = inputs.I;
+            document.getElementById('statusIn').className = 'status-value ' + (inputs.I ? 'on' : 'off');
+            document.getElementById('statusLoad').textContent = inputs.L;
+            document.getElementById('statusOut').textContent = output;
+            document.getElementById('statusOut').className = 'status-value ' + (output ? 'on' : 'off');
+        }
+
+        function updateTimingDiagram() {
+            ['clk', 'in', 'load', 'out'].forEach(signal => {
+                const wave = document.getElementById(signal + 'Wave');
+                wave.innerHTML = '';
+            });
+
+            history.forEach((h, i) => {
+                const isCurrent = i === history.length - 1;
+
+                // CLK
+                const clkCell = document.createElement('div');
+                clkCell.className = 'timing-cell ' + (h.clk === 'rising' ? 'rising' : 'low') + (isCurrent ? ' current' : '');
+                document.getElementById('clkWave').appendChild(clkCell);
+
+                // IN
+                const inCell = document.createElement('div');
+                inCell.className = 'timing-cell ' + (h.i ? 'high' : 'low') + (isCurrent ? ' current' : '');
+                document.getElementById('inWave').appendChild(inCell);
+
+                // LOAD
+                const loadCell = document.createElement('div');
+                loadCell.className = 'timing-cell ' + (h.l ? 'high' : 'low') + (isCurrent ? ' current' : '');
+                document.getElementById('loadWave').appendChild(loadCell);
+
+                // OUT
+                const outCell = document.createElement('div');
+                outCell.className = 'timing-cell ' + (h.o ? 'high' : 'low') + (isCurrent ? ' current' : '');
+                document.getElementById('outWave').appendChild(outCell);
+            });
+        }
+
+        function reset() {
+            animating = false;
+            updateAnimBtn();
+            inputs = { I: 0, L: 0 };
+            output = 0;
+            history = [{ clk: 'low', i: 0, l: 0, o: 0 }];
+            updateDisplay();
+            updateTimingDiagram();
+        }
+
+        async function animate() {
+            if (animating) {
+                animating = false;
+                updateAnimBtn();
+                return;
+            }
+            animating = true;
+            updateAnimBtn();
+            const sequence = [
+                // Try to load without load=1 (should not change)
+                { setI: 1 }, { clock: true },
+                // Now enable load
+                { setL: 1 }, { clock: true },
+                // Change input with load still enabled
+                { setI: 0 }, { clock: true },
+                // Disable load, try to change (should not change)
+                { setL: 0 }, { setI: 1 }, { clock: true },
+                // Enable load again
+                { setL: 1 }, { clock: true },
+                { setI: 0 }, { clock: true },
+            ];
+
+            for (const action of sequence) {
+                if (!animating) break;
+
+                if (action.setI !== undefined) {
+                    inputs.I = action.setI;
+                    updateDisplay();
+                    await new Promise(r => setTimeout(r, 400));
+                }
+
+                if (action.setL !== undefined) {
+                    inputs.L = action.setL;
+                    updateDisplay();
+                    await new Promise(r => setTimeout(r, 400));
+                }
+
+                if (action.clock) {
+                    await performClockPulse();
+                    await new Promise(r => setTimeout(r, 500));
+                }
+            }
+
+            animating = false;
+            updateAnimBtn();
+        }
+
+        // Initialize
+        reset();
+    </script>
+</body>
+</html>

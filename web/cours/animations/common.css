@@ -1,0 +1,295 @@
+/* Common styles for circuit animations */
+:root {
+    --bg-color: #1a1a2e;
+    --panel-bg: #16213e;
+    --wire-off: #4a5568;
+    --wire-on: #48bb78;
+    --gate-fill: #2d3748;
+    --gate-stroke: #a0aec0;
+    --text-color: #e2e8f0;
+    --input-off: #e53e3e;
+    --input-on: #48bb78;
+    --output-color: #4299e1;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: #fff;
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: #a0aec0;
+    margin-bottom: 20px;
+}
+
+.container {
+    background: var(--panel-bg);
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    max-width: 800px;
+    width: 100%;
+}
+
+.circuit-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin: 20px auto;
+}
+
+/* Interactive input circles */
+.input-toggle {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.input-toggle:hover {
+    filter: brightness(1.3);
+}
+
+.input-toggle:active {
+    filter: brightness(0.9);
+}
+
+/* Wire styling */
+.wire {
+    stroke-width: 3;
+    fill: none;
+    transition: stroke 0.3s ease;
+}
+
+.wire.off {
+    stroke: var(--wire-off);
+}
+
+.wire.on {
+    stroke: var(--wire-on);
+}
+
+/* Gate styling */
+.gate-body {
+    fill: var(--gate-fill);
+    stroke: var(--gate-stroke);
+    stroke-width: 2;
+}
+
+/* Labels */
+.label {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    fill: var(--text-color);
+}
+
+.label-input {
+    fill: #fc8181;
+}
+
+.label-output {
+    fill: #63b3ed;
+}
+
+/* Truth table */
+.truth-table {
+    margin-top: 20px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.truth-table th,
+.truth-table td {
+    padding: 10px 15px;
+    text-align: center;
+    border: 1px solid #4a5568;
+}
+
+.truth-table th {
+    background: #2d3748;
+    color: #a0aec0;
+    font-weight: 600;
+}
+
+.truth-table td {
+    background: #1a202c;
+    font-family: 'Courier New', monospace;
+}
+
+.truth-table tr.active {
+    background: #2c5282;
+}
+
+.truth-table tr.active td {
+    background: #2c5282;
+    color: #fff;
+}
+
+/* Controls */
+.controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: #4299e1;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #3182ce;
+}
+
+.btn-secondary {
+    background: #4a5568;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #718096;
+}
+
+.btn-primary.animating {
+    background: #e53e3e;
+}
+
+.btn-primary.animating:hover {
+    background: #c53030;
+}
+
+/* Instructions */
+.instructions {
+    text-align: center;
+    color: #a0aec0;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+/* Navigation */
+.nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.nav a {
+    color: #63b3ed;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.nav a:hover {
+    background: rgba(99, 179, 237, 0.2);
+}
+
+.nav a.active {
+    background: #4299e1;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    .truth-table th,
+    .truth-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
+
+/* Input/Output indicators */
+.io-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #2d3748;
+    margin: 5px;
+}
+
+.io-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.io-dot.off {
+    background: var(--input-off);
+}
+
+.io-dot.on {
+    background: var(--input-on);
+}
+
+/* Status display */
+.status {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Courier New', monospace;
+}
+
+.status-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    min-width: 30px;
+    text-align: center;
+}
+
+.status-value.on {
+    color: var(--input-on);
+}
+
+.status-value.off {
+    color: var(--input-off);
+}

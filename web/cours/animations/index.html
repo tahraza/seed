@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animations Interactives - Circuits Logiques</title>
+    <link rel="stylesheet" href="common.css">
+    <style>
+        .hero {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 20px;
+            margin-bottom: 30px;
+        }
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #48bb78 0%, #4299e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            color: #a0aec0;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .section {
+            margin: 30px 0;
+        }
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4a5568;
+        }
+        .section-title h2 {
+            font-size: 1.5rem;
+            color: #e2e8f0;
+            margin: 0;
+        }
+        .section-title .chapter {
+            background: #4299e1;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .circuit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        .circuit-card {
+            background: #2d3748;
+            border-radius: 12px;
+            padding: 20px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .circuit-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: #4a5568;
+        }
+        .circuit-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        .circuit-icon.gate { background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); }
+        .circuit-icon.mux { background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); }
+        .circuit-icon.arith { background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); }
+        .circuit-icon.mem { background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%); }
+        .circuit-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #e2e8f0;
+            margin-bottom: 5px;
+        }
+        .circuit-desc {
+            font-size: 12px;
+            color: #a0aec0;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #4299e1;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            padding: 15px;
+            background: #1a202c;
+            border-radius: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <a href="../index.html" class="back-link">← Retour aux cours</a>
+
+    <div class="hero">
+        <h1>Animations Interactives</h1>
+        <p>Explorez le fonctionnement des circuits logiques de maniere interactive. Cliquez sur les entrees pour voir comment les signaux se propagent.</p>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: #48bb78;"></div>
+            <span>Signal actif (1)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #e53e3e;"></div>
+            <span>Signal inactif (0)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #4299e1;"></div>
+            <span>Signal de controle</span>
+        </div>
+    </div>
+
+    <div class="container" style="max-width: 1000px;">
+        <!-- Chapter 1: Boolean Logic -->
+        <div class="section">
+            <div class="section-title">
+                <span class="chapter">Chapitre 1</span>
+                <h2>Portes Logiques</h2>
+            </div>
+            <div class="circuit-grid">
+                <a href="nand.html" class="circuit-card">
+                    <div class="circuit-icon gate">⊼</div>
+                    <div class="circuit-name">NAND</div>
+                    <div class="circuit-desc">Porte universelle</div>
+                </a>
+                <a href="not.html" class="circuit-card">
+                    <div class="circuit-icon gate">¬</div>
+                    <div class="circuit-name">NOT</div>
+                    <div class="circuit-desc">Inverseur</div>
+                </a>
+                <a href="and.html" class="circuit-card">
+                    <div class="circuit-icon gate">∧</div>
+                    <div class="circuit-name">AND</div>
+                    <div class="circuit-desc">ET logique</div>
+                </a>
+                <a href="or.html" class="circuit-card">
+                    <div class="circuit-icon gate">∨</div>
+                    <div class="circuit-name">OR</div>
+                    <div class="circuit-desc">OU logique</div>
+                </a>
+                <a href="xor.html" class="circuit-card">
+                    <div class="circuit-icon gate">⊕</div>
+                    <div class="circuit-name">XOR</div>
+                    <div class="circuit-desc">OU exclusif</div>
+                </a>
+                <a href="or8way.html" class="circuit-card">
+                    <div class="circuit-icon gate">∨₈</div>
+                    <div class="circuit-name">Or8Way</div>
+                    <div class="circuit-desc">OU sur 8 bits</div>
+                </a>
+                <a href="nor.html" class="circuit-card">
+                    <div class="circuit-icon gate">⊽</div>
+                    <div class="circuit-name">NOR</div>
+                    <div class="circuit-desc">NOT OR</div>
+                </a>
+                <a href="xnor.html" class="circuit-card">
+                    <div class="circuit-icon gate">⊙</div>
+                    <div class="circuit-name">XNOR</div>
+                    <div class="circuit-desc">Equivalence</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Multiplexers -->
+        <div class="section">
+            <div class="section-title">
+                <span class="chapter">Chapitre 1</span>
+                <h2>Multiplexeurs et Demultiplexeurs</h2>
+            </div>
+            <div class="circuit-grid">
+                <a href="mux.html" class="circuit-card">
+                    <div class="circuit-icon mux">⧈</div>
+                    <div class="circuit-name">MUX</div>
+                    <div class="circuit-desc">Selecteur 2 vers 1</div>
+                </a>
+                <a href="mux4way.html" class="circuit-card">
+                    <div class="circuit-icon mux">⧈₄</div>
+                    <div class="circuit-name">MUX 4-Way</div>
+                    <div class="circuit-desc">Selecteur 4 vers 1</div>
+                </a>
+                <a href="dmux.html" class="circuit-card">
+                    <div class="circuit-icon mux">⧉</div>
+                    <div class="circuit-name">DMUX</div>
+                    <div class="circuit-desc">Routeur 1 vers 2</div>
+                </a>
+                <a href="dmux8way.html" class="circuit-card">
+                    <div class="circuit-icon mux">⧉₈</div>
+                    <div class="circuit-name">DMUX 8-Way</div>
+                    <div class="circuit-desc">Routeur 1 vers 8</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Chapter 2: Arithmetic -->
+        <div class="section">
+            <div class="section-title">
+                <span class="chapter">Chapitre 2</span>
+                <h2>Circuits Arithmetiques</h2>
+            </div>
+            <div class="circuit-grid">
+                <a href="half-adder.html" class="circuit-card">
+                    <div class="circuit-icon arith">½</div>
+                    <div class="circuit-name">Half Adder</div>
+                    <div class="circuit-desc">Demi-additionneur</div>
+                </a>
+                <a href="full-adder.html" class="circuit-card">
+                    <div class="circuit-icon arith">+</div>
+                    <div class="circuit-name">Full Adder</div>
+                    <div class="circuit-desc">Additionneur complet</div>
+                </a>
+                <a href="add16.html" class="circuit-card">
+                    <div class="circuit-icon arith">+₁₆</div>
+                    <div class="circuit-name">Add16</div>
+                    <div class="circuit-desc">Additionneur 16-bit</div>
+                </a>
+                <a href="alu.html" class="circuit-card">
+                    <div class="circuit-icon arith">ALU</div>
+                    <div class="circuit-name">ALU</div>
+                    <div class="circuit-desc">Unite Arithmetique</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Chapter 3: Memory -->
+        <div class="section">
+            <div class="section-title">
+                <span class="chapter">Chapitre 3</span>
+                <h2>Memoire</h2>
+            </div>
+            <div class="circuit-grid">
+                <a href="dff.html" class="circuit-card">
+                    <div class="circuit-icon mem">D</div>
+                    <div class="circuit-name">DFF</div>
+                    <div class="circuit-desc">Data Flip-Flop</div>
+                </a>
+                <a href="register.html" class="circuit-card">
+                    <div class="circuit-icon mem">1</div>
+                    <div class="circuit-name">Bit Register</div>
+                    <div class="circuit-desc">Registre 1-bit</div>
+                </a>
+                <a href="register32.html" class="circuit-card">
+                    <div class="circuit-icon mem">32</div>
+                    <div class="circuit-name">Register32</div>
+                    <div class="circuit-desc">Registre 32-bit</div>
+                </a>
+                <a href="ram.html" class="circuit-card">
+                    <div class="circuit-icon mem">RAM</div>
+                    <div class="circuit-name">RAM</div>
+                    <div class="circuit-desc">Memoire vive</div>
+                </a>
+                <a href="pc.html" class="circuit-card">
+                    <div class="circuit-icon mem">PC</div>
+                    <div class="circuit-name">Program Counter</div>
+                    <div class="circuit-desc">Compteur de programme</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <footer style="text-align: center; margin-top: 40px; padding: 20px; color: #718096; font-size: 14px;">
+        <p>Animations SVG interactives pour l'apprentissage des circuits logiques</p>
+        <p style="margin-top: 10px;">
+            <a href="../01_logique_booleenne/index.html" style="color: #4299e1; text-decoration: none;">Cours Logique</a> |
+            <a href="../02_arithmetique/index.html" style="color: #4299e1; text-decoration: none;">Cours Arithmetique</a> |
+            <a href="../03_memoire/index.html" style="color: #4299e1; text-decoration: none;">Cours Memoire</a>
+        </p>
+    </footer>
+</body>
+</html>
