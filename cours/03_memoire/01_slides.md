@@ -77,69 +77,166 @@ Les circuits séquentiels ont une <strong>notion de temps</strong>
 
 ---
 
+# Le Problème : Quand Capturer ?
+
+**Sans horloge, comment savoir QUAND lire les entrées ?**
+
+```
+Signal A: ────┐     ┌─────────    (arrive tôt)
+              └─────┘
+Signal B: ──────────┐   ┌─────    (arrive tard - délai)
+                    └───┘
+                  ↑
+            Quel moment choisir ?
+```
+
+<div class="columns">
+<div>
+
+**Le problème :**
+- Les signaux ont des délais différents
+- Certains bits sont "prêts" avant d'autres
+- Capturer trop tôt = valeur incorrecte !
+
+</div>
+<div>
+
+<div class="callout callout-warning">
+<div class="callout-title">Chaos garanti</div>
+Sans synchronisation, le circuit capture des valeurs incohérentes
+</div>
+
+</div>
+</div>
+
+---
+
+# La Solution : Un Chef d'Orchestre
+
+**L'horloge = un signal qui dit "MAINTENANT !" à tout le circuit**
+
+<div class="columns">
+<div>
+
+Comme un **chef d'orchestre** qui bat la mesure :
+- Tous les musiciens jouent au même moment
+- Pas de cacophonie
+
+Comme un **feu de signalisation** :
+- Tout le monde attend le feu vert
+- Puis tout le monde avance ensemble
+
+</div>
+<div>
+
+<div class="key-concept">
+<div class="key-concept-title">Principe fondamental</div>
+L'horloge donne un <strong>rythme commun</strong> à tous les composants du circuit
+</div>
+
+</div>
+</div>
+
+---
+
 # L'Horloge (Clock)
 
+Signal périodique qui oscille entre 0 et 1 :
+
+```
+      ┌───┐   ┌───┐   ┌───┐   ┌───┐
+clk ──┘   └───┘   └───┘   └───┘   └───
+      ↑       ↑       ↑       ↑
+   "CAPTURE" "CAPTURE" "CAPTURE" ...
+```
+
 <div class="columns">
 <div>
 
-Signal qui oscille entre 0 et 1 à fréquence fixe :
-
-```
-      ┌───┐   ┌───┐   ┌───┐
-clk ──┘   └───┘   └───┘   └───
-      ↑       ↑       ↑
-   Front   Front   Front
-   montant montant montant
-```
+**Vocabulaire :**
+- **Front montant** : passage 0→1 (moment de capture)
+- **Période** : durée d'un cycle complet
+- **Fréquence** : cycles par seconde (Hz)
 
 </div>
-<div class="figure">
-<img src="assets/clock-signal.svg" alt="Signal d'horloge">
-<div class="figure-caption">Signal d'horloge périodique</div>
-</div>
-</div>
-
----
-
-# Timing de l'Horloge
-
-<div class="definition">
-<div class="definition-term">Front montant (Rising Edge)</div>
-<div class="definition-text">Passage de 0 à 1 — moment où les données sont capturées</div>
-</div>
-
-<div class="definition">
-<div class="definition-term">Période</div>
-<div class="definition-text">Durée d'un cycle complet (high + low)</div>
-</div>
+<div>
 
 <div class="callout callout-arm">
-Un processeur ARM Cortex-M4 tourne à ~168 MHz = 168 millions de cycles/seconde.
+Un ARM Cortex-M4 à 168 MHz = 168 millions de "MAINTENANT !" par seconde
+</div>
+
+</div>
 </div>
 
 ---
 
-# Pourquoi l'Horloge ?
+# D'où Vient l'Horloge ?
 
-**Problème :** Les signaux se propagent avec délai
+**Un cristal de quartz** vibre à fréquence fixe quand on lui applique une tension :
 
-**Solution :** L'horloge synchronise tout
+```
+              ┌─────────┐      ┌──────────┐
+Alimentation ─┤ Cristal ├──────┤Oscillateur├───► Signal carré
+              │ Quartz  │      └──────────┘       (horloge)
+              └─────────┘
+                 32 kHz
+               ou MHz
+```
 
 <div class="columns">
 <div>
 
-- Pendant clk = 0 : les circuits calculent
-- Sur front montant : les résultats sont capturés
+**Pourquoi le quartz ?**
+- Vibration TRÈS stable (~10 ppm)
+- Peu coûteux et robuste
+- Même principe que les montres !
 
 </div>
 <div>
 
 <div class="callout callout-tip">
-<div class="callout-title">Synchronisation</div>
-Tous les registres capturent au même instant
+<div class="callout-title">Le battement de cœur</div>
+Le cristal est le "cœur" de l'ordinateur — sans lui, rien ne fonctionne
 </div>
 
 </div>
+</div>
+
+---
+
+# Horloge et Mémoire : Le Lien Fondamental
+
+<div class="columns">
+<div>
+
+**SANS horloge :**
+```
+entrée ───► sortie
+```
+- Sortie change dès que l'entrée change
+- Impossible de "figer" une valeur
+- = Circuit **combinatoire**
+
+</div>
+<div>
+
+**AVEC horloge :**
+```
+entrée ───►[attend]───► sortie
+              ↑
+            front
+           montant
+```
+- Sortie change SEULEMENT au front montant
+- Entre deux fronts = valeur STABLE
+- = Circuit **séquentiel** (mémoire !)
+
+</div>
+</div>
+
+<div class="key-concept">
+<div class="key-concept-title">Révélation</div>
+L'horloge transforme un simple fil en <strong>mémoire</strong>
 </div>
 
 ---
