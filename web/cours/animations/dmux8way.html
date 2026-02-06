@@ -25,6 +25,20 @@
         .output-cell .label { font-size: 11px; color: #718096; }
         .output-cell .value { font-size: 20px; font-weight: bold; color: #e2e8f0; }
         .output-cell.active .value { color: #48bb78; }
+        .construction-section { margin-top: 30px; border: 2px solid #4a5568; border-radius: 12px; overflow: hidden; }
+        .construction-header { background: #2d3748; padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .construction-header:hover { background: #4a5568; }
+        .construction-header h3 { margin: 0; color: #e2e8f0; font-size: 1.1rem; }
+        .construction-toggle { color: #4299e1; font-size: 1.5rem; transition: transform 0.3s; }
+        .construction-content { display: none; padding: 20px; background: #1a202c; }
+        .construction-content.open { display: block; }
+        .construction-toggle.open { transform: rotate(180deg); }
+        .construction-formula { text-align: center; padding: 15px; background: #2d3748; border-radius: 8px; margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 1rem; color: #e2e8f0; }
+        .construction-formula .highlight { color: #48bb78; font-weight: bold; }
+        .component-links { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
+        .component-link { padding: 8px 16px; background: #4299e1; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
+        .component-link:hover { background: #3182ce; }
+        .construction-explanation { color: #a0aec0; font-size: 14px; line-height: 1.6; margin: 15px 0; }
     </style>
 </head>
 <body>
@@ -119,6 +133,95 @@
         <div class="controls">
             <button class="btn btn-secondary" onclick="reset()">Reset</button>
             <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
+        </div>
+
+        <!-- Construction Section -->
+        <div class="construction-section">
+            <div class="construction-header" onclick="toggleConstruction()">
+                <h3>Voir la Construction</h3>
+                <span class="construction-toggle" id="constructionToggle">&#9660;</span>
+            </div>
+            <div class="construction-content" id="constructionContent">
+                <div class="construction-formula">
+                    <span class="highlight">DMUX8Way</span> = 7 x DMUX2 en cascade
+                </div>
+
+                <p class="construction-explanation">
+                    Le DMUX 8 voies utilise une structure arborescente de DMUX 2 voies.
+                    Chaque niveau de l'arbre utilise un bit du selecteur pour diviser le signal.
+                </p>
+
+                <svg viewBox="0 0 400 180" xmlns="http://www.w3.org/2000/svg" style="max-width: 400px; margin: 0 auto; display: block;">
+                    <!-- Level 1 - DMUX with SEL[2] -->
+                    <path d="M 60 70 L 100 60 L 100 100 L 60 110 Z" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+                    <text x="80" y="90" text-anchor="middle" fill="#4299e1" font-size="7">DMUX</text>
+
+                    <!-- Level 2 - 2x DMUX with SEL[1] -->
+                    <path d="M 150 30 L 180 25 L 180 55 L 150 60 Z" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
+                    <text x="165" y="45" text-anchor="middle" fill="#48bb78" font-size="6">DM</text>
+
+                    <path d="M 150 110 L 180 105 L 180 135 L 150 140 Z" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
+                    <text x="165" y="125" text-anchor="middle" fill="#48bb78" font-size="6">DM</text>
+
+                    <!-- Level 3 - 4x DMUX with SEL[0] -->
+                    <path d="M 230 10 L 250 8 L 250 28 L 230 30 Z" fill="#2d3748" stroke="#f6ad55" stroke-width="1.5"/>
+                    <path d="M 230 45 L 250 43 L 250 63 L 230 65 Z" fill="#2d3748" stroke="#f6ad55" stroke-width="1.5"/>
+                    <path d="M 230 90 L 250 88 L 250 108 L 230 110 Z" fill="#2d3748" stroke="#f6ad55" stroke-width="1.5"/>
+                    <path d="M 230 125 L 250 123 L 250 143 L 230 145 Z" fill="#2d3748" stroke="#f6ad55" stroke-width="1.5"/>
+
+                    <!-- Wires -->
+                    <path d="M 30 90 L 60 90" stroke="#4299e1" stroke-width="2"/>
+                    <path d="M 100 70 L 150 40" stroke="#4299e1" stroke-width="1"/>
+                    <path d="M 100 90 L 150 120" stroke="#4299e1" stroke-width="1"/>
+
+                    <path d="M 180 35 L 230 18" stroke="#48bb78" stroke-width="1"/>
+                    <path d="M 180 50 L 230 55" stroke="#48bb78" stroke-width="1"/>
+                    <path d="M 180 115 L 230 98" stroke="#48bb78" stroke-width="1"/>
+                    <path d="M 180 130 L 230 135" stroke="#48bb78" stroke-width="1"/>
+
+                    <!-- Outputs -->
+                    <path d="M 250 15 L 350 10" stroke="#f6ad55" stroke-width="1"/>
+                    <path d="M 250 23 L 350 25" stroke="#f6ad55" stroke-width="1"/>
+                    <path d="M 250 50 L 350 45" stroke="#f6ad55" stroke-width="1"/>
+                    <path d="M 250 58 L 350 60" stroke="#f6ad55" stroke-width="1"/>
+                    <path d="M 250 95 L 350 95" stroke="#f6ad55" stroke-width="1"/>
+                    <path d="M 250 103 L 350 110" stroke="#f6ad55" stroke-width="1"/>
+                    <path d="M 250 130 L 350 130" stroke="#f6ad55" stroke-width="1"/>
+                    <path d="M 250 138 L 350 145" stroke="#f6ad55" stroke-width="1"/>
+
+                    <!-- Output labels -->
+                    <text x="360" y="13" fill="#718096" font-size="8">O0</text>
+                    <text x="360" y="28" fill="#718096" font-size="8">O1</text>
+                    <text x="360" y="48" fill="#718096" font-size="8">O2</text>
+                    <text x="360" y="63" fill="#718096" font-size="8">O3</text>
+                    <text x="360" y="98" fill="#718096" font-size="8">O4</text>
+                    <text x="360" y="113" fill="#718096" font-size="8">O5</text>
+                    <text x="360" y="133" fill="#718096" font-size="8">O6</text>
+                    <text x="360" y="148" fill="#718096" font-size="8">O7</text>
+
+                    <!-- Control labels -->
+                    <text x="80" y="125" text-anchor="middle" fill="#4299e1" font-size="7">SEL[2]</text>
+                    <text x="165" y="160" text-anchor="middle" fill="#48bb78" font-size="7">SEL[1]</text>
+                    <text x="240" y="160" text-anchor="middle" fill="#f6ad55" font-size="7">SEL[0]</text>
+
+                    <!-- Input -->
+                    <circle cx="30" cy="90" r="10" fill="#4299e1"/>
+                    <text x="30" y="94" text-anchor="middle" fill="white" font-size="8">IN</text>
+                </svg>
+
+                <p class="construction-explanation" style="text-align: center; margin-top: 15px;">
+                    <strong>Decodage hierarchique:</strong><br>
+                    SEL[2] divise en 2 groupes (0-3 vs 4-7)<br>
+                    SEL[1] divise chaque groupe en 2 (0-1 vs 2-3, etc.)<br>
+                    SEL[0] selectionne le bit final
+                </p>
+
+                <div class="component-links">
+                    <a href="dmux.html" class="component-link">Voir DMUX 2-Way</a>
+                    <a href="mux4way.html" class="component-link">Voir MUX 4-Way</a>
+                    <a href="ram.html" class="component-link">Voir RAM</a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -222,6 +325,11 @@
                 }
             }
             updateAnimBtn();
+        }
+
+        function toggleConstruction() {
+            document.getElementById('constructionContent').classList.toggle('open');
+            document.getElementById('constructionToggle').classList.toggle('open');
         }
 
         updateCircuit();

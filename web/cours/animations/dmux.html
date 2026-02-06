@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Demultiplexeur (DMUX) - Animation Interactive</title>
     <link rel="stylesheet" href="common.css">
+    <style>
+        .construction-section { margin-top: 30px; border: 2px solid #4a5568; border-radius: 12px; overflow: hidden; }
+        .construction-header { background: #2d3748; padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .construction-header:hover { background: #4a5568; }
+        .construction-header h3 { margin: 0; color: #e2e8f0; font-size: 1.1rem; }
+        .construction-toggle { color: #4299e1; font-size: 1.5rem; transition: transform 0.3s; }
+        .construction-content { display: none; padding: 20px; background: #1a202c; }
+        .construction-content.open { display: block; }
+        .construction-toggle.open { transform: rotate(180deg); }
+        .construction-formula { text-align: center; padding: 15px; background: #2d3748; border-radius: 8px; margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 1.1rem; color: #e2e8f0; }
+        .construction-formula .highlight { color: #48bb78; font-weight: bold; }
+        .component-links { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
+        .component-link { padding: 8px 16px; background: #4299e1; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
+        .component-link:hover { background: #3182ce; }
+        .construction-explanation { color: #a0aec0; font-size: 14px; line-height: 1.6; margin: 15px 0; }
+    </style>
 </head>
 <body>
     <h1>Demultiplexeur 1 vers 2 (DMUX)</h1>
@@ -97,6 +113,90 @@
             <button class="btn btn-secondary" onclick="reset()">Reset</button>
             <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
         </div>
+
+        <!-- Construction Section -->
+        <div class="construction-section">
+            <div class="construction-header" onclick="toggleConstruction()">
+                <h3>Voir la Construction</h3>
+                <span class="construction-toggle" id="constructionToggle">&#9660;</span>
+            </div>
+            <div class="construction-content" id="constructionContent">
+                <div class="construction-formula">
+                    <span class="highlight">A</span> = AND(IN, NOT(SEL))<br>
+                    <span class="highlight">B</span> = AND(IN, SEL)
+                </div>
+
+                <p class="construction-explanation">
+                    Le demultiplexeur est l'inverse du MUX: il route le signal d'entree vers une des sorties.
+                    Chaque sortie est activee par une combinaison du signal IN et du selecteur.
+                </p>
+
+                <svg viewBox="0 0 420 140" xmlns="http://www.w3.org/2000/svg" style="max-width: 420px; margin: 0 auto; display: block;">
+                    <!-- IN input -->
+                    <path id="consWireIn" class="wire off" d="M 30 70 L 80 70"/>
+                    <path id="consWireInToAnd1" class="wire off" d="M 80 70 L 80 40 L 140 40"/>
+                    <path id="consWireInToAnd2" class="wire off" d="M 80 70 L 80 100 L 140 100"/>
+
+                    <!-- SEL input -->
+                    <path id="consWireSel" class="wire off" d="M 30 130 L 60 130"/>
+                    <path id="consWireSelToNot" class="wire off" d="M 60 130 L 60 55 L 100 55"/>
+                    <path id="consWireSelToAnd2" class="wire off" d="M 60 130 L 110 130 L 110 115 L 140 115"/>
+
+                    <!-- NOT output -->
+                    <path id="consWireNotOut" class="wire on" d="M 130 55 L 140 55"/>
+
+                    <!-- AND outputs -->
+                    <path id="consWireOutA" class="wire off" d="M 230 50 L 390 40"/>
+                    <path id="consWireOutB" class="wire off" d="M 230 110 L 390 100"/>
+
+                    <!-- NOT gate -->
+                    <polygon points="100,45 100,65 125,55" fill="#2d3748" stroke="#f6ad55" stroke-width="2"/>
+                    <circle cx="130" cy="55" r="5" fill="#2d3748" stroke="#f6ad55" stroke-width="2"/>
+
+                    <!-- AND1 gate (A = IN AND NOT(SEL)) -->
+                    <path d="M 140 30 L 140 70 L 175 70 Q 210 70 210 50 Q 210 30 175 30 Z" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+                    <text x="175" y="55" text-anchor="middle" fill="#4299e1" font-size="9">AND</text>
+
+                    <!-- AND2 gate (B = IN AND SEL) -->
+                    <path d="M 140 90 L 140 130 L 175 130 Q 210 130 210 110 Q 210 90 175 90 Z" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+                    <text x="175" y="115" text-anchor="middle" fill="#4299e1" font-size="9">AND</text>
+
+                    <!-- Input indicators -->
+                    <g class="input-toggle" onclick="toggleConstructionInput('I')">
+                        <circle id="consInputIn" cx="30" cy="70" r="12" fill="#e53e3e"/>
+                        <text id="consInputTextIn" x="30" y="74" text-anchor="middle" fill="white" font-weight="bold" font-size="10">0</text>
+                    </g>
+                    <g class="input-toggle" onclick="toggleConstructionInput('S')">
+                        <circle id="consInputSel" cx="30" cy="130" r="12" fill="#4299e1"/>
+                        <text id="consInputTextSel" x="30" y="134" text-anchor="middle" fill="white" font-weight="bold" font-size="10">0</text>
+                    </g>
+
+                    <!-- Outputs -->
+                    <circle id="consOutputA" cx="390" cy="40" r="12" fill="#e53e3e"/>
+                    <text id="consOutputTextA" x="390" y="44" text-anchor="middle" fill="white" font-weight="bold" font-size="10">0</text>
+                    <circle id="consOutputB" cx="390" cy="100" r="12" fill="#e53e3e"/>
+                    <text id="consOutputTextB" x="390" y="104" text-anchor="middle" fill="white" font-weight="bold" font-size="10">0</text>
+
+                    <!-- Labels -->
+                    <text x="10" y="74" fill="#a0aec0" font-size="10">IN</text>
+                    <text x="10" y="134" fill="#4299e1" font-size="10">SEL</text>
+                    <text x="390" y="25" fill="#48bb78" font-size="10" text-anchor="middle">A</text>
+                    <text x="390" y="120" fill="#48bb78" font-size="10" text-anchor="middle">B</text>
+                </svg>
+
+                <p class="construction-explanation" style="text-align: center; margin-top: 15px;">
+                    <strong>Fonctionnement:</strong><br>
+                    Si SEL=0: A = IN (signal passe vers A), B = 0<br>
+                    Si SEL=1: A = 0, B = IN (signal passe vers B)
+                </p>
+
+                <div class="component-links">
+                    <a href="and.html" class="component-link">Voir AND</a>
+                    <a href="not.html" class="component-link">Voir NOT</a>
+                    <a href="mux.html" class="component-link">Voir MUX</a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <nav class="nav" style="margin-top: 20px;">
@@ -188,6 +288,49 @@
             }
             updateAnimBtn();
         }
+
+        function toggleConstruction() {
+            document.getElementById('constructionContent').classList.toggle('open');
+            document.getElementById('constructionToggle').classList.toggle('open');
+        }
+
+        function toggleConstructionInput(input) {
+            if (animating) return;
+            inputs[input] = 1 - inputs[input];
+            updateCircuit();
+        }
+
+        function updateConstructionCircuit() {
+            const notSel = 1 - inputs.S;
+            const outA = inputs.I & notSel;
+            const outB = inputs.I & inputs.S;
+
+            document.getElementById('consInputIn').setAttribute('fill', inputs.I ? '#48bb78' : '#e53e3e');
+            document.getElementById('consInputTextIn').textContent = inputs.I;
+            document.getElementById('consInputSel').setAttribute('fill', inputs.S ? '#48bb78' : '#4299e1');
+            document.getElementById('consInputTextSel').textContent = inputs.S;
+
+            document.getElementById('consWireIn').className.baseVal = 'wire ' + (inputs.I ? 'on' : 'off');
+            document.getElementById('consWireInToAnd1').className.baseVal = 'wire ' + (inputs.I ? 'on' : 'off');
+            document.getElementById('consWireInToAnd2').className.baseVal = 'wire ' + (inputs.I ? 'on' : 'off');
+            document.getElementById('consWireSel').className.baseVal = 'wire ' + (inputs.S ? 'on' : 'off');
+            document.getElementById('consWireSelToNot').className.baseVal = 'wire ' + (inputs.S ? 'on' : 'off');
+            document.getElementById('consWireSelToAnd2').className.baseVal = 'wire ' + (inputs.S ? 'on' : 'off');
+            document.getElementById('consWireNotOut').className.baseVal = 'wire ' + (notSel ? 'on' : 'off');
+            document.getElementById('consWireOutA').className.baseVal = 'wire ' + (outA ? 'on' : 'off');
+            document.getElementById('consWireOutB').className.baseVal = 'wire ' + (outB ? 'on' : 'off');
+
+            document.getElementById('consOutputA').setAttribute('fill', outA ? '#48bb78' : '#e53e3e');
+            document.getElementById('consOutputTextA').textContent = outA;
+            document.getElementById('consOutputB').setAttribute('fill', outB ? '#48bb78' : '#e53e3e');
+            document.getElementById('consOutputTextB').textContent = outB;
+        }
+
+        const originalUpdateCircuit = updateCircuit;
+        updateCircuit = function() {
+            originalUpdateCircuit();
+            updateConstructionCircuit();
+        };
 
         updateCircuit();
     </script>

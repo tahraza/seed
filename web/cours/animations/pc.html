@@ -94,6 +94,20 @@
             background: #4299e1;
             color: white;
         }
+        .construction-section { margin-top: 30px; border: 2px solid #4a5568; border-radius: 12px; overflow: hidden; }
+        .construction-header { background: #2d3748; padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .construction-header:hover { background: #4a5568; }
+        .construction-header h3 { margin: 0; color: #e2e8f0; font-size: 1.1rem; }
+        .construction-toggle { color: #4299e1; font-size: 1.5rem; transition: transform 0.3s; }
+        .construction-content { display: none; padding: 20px; background: #1a202c; }
+        .construction-content.open { display: block; }
+        .construction-toggle.open { transform: rotate(180deg); }
+        .construction-formula { text-align: center; padding: 15px; background: #2d3748; border-radius: 8px; margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 1rem; color: #e2e8f0; }
+        .construction-formula .highlight { color: #48bb78; font-weight: bold; }
+        .component-links { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
+        .component-link { padding: 8px 16px; background: #4299e1; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
+        .component-link:hover { background: #3182ce; }
+        .construction-explanation { color: #a0aec0; font-size: 14px; line-height: 1.6; margin: 15px 0; }
     </style>
 </head>
 <body>
@@ -228,6 +242,76 @@
         <div class="controls">
             <button class="btn btn-secondary" onclick="reset()">Reset</button>
             <button id="animBtn" class="btn btn-primary" onclick="animate()">Demo Execution</button>
+        </div>
+
+        <!-- Construction Section -->
+        <div class="construction-section">
+            <div class="construction-header" onclick="toggleConstruction()">
+                <h3>Voir la Construction</h3>
+                <span class="construction-toggle" id="constructionToggle">&#9660;</span>
+            </div>
+            <div class="construction-content" id="constructionContent">
+                <div class="construction-formula">
+                    <span class="highlight">PC</span> = Registre + Incrementeur + MUX4
+                </div>
+
+                <p class="construction-explanation">
+                    Le Program Counter (PC) est un registre special avec 4 modes d'operation.
+                    Un MUX 4 voies selectionne la prochaine valeur selon les signaux de controle.
+                </p>
+
+                <svg viewBox="0 0 450 140" xmlns="http://www.w3.org/2000/svg" style="max-width: 450px; margin: 0 auto; display: block;">
+                    <!-- MUX4 -->
+                    <path d="M 100 15 L 160 25 L 160 115 L 100 125 Z" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+                    <text x="130" y="75" text-anchor="middle" fill="#4299e1" font-size="9">MUX4</text>
+
+                    <!-- Register -->
+                    <rect x="220" y="45" width="80" height="50" rx="6" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
+                    <text x="260" y="75" text-anchor="middle" fill="#48bb78" font-size="10">REG</text>
+
+                    <!-- Incrementer -->
+                    <rect x="360" y="45" width="50" height="50" rx="6" fill="#2d3748" stroke="#f6ad55" stroke-width="2"/>
+                    <text x="385" y="75" text-anchor="middle" fill="#f6ad55" font-size="9">+1</text>
+
+                    <!-- Wires -->
+                    <path d="M 160 70 L 220 70" stroke="#4299e1" stroke-width="2"/>
+                    <path d="M 300 70 L 340 70" stroke="#48bb78" stroke-width="2"/>
+
+                    <!-- Feedback from incrementer -->
+                    <path d="M 385 95 L 385 130 L 80 130 L 80 105 L 100 105" stroke="#f6ad55" stroke-width="2" stroke-dasharray="4"/>
+
+                    <!-- Feedback from register (hold) -->
+                    <path d="M 320 70 L 320 10 L 80 10 L 80 30 L 100 30" stroke="#718096" stroke-width="1" stroke-dasharray="3"/>
+
+                    <!-- Input options -->
+                    <text x="20" y="25" fill="#fc8181" font-size="8">0 (reset)</text>
+                    <path d="M 70 22 L 100 35" stroke="#fc8181" stroke-width="1"/>
+
+                    <text x="20" y="55" fill="#48bb78" font-size="8">addr (jump)</text>
+                    <path d="M 70 52 L 100 55" stroke="#48bb78" stroke-width="1"/>
+
+                    <text x="20" y="85" fill="#718096" font-size="8">PC (hold)</text>
+                    <text x="20" y="115" fill="#f6ad55" font-size="8">PC+1 (inc)</text>
+
+                    <!-- Control signals -->
+                    <text x="130" y="140" text-anchor="middle" fill="#4299e1" font-size="8">reset/jump/inc</text>
+
+                    <!-- Output -->
+                    <circle cx="430" cy="70" r="12" fill="#48bb78"/>
+                    <text x="430" y="74" text-anchor="middle" fill="white" font-size="9">PC</text>
+                </svg>
+
+                <p class="construction-explanation" style="text-align: center; margin-top: 15px;">
+                    <strong>Selection du MUX (priorite):</strong><br>
+                    reset=1 → 0 | jump=1 → addr | inc=1 → PC+1 | sinon → PC
+                </p>
+
+                <div class="component-links">
+                    <a href="register.html" class="component-link">Voir Registre</a>
+                    <a href="mux4way.html" class="component-link">Voir MUX 4-Way</a>
+                    <a href="add16.html" class="component-link">Voir Additionneur</a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -399,6 +483,11 @@
 
             animating = false;
             updateAnimBtn();
+        }
+
+        function toggleConstruction() {
+            document.getElementById('constructionContent').classList.toggle('open');
+            document.getElementById('constructionToggle').classList.toggle('open');
         }
 
         // Initialize

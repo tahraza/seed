@@ -45,6 +45,20 @@
         .timing-cell.current {
             border: 2px solid #f6ad55;
         }
+        .construction-section { margin-top: 30px; border: 2px solid #4a5568; border-radius: 12px; overflow: hidden; }
+        .construction-header { background: #2d3748; padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .construction-header:hover { background: #4a5568; }
+        .construction-header h3 { margin: 0; color: #e2e8f0; font-size: 1.1rem; }
+        .construction-toggle { color: #4299e1; font-size: 1.5rem; transition: transform 0.3s; }
+        .construction-content { display: none; padding: 20px; background: #1a202c; }
+        .construction-content.open { display: block; }
+        .construction-toggle.open { transform: rotate(180deg); }
+        .construction-formula { text-align: center; padding: 15px; background: #2d3748; border-radius: 8px; margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 1rem; color: #e2e8f0; }
+        .construction-formula .highlight { color: #48bb78; font-weight: bold; }
+        .component-links { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
+        .component-link { padding: 8px 16px; background: #4299e1; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
+        .component-link:hover { background: #3182ce; }
+        .construction-explanation { color: #a0aec0; font-size: 14px; line-height: 1.6; margin: 15px 0; }
     </style>
 </head>
 <body>
@@ -177,6 +191,76 @@
         <div class="controls">
             <button class="btn btn-secondary" onclick="reset()">Reset</button>
             <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
+        </div>
+
+        <!-- Construction Section -->
+        <div class="construction-section">
+            <div class="construction-header" onclick="toggleConstruction()">
+                <h3>Voir la Construction</h3>
+                <span class="construction-toggle" id="constructionToggle">&#9660;</span>
+            </div>
+            <div class="construction-content" id="constructionContent">
+                <div class="construction-formula">
+                    <span class="highlight">Registre 1-bit</span> = MUX + DFF
+                </div>
+
+                <p class="construction-explanation">
+                    Le registre ajoute un signal LOAD au DFF. Un MUX choisit entre la nouvelle valeur (IN)
+                    et l'ancienne valeur (feedback) selon LOAD. Le DFF stocke le resultat au front d'horloge.
+                </p>
+
+                <svg viewBox="0 0 420 120" xmlns="http://www.w3.org/2000/svg" style="max-width: 420px; margin: 0 auto; display: block;">
+                    <!-- MUX -->
+                    <path d="M 100 25 L 160 35 L 160 85 L 100 95 Z" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+                    <text x="130" y="65" text-anchor="middle" fill="#4299e1" font-size="10">MUX</text>
+
+                    <!-- DFF -->
+                    <rect x="220" y="35" width="70" height="50" rx="6" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
+                    <text x="255" y="65" text-anchor="middle" fill="#48bb78" font-size="10">DFF</text>
+
+                    <!-- Wires -->
+                    <path class="wire off" d="M 30 40 L 100 45"/>
+                    <path class="wire on" d="M 30 80 L 80 80 L 80 75 L 100 75"/>
+                    <path class="wire off" d="M 130 100 L 130 115 L 30 115"/>
+                    <path class="wire on" d="M 160 60 L 220 60"/>
+                    <path class="wire on" d="M 290 60 L 390 60"/>
+
+                    <!-- Feedback loop -->
+                    <path class="wire on" d="M 340 60 L 340 10 L 80 10 L 80 55 L 100 55" stroke-dasharray="4"/>
+
+                    <!-- Clock -->
+                    <path class="wire off" d="M 255 100 L 255 85"/>
+
+                    <!-- Inputs -->
+                    <circle cx="30" cy="40" r="10" fill="#e53e3e"/>
+                    <text x="30" y="44" text-anchor="middle" fill="white" font-size="9">IN</text>
+                    <circle cx="30" cy="80" r="10" fill="#4299e1"/>
+                    <text x="30" y="84" text-anchor="middle" fill="white" font-size="8">L</text>
+                    <rect x="240" y="100" width="30" height="15" rx="3" fill="#f6ad55"/>
+                    <text x="255" y="111" text-anchor="middle" fill="white" font-size="7">CLK</text>
+
+                    <!-- Output -->
+                    <circle cx="390" cy="60" r="12" fill="#48bb78"/>
+                    <text x="390" y="64" text-anchor="middle" fill="white" font-size="9">Q</text>
+
+                    <!-- Labels -->
+                    <text x="107" y="50" fill="#718096" font-size="7">0</text>
+                    <text x="107" y="80" fill="#718096" font-size="7">1</text>
+                    <text x="80" y="8" fill="#718096" font-size="7">feedback</text>
+                </svg>
+
+                <p class="construction-explanation" style="text-align: center; margin-top: 15px;">
+                    <strong>Logique:</strong><br>
+                    LOAD=0: MUX choisit feedback → Q reste inchange<br>
+                    LOAD=1: MUX choisit IN → Q prend nouvelle valeur
+                </p>
+
+                <div class="component-links">
+                    <a href="mux.html" class="component-link">Voir MUX</a>
+                    <a href="dff.html" class="component-link">Voir DFF</a>
+                    <a href="register32.html" class="component-link">Voir Registre 32-bit</a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -351,6 +435,11 @@
 
             animating = false;
             updateAnimBtn();
+        }
+
+        function toggleConstruction() {
+            document.getElementById('constructionContent').classList.toggle('open');
+            document.getElementById('constructionToggle').classList.toggle('open');
         }
 
         // Initialize

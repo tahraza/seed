@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Demi-Additionneur (Half Adder) - Animation Interactive</title>
     <link rel="stylesheet" href="common.css">
+    <style>
+        .construction-section { margin-top: 30px; border: 2px solid #4a5568; border-radius: 12px; overflow: hidden; }
+        .construction-header { background: #2d3748; padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .construction-header:hover { background: #4a5568; }
+        .construction-header h3 { margin: 0; color: #e2e8f0; font-size: 1.1rem; }
+        .construction-toggle { color: #4299e1; font-size: 1.5rem; transition: transform 0.3s; }
+        .construction-content { display: none; padding: 20px; background: #1a202c; }
+        .construction-content.open { display: block; }
+        .construction-toggle.open { transform: rotate(180deg); }
+        .construction-formula { text-align: center; padding: 15px; background: #2d3748; border-radius: 8px; margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 1.1rem; color: #e2e8f0; }
+        .construction-formula .highlight { color: #48bb78; font-weight: bold; }
+        .component-links { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
+        .component-link { padding: 8px 16px; background: #4299e1; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
+        .component-link:hover { background: #3182ce; }
+        .construction-explanation { color: #a0aec0; font-size: 14px; line-height: 1.6; margin: 15px 0; }
+    </style>
 </head>
 <body>
     <h1>Demi-Additionneur (Half Adder)</h1>
@@ -115,6 +131,81 @@
             <button class="btn btn-secondary" onclick="reset()">Reset</button>
             <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
         </div>
+
+        <!-- Construction Section -->
+        <div class="construction-section">
+            <div class="construction-header" onclick="toggleConstruction()">
+                <h3>Voir la Construction</h3>
+                <span class="construction-toggle" id="constructionToggle">&#9660;</span>
+            </div>
+            <div class="construction-content" id="constructionContent">
+                <div class="construction-formula">
+                    <span class="highlight">SUM</span> = XOR(A, B)<br>
+                    <span class="highlight">CARRY</span> = AND(A, B)
+                </div>
+
+                <p class="construction-explanation">
+                    Le demi-additionneur est le circuit arithmetique le plus simple. Il additionne 2 bits
+                    sans retenue entrante. XOR donne la somme (1 si exactement un bit est 1),
+                    AND donne la retenue (1 si les deux bits sont 1).
+                </p>
+
+                <svg viewBox="0 0 380 140" xmlns="http://www.w3.org/2000/svg" style="max-width: 380px; margin: 0 auto; display: block;">
+                    <!-- Input A -->
+                    <path id="consWireA" class="wire off" d="M 30 40 L 70 40"/>
+                    <path id="consWireAXor" class="wire off" d="M 70 40 L 100 40 L 100 50 L 120 50"/>
+                    <path id="consWireAAnd" class="wire off" d="M 70 40 L 70 100 L 120 100"/>
+
+                    <!-- Input B -->
+                    <path id="consWireB" class="wire off" d="M 30 70 L 50 70"/>
+                    <path id="consWireBXor" class="wire off" d="M 50 70 L 90 70 L 90 60 L 120 60"/>
+                    <path id="consWireBAnd" class="wire off" d="M 50 70 L 50 110 L 120 110"/>
+
+                    <!-- Outputs -->
+                    <path id="consWireSum" class="wire off" d="M 210 55 L 350 35"/>
+                    <path id="consWireCarry" class="wire off" d="M 210 105 L 350 105"/>
+
+                    <!-- XOR gate -->
+                    <path d="M 110 35 Q 130 55 110 75" fill="none" stroke="#4299e1" stroke-width="2"/>
+                    <path d="M 120 35 Q 140 55 120 75 Q 160 75 185 75 Q 210 55 185 35 Q 160 35 120 35 Z" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+                    <text x="160" y="60" text-anchor="middle" fill="#4299e1" font-size="9">XOR</text>
+
+                    <!-- AND gate -->
+                    <path d="M 120 85 L 120 125 L 155 125 Q 190 125 190 105 Q 190 85 155 85 Z" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
+                    <text x="155" y="110" text-anchor="middle" fill="#48bb78" font-size="9">AND</text>
+
+                    <!-- Inputs -->
+                    <circle id="consInputA" cx="30" cy="40" r="12" fill="#e53e3e"/>
+                    <text id="consInputTextA" x="30" y="44" text-anchor="middle" fill="white" font-weight="bold" font-size="10">0</text>
+                    <circle id="consInputB" cx="30" cy="70" r="12" fill="#e53e3e"/>
+                    <text id="consInputTextB" x="30" y="74" text-anchor="middle" fill="white" font-weight="bold" font-size="10">0</text>
+
+                    <!-- Outputs -->
+                    <circle id="consOutputSum" cx="350" cy="35" r="12" fill="#e53e3e"/>
+                    <text id="consOutputTextSum" x="350" y="39" text-anchor="middle" fill="white" font-weight="bold" font-size="10">0</text>
+                    <circle id="consOutputCarry" cx="350" cy="105" r="12" fill="#e53e3e"/>
+                    <text id="consOutputTextCarry" x="350" y="109" text-anchor="middle" fill="white" font-weight="bold" font-size="10">0</text>
+
+                    <!-- Labels -->
+                    <text x="15" y="44" fill="#a0aec0" font-size="9">A</text>
+                    <text x="15" y="74" fill="#a0aec0" font-size="9">B</text>
+                    <text x="350" y="20" fill="#4299e1" font-size="9" text-anchor="middle">SUM</text>
+                    <text x="350" y="125" fill="#48bb78" font-size="9" text-anchor="middle">CARRY</text>
+                </svg>
+
+                <p class="construction-explanation" style="text-align: center; margin-top: 15px;">
+                    <strong>Table de verite:</strong><br>
+                    0+0 = 0, carry 0 | 0+1 = 1, carry 0<br>
+                    1+0 = 1, carry 0 | 1+1 = 0, carry 1 (=2 en binaire)
+                </p>
+
+                <div class="component-links">
+                    <a href="xor.html" class="component-link">Voir XOR</a>
+                    <a href="and.html" class="component-link">Voir AND</a>
+                    <a href="full-adder.html" class="component-link">Voir Full Adder</a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <nav class="nav" style="margin-top: 20px;">
@@ -213,6 +304,40 @@
             }
             updateAnimBtn();
         }
+
+        function toggleConstruction() {
+            document.getElementById('constructionContent').classList.toggle('open');
+            document.getElementById('constructionToggle').classList.toggle('open');
+        }
+
+        function updateConstructionCircuit() {
+            const result = halfAdder(inputs.A, inputs.B);
+
+            document.getElementById('consInputA').setAttribute('fill', inputs.A ? '#48bb78' : '#e53e3e');
+            document.getElementById('consInputTextA').textContent = inputs.A;
+            document.getElementById('consInputB').setAttribute('fill', inputs.B ? '#48bb78' : '#e53e3e');
+            document.getElementById('consInputTextB').textContent = inputs.B;
+
+            document.getElementById('consWireA').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('consWireAXor').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('consWireAAnd').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('consWireB').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('consWireBXor').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('consWireBAnd').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('consWireSum').className.baseVal = 'wire ' + (result.sum ? 'on' : 'off');
+            document.getElementById('consWireCarry').className.baseVal = 'wire ' + (result.carry ? 'on' : 'off');
+
+            document.getElementById('consOutputSum').setAttribute('fill', result.sum ? '#48bb78' : '#e53e3e');
+            document.getElementById('consOutputTextSum').textContent = result.sum;
+            document.getElementById('consOutputCarry').setAttribute('fill', result.carry ? '#48bb78' : '#e53e3e');
+            document.getElementById('consOutputTextCarry').textContent = result.carry;
+        }
+
+        const originalUpdateCircuit = updateCircuit;
+        updateCircuit = function() {
+            originalUpdateCircuit();
+            updateConstructionCircuit();
+        };
 
         updateCircuit();
     </script>

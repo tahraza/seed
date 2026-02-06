@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multiplexeur (MUX) - Animation Interactive</title>
     <link rel="stylesheet" href="common.css">
+    <style>
+        .construction-section { margin-top: 30px; border: 2px solid #4a5568; border-radius: 12px; overflow: hidden; }
+        .construction-header { background: #2d3748; padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .construction-header:hover { background: #4a5568; }
+        .construction-header h3 { margin: 0; color: #e2e8f0; font-size: 1.1rem; }
+        .construction-toggle { color: #4299e1; font-size: 1.5rem; transition: transform 0.3s; }
+        .construction-content { display: none; padding: 20px; background: #1a202c; }
+        .construction-content.open { display: block; }
+        .construction-toggle.open { transform: rotate(180deg); }
+        .construction-formula { text-align: center; padding: 15px; background: #2d3748; border-radius: 8px; margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 1.1rem; color: #e2e8f0; }
+        .construction-formula .highlight { color: #48bb78; font-weight: bold; }
+        .component-links { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
+        .component-link { padding: 8px 16px; background: #4299e1; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
+        .component-link:hover { background: #3182ce; }
+        .construction-explanation { color: #a0aec0; font-size: 14px; line-height: 1.6; margin: 15px 0; }
+    </style>
 </head>
 <body>
     <h1>Multiplexeur 2 vers 1 (MUX)</h1>
@@ -103,6 +119,105 @@
             <button class="btn btn-secondary" onclick="reset()">Reset</button>
             <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
         </div>
+
+        <!-- Construction Section -->
+        <div class="construction-section">
+            <div class="construction-header" onclick="toggleConstruction()">
+                <h3>Voir la Construction</h3>
+                <span class="construction-toggle" id="constructionToggle">&#9660;</span>
+            </div>
+            <div class="construction-content" id="constructionContent">
+                <div class="construction-formula">
+                    <span class="highlight">MUX(A, B, SEL)</span> = OR( AND(A, NOT(SEL)), AND(B, SEL) )
+                </div>
+
+                <p class="construction-explanation">
+                    Le multiplexeur selectionne A si SEL=0, B si SEL=1. On utilise NOT(SEL) pour activer
+                    le chemin de A quand SEL=0, et SEL directement pour activer le chemin de B quand SEL=1.
+                </p>
+
+                <svg viewBox="0 0 520 160" xmlns="http://www.w3.org/2000/svg" style="max-width: 520px; margin: 0 auto; display: block;">
+                    <!-- Input A path -->
+                    <path id="consWireA" class="wire off" d="M 30 40 L 80 40"/>
+                    <path id="consWireAnd1A" class="wire off" d="M 80 40 L 140 40"/>
+
+                    <!-- Input B path -->
+                    <path id="consWireB" class="wire off" d="M 30 120 L 80 120"/>
+                    <path id="consWireAnd2B" class="wire off" d="M 80 120 L 140 120"/>
+
+                    <!-- SEL input and NOT -->
+                    <path id="consWireSel" class="wire off" d="M 30 80 L 60 80"/>
+                    <path id="consWireSelToNot" class="wire off" d="M 60 80 L 60 55 L 100 55"/>
+                    <path id="consWireSelToAnd2" class="wire off" d="M 60 80 L 60 105 L 140 105"/>
+
+                    <!-- NOT output -->
+                    <path id="consWireNotOut" class="wire on" d="M 130 55 L 140 55"/>
+
+                    <!-- AND1 output to OR -->
+                    <path id="consWireAnd1Out" class="wire off" d="M 230 50 L 280 50 L 280 70 L 300 70"/>
+
+                    <!-- AND2 output to OR -->
+                    <path id="consWireAnd2Out" class="wire off" d="M 230 110 L 280 110 L 280 90 L 300 90"/>
+
+                    <!-- OR output -->
+                    <path id="consWireOut" class="wire off" d="M 390 80 L 490 80"/>
+
+                    <!-- NOT gate (for SEL) -->
+                    <polygon points="100,45 100,65 125,55" fill="#2d3748" stroke="#f6ad55" stroke-width="2"/>
+                    <circle cx="130" cy="55" r="5" fill="#2d3748" stroke="#f6ad55" stroke-width="2"/>
+
+                    <!-- AND1 gate (A AND NOT(SEL)) -->
+                    <path d="M 140 30 L 140 70 L 175 70 Q 210 70 210 50 Q 210 30 175 30 Z" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+                    <text x="175" y="55" text-anchor="middle" fill="#4299e1" font-size="9">AND</text>
+
+                    <!-- AND2 gate (B AND SEL) -->
+                    <path d="M 140 90 L 140 130 L 175 130 Q 210 130 210 110 Q 210 90 175 90 Z" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+                    <text x="175" y="115" text-anchor="middle" fill="#4299e1" font-size="9">AND</text>
+
+                    <!-- OR gate -->
+                    <path d="M 290 55 Q 310 80 290 105 Q 340 105 365 105 Q 390 80 365 55 Q 340 55 290 55 Z" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
+                    <text x="340" y="85" text-anchor="middle" fill="#48bb78" font-size="9">OR</text>
+
+                    <!-- Input indicators -->
+                    <g class="input-toggle" onclick="toggleConstructionInput('A')">
+                        <circle id="consInputA" cx="30" cy="40" r="12" fill="#e53e3e"/>
+                        <text id="consInputTextA" x="30" y="44" text-anchor="middle" fill="white" font-weight="bold" font-size="10">0</text>
+                    </g>
+                    <g class="input-toggle" onclick="toggleConstructionInput('B')">
+                        <circle id="consInputB" cx="30" cy="120" r="12" fill="#e53e3e"/>
+                        <text id="consInputTextB" x="30" y="124" text-anchor="middle" fill="white" font-weight="bold" font-size="10">0</text>
+                    </g>
+                    <g class="input-toggle" onclick="toggleConstructionInput('S')">
+                        <circle id="consInputSel" cx="30" cy="80" r="12" fill="#4299e1"/>
+                        <text id="consInputTextSel" x="30" y="84" text-anchor="middle" fill="white" font-weight="bold" font-size="10">0</text>
+                    </g>
+
+                    <!-- Output -->
+                    <circle id="consOutputCircle" cx="490" cy="80" r="12" fill="#e53e3e"/>
+                    <text id="consOutputText" x="490" y="84" text-anchor="middle" fill="white" font-weight="bold" font-size="10">0</text>
+
+                    <!-- Labels -->
+                    <text x="10" y="44" fill="#a0aec0" font-size="10">A</text>
+                    <text x="10" y="84" fill="#4299e1" font-size="10">S</text>
+                    <text x="10" y="124" fill="#a0aec0" font-size="10">B</text>
+                    <text x="115" y="35" fill="#718096" font-size="8">NOT</text>
+                    <text x="245" y="55" fill="#718096" font-size="8">A∧¬S</text>
+                    <text x="245" y="115" fill="#718096" font-size="8">B∧S</text>
+                </svg>
+
+                <p class="construction-explanation" style="text-align: center; margin-top: 15px;">
+                    <strong>Fonctionnement:</strong><br>
+                    Si SEL=0: NOT(SEL)=1, donc AND(A,1)=A passe, AND(B,0)=0<br>
+                    Si SEL=1: NOT(SEL)=0, donc AND(A,0)=0, AND(B,1)=B passe
+                </p>
+
+                <div class="component-links">
+                    <a href="and.html" class="component-link">Voir AND</a>
+                    <a href="or.html" class="component-link">Voir OR</a>
+                    <a href="not.html" class="component-link">Voir NOT</a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <nav class="nav" style="margin-top: 20px;">
@@ -117,13 +232,48 @@
 
         function updateAnimBtn() {
             const btn = document.getElementById('animBtn');
-            if (animating) {
-                btn.textContent = 'Stop';
-                btn.classList.add('animating');
-            } else {
-                btn.textContent = 'Animation Auto';
-                btn.classList.remove('animating');
-            }
+            btn.textContent = animating ? 'Stop' : 'Animation Auto';
+            btn.classList.toggle('animating', animating);
+        }
+
+        function toggleConstruction() {
+            document.getElementById('constructionContent').classList.toggle('open');
+            document.getElementById('constructionToggle').classList.toggle('open');
+        }
+
+        function toggleConstructionInput(input) {
+            if (animating) return;
+            inputs[input] = inputs[input] === 0 ? 1 : 0;
+            updateCircuit();
+        }
+
+        function updateConstructionCircuit() {
+            const notSel = 1 - inputs.S;
+            const and1 = inputs.A & notSel;
+            const and2 = inputs.B & inputs.S;
+            const output = and1 | and2;
+
+            document.getElementById('consInputA').setAttribute('fill', inputs.A ? '#48bb78' : '#e53e3e');
+            document.getElementById('consInputTextA').textContent = inputs.A;
+            document.getElementById('consInputB').setAttribute('fill', inputs.B ? '#48bb78' : '#e53e3e');
+            document.getElementById('consInputTextB').textContent = inputs.B;
+            document.getElementById('consInputSel').setAttribute('fill', inputs.S ? '#48bb78' : '#4299e1');
+            document.getElementById('consInputTextSel').textContent = inputs.S;
+
+            document.getElementById('consWireA').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('consWireAnd1A').className.baseVal = 'wire ' + (inputs.A ? 'on' : 'off');
+            document.getElementById('consWireB').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('consWireAnd2B').className.baseVal = 'wire ' + (inputs.B ? 'on' : 'off');
+            document.getElementById('consWireSel').className.baseVal = 'wire ' + (inputs.S ? 'on' : 'off');
+            document.getElementById('consWireSelToNot').className.baseVal = 'wire ' + (inputs.S ? 'on' : 'off');
+            document.getElementById('consWireSelToAnd2').className.baseVal = 'wire ' + (inputs.S ? 'on' : 'off');
+            document.getElementById('consWireNotOut').className.baseVal = 'wire ' + (notSel ? 'on' : 'off');
+            document.getElementById('consWireAnd1Out').className.baseVal = 'wire ' + (and1 ? 'on' : 'off');
+            document.getElementById('consWireAnd2Out').className.baseVal = 'wire ' + (and2 ? 'on' : 'off');
+            document.getElementById('consWireOut').className.baseVal = 'wire ' + (output ? 'on' : 'off');
+
+            document.getElementById('consOutputCircle').setAttribute('fill', output ? '#48bb78' : '#e53e3e');
+            document.getElementById('consOutputText').textContent = output;
         }
 
         function mux(a, b, sel) {
@@ -210,6 +360,12 @@
             }
             updateAnimBtn();
         }
+
+        const originalUpdateCircuit = updateCircuit;
+        updateCircuit = function() {
+            originalUpdateCircuit();
+            updateConstructionCircuit();
+        };
 
         updateCircuit();
     </script>

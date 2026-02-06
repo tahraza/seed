@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multiplexeur 4 voies (MUX4Way) - Animation Interactive</title>
     <link rel="stylesheet" href="common.css">
+    <style>
+        .construction-section { margin-top: 30px; border: 2px solid #4a5568; border-radius: 12px; overflow: hidden; }
+        .construction-header { background: #2d3748; padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .construction-header:hover { background: #4a5568; }
+        .construction-header h3 { margin: 0; color: #e2e8f0; font-size: 1.1rem; }
+        .construction-toggle { color: #4299e1; font-size: 1.5rem; transition: transform 0.3s; }
+        .construction-content { display: none; padding: 20px; background: #1a202c; }
+        .construction-content.open { display: block; }
+        .construction-toggle.open { transform: rotate(180deg); }
+        .construction-formula { text-align: center; padding: 15px; background: #2d3748; border-radius: 8px; margin-bottom: 20px; font-family: 'Courier New', monospace; font-size: 1rem; color: #e2e8f0; }
+        .construction-formula .highlight { color: #48bb78; font-weight: bold; }
+        .component-links { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
+        .component-link { padding: 8px 16px; background: #4299e1; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }
+        .component-link:hover { background: #3182ce; }
+        .construction-explanation { color: #a0aec0; font-size: 14px; line-height: 1.6; margin: 15px 0; }
+    </style>
 </head>
 <body>
     <h1>Multiplexeur 4 voies (MUX4Way)</h1>
@@ -120,6 +136,88 @@
             <button class="btn btn-secondary" onclick="reset()">Reset</button>
             <button id="animBtn" class="btn btn-primary" onclick="animate()">Animation Auto</button>
         </div>
+
+        <!-- Construction Section -->
+        <div class="construction-section">
+            <div class="construction-header" onclick="toggleConstruction()">
+                <h3>Voir la Construction</h3>
+                <span class="construction-toggle" id="constructionToggle">&#9660;</span>
+            </div>
+            <div class="construction-content" id="constructionContent">
+                <div class="construction-formula">
+                    <span class="highlight">MUX4</span> = 3 x MUX2 en arbre
+                </div>
+
+                <p class="construction-explanation">
+                    Un MUX 4 voies se construit avec 3 MUX 2 voies en structure arborescente.
+                    Les 2 premiers MUX selectionnent entre (A,B) et (C,D) avec SEL[0],
+                    puis le 3eme MUX choisit entre ces resultats avec SEL[1].
+                </p>
+
+                <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" style="max-width: 400px; margin: 0 auto; display: block;">
+                    <!-- Input wires -->
+                    <path class="wire on" d="M 30 30 L 80 30 L 80 40 L 100 40" stroke="#4299e1"/>
+                    <path class="wire off" d="M 30 60 L 80 60 L 80 55 L 100 55"/>
+                    <path class="wire off" d="M 30 110 L 80 110 L 80 120 L 100 120"/>
+                    <path class="wire off" d="M 30 140 L 80 140 L 80 135 L 100 135"/>
+
+                    <!-- MUX1 and MUX2 outputs to MUX3 -->
+                    <path class="wire on" d="M 180 48 L 230 48 L 230 90 L 250 90" stroke="#4299e1"/>
+                    <path class="wire off" d="M 180 128 L 230 128 L 230 110 L 250 110"/>
+
+                    <!-- Final output -->
+                    <path class="wire on" d="M 330 100 L 370 100" stroke="#48bb78"/>
+
+                    <!-- MUX1 (A, B) -->
+                    <path d="M 100 25 L 160 35 L 160 60 L 100 70 Z" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+                    <text x="130" y="52" text-anchor="middle" fill="#4299e1" font-size="8">MUX</text>
+
+                    <!-- MUX2 (C, D) -->
+                    <path d="M 100 105 L 160 115 L 160 140 L 100 150 Z" fill="#2d3748" stroke="#4299e1" stroke-width="2"/>
+                    <text x="130" y="132" text-anchor="middle" fill="#4299e1" font-size="8">MUX</text>
+
+                    <!-- MUX3 (final) -->
+                    <path d="M 250 75 L 310 85 L 310 115 L 250 125 Z" fill="#2d3748" stroke="#48bb78" stroke-width="2"/>
+                    <text x="280" y="105" text-anchor="middle" fill="#48bb78" font-size="8">MUX</text>
+
+                    <!-- SEL[0] to MUX1 and MUX2 -->
+                    <path class="wire off" d="M 130 180 L 130 70"/>
+                    <path class="wire off" d="M 130 180 L 130 150"/>
+                    <text x="130" y="195" text-anchor="middle" fill="#4299e1" font-size="9">SEL[0]</text>
+
+                    <!-- SEL[1] to MUX3 -->
+                    <path class="wire off" d="M 280 180 L 280 125"/>
+                    <text x="280" y="195" text-anchor="middle" fill="#4299e1" font-size="9">SEL[1]</text>
+
+                    <!-- Input labels -->
+                    <text x="20" y="34" fill="#a0aec0" font-size="10">A</text>
+                    <text x="20" y="64" fill="#a0aec0" font-size="10">B</text>
+                    <text x="20" y="114" fill="#a0aec0" font-size="10">C</text>
+                    <text x="20" y="144" fill="#a0aec0" font-size="10">D</text>
+
+                    <!-- Output -->
+                    <circle cx="370" cy="100" r="12" fill="#48bb78"/>
+                    <text x="370" y="104" text-anchor="middle" fill="white" font-weight="bold" font-size="10">A</text>
+
+                    <!-- Step labels -->
+                    <text x="130" y="18" text-anchor="middle" fill="#718096" font-size="8">Etape 1</text>
+                    <text x="280" y="68" text-anchor="middle" fill="#718096" font-size="8">Etape 2</text>
+                </svg>
+
+                <p class="construction-explanation" style="text-align: center; margin-top: 15px;">
+                    <strong>Logique de selection:</strong><br>
+                    SEL=00 → MUX1 choisit A, MUX3 choisit resultat MUX1 → A<br>
+                    SEL=01 → MUX1 choisit B, MUX3 choisit resultat MUX1 → B<br>
+                    SEL=10 → MUX2 choisit C, MUX3 choisit resultat MUX2 → C<br>
+                    SEL=11 → MUX2 choisit D, MUX3 choisit resultat MUX2 → D
+                </p>
+
+                <div class="component-links">
+                    <a href="mux.html" class="component-link">Voir MUX 2-Way</a>
+                    <a href="dmux.html" class="component-link">Voir DMUX</a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <nav class="nav" style="margin-top: 20px;">
@@ -231,6 +329,11 @@
                 }
             }
             updateAnimBtn();
+        }
+
+        function toggleConstruction() {
+            document.getElementById('constructionContent').classList.toggle('open');
+            document.getElementById('constructionToggle').classList.toggle('open');
         }
 
         updateCircuit();
