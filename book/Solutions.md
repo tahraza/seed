@@ -745,130 +745,184 @@ end architecture;
 
 ---
 
+### Mux32
+
+```vhdl
+-- 32-bit 2-way Multiplexer
+-- if sel=0 then y=a else y=b
+
+entity Mux32 is
+  port(
+    a   : in bits(31 downto 0);
+    b   : in bits(31 downto 0);
+    sel : in bit;
+    y   : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Mux32 is
+  component Mux16
+    port(a,b : in bits(15 downto 0); sel : in bit; y : out bits(15 downto 0));
+  end component;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  u_lo: Mux16 port map (a => a(15 downto 0), b => b(15 downto 0), sel => sel, y => y_lo);
+  u_hi: Mux16 port map (a => a(31 downto 16), b => b(31 downto 16), sel => sel, y => y_hi);
+  y <= y_hi & y_lo;
+end architecture;
+```
+
+---
+
+### Add32
+
+```vhdl
+-- 32-bit Ripple Carry Adder
+-- y = a + b + cin
+-- Built from two Add16 chained together
+
+entity Add32 is
+  port(
+    a    : in bits(31 downto 0);
+    b    : in bits(31 downto 0);
+    cin  : in bit;
+    y    : out bits(31 downto 0);
+    cout : out bit
+  );
+end entity;
+
+architecture rtl of Add32 is
+  component Add16
+    port(a,b : in bits(15 downto 0); cin : in bit; sum : out bits(15 downto 0); cout : out bit);
+  end component;
+  signal c16 : bit;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  u_lo: Add16 port map (a => a(15 downto 0), b => b(15 downto 0), cin => cin, sum => y_lo, cout => c16);
+  u_hi: Add16 port map (a => a(31 downto 16), b => b(31 downto 16), cin => c16, sum => y_hi, cout => cout);
+  y <= y_hi & y_lo;
+end architecture;
+```
+
+---
+
 ### ALU32
 
 ```vhdl
 -- 32-bit ALU for A32-Lite CPU
 -- Implements: AND, EOR, SUB, ADD, ORR, MOV, MVN, CMP, TST
--- op encoding matches A32-Lite ISA:
+-- op encoding:
 --   0000=AND, 0001=EOR, 0010=SUB, 0011=ADD
 --   0100=ORR, 0101=MOV, 0110=MVN, 0111=CMP, 1000=TST
 
 entity ALU32 is
   port(
-    a : in bits(31 downto 0);      -- First operand (Rn)
-    b : in bits(31 downto 0);      -- Second operand (Rm or imm, possibly shifted)
-    op : in bits(3 downto 0);      -- ALU operation
-    y : out bits(31 downto 0);     -- Result
-    n_flag : out bit;              -- Negative flag
-    z_flag : out bit;              -- Zero flag
-    c_flag : out bit;              -- Carry flag
-    v_flag : out bit               -- Overflow flag
+    a      : in bits(31 downto 0);
+    b      : in bits(31 downto 0);
+    op     : in bits(3 downto 0);
+    y      : out bits(31 downto 0);
+    n_flag : out bit;
+    z_flag : out bit;
+    c_flag : out bit;
+    v_flag : out bit
   );
 end entity;
 
 architecture rtl of ALU32 is
   component Add32
-    port(a : in bits(31 downto 0); b : in bits(31 downto 0); cin : in bit; y : out bits(31 downto 0); cout : out bit);
+    port(a,b : in bits(31 downto 0); cin : in bit; y : out bits(31 downto 0); cout : out bit);
   end component;
   component Mux32
-    port(a : in bits(31 downto 0); b : in bits(31 downto 0); sel : in bit; y : out bits(31 downto 0));
+    port(a,b : in bits(31 downto 0); sel : in bit; y : out bits(31 downto 0));
   end component;
-  component Mux4Way32
-    port(a : in bits(31 downto 0); b : in bits(31 downto 0); c : in bits(31 downto 0); d : in bits(31 downto 0); sel : in bits(1 downto 0); y : out bits(31 downto 0));
+  component Mux
+    port(a,b : in bit; sel : in bit; y : out bit);
+  end component;
+  component And2
+    port(a,b : in bit; y : out bit);
+  end component;
+  component Or2
+    port(a,b : in bit; y : out bit);
+  end component;
+  component Inv
+    port(a : in bit; y : out bit);
+  end component;
+  component Or8Way
+    port(a : in bits(7 downto 0); y : out bit);
   end component;
 
-  signal nb : bits(31 downto 0);
-
-  -- Results for each operation
-  signal r_and : bits(31 downto 0);
-  signal r_eor : bits(31 downto 0);
-  signal r_sub : bits(31 downto 0);
-  signal r_add : bits(31 downto 0);
-  signal r_orr : bits(31 downto 0);
-  signal r_mov : bits(31 downto 0);
-  signal r_mvn : bits(31 downto 0);
-
+  -- Logic operation results
+  signal r_and, r_eor, r_orr, r_mov, r_mvn, nb : bits(31 downto 0);
   -- Adder signals
-  signal add_b : bits(31 downto 0);
-  signal add_cin : bit;
-  signal add_y : bits(31 downto 0);
-  signal add_cout : bit;
-
-  -- Intermediate mux results
-  signal m0 : bits(31 downto 0);  -- AND/EOR
-  signal m1 : bits(31 downto 0);  -- SUB/ADD
-  signal m2 : bits(31 downto 0);  -- ORR/MOV
-  signal m3 : bits(31 downto 0);  -- MVN/CMP(=SUB)
-  signal m01 : bits(31 downto 0);
-  signal m23 : bits(31 downto 0);
-  signal result : bits(31 downto 0);
-
-  -- Flags
   signal is_sub : bit;
-  signal is_add : bit;
-  signal c_add : bit;
-  signal c_sub : bit;
-  signal v_add : bit;
-  signal v_sub : bit;
+  signal add_b, add_y : bits(31 downto 0);
+  signal add_cout : bit;
+  -- Mux tree
+  signal m0, m1, m2, m3, m01, m23, result : bits(31 downto 0);
+  -- Zero flag detection
+  signal or0, or1, or2, or3, or01, or23, or_all : bit;
+  -- Carry/overflow gating
+  signal not_op3, not_op2, sel_20, arith_t1, is_arith : bit;
+  signal v_add, v_sub, v_sel : bit;
 begin
-  -- Basic logic operations
+  -- Logic operations (concurrent signal assignment)
   r_and <= a and b;
   r_eor <= a xor b;
   r_orr <= a or b;
   r_mov <= b;
-  r_mvn <= not b;
-
-  -- For SUB/CMP: y = a + (~b) + 1 = a - b
-  -- For ADD: y = a + b
   nb <= not b;
+  r_mvn <= nb;
 
-  -- is_sub = op is 0010 (SUB) or 0111 (CMP)
+  -- is_sub: detect SUB (0010) or CMP (0111)
   is_sub <= (not op(3) and not op(2) and op(1) and not op(0))
          or (not op(3) and op(2) and op(1) and op(0));
 
-  -- Select adder input based on operation
-  add_b <= nb when is_sub = '1' else b;
-  add_cin <= is_sub;
+  -- Adder: SUB/CMP uses a + ~b + 1, ADD uses a + b
+  u_add_sel: Mux32 port map (a => b, b => nb, sel => is_sub, y => add_b);
+  u_add: Add32 port map (a => a, b => add_b, cin => is_sub, y => add_y, cout => add_cout);
 
-  u_add: Add32 port map (a => a, b => add_b, cin => add_cin, y => add_y, cout => add_cout);
-
-  r_sub <= add_y;
-  r_add <= add_y;
-
-  -- 3-level mux tree to select result based on op
-  -- Level 1
+  -- 3-level mux tree to select result based on op(2:0)
   u_m0: Mux32 port map (a => r_and, b => r_eor, sel => op(0), y => m0);
-  u_m1: Mux32 port map (a => r_sub, b => r_add, sel => op(0), y => m1);
+  u_m1: Mux32 port map (a => add_y, b => add_y, sel => op(0), y => m1);
   u_m2: Mux32 port map (a => r_orr, b => r_mov, sel => op(0), y => m2);
-  u_m3: Mux32 port map (a => r_mvn, b => r_sub, sel => op(0), y => m3);  -- CMP uses SUB result
-
-  -- Level 2
+  u_m3: Mux32 port map (a => r_mvn, b => add_y, sel => op(0), y => m3);
   u_m01: Mux32 port map (a => m0, b => m1, sel => op(1), y => m01);
   u_m23: Mux32 port map (a => m2, b => m3, sel => op(1), y => m23);
-
-  -- Level 3
   u_result: Mux32 port map (a => m01, b => m23, sel => op(2), y => result);
 
-  -- For TST (op=1000), result should be r_and but we ignore it
-  -- Handle op(3)=1 case (TST uses AND result for flags)
-  y <= r_and when op(3) = '1' else result;
+  -- TST (op=1000): output AND result; otherwise mux tree result
+  u_out: Mux32 port map (a => result, b => r_and, sel => op(3), y => y);
 
-  -- Flag calculations
+  -- N flag: MSB of result
   n_flag <= result(31);
-  z_flag <= '1' when result = 0 else '0';
 
-  -- Carry flag: for ADD, carry out. For SUB/CMP, NOT borrow (i.e., carry out)
-  c_flag <= add_cout when (op = b"0011" or op = b"0010" or op = b"0111") else '0';
+  -- Z flag: result == 0 (OR all bytes, then invert)
+  u_or0: Or8Way port map (a => result(7 downto 0), y => or0);
+  u_or1: Or8Way port map (a => result(15 downto 8), y => or1);
+  u_or2: Or8Way port map (a => result(23 downto 16), y => or2);
+  u_or3: Or8Way port map (a => result(31 downto 24), y => or3);
+  u_or01: Or2 port map (a => or0, b => or1, y => or01);
+  u_or23: Or2 port map (a => or2, b => or3, y => or23);
+  u_or_all: Or2 port map (a => or01, b => or23, y => or_all);
+  z_flag <= not or_all;
 
-  -- Overflow flag: for ADD/SUB/CMP
-  -- V = (a[31] == b[31] for ADD, a[31] != b[31] for SUB) && (result[31] != a[31])
-  v_add <= (a(31) and b(31) and not result(31)) or (not a(31) and not b(31) and result(31));
-  v_sub <= (a(31) and not b(31) and not result(31)) or (not a(31) and b(31) and result(31));
+  -- is_arith: detect ADD/SUB/CMP = !op(3) and op(1) and (!op(2) or op(0))
+  u_not3: Inv port map (a => op(3), y => not_op3);
+  u_not2: Inv port map (a => op(2), y => not_op2);
+  u_sel20: Or2 port map (a => not_op2, b => op(0), y => sel_20);
+  u_arith1: And2 port map (a => not_op3, b => op(1), y => arith_t1);
+  u_arith2: And2 port map (a => arith_t1, b => sel_20, y => is_arith);
 
-  v_flag <= v_add when op = b"0011" else
-            v_sub when (op = b"0010" or op = b"0111") else
-            '0';
+  -- C flag: add_cout AND is_arith
+  u_cflag: And2 port map (a => is_arith, b => add_cout, y => c_flag);
+
+  -- V flag: Mux(v_add, v_sub, is_sub) AND is_arith
+  v_add <= (a(31) and b(31) and not add_y(31))
+        or (not a(31) and not b(31) and add_y(31));
+  v_sub <= (a(31) and not b(31) and not add_y(31))
+        or (not a(31) and b(31) and add_y(31));
+  u_vmux: Mux port map (a => v_add, b => v_sub, sel => is_sub, y => v_sel);
+  u_vflag: And2 port map (a => is_arith, b => v_sel, y => v_flag);
 end architecture;
 ```
 

@@ -1454,6 +1454,95 @@ expect h 1
 `,
     },
 
+    'Mux32': {
+        project: 2,
+        name: 'Mux32',
+        description: '32-bit 2-way multiplexer',
+        dependencies: ['Mux16'],
+        template: `-- 32-bit 2-way Multiplexer
+-- if sel=0 then y=a else y=b
+
+entity Mux32 is
+  port(
+    a   : in bits(31 downto 0);
+    b   : in bits(31 downto 0);
+    sel : in bit;
+    y   : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Mux32 is
+  component Mux16
+    port(a,b : in bits(15 downto 0); sel : in bit; y : out bits(15 downto 0));
+  end component;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  -- YOUR CODE HERE
+end architecture;
+`,
+        test: `// Test file for Mux32 (32-bit 2-way multiplexer)
+
+load Mux32
+
+// sel=0 selects a
+set a 0x12345678
+set b 0xDEADBEEF
+set sel 0
+eval
+expect y 0x12345678
+
+// sel=1 selects b
+set sel 1
+eval
+expect y 0xDEADBEEF
+
+// All zeros
+set a 0x00000000
+set b 0xFFFFFFFF
+set sel 0
+eval
+expect y 0x00000000
+
+set sel 1
+eval
+expect y 0xFFFFFFFF
+
+// Verify upper/lower halves route independently
+set a 0xAAAA5555
+set b 0x5555AAAA
+set sel 0
+eval
+expect y 0xAAAA5555
+
+set sel 1
+eval
+expect y 0x5555AAAA
+`,
+        solution: `-- 32-bit 2-way Multiplexer
+-- if sel=0 then y=a else y=b
+
+entity Mux32 is
+  port(
+    a   : in bits(31 downto 0);
+    b   : in bits(31 downto 0);
+    sel : in bit;
+    y   : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Mux32 is
+  component Mux16
+    port(a,b : in bits(15 downto 0); sel : in bit; y : out bits(15 downto 0));
+  end component;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  u_lo: Mux16 port map (a => a(15 downto 0), b => b(15 downto 0), sel => sel, y => y_lo);
+  u_hi: Mux16 port map (a => a(31 downto 16), b => b(31 downto 16), sel => sel, y => y_hi);
+  y <= y_hi & y_lo;
+end architecture;
+`,
+    },
+
     // =========================================================================
     // Project 3: Arithmetic
     // =========================================================================
@@ -2315,6 +2404,542 @@ begin
   -- Mux(v_add, v_sub, op(0)) AND op(1)
   u_ovf_mux: Mux port map (a => v_add, b => v_sub, sel => op(0), y => ovf_mux);
   u_ovf_and: And2 port map (a => op(1), b => ovf_mux, y => overflow);
+end architecture;
+`,
+    },
+
+    'Add32': {
+        project: 3,
+        name: 'Add32',
+        description: '32-bit adder',
+        dependencies: ['Add16'],
+        template: `-- 32-bit Ripple Carry Adder
+-- y = a + b + cin
+-- Built from two Add16 chained together
+
+entity Add32 is
+  port(
+    a    : in bits(31 downto 0);
+    b    : in bits(31 downto 0);
+    cin  : in bit;
+    y    : out bits(31 downto 0);
+    cout : out bit
+  );
+end entity;
+
+architecture rtl of Add32 is
+  component Add16
+    port(a,b : in bits(15 downto 0); cin : in bit; sum : out bits(15 downto 0); cout : out bit);
+  end component;
+  signal c16 : bit;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  -- YOUR CODE HERE
+end architecture;
+`,
+        test: `// Test file for Add32 (32-bit adder)
+
+load Add32
+
+// Basic addition
+set a 0x00000001
+set b 0x00000002
+set cin 0
+eval
+expect y 0x00000003
+expect cout 0
+
+// Zero + Zero
+set a 0x00000000
+set b 0x00000000
+set cin 0
+eval
+expect y 0x00000000
+expect cout 0
+
+// Carry in
+set a 0x00000001
+set b 0x00000002
+set cin 1
+eval
+expect y 0x00000004
+expect cout 0
+
+// 16-bit boundary carry
+set a 0x0000FFFF
+set b 0x00000001
+set cin 0
+eval
+expect y 0x00010000
+expect cout 0
+
+// 32-bit overflow
+set a 0xFFFFFFFF
+set b 0x00000001
+set cin 0
+eval
+expect y 0x00000000
+expect cout 1
+
+// Large values
+set a 0x12345678
+set b 0x9ABCDEF0
+set cin 0
+eval
+expect y 0xACF13568
+expect cout 0
+
+// Both MSB set
+set a 0x80000000
+set b 0x80000000
+set cin 0
+eval
+expect y 0x00000000
+expect cout 1
+
+// Max value + 0
+set a 0xFFFFFFFF
+set b 0x00000000
+set cin 0
+eval
+expect y 0xFFFFFFFF
+expect cout 0
+`,
+        solution: `-- 32-bit Ripple Carry Adder
+-- y = a + b + cin
+-- Built from two Add16 chained together
+
+entity Add32 is
+  port(
+    a    : in bits(31 downto 0);
+    b    : in bits(31 downto 0);
+    cin  : in bit;
+    y    : out bits(31 downto 0);
+    cout : out bit
+  );
+end entity;
+
+architecture rtl of Add32 is
+  component Add16
+    port(a,b : in bits(15 downto 0); cin : in bit; sum : out bits(15 downto 0); cout : out bit);
+  end component;
+  signal c16 : bit;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  u_lo: Add16 port map (a => a(15 downto 0), b => b(15 downto 0), cin => cin, sum => y_lo, cout => c16);
+  u_hi: Add16 port map (a => a(31 downto 16), b => b(31 downto 16), cin => c16, sum => y_hi, cout => cout);
+  y <= y_hi & y_lo;
+end architecture;
+`,
+    },
+
+    'ALU32': {
+        project: 3,
+        name: 'ALU32',
+        description: '32-bit ALU (9 ops, 4 flags)',
+        dependencies: ['Add32', 'Mux32', 'Mux', 'And2', 'Or2', 'Inv', 'Or8Way'],
+        template: `-- 32-bit ALU for A32-Lite CPU
+-- Implements: AND, EOR, SUB, ADD, ORR, MOV, MVN, CMP, TST
+-- op encoding:
+--   0000=AND, 0001=EOR, 0010=SUB, 0011=ADD
+--   0100=ORR, 0101=MOV, 0110=MVN, 0111=CMP, 1000=TST
+-- Flags: N (negative), Z (zero), C (carry), V (overflow)
+
+entity ALU32 is
+  port(
+    a      : in bits(31 downto 0);
+    b      : in bits(31 downto 0);
+    op     : in bits(3 downto 0);
+    y      : out bits(31 downto 0);
+    n_flag : out bit;
+    z_flag : out bit;
+    c_flag : out bit;
+    v_flag : out bit
+  );
+end entity;
+
+architecture rtl of ALU32 is
+  component Add32
+    port(a,b : in bits(31 downto 0); cin : in bit; y : out bits(31 downto 0); cout : out bit);
+  end component;
+  component Mux32
+    port(a,b : in bits(31 downto 0); sel : in bit; y : out bits(31 downto 0));
+  end component;
+  component Mux
+    port(a,b : in bit; sel : in bit; y : out bit);
+  end component;
+  component And2
+    port(a,b : in bit; y : out bit);
+  end component;
+  component Or2
+    port(a,b : in bit; y : out bit);
+  end component;
+  component Inv
+    port(a : in bit; y : out bit);
+  end component;
+  component Or8Way
+    port(a : in bits(7 downto 0); y : out bit);
+  end component;
+
+  -- Logic operation results
+  signal r_and, r_eor, r_orr, r_mov, r_mvn, nb : bits(31 downto 0);
+  -- Adder signals
+  signal is_sub : bit;
+  signal add_b, add_y : bits(31 downto 0);
+  signal add_cout : bit;
+  -- Mux tree
+  signal m0, m1, m2, m3, m01, m23, result : bits(31 downto 0);
+  -- Zero flag detection
+  signal or0, or1, or2, or3, or01, or23, or_all : bit;
+  -- Carry/overflow gating
+  signal not_op3, not_op2, sel_20, arith_t1, is_arith : bit;
+  signal v_add, v_sub, v_sel : bit;
+begin
+  -- YOUR CODE HERE
+end architecture;
+`,
+        test: `// Test file for ALU32 (32-bit ALU)
+// ops: 0000=AND, 0001=EOR, 0010=SUB, 0011=ADD
+//      0100=ORR, 0101=MOV, 0110=MVN, 0111=CMP, 1000=TST
+// Flags: N (negative), Z (zero), C (carry), V (overflow)
+
+load ALU32
+
+// ========== AND (op=0000) ==========
+set a 0x0000FFFF
+set b 0x00FF00FF
+set op 0b0000
+eval
+expect y 0x000000FF
+expect n_flag 0
+expect z_flag 0
+expect c_flag 0
+expect v_flag 0
+
+set a 0xFFFFFFFF
+set b 0xFFFFFFFF
+set op 0b0000
+eval
+expect y 0xFFFFFFFF
+expect n_flag 1
+expect z_flag 0
+expect c_flag 0
+expect v_flag 0
+
+set a 0xAAAAAAAA
+set b 0x55555555
+set op 0b0000
+eval
+expect y 0x00000000
+expect n_flag 0
+expect z_flag 1
+expect c_flag 0
+expect v_flag 0
+
+// ========== EOR (op=0001) ==========
+set a 0xFF00FF00
+set b 0x0F0F0F0F
+set op 0b0001
+eval
+expect y 0xF00FF00F
+expect n_flag 1
+expect z_flag 0
+expect c_flag 0
+expect v_flag 0
+
+set a 0x12345678
+set b 0x12345678
+set op 0b0001
+eval
+expect y 0x00000000
+expect n_flag 0
+expect z_flag 1
+expect c_flag 0
+expect v_flag 0
+
+// ========== SUB (op=0010) ==========
+set a 0x00000005
+set b 0x00000003
+set op 0b0010
+eval
+expect y 0x00000002
+expect n_flag 0
+expect z_flag 0
+expect c_flag 1
+expect v_flag 0
+
+set a 0x00000001
+set b 0x00000002
+set op 0b0010
+eval
+expect y 0xFFFFFFFF
+expect n_flag 1
+expect z_flag 0
+expect c_flag 0
+expect v_flag 0
+
+// SUB overflow: 0x80000000 - 1 = 0x7FFFFFFF (overflow!)
+set a 0x80000000
+set b 0x00000001
+set op 0b0010
+eval
+expect y 0x7FFFFFFF
+expect n_flag 0
+expect z_flag 0
+expect c_flag 1
+expect v_flag 1
+
+// ========== ADD (op=0011) ==========
+set a 0x00000001
+set b 0x00000002
+set op 0b0011
+eval
+expect y 0x00000003
+expect n_flag 0
+expect z_flag 0
+expect c_flag 0
+expect v_flag 0
+
+set a 0xFFFFFFFF
+set b 0x00000001
+set op 0b0011
+eval
+expect y 0x00000000
+expect n_flag 0
+expect z_flag 1
+expect c_flag 1
+expect v_flag 0
+
+// ADD overflow: 0x7FFFFFFF + 1 = 0x80000000 (overflow!)
+set a 0x7FFFFFFF
+set b 0x00000001
+set op 0b0011
+eval
+expect y 0x80000000
+expect n_flag 1
+expect z_flag 0
+expect c_flag 0
+expect v_flag 1
+
+// ========== ORR (op=0100) ==========
+set a 0x00FF0000
+set b 0x000000FF
+set op 0b0100
+eval
+expect y 0x00FF00FF
+expect n_flag 0
+expect z_flag 0
+expect c_flag 0
+expect v_flag 0
+
+set a 0x00000000
+set b 0x00000000
+set op 0b0100
+eval
+expect y 0x00000000
+expect n_flag 0
+expect z_flag 1
+expect c_flag 0
+expect v_flag 0
+
+// ========== MOV (op=0101) ==========
+set a 0xDEADBEEF
+set b 0x12345678
+set op 0b0101
+eval
+expect y 0x12345678
+expect n_flag 0
+expect z_flag 0
+expect c_flag 0
+expect v_flag 0
+
+set a 0x00000000
+set b 0x80000000
+set op 0b0101
+eval
+expect y 0x80000000
+expect n_flag 1
+expect z_flag 0
+expect c_flag 0
+expect v_flag 0
+
+// ========== MVN (op=0110) ==========
+set a 0x00000000
+set b 0x00000000
+set op 0b0110
+eval
+expect y 0xFFFFFFFF
+expect n_flag 1
+expect z_flag 0
+expect c_flag 0
+expect v_flag 0
+
+set a 0x00000000
+set b 0xFFFFFFFF
+set op 0b0110
+eval
+expect y 0x00000000
+expect n_flag 0
+expect z_flag 1
+expect c_flag 0
+expect v_flag 0
+
+// ========== CMP (op=0111) ==========
+set a 0x00000005
+set b 0x00000005
+set op 0b0111
+eval
+expect y 0x00000000
+expect n_flag 0
+expect z_flag 1
+expect c_flag 1
+expect v_flag 0
+
+set a 0x00000001
+set b 0x00000005
+set op 0b0111
+eval
+expect y 0xFFFFFFFC
+expect n_flag 1
+expect z_flag 0
+expect c_flag 0
+expect v_flag 0
+
+// ========== TST (op=1000) ==========
+set a 0xFF00FF00
+set b 0x00FF00FF
+set op 0b1000
+eval
+expect y 0x00000000
+expect n_flag 0
+expect z_flag 1
+expect c_flag 0
+expect v_flag 0
+
+set a 0xFF00FF00
+set b 0xFF000000
+set op 0b1000
+eval
+expect y 0xFF000000
+expect n_flag 1
+expect z_flag 0
+expect c_flag 0
+expect v_flag 0
+`,
+        solution: `-- 32-bit ALU for A32-Lite CPU
+-- Implements: AND, EOR, SUB, ADD, ORR, MOV, MVN, CMP, TST
+-- op encoding:
+--   0000=AND, 0001=EOR, 0010=SUB, 0011=ADD
+--   0100=ORR, 0101=MOV, 0110=MVN, 0111=CMP, 1000=TST
+
+entity ALU32 is
+  port(
+    a      : in bits(31 downto 0);
+    b      : in bits(31 downto 0);
+    op     : in bits(3 downto 0);
+    y      : out bits(31 downto 0);
+    n_flag : out bit;
+    z_flag : out bit;
+    c_flag : out bit;
+    v_flag : out bit
+  );
+end entity;
+
+architecture rtl of ALU32 is
+  component Add32
+    port(a,b : in bits(31 downto 0); cin : in bit; y : out bits(31 downto 0); cout : out bit);
+  end component;
+  component Mux32
+    port(a,b : in bits(31 downto 0); sel : in bit; y : out bits(31 downto 0));
+  end component;
+  component Mux
+    port(a,b : in bit; sel : in bit; y : out bit);
+  end component;
+  component And2
+    port(a,b : in bit; y : out bit);
+  end component;
+  component Or2
+    port(a,b : in bit; y : out bit);
+  end component;
+  component Inv
+    port(a : in bit; y : out bit);
+  end component;
+  component Or8Way
+    port(a : in bits(7 downto 0); y : out bit);
+  end component;
+
+  -- Logic operation results
+  signal r_and, r_eor, r_orr, r_mov, r_mvn, nb : bits(31 downto 0);
+  -- Adder signals
+  signal is_sub : bit;
+  signal add_b, add_y : bits(31 downto 0);
+  signal add_cout : bit;
+  -- Mux tree
+  signal m0, m1, m2, m3, m01, m23, result : bits(31 downto 0);
+  -- Zero flag detection
+  signal or0, or1, or2, or3, or01, or23, or_all : bit;
+  -- Carry/overflow gating
+  signal not_op3, not_op2, sel_20, arith_t1, is_arith : bit;
+  signal v_add, v_sub, v_sel : bit;
+begin
+  -- Logic operations (concurrent signal assignment)
+  r_and <= a and b;
+  r_eor <= a xor b;
+  r_orr <= a or b;
+  r_mov <= b;
+  nb <= not b;
+  r_mvn <= nb;
+
+  -- is_sub: detect SUB (0010) or CMP (0111)
+  is_sub <= (not op(3) and not op(2) and op(1) and not op(0))
+         or (not op(3) and op(2) and op(1) and op(0));
+
+  -- Adder: SUB/CMP uses a + ~b + 1, ADD uses a + b
+  u_add_sel: Mux32 port map (a => b, b => nb, sel => is_sub, y => add_b);
+  u_add: Add32 port map (a => a, b => add_b, cin => is_sub, y => add_y, cout => add_cout);
+
+  -- 3-level mux tree to select result based on op(2:0)
+  u_m0: Mux32 port map (a => r_and, b => r_eor, sel => op(0), y => m0);
+  u_m1: Mux32 port map (a => add_y, b => add_y, sel => op(0), y => m1);
+  u_m2: Mux32 port map (a => r_orr, b => r_mov, sel => op(0), y => m2);
+  u_m3: Mux32 port map (a => r_mvn, b => add_y, sel => op(0), y => m3);
+  u_m01: Mux32 port map (a => m0, b => m1, sel => op(1), y => m01);
+  u_m23: Mux32 port map (a => m2, b => m3, sel => op(1), y => m23);
+  u_result: Mux32 port map (a => m01, b => m23, sel => op(2), y => result);
+
+  -- TST (op=1000): output AND result; otherwise mux tree result
+  u_out: Mux32 port map (a => result, b => r_and, sel => op(3), y => y);
+
+  -- N flag: MSB of result
+  n_flag <= result(31);
+
+  -- Z flag: result == 0 (OR all bytes, then invert)
+  u_or0: Or8Way port map (a => result(7 downto 0), y => or0);
+  u_or1: Or8Way port map (a => result(15 downto 8), y => or1);
+  u_or2: Or8Way port map (a => result(23 downto 16), y => or2);
+  u_or3: Or8Way port map (a => result(31 downto 24), y => or3);
+  u_or01: Or2 port map (a => or0, b => or1, y => or01);
+  u_or23: Or2 port map (a => or2, b => or3, y => or23);
+  u_or_all: Or2 port map (a => or01, b => or23, y => or_all);
+  z_flag <= not or_all;
+
+  -- is_arith: detect ADD/SUB/CMP = !op(3) and op(1) and (!op(2) or op(0))
+  u_not3: Inv port map (a => op(3), y => not_op3);
+  u_not2: Inv port map (a => op(2), y => not_op2);
+  u_sel20: Or2 port map (a => not_op2, b => op(0), y => sel_20);
+  u_arith1: And2 port map (a => not_op3, b => op(1), y => arith_t1);
+  u_arith2: And2 port map (a => arith_t1, b => sel_20, y => is_arith);
+
+  -- C flag: add_cout AND is_arith
+  u_cflag: And2 port map (a => is_arith, b => add_cout, y => c_flag);
+
+  -- V flag: Mux(v_add, v_sub, is_sub) AND is_arith
+  v_add <= (a(31) and b(31) and not add_y(31))
+        or (not a(31) and not b(31) and add_y(31));
+  v_sub <= (a(31) and not b(31) and not add_y(31))
+        or (not a(31) and b(31) and add_y(31));
+  u_vmux: Mux port map (a => v_add, b => v_sub, sel => is_sub, y => v_sel);
+  u_vflag: And2 port map (a => is_arith, b => v_sel, y => v_flag);
 end architecture;
 `,
     },
