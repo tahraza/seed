@@ -693,9 +693,16 @@ architecture rtl of ALU is
   component Or8Way
     port(a : in bits(7 downto 0); y : out bit);
   end component;
+  component Mux
+    port(a,b : in bit; sel : in bit; y : out bit);
+  end component;
+  component And2
+    port(a,b : in bit; y : out bit);
+  end component;
   signal r_and, r_or, r_add, r_sub, nb, result : bits(15 downto 0);
   signal add_cout, sub_cout : bit;
   signal v_add, v_sub : bit;
+  signal carry_mux, ovf_mux : bit;
   signal or_lo, or_hi : bit;
 begin
   -- Compute all operations
@@ -721,17 +728,18 @@ begin
   -- Negative flag: MSB of result
   neg <= result(15);
 
-  -- Carry flag
-  carry <= add_cout when op = b"10" else
-           sub_cout when op = b"11" else '0';
+  -- Carry flag: Mux(add_cout, sub_cout, op(0)) AND op(1)
+  u_carry_mux: Mux port map (a => add_cout, b => sub_cout, sel => op(0), y => carry_mux);
+  u_carry_and: And2 port map (a => op(1), b => carry_mux, y => carry);
 
   -- Overflow flag
   v_add <= (a(15) and b(15) and not result(15))
         or (not a(15) and not b(15) and result(15));
   v_sub <= (a(15) and not b(15) and not result(15))
         or (not a(15) and b(15) and result(15));
-  overflow <= v_add when op = b"10" else
-              v_sub when op = b"11" else '0';
+  -- Mux(v_add, v_sub, op(0)) AND op(1)
+  u_ovf_mux: Mux port map (a => v_add, b => v_sub, sel => op(0), y => ovf_mux);
+  u_ovf_and: And2 port map (a => op(1), b => ovf_mux, y => overflow);
 end architecture;
 ```
 
