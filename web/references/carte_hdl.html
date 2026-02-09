@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr" xml:lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Carte de Référence HDL</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        background-color: #232629;
+        color: #7a7c7d;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #7a7c7d;  padding-left: 4px; }
+    div.sourceCode
+      { color: #cfcfc2; background-color: #232629; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #cfcfc2; } /* Normal */
+    code span.al { color: #95da4c; background-color: #4d1f24; font-weight: bold; } /* Alert */
+    code span.an { color: #3f8058; } /* Annotation */
+    code span.at { color: #2980b9; } /* Attribute */
+    code span.bn { color: #f67400; } /* BaseN */
+    code span.bu { color: #7f8c8d; } /* BuiltIn */
+    code span.cf { color: #fdbc4b; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #3daee9; } /* Char */
+    code span.cn { color: #27aeae; font-weight: bold; } /* Constant */
+    code span.co { color: #7a7c7d; } /* Comment */
+    code span.cv { color: #7f8c8d; } /* CommentVar */
+    code span.do { color: #a43340; } /* Documentation */
+    code span.dt { color: #2980b9; } /* DataType */
+    code span.dv { color: #f67400; } /* DecVal */
+    code span.er { color: #da4453; text-decoration: underline; } /* Error */
+    code span.ex { color: #0099ff; font-weight: bold; } /* Extension */
+    code span.fl { color: #f67400; } /* Float */
+    code span.fu { color: #8e44ad; } /* Function */
+    code span.im { color: #27ae60; } /* Import */
+    code span.in { color: #c45b00; } /* Information */
+    code span.kw { color: #cfcfc2; font-weight: bold; } /* Keyword */
+    code span.op { color: #cfcfc2; } /* Operator */
+    code span.ot { color: #27ae60; } /* Other */
+    code span.pp { color: #27ae60; } /* Preprocessor */
+    code span.re { color: #2980b9; background-color: #153042; } /* RegionMarker */
+    code span.sc { color: #3daee9; } /* SpecialChar */
+    code span.ss { color: #da4453; } /* SpecialString */
+    code span.st { color: #f44f4f; } /* String */
+    code span.va { color: #27aeae; } /* Variable */
+    code span.vs { color: #da4453; } /* VerbatimString */
+    code span.wa { color: #da4453; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Carte de Référence HDL</h1>
+</header>
+<h1 id="carte-de-référence-hdl">Carte de Référence HDL</h1>
+<h2 id="structure-dun-fichier-hdl">Structure d’un Fichier HDL</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Déclaration de l&#39;entité (interface)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="cf">entity</span> <span class="dv">NomComposant</span> <span class="kw">is</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">port</span>(</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    entree1 <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    entree2 <span class="ot">:</span> <span class="kw">in</span> bits(<span class="dv">7</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    sortie  <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  );</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="cf">end entity;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">-- Implémentation (architecture)</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="cf">architecture</span> <span class="dv">rtl</span> <span class="kw">of</span> <span class="fu">NomComposant</span> <span class="kw">is</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Déclaration des composants utilisés</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">component</span> <span class="dv">AutreComposant</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">port</span>(a <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; y <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span>);</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end component;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Signaux internes</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> sig1<span class="ot">,</span> sig2 <span class="ot">:</span> <span class="dt">bit</span>;</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> bus1 <span class="ot">:</span> bits(<span class="dv">7</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Instanciation de composants</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>  <span class="dv">u1</span><span class="ot">:</span> <span class="fu">AutreComposant</span> <span class="kw">port map </span>(a <span class="ot">=&gt;</span> entree1<span class="ot">,</span> y <span class="ot">=&gt;</span> sig1);</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Assignations concurrentes</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  sortie <span class="ot">&lt;=</span> sig1 <span class="kw">and</span> sig2;</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="cf">end architecture;</span></span></code></pre></div>
+<h2 id="types-de-données">Types de Données</h2>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 46%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>Description</th>
+<th>Exemple</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>bit</td>
+<td>Un seul bit (0 ou 1)</td>
+<td><code>signal x : bit;</code></td>
+</tr>
+<tr class="even">
+<td>bits(n downto 0)</td>
+<td>Vecteur de n+1 bits</td>
+<td><code>signal data : bits(31 downto 0);</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="opérateurs-logiques">Opérateurs Logiques</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Opérateur</th>
+<th>Description</th>
+<th>Exemple</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>not</code></td>
+<td>Inversion</td>
+<td><code>y &lt;= not a;</code></td>
+</tr>
+<tr class="even">
+<td><code>and</code></td>
+<td>ET logique</td>
+<td><code>y &lt;= a and b;</code></td>
+</tr>
+<tr class="odd">
+<td><code>or</code></td>
+<td>OU logique</td>
+<td><code>y &lt;= a or b;</code></td>
+</tr>
+<tr class="even">
+<td><code>xor</code></td>
+<td>OU exclusif</td>
+<td><code>y &lt;= a xor b;</code></td>
+</tr>
+<tr class="odd">
+<td><code>nand</code></td>
+<td>NON-ET</td>
+<td><code>y &lt;= a nand b;</code></td>
+</tr>
+<tr class="even">
+<td><code>nor</code></td>
+<td>NON-OU</td>
+<td><code>y &lt;= a nor b;</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="accès-aux-bits">Accès aux Bits</h2>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ot">signal</span> data <span class="ot">:</span> bits(<span class="dv">31</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- Bit individuel</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>data(<span class="dv">0</span>)           <span class="co">-- Bit de poids faible (LSB)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>data(<span class="dv">31</span>)          <span class="co">-- Bit de poids fort (MSB)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co">-- Tranche (slice)</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>data(<span class="dv">7</span> <span class="ot">downto</span> <span class="dv">0</span>)  <span class="co">-- 8 bits de poids faible</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>data(<span class="dv">31</span> <span class="ot">downto</span> <span class="dv">16</span>) <span class="co">-- 16 bits de poids fort</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- Concaténation</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>result <span class="ot">&lt;=</span> high_bits <span class="ot">&amp;</span> low_bits;</span></code></pre></div>
+<h2 id="instanciation-de-composants">Instanciation de Composants</h2>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Forme complète</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>u_and<span class="ot">:</span> And2 <span class="kw">port</span> <span class="kw">map</span> (</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">=&gt;</span> signal_a<span class="ot">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  b <span class="ot">=&gt;</span> signal_b<span class="ot">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">=&gt;</span> signal_y</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- Plusieurs instances</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>u1<span class="ot">:</span> Not1 <span class="kw">port</span> <span class="kw">map</span> (a <span class="ot">=&gt;</span> in1<span class="ot">,</span> y <span class="ot">=&gt;</span> not_in1);</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>u2<span class="ot">:</span> Not1 <span class="kw">port</span> <span class="kw">map</span> (a <span class="ot">=&gt;</span> in2<span class="ot">,</span> y <span class="ot">=&gt;</span> not_in2);</span></code></pre></div>
+<h2 id="composants-primitifs">Composants Primitifs</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Composant</th>
+<th>Ports</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Nand</td>
+<td>a, b → y</td>
+<td>Porte NAND (primitif)</td>
+</tr>
+<tr class="even">
+<td>DFF</td>
+<td>d, clk → q</td>
+<td>D Flip-Flop (primitif)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="composants-de-base-à-construire">Composants de Base (à
+construire)</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Composant</th>
+<th>Ports</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Inv / Not1</td>
+<td>a → y</td>
+<td>Inverseur</td>
+</tr>
+<tr class="even">
+<td>And2</td>
+<td>a, b → y</td>
+<td>Porte AND</td>
+</tr>
+<tr class="odd">
+<td>Or2</td>
+<td>a, b → y</td>
+<td>Porte OR</td>
+</tr>
+<tr class="even">
+<td>Xor2</td>
+<td>a, b → y</td>
+<td>Porte XOR</td>
+</tr>
+<tr class="odd">
+<td>Mux</td>
+<td>a, b, sel → y</td>
+<td>Multiplexeur 2:1</td>
+</tr>
+<tr class="even">
+<td>DMux</td>
+<td>in, sel → a, b</td>
+<td>Démultiplexeur 1:2</td>
+</tr>
+</tbody>
+</table>
+<h2 id="composants-arithmétiques">Composants Arithmétiques</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Composant</th>
+<th>Ports</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>HalfAdder</td>
+<td>a, b → sum, carry</td>
+<td>Demi-additionneur</td>
+</tr>
+<tr class="even">
+<td>FullAdder</td>
+<td>a, b, cin → sum, cout</td>
+<td>Additionneur complet</td>
+</tr>
+<tr class="odd">
+<td>Add32</td>
+<td>a[32], b[32] → sum[32], cout</td>
+<td>Additionneur 32 bits</td>
+</tr>
+<tr class="even">
+<td>ALU32</td>
+<td>a[32], b[32], op[4] → result[32], flags[4]</td>
+<td>ALU complète</td>
+</tr>
+</tbody>
+</table>
+<h2 id="composants-séquentiels">Composants Séquentiels</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Composant</th>
+<th>Ports</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Bit</td>
+<td>in, load, clk → out</td>
+<td>Registre 1 bit</td>
+</tr>
+<tr class="even">
+<td>Register</td>
+<td>in[32], load, clk → out[32]</td>
+<td>Registre 32 bits</td>
+</tr>
+<tr class="odd">
+<td>PC</td>
+<td>in[32], load, inc, reset, clk → out[32]</td>
+<td>Program Counter</td>
+</tr>
+<tr class="even">
+<td>RAM8</td>
+<td>in[32], addr[3], load, clk → out[32]</td>
+<td>RAM 8 mots</td>
+</tr>
+</tbody>
+</table>
+<h2 id="bonnes-pratiques">Bonnes Pratiques</h2>
+<ol type="1">
+<li><p><strong>Nommage</strong> : Utilisez des noms descriptifs</p>
+<ul>
+<li><code>u_</code> pour les instances : <code>u_alu</code>,
+<code>u_mux</code></li>
+<li><code>sig_</code> ou suffixe descriptif pour les signaux</li>
+</ul></li>
+<li><p><strong>Organisation</strong> :</p>
+<ul>
+<li>Composants en premier</li>
+<li>Signaux ensuite</li>
+<li>Instanciations dans <code>begin...end</code></li>
+</ul></li>
+<li><p><strong>Commentaires</strong> :</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Description de ce que fait le bloc</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>u_add<span class="ot">:</span> Add32 <span class="kw">port</span> <span class="kw">map</span> (<span class="ot">...</span>);</span></code></pre></div></li>
+<li><p><strong>Hiérarchie</strong> :</p>
+<ul>
+<li>Construisez des composants simples d’abord</li>
+<li>Réutilisez-les pour construire des composants complexes</li>
+</ul></li>
+</ol>
+<h2 id="fichier-de-test-.tst">Fichier de Test (.tst)</h2>
+<pre><code>// Charger le composant
+load MyComponent.hdl
+
+// Définir les entrées
+set a 0
+set b 1
+
+// Évaluer (circuits combinatoires)
+eval
+
+// Vérifier la sortie
+expect y 1
+
+// Pour circuits séquentiels
+tick    // Front montant
+tock    // Front descendant
+step    // tick + tock</code></pre>
+</body>
+</html>

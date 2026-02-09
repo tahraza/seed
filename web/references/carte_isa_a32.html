@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr" xml:lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Carte de Référence ISA A32</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Carte de Référence ISA A32</h1>
+</header>
+<h1 id="carte-de-référence-isa-a32">Carte de Référence ISA A32</h1>
+<h2 id="registres">Registres</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Registre</th>
+<th>Alias</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>R0-R3</td>
+<td>-</td>
+<td>Arguments / Retour (caller-saved)</td>
+</tr>
+<tr class="even">
+<td>R4-R11</td>
+<td>-</td>
+<td>Variables (callee-saved)</td>
+</tr>
+<tr class="odd">
+<td>R12</td>
+<td>IP</td>
+<td>Scratch</td>
+</tr>
+<tr class="even">
+<td>R13</td>
+<td>SP</td>
+<td>Stack Pointer</td>
+</tr>
+<tr class="odd">
+<td>R14</td>
+<td>LR</td>
+<td>Link Register</td>
+</tr>
+<tr class="even">
+<td>R15</td>
+<td>PC</td>
+<td>Program Counter</td>
+</tr>
+</tbody>
+</table>
+<h2 id="drapeaux-nzcv">Drapeaux (NZCV)</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Flag</th>
+<th>Nom</th>
+<th>Signification</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>N</td>
+<td>Negative</td>
+<td>Bit 31 du résultat = 1</td>
+</tr>
+<tr class="even">
+<td>Z</td>
+<td>Zero</td>
+<td>Résultat = 0</td>
+</tr>
+<tr class="odd">
+<td>C</td>
+<td>Carry</td>
+<td>Retenue sortante</td>
+</tr>
+<tr class="even">
+<td>V</td>
+<td>oVerflow</td>
+<td>Débordement signé</td>
+</tr>
+</tbody>
+</table>
+<h2 id="conditions">Conditions</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Cond</th>
+<th>Signification</th>
+<th>Flags testés</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>EQ</td>
+<td>Equal</td>
+<td>Z=1</td>
+</tr>
+<tr class="even">
+<td>NE</td>
+<td>Not Equal</td>
+<td>Z=0</td>
+</tr>
+<tr class="odd">
+<td>CS/HS</td>
+<td>Carry Set / Unsigned ≥</td>
+<td>C=1</td>
+</tr>
+<tr class="even">
+<td>CC/LO</td>
+<td>Carry Clear / Unsigned &lt;</td>
+<td>C=0</td>
+</tr>
+<tr class="odd">
+<td>MI</td>
+<td>Minus (negative)</td>
+<td>N=1</td>
+</tr>
+<tr class="even">
+<td>PL</td>
+<td>Plus (positive or zero)</td>
+<td>N=0</td>
+</tr>
+<tr class="odd">
+<td>VS</td>
+<td>Overflow Set</td>
+<td>V=1</td>
+</tr>
+<tr class="even">
+<td>VC</td>
+<td>Overflow Clear</td>
+<td>V=0</td>
+</tr>
+<tr class="odd">
+<td>HI</td>
+<td>Unsigned &gt;</td>
+<td>C=1 et Z=0</td>
+</tr>
+<tr class="even">
+<td>LS</td>
+<td>Unsigned ≤</td>
+<td>C=0 ou Z=1</td>
+</tr>
+<tr class="odd">
+<td>GE</td>
+<td>Signed ≥</td>
+<td>N=V</td>
+</tr>
+<tr class="even">
+<td>LT</td>
+<td>Signed &lt;</td>
+<td>N≠V</td>
+</tr>
+<tr class="odd">
+<td>GT</td>
+<td>Signed &gt;</td>
+<td>Z=0 et N=V</td>
+</tr>
+<tr class="even">
+<td>LE</td>
+<td>Signed ≤</td>
+<td>Z=1 ou N≠V</td>
+</tr>
+<tr class="odd">
+<td>AL</td>
+<td>Always</td>
+<td>(défaut)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="instructions-alu">Instructions ALU</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Instruction</th>
+<th>Syntaxe</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ADD</td>
+<td>ADD Rd, Rn, Rm/imm</td>
+<td>Rd = Rn + Op2</td>
+</tr>
+<tr class="even">
+<td>SUB</td>
+<td>SUB Rd, Rn, Rm/imm</td>
+<td>Rd = Rn - Op2</td>
+</tr>
+<tr class="odd">
+<td>RSB</td>
+<td>RSB Rd, Rn, Rm/imm</td>
+<td>Rd = Op2 - Rn</td>
+</tr>
+<tr class="even">
+<td>AND</td>
+<td>AND Rd, Rn, Rm/imm</td>
+<td>Rd = Rn &amp; Op2</td>
+</tr>
+<tr class="odd">
+<td>ORR</td>
+<td>ORR Rd, Rn, Rm/imm</td>
+<td>Rd = Rn | Op2</td>
+</tr>
+<tr class="even">
+<td>EOR</td>
+<td>EOR Rd, Rn, Rm/imm</td>
+<td>Rd = Rn ^ Op2</td>
+</tr>
+<tr class="odd">
+<td>BIC</td>
+<td>BIC Rd, Rn, Rm/imm</td>
+<td>Rd = Rn &amp; ~Op2</td>
+</tr>
+<tr class="even">
+<td>MOV</td>
+<td>MOV Rd, Rm/imm</td>
+<td>Rd = Op2</td>
+</tr>
+<tr class="odd">
+<td>MVN</td>
+<td>MVN Rd, Rm/imm</td>
+<td>Rd = ~Op2</td>
+</tr>
+<tr class="even">
+<td>CMP</td>
+<td>CMP Rn, Rm/imm</td>
+<td>Flags = Rn - Op2</td>
+</tr>
+<tr class="odd">
+<td>CMN</td>
+<td>CMN Rn, Rm/imm</td>
+<td>Flags = Rn + Op2</td>
+</tr>
+<tr class="even">
+<td>TST</td>
+<td>TST Rn, Rm/imm</td>
+<td>Flags = Rn &amp; Op2</td>
+</tr>
+<tr class="odd">
+<td>TEQ</td>
+<td>TEQ Rn, Rm/imm</td>
+<td>Flags = Rn ^ Op2</td>
+</tr>
+<tr class="even">
+<td>MUL</td>
+<td>MUL Rd, Rn, Rm</td>
+<td>Rd = Rn * Rm</td>
+</tr>
+</tbody>
+</table>
+<p><em>Ajouter <code>.S</code> pour mettre à jour les flags (ex:
+ADDS)</em></p>
+<h2 id="instructions-loadstore">Instructions Load/Store</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Instruction</th>
+<th>Syntaxe</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>LDR</td>
+<td>LDR Rd, [Rn, #off]</td>
+<td>Rd = Mem[Rn + off] (32 bits)</td>
+</tr>
+<tr class="even">
+<td>STR</td>
+<td>STR Rd, [Rn, #off]</td>
+<td>Mem[Rn + off] = Rd (32 bits)</td>
+</tr>
+<tr class="odd">
+<td>LDRB</td>
+<td>LDRB Rd, [Rn, #off]</td>
+<td>Rd = Mem[Rn + off] (8 bits)</td>
+</tr>
+<tr class="even">
+<td>STRB</td>
+<td>STRB Rd, [Rn, #off]</td>
+<td>Mem[Rn + off] = Rd (8 bits)</td>
+</tr>
+<tr class="odd">
+<td>LDR</td>
+<td>LDR Rd, =value</td>
+<td>Rd = value (via literal pool)</td>
+</tr>
+<tr class="even">
+<td>PUSH</td>
+<td>PUSH {regs}</td>
+<td>Empiler registres</td>
+</tr>
+<tr class="odd">
+<td>POP</td>
+<td>POP {regs}</td>
+<td>Dépiler registres</td>
+</tr>
+</tbody>
+</table>
+<h2 id="instructions-de-branchement">Instructions de Branchement</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Instruction</th>
+<th>Syntaxe</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>B</td>
+<td>B label</td>
+<td>Saut inconditionnel</td>
+</tr>
+<tr class="even">
+<td>B.cond</td>
+<td>B.EQ label</td>
+<td>Saut conditionnel (voir conditions)</td>
+</tr>
+<tr class="odd">
+<td>BL</td>
+<td>BL label</td>
+<td>LR = PC+4; PC = label</td>
+</tr>
+<tr class="even">
+<td>BX</td>
+<td>BX Rm</td>
+<td>PC = Rm</td>
+</tr>
+</tbody>
+</table>
+<p><em>Exemples : B.EQ, B.NE, B.LT, B.GE, B.GT, B.LE, B.HI,
+B.LO</em></p>
+<h2 id="instructions-système">Instructions Système</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Instruction</th>
+<th>Syntaxe</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SVC</td>
+<td>SVC #n</td>
+<td>Supervisor Call (n=0 pour exit)</td>
+</tr>
+<tr class="even">
+<td>NOP</td>
+<td>NOP</td>
+<td>No Operation</td>
+</tr>
+</tbody>
+</table>
+<h2 id="directives-assembleur">Directives Assembleur</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Directive</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>.text</td>
+<td>Section code</td>
+</tr>
+<tr class="even">
+<td>.data</td>
+<td>Section données initialisées</td>
+</tr>
+<tr class="odd">
+<td>.bss</td>
+<td>Section données non-initialisées</td>
+</tr>
+<tr class="even">
+<td>.word val</td>
+<td>Mot 32 bits</td>
+</tr>
+<tr class="odd">
+<td>.byte val</td>
+<td>Octet</td>
+</tr>
+<tr class="even">
+<td>.asciz “s”</td>
+<td>Chaîne avec \0</td>
+</tr>
+<tr class="odd">
+<td>.align n</td>
+<td>Aligner sur 2^n</td>
+</tr>
+<tr class="even">
+<td>.ltorg</td>
+<td>Placer literal pool ici</td>
+</tr>
+<tr class="odd">
+<td>.global sym</td>
+<td>Exporter symbole</td>
+</tr>
+</tbody>
+</table>
+<h2 id="memory-map">Memory Map</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Adresse</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0x00000000</td>
+<td>Début RAM</td>
+</tr>
+<tr class="even">
+<td>0x00100000</td>
+<td>Fin RAM (1 MiB)</td>
+</tr>
+<tr class="odd">
+<td>0x00400000</td>
+<td>Framebuffer</td>
+</tr>
+<tr class="even">
+<td>0xFFFF0000</td>
+<td>MMIO Output</td>
+</tr>
+<tr class="odd">
+<td>0xFFFF0004</td>
+<td>MMIO Input</td>
+</tr>
+<tr class="even">
+<td>0xFFFF0010</td>
+<td>MMIO Exit</td>
+</tr>
+</tbody>
+</table>
+<h2 id="encodage-32-bits">Encodage (32 bits)</h2>
+<pre><code>[31:28] cond
+[27:25] class (000=ALU reg, 001=ALU imm, 010=Mem, 011=Branch)
+[24:21] opcode
+[20]    S (update flags)
+[19:16] Rn
+[15:12] Rd
+[11:0]  Op2/offset</code></pre>
+</body>
+</html>
