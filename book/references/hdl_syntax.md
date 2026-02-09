@@ -124,6 +124,37 @@ a xor b        -- OU exclusif
 not a          -- NON logique
 ```
 
+### Précédence des Opérateurs Logiques
+
+Du plus prioritaire au moins prioritaire :
+
+| Priorité | Opérateur | Exemple |
+|----------|-----------|---------|
+| 1 (haute) | `not` | `not a` |
+| 2 | `and` | `a and b` |
+| 3 (basse) | `or`, `xor` | `a or b` |
+
+Utilisez des **parenthèses** pour rendre l'intention explicite :
+
+```vhdl
+-- Expressions complexes : parenthèses recommandées
+y <= (a and b) or (c and d);
+
+-- not s'applique au terme immédiat
+y <= not a and b;          -- signifie (not a) and b
+y <= not (a and b);        -- signifie not(a and b)
+
+-- Chaînage de and (même précédence, évalué gauche à droite)
+y <= a and b and c;
+
+-- Expressions multi-termes avec groupement
+-- Exemple : calcul d'overflow pour la soustraction
+v_sub <= (a(15) and not b(15) and not result(15))
+      or (not a(15) and b(15) and result(15));
+```
+
+**Conseil** : Quand une expression mélange `and` et `or`, toujours utiliser des parenthèses pour éviter les erreurs.
+
 ### Opérateurs Arithmétiques
 ```vhdl
 a + b          -- Addition
