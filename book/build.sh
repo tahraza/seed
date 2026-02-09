@@ -36,6 +36,15 @@ REFERENCE_CARDS=(
     references/carte_erreurs.md
 )
 
+# Tous les fichiers de référence (cartes + syntaxe)
+REFERENCE_ALL=(
+    references/carte_isa_a32.md
+    references/carte_hdl.md
+    references/carte_c32.md
+    references/carte_erreurs.md
+    references/hdl_syntax.md
+)
+
 # Vérification de la présence de pandoc
 if ! command -v pandoc &> /dev/null; then
     echo "Erreur: Pandoc n'est pas installé."
@@ -57,7 +66,7 @@ echo "========================================"
 echo ""
 
 # Génération du PDF
-echo "[1/3] Génération du PDF..."
+echo "[1/4] Génération du PDF..."
 
 if [ "$EISVOGEL_INSTALLED" = true ]; then
     pandoc metadata-eisvogel.yaml \
@@ -118,7 +127,7 @@ fi
 
 # Génération du HTML
 echo ""
-echo "[2/3] Génération du HTML..."
+echo "[2/4] Génération du HTML..."
 
 pandoc metadata-eisvogel.yaml \
     "${CHAPTERS[@]}" \
@@ -133,6 +142,18 @@ pandoc metadata-eisvogel.yaml \
     --metadata title="L'Architecture Seed" 2>&1
 
 if [ $? -eq 0 ]; then
+    # Injecter les liens vers les fiches de référence avant la TOC
+    sed -i '/<nav id="TOC"/i \
+<div id="references-rapides" style="background-color:#f0f4f8; border:1px solid #ccd; border-radius:8px; padding:16px 24px; margin-bottom:24px;">\
+<h3 style="margin-top:0;">Fiches de Reference</h3>\
+<ul style="columns:2; list-style:none; padding-left:0;">\
+<li><a href="references/hdl_syntax.html">Reference Syntaxe HDL nand2c</a></li>\
+<li><a href="references/carte_hdl.html">Carte de Reference HDL</a></li>\
+<li><a href="references/carte_isa_a32.html">Carte de Reference ISA A32</a></li>\
+<li><a href="references/carte_c32.html">Carte de Reference C32</a></li>\
+<li><a href="references/carte_erreurs.html">Carte de Reference - Codes d'"'"'Erreur</a></li>\
+</ul>\
+</div>' "$HTML_OUTPUT"
     echo "  ✓ HTML créé: $HTML_OUTPUT ($(du -h "$HTML_OUTPUT" | cut -f1))"
 else
     echo "  ✗ Échec de la génération HTML"
@@ -140,7 +161,7 @@ fi
 
 # Génération des cartes de référence (PDF compact)
 echo ""
-echo "[3/3] Génération des cartes de référence..."
+echo "[3/4] Génération des cartes de référence (PDF)..."
 
 # Créer le dossier de sortie si nécessaire
 mkdir -p references
@@ -162,6 +183,39 @@ if [ $? -eq 0 ]; then
     echo "  ✓ Cartes de référence: $REFCARD_OUTPUT ($(du -h "$REFCARD_OUTPUT" | cut -f1))"
 else
     echo "  ✗ Échec de la génération des cartes de référence"
+fi
+
+# Génération des références HTML individuelles
+echo ""
+echo "[4/4] Génération des références HTML..."
+
+REF_OK=0
+REF_TOTAL=0
+for ref_md in "${REFERENCE_ALL[@]}"; do
+    REF_TOTAL=$((REF_TOTAL + 1))
+    ref_base=$(basename "$ref_md" .md)
+    ref_title=$(head -1 "$ref_md" | sed 's/^# //')
+    ref_html="references/${ref_base}.html"
+
+    pandoc "$ref_md" \
+        -o "$ref_html" \
+        --from markdown \
+        --standalone \
+        --highlight-style breezedark \
+        --metadata lang=fr \
+        --metadata title="$ref_title" 2>&1
+
+    if [ $? -eq 0 ]; then
+        REF_OK=$((REF_OK + 1))
+    else
+        echo "  ✗ Échec: $ref_html"
+    fi
+done
+
+if [ $REF_OK -eq $REF_TOTAL ]; then
+    echo "  ✓ $REF_OK/$REF_TOTAL références HTML générées dans references/"
+else
+    echo "  ⚠ $REF_OK/$REF_TOTAL références HTML générées"
 fi
 
 echo ""

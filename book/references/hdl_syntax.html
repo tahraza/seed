@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="fr" xml:lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Référence Syntaxe HDL nand2c</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        background-color: #232629;
+        color: #7a7c7d;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #7a7c7d;  padding-left: 4px; }
+    div.sourceCode
+      { color: #cfcfc2; background-color: #232629; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #cfcfc2; } /* Normal */
+    code span.al { color: #95da4c; background-color: #4d1f24; font-weight: bold; } /* Alert */
+    code span.an { color: #3f8058; } /* Annotation */
+    code span.at { color: #2980b9; } /* Attribute */
+    code span.bn { color: #f67400; } /* BaseN */
+    code span.bu { color: #7f8c8d; } /* BuiltIn */
+    code span.cf { color: #fdbc4b; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #3daee9; } /* Char */
+    code span.cn { color: #27aeae; font-weight: bold; } /* Constant */
+    code span.co { color: #7a7c7d; } /* Comment */
+    code span.cv { color: #7f8c8d; } /* CommentVar */
+    code span.do { color: #a43340; } /* Documentation */
+    code span.dt { color: #2980b9; } /* DataType */
+    code span.dv { color: #f67400; } /* DecVal */
+    code span.er { color: #da4453; text-decoration: underline; } /* Error */
+    code span.ex { color: #0099ff; font-weight: bold; } /* Extension */
+    code span.fl { color: #f67400; } /* Float */
+    code span.fu { color: #8e44ad; } /* Function */
+    code span.im { color: #27ae60; } /* Import */
+    code span.in { color: #c45b00; } /* Information */
+    code span.kw { color: #cfcfc2; font-weight: bold; } /* Keyword */
+    code span.op { color: #cfcfc2; } /* Operator */
+    code span.ot { color: #27ae60; } /* Other */
+    code span.pp { color: #27ae60; } /* Preprocessor */
+    code span.re { color: #2980b9; background-color: #153042; } /* RegionMarker */
+    code span.sc { color: #3daee9; } /* SpecialChar */
+    code span.ss { color: #da4453; } /* SpecialString */
+    code span.st { color: #f44f4f; } /* String */
+    code span.va { color: #27aeae; } /* Variable */
+    code span.vs { color: #da4453; } /* VerbatimString */
+    code span.wa { color: #da4453; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Référence Syntaxe HDL nand2c</h1>
+</header>
+<h1 id="référence-syntaxe-hdl-nand2c">Référence Syntaxe HDL nand2c</h1>
+<p>Ce document décrit la syntaxe complète du langage HDL utilisé dans le
+projet nand2c.</p>
+<h2 id="vue-densemble">Vue d’Ensemble</h2>
+<p>Le HDL nand2c est inspiré de VHDL mais simplifié pour
+l’apprentissage. Il supporte : - Déclarations d’entité et d’architecture
+- Logique combinatoire (affectations concurrentes) - Logique
+séquentielle (processus synchrones) - Instanciation de composants</p>
+<hr />
+<h2 id="structure-dun-fichier-hdl">1. Structure d’un Fichier HDL</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Commentaire (jusqu&#39;à fin de ligne)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="cf">entity</span> <span class="dv">NomEntite</span> <span class="kw">is</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">port</span>(</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- déclarations de ports</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  );</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="cf">end entity;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="cf">architecture</span> <span class="dv">rtl</span> <span class="kw">of</span> <span class="fu">NomEntite</span> <span class="kw">is</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- déclarations de signaux et composants</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- instructions concurrentes</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="cf">end architecture;</span></span></code></pre></div>
+<hr />
+<h2 id="déclaration-dentité">2. Déclaration d’Entité</h2>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">entity</span> <span class="dv">And2</span> <span class="kw">is</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">port</span>(</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    a <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    b <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    y <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  );</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="cf">end entity;</span></span></code></pre></div>
+<h3 id="types-de-ports">Types de Ports</h3>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 46%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Type</th>
+<th>Description</th>
+<th>Exemple</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>bit</code></td>
+<td>Signal 1 bit</td>
+<td><code>clk : in bit</code></td>
+</tr>
+<tr class="even">
+<td><code>bits(N downto 0)</code></td>
+<td>Bus N+1 bits, MSB en premier</td>
+<td><code>data : in bits(31 downto 0)</code></td>
+</tr>
+<tr class="odd">
+<td><code>bits(0 to N)</code></td>
+<td>Bus N+1 bits, LSB en premier</td>
+<td><code>addr : out bits(0 to 15)</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="directions">Directions</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Direction</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>in</code></td>
+<td>Entrée (lecture seule)</td>
+</tr>
+<tr class="even">
+<td><code>out</code></td>
+<td>Sortie (écriture seule)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="déclaration-darchitecture">3. Déclaration d’Architecture</h2>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="cf">architecture</span> <span class="dv">rtl</span> <span class="kw">of</span> <span class="fu">And2</span> <span class="kw">is</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Signaux internes</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> temp <span class="ot">:</span> <span class="dt">bit</span>;</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> bus_data <span class="ot">:</span> bits(<span class="dv">7</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Déclaration de composants</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">component</span> <span class="dv">Nand</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">port</span>(a <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; b <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; y <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span>);</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end component;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Corps de l&#39;architecture</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="cf">end architecture;</span></span></code></pre></div>
+<hr />
+<h2 id="littéraux">4. Littéraux</h2>
+<h3 id="bit-simple">Bit Simple</h3>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bn">&#39;0&#39;</span>    <span class="co">-- bit à 0</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bn">&#39;1&#39;</span>    <span class="co">-- bit à 1</span></span></code></pre></div>
+<h3 id="vecteurs-binaires">Vecteurs Binaires</h3>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>b<span class="st">&quot;0101&quot;</span>        <span class="co">-- 4 bits : 0101</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>b<span class="st">&quot;11001010&quot;</span>    <span class="co">-- 8 bits</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>b<span class="st">&quot;0000_0000&quot;</span>   <span class="co">-- underscores autorisés (lisibilité)</span></span></code></pre></div>
+<h3 id="vecteurs-hexadécimaux">Vecteurs Hexadécimaux</h3>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>x<span class="st">&quot;2A&quot;</span>          <span class="co">-- 8 bits  : 00101010</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>x<span class="st">&quot;FF&quot;</span>          <span class="co">-- 8 bits  : 11111111</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>x<span class="st">&quot;DEAD_BEEF&quot;</span>   <span class="co">-- 32 bits</span></span></code></pre></div>
+<h3 id="entiers">Entiers</h3>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dv">42</span>             <span class="co">-- décimal</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="dv">0x2A</span>           <span class="co">-- hexadécimal</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="dv">0</span>b101010       <span class="co">-- binaire</span></span></code></pre></div>
+<p><strong>Important</strong> : Les guillemets doubles (<code>"</code>)
+sont obligatoires pour <code>b"..."</code> et <code>x"..."</code>.</p>
+<hr />
+<h2 id="opérateurs">5. Opérateurs</h2>
+<h3 id="opérateurs-logiques-bit-à-bit">Opérateurs Logiques (bit à
+bit)</h3>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>a <span class="kw">and</span> b        <span class="co">-- ET logique</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>a <span class="kw">or</span> b         <span class="co">-- OU logique</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>a <span class="kw">xor</span> b        <span class="co">-- OU exclusif</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">not</span> a          <span class="co">-- NON logique</span></span></code></pre></div>
+<h3 id="précédence-des-opérateurs-logiques">Précédence des Opérateurs
+Logiques</h3>
+<p>Du plus prioritaire au moins prioritaire :</p>
+<table>
+<thead>
+<tr class="header">
+<th>Priorité</th>
+<th>Opérateur</th>
+<th>Exemple</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1 (haute)</td>
+<td><code>not</code></td>
+<td><code>not a</code></td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><code>and</code></td>
+<td><code>a and b</code></td>
+</tr>
+<tr class="odd">
+<td>3 (basse)</td>
+<td><code>or</code>, <code>xor</code></td>
+<td><code>a or b</code></td>
+</tr>
+</tbody>
+</table>
+<p>Utilisez des <strong>parenthèses</strong> pour rendre l’intention
+explicite :</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Expressions complexes : parenthèses recommandées</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;=</span> (a <span class="kw">and</span> b) <span class="kw">or</span> (c <span class="kw">and</span> d);</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- not s&#39;applique au terme immédiat</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;=</span> <span class="kw">not</span> a <span class="kw">and</span> b;          <span class="co">-- signifie (not a) and b</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;=</span> <span class="kw">not</span> (a <span class="kw">and</span> b);        <span class="co">-- signifie not(a and b)</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- Chaînage de and (même précédence, évalué gauche à droite)</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;=</span> a <span class="kw">and</span> b <span class="kw">and</span> c;</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- Expressions multi-termes avec groupement</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co">-- Exemple : calcul d&#39;overflow pour la soustraction</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>v_sub <span class="ot">&lt;=</span> (a(<span class="dv">15</span>) <span class="kw">and</span> <span class="kw">not</span> b(<span class="dv">15</span>) <span class="kw">and</span> <span class="kw">not</span> result(<span class="dv">15</span>))</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>      <span class="kw">or</span> (<span class="kw">not</span> a(<span class="dv">15</span>) <span class="kw">and</span> b(<span class="dv">15</span>) <span class="kw">and</span> result(<span class="dv">15</span>));</span></code></pre></div>
+<p><strong>Conseil</strong> : Quand une expression mélange
+<code>and</code> et <code>or</code>, toujours utiliser des parenthèses
+pour éviter les erreurs.</p>
+<h3 id="opérateurs-arithmétiques">Opérateurs Arithmétiques</h3>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>a <span class="ot">+</span> b          <span class="co">-- Addition</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>a <span class="ot">-</span> b          <span class="co">-- Soustraction</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ot">-</span>a             <span class="co">-- Négation</span></span></code></pre></div>
+<h3 id="opérateurs-de-décalage">Opérateurs de Décalage</h3>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>a <span class="ot">&lt;&lt;</span> <span class="dv">2</span>         <span class="co">-- Décalage gauche de 2</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>a <span class="ot">&gt;&gt;</span> <span class="dv">1</span>         <span class="co">-- Décalage droite de 1</span></span></code></pre></div>
+<h3 id="concaténation">Concaténation</h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>a <span class="ot">&amp;</span> b          <span class="co">-- Concatène a (MSB) et b (LSB)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>x<span class="st">&quot;00&quot;</span> <span class="ot">&amp;</span> data   <span class="co">-- Préfixe 8 zéros</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&amp;</span> <span class="bn">&#39;0&#39;</span>     <span class="co">-- Suffixe un zéro</span></span></code></pre></div>
+<h3 id="opérateurs-de-comparaison">Opérateurs de Comparaison</h3>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>a <span class="ot">=</span> b          <span class="co">-- Égalité</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>a <span class="ot">/=</span> b         <span class="co">-- Différence (aussi &lt;&gt;)</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>a <span class="ot">&lt;</span> b          <span class="co">-- Inférieur (non-signé)</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>a <span class="ot">&lt;=</span> b         <span class="co">-- Inférieur ou égal</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>a <span class="ot">&gt;</span> b          <span class="co">-- Supérieur</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>a <span class="ot">&gt;=</span> b         <span class="co">-- Supérieur ou égal</span></span></code></pre></div>
+<hr />
+<h2 id="affectations-concurrentes">6. Affectations Concurrentes</h2>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Affectation simple</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;=</span> a <span class="kw">and</span> b;</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">-- Affectation avec sélection de bits</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>result(<span class="dv">7</span> <span class="ot">downto</span> <span class="dv">0</span>) <span class="ot">&lt;=</span> data(<span class="dv">15</span> <span class="ot">downto</span> <span class="dv">8</span>);</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co">-- Affectation avec concaténation</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>output <span class="ot">&lt;=</span> x<span class="st">&quot;00&quot;</span> <span class="ot">&amp;</span> input(<span class="dv">7</span> <span class="ot">downto</span> <span class="dv">0</span>);</span></code></pre></div>
+<p><strong>Règle importante</strong> : Chaque signal ne peut avoir qu’UN
+SEUL driver (une seule affectation).</p>
+<hr />
+<h2 id="instanciation-de-composants">7. Instanciation de Composants</h2>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Syntaxe</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">label</span><span class="ot">:</span> NomComposant <span class="kw">port</span> <span class="kw">map</span> (</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  port1 <span class="ot">=&gt;</span> signal1<span class="ot">,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  port2 <span class="ot">=&gt;</span> signal2<span class="ot">,</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">...</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- Exemple</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>u_add<span class="ot">:</span> Add32 <span class="kw">port</span> <span class="kw">map</span> (</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">=&gt;</span> operand_a<span class="ot">,</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  b <span class="ot">=&gt;</span> operand_b<span class="ot">,</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  cin <span class="ot">=&gt;</span> <span class="bn">&#39;0&#39;</span><span class="ot">,</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  y <span class="ot">=&gt;</span> result<span class="ot">,</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  cout <span class="ot">=&gt;</span> carry</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<p><strong>Règles</strong> : - Le label est obligatoire et unique - Tous
+les ports doivent être mappés - Le mapping est par nom (pas
+positionnel)</p>
+<hr />
+<h2 id="sélection-de-bits">8. Sélection de Bits</h2>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>data           <span class="co">-- Signal complet</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>data(<span class="dv">5</span>)        <span class="co">-- Bit 5 uniquement</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>data(<span class="dv">7</span> <span class="ot">downto</span> <span class="dv">0</span>)   <span class="co">-- Bits 7 à 0 (8 bits)</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>data(<span class="dv">15</span> <span class="ot">downto</span> <span class="dv">8</span>)  <span class="co">-- Bits 15 à 8 (8 bits)</span></span></code></pre></div>
+<hr />
+<h2 id="logique-séquentielle-processus">9. Logique Séquentielle
+(Processus)</h2>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">process</span>(clk)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">begin</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">if</span> <span class="kw">rising_edge</span>(clk) <span class="kw">then</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- Logique synchrone</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    q <span class="ot">&lt;=</span> d;</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">end</span> <span class="kw">if</span>;</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span> <span class="kw">process</span>;</span></code></pre></div>
+<h3 id="registre-avec-reset">Registre avec Reset</h3>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">process</span>(clk)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">begin</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">if</span> <span class="kw">rising_edge</span>(clk) <span class="kw">then</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> reset <span class="ot">=</span> <span class="bn">&#39;1&#39;</span> <span class="kw">then</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>      q <span class="ot">&lt;=</span> b<span class="st">&quot;00000000&quot;</span>;</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">elsif</span> load <span class="ot">=</span> <span class="bn">&#39;1&#39;</span> <span class="kw">then</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>      q <span class="ot">&lt;=</span> d;</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span> <span class="kw">if</span>;</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">end</span> <span class="kw">if</span>;</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span> <span class="kw">process</span>;</span></code></pre></div>
+<h3 id="instruction-case">Instruction Case</h3>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">process</span>(clk)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">begin</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">if</span> <span class="kw">rising_edge</span>(clk) <span class="kw">then</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">case</span> state <span class="kw">is</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>      <span class="kw">when</span> b<span class="st">&quot;00&quot;</span> <span class="ot">=&gt;</span> next_state <span class="ot">&lt;=</span> b<span class="st">&quot;01&quot;</span>;</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>      <span class="kw">when</span> b<span class="st">&quot;01&quot;</span> <span class="ot">=&gt;</span> next_state <span class="ot">&lt;=</span> b<span class="st">&quot;10&quot;</span>;</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>      <span class="kw">when</span> <span class="ot">others</span> <span class="ot">=&gt;</span> next_state <span class="ot">&lt;=</span> b<span class="st">&quot;00&quot;</span>;</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">end</span> <span class="kw">case</span>;</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">end</span> <span class="kw">if</span>;</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span> <span class="kw">process</span>;</span></code></pre></div>
+<hr />
+<h2 id="fonctions-supportées">10. Fonctions Supportées</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Fonction</th>
+<th>Description</th>
+<th>Exemple</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>rising_edge(clk)</code></td>
+<td>Détecte front montant</td>
+<td><code>if rising_edge(clk)</code></td>
+</tr>
+<tr class="even">
+<td><code>resize(expr, N)</code></td>
+<td>Extension zéro à N bits</td>
+<td><code>resize(val, 32)</code></td>
+</tr>
+<tr class="odd">
+<td><code>sresize(expr, N)</code></td>
+<td>Extension signée à N bits</td>
+<td><code>sresize(val, 32)</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="exemple-complet">11. Exemple Complet</h2>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Registre 8 bits avec load et reset</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="cf">entity</span> <span class="dv">Register8</span> <span class="kw">is</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">port</span>(</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    clk   <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    reset <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    load  <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>;</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    d     <span class="ot">:</span> <span class="kw">in</span> bits(<span class="dv">7</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    q     <span class="ot">:</span> <span class="kw">out</span> bits(<span class="dv">7</span> <span class="ot">downto</span> <span class="dv">0</span>)</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  );</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="cf">end entity;</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="cf">architecture</span> <span class="dv">rtl</span> <span class="kw">of</span> <span class="fu">Register8</span> <span class="kw">is</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> reg <span class="ot">:</span> bits(<span class="dv">7</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="cf">begin</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>  <span class="sc">process</span>(clk)</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>  <span class="sc">begin</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">rising_edge</span>(clk) <span class="cf">then</span></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>      <span class="cf">if</span> reset <span class="ot">=</span> <span class="bn">&#39;1&#39;</span> <span class="cf">then</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>        reg <span class="ot">&lt;=</span> x<span class="st">&quot;00&quot;</span>;</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>      <span class="cf">elsif</span> load <span class="ot">=</span> <span class="bn">&#39;1&#39;</span> <span class="cf">then</span></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>        reg <span class="ot">&lt;=</span> d;</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>      <span class="cf">end if;</span></span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">end if;</span></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>  <span class="sc">end process;</span></span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>  q <span class="ot">&lt;=</span> reg;</span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a><span class="cf">end architecture;</span></span></code></pre></div>
+<hr />
+<h2 id="erreurs-courantes">12. Erreurs Courantes</h2>
+<table>
+<colgroup>
+<col style="width: 32%" />
+<col style="width: 28%" />
+<col style="width: 40%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Erreur</th>
+<th>Cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>unexpected character</code></td>
+<td>Littéral mal formaté</td>
+<td>Utiliser <code>b"..."</code> ou <code>x"..."</code></td>
+</tr>
+<tr class="even">
+<td><code>multiple drivers</code></td>
+<td>Signal affecté plusieurs fois</td>
+<td>Une seule affectation par signal</td>
+</tr>
+<tr class="odd">
+<td><code>expected port direction</code></td>
+<td>Direction manquante</td>
+<td>Ajouter <code>in</code> ou <code>out</code></td>
+</tr>
+<tr class="even">
+<td><code>invalid bit literal</code></td>
+<td>Mauvaises quotes</td>
+<td>Utiliser <code>'0'</code> pas <code>"0"</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="limitations">13. Limitations</h2>
+<p>Ce qui n’est <strong>PAS</strong> supporté :</p>
+<ul>
+<li>Logique asynchrone (sensibilité niveau)</li>
+<li>Instructions <code>wait</code></li>
+<li>Instructions <code>generate</code></li>
+<li>Génériques (<code>generic</code>)</li>
+<li>Variables (seulement <code>signal</code>)</li>
+<li>Types <code>record</code> ou tableaux complexes</li>
+<li>Fonctions/procédures utilisateur</li>
+<li>Attributs (<code>'length</code>, <code>'range</code>)</li>
+</ul>
+<hr />
+<h2 id="bonnes-pratiques">14. Bonnes Pratiques</h2>
+<ol type="1">
+<li><strong>Un fichier = une entité</strong> (convention)</li>
+<li><strong>Noms explicites</strong> : <code>counter_reg</code> pas
+<code>cr</code></li>
+<li><strong>Commentaires</strong> : Documenter les interfaces</li>
+<li><strong>Initialisation</strong> : Toujours initialiser les
+registres</li>
+<li><strong>Reset synchrone</strong> : Préférer au reset asynchrone</li>
+</ol>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- BON</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="ot">signal</span> counter <span class="ot">:</span> bits(<span class="dv">7</span> <span class="ot">downto</span> <span class="dv">0</span>) <span class="ot">:=</span> x<span class="st">&quot;00&quot;</span>;</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- ÉVITER</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="ot">signal</span> x <span class="ot">:</span> bits(<span class="dv">7</span> <span class="ot">downto</span> <span class="dv">0</span>);  <span class="co">-- Non initialisé</span></span></code></pre></div>
+</body>
+</html>
