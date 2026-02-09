@@ -857,6 +857,67 @@ end architecture;
 
 ---
 
+### Mux16Way32
+
+```vhdl
+-- 16-way 32-bit Multiplexer
+entity Mux16Way32 is
+  port(
+    r0  : in bits(31 downto 0);
+    r1  : in bits(31 downto 0);
+    r2  : in bits(31 downto 0);
+    r3  : in bits(31 downto 0);
+    r4  : in bits(31 downto 0);
+    r5  : in bits(31 downto 0);
+    r6  : in bits(31 downto 0);
+    r7  : in bits(31 downto 0);
+    r8  : in bits(31 downto 0);
+    r9  : in bits(31 downto 0);
+    r10 : in bits(31 downto 0);
+    r11 : in bits(31 downto 0);
+    r12 : in bits(31 downto 0);
+    r13 : in bits(31 downto 0);
+    r14 : in bits(31 downto 0);
+    r15 : in bits(31 downto 0);
+    sel : in bits(3 downto 0);
+    y   : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Mux16Way32 is
+  component Mux8Way16
+    port(a,b,c,d,e,f,g,h : in bits(15 downto 0); sel : in bits(2 downto 0); y : out bits(15 downto 0));
+  end component;
+  component Mux16
+    port(a,b : in bits(15 downto 0); sel : in bit; y : out bits(15 downto 0));
+  end component;
+  signal lo_07, lo_815, hi_07, hi_815 : bits(15 downto 0);
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  u_lo_07: Mux8Way16 port map (
+    a => r0(15 downto 0), b => r1(15 downto 0), c => r2(15 downto 0), d => r3(15 downto 0),
+    e => r4(15 downto 0), f => r5(15 downto 0), g => r6(15 downto 0), h => r7(15 downto 0),
+    sel => sel(2 downto 0), y => lo_07);
+  u_lo_815: Mux8Way16 port map (
+    a => r8(15 downto 0), b => r9(15 downto 0), c => r10(15 downto 0), d => r11(15 downto 0),
+    e => r12(15 downto 0), f => r13(15 downto 0), g => r14(15 downto 0), h => r15(15 downto 0),
+    sel => sel(2 downto 0), y => lo_815);
+  u_lo: Mux16 port map (a => lo_07, b => lo_815, sel => sel(3), y => y_lo);
+  u_hi_07: Mux8Way16 port map (
+    a => r0(31 downto 16), b => r1(31 downto 16), c => r2(31 downto 16), d => r3(31 downto 16),
+    e => r4(31 downto 16), f => r5(31 downto 16), g => r6(31 downto 16), h => r7(31 downto 16),
+    sel => sel(2 downto 0), y => hi_07);
+  u_hi_815: Mux8Way16 port map (
+    a => r8(31 downto 16), b => r9(31 downto 16), c => r10(31 downto 16), d => r11(31 downto 16),
+    e => r12(31 downto 16), f => r13(31 downto 16), g => r14(31 downto 16), h => r15(31 downto 16),
+    sel => sel(2 downto 0), y => hi_815);
+  u_hi: Mux16 port map (a => hi_07, b => hi_815, sel => sel(3), y => y_hi);
+  y <= y_hi & y_lo;
+end architecture;
+```
+
+---
+
 ### Add32
 
 ```vhdl
@@ -1209,6 +1270,33 @@ end architecture;
 
 ---
 
+### Register32
+
+```vhdl
+-- 32-bit Register
+entity Register32 is
+  port(
+    clk  : in bit;
+    d    : in bits(31 downto 0);
+    load : in bit;
+    q    : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Register32 is
+  component Register16
+    port(clk : in bit; d : in bits(15 downto 0); load : in bit; q : out bits(15 downto 0));
+  end component;
+  signal q_lo, q_hi : bits(15 downto 0);
+begin
+  u_lo: Register16 port map (clk => clk, d => d(15 downto 0), load => load, q => q_lo);
+  u_hi: Register16 port map (clk => clk, d => d(31 downto 16), load => load, q => q_hi);
+  q <= q_hi & q_lo;
+end architecture;
+```
+
+---
+
 ### PC
 
 ```vhdl
@@ -1254,6 +1342,57 @@ begin
   -- Always load the register
   do_load <= inc or load or reset;
   u_reg: Register16 port map (clk => clk, d => mux3_out, load => do_load, q => q_int);
+
+  q <= q_int;
+end architecture;
+```
+
+---
+
+### PC32
+
+```vhdl
+-- 32-bit Program Counter
+entity PC32 is
+  port(
+    clk   : in bit;
+    d     : in bits(31 downto 0);
+    inc   : in bit;
+    load  : in bit;
+    reset : in bit;
+    q     : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of PC32 is
+  component Register32
+    port(clk : in bit; d : in bits(31 downto 0); load : in bit; q : out bits(31 downto 0));
+  end component;
+  component Add32
+    port(a,b : in bits(31 downto 0); cin : in bit; y : out bits(31 downto 0); cout : out bit);
+  end component;
+  component Mux32
+    port(a,b : in bits(31 downto 0); sel : in bit; y : out bits(31 downto 0));
+  end component;
+  signal q_int, inc_out : bits(31 downto 0);
+  signal mux1_out, mux2_out, mux3_out : bits(31 downto 0);
+  signal four32, zero32 : bits(31 downto 0);
+  signal unused_cout : bit;
+  signal do_load : bit;
+begin
+  four32 <= x"00000004";
+  zero32 <= x"00000000";
+
+  -- Increment by 4 (32-bit instructions = 4 bytes)
+  u_add: Add32 port map (a => q_int, b => four32, cin => '0', y => inc_out, cout => unused_cout);
+
+  -- Priority: reset > load > inc
+  u_mux1: Mux32 port map (a => q_int, b => inc_out, sel => inc, y => mux1_out);
+  u_mux2: Mux32 port map (a => mux1_out, b => d, sel => load, y => mux2_out);
+  u_mux3: Mux32 port map (a => mux2_out, b => zero32, sel => reset, y => mux3_out);
+
+  do_load <= inc or load or reset;
+  u_reg: Register32 port map (clk => clk, d => mux3_out, load => do_load, q => q_int);
 
   q <= q_int;
 end architecture;
@@ -1438,6 +1577,79 @@ end architecture;
 
 ---
 
+### RegFile32
+
+```vhdl
+-- 16-Register File (32-bit) with 2 independent read ports
+entity RegFile32 is
+  port(
+    clk   : in bit;
+    we    : in bit;
+    waddr : in bits(3 downto 0);
+    wdata : in bits(31 downto 0);
+    raddr1: in bits(3 downto 0);
+    raddr2: in bits(3 downto 0);
+    rdata1: out bits(31 downto 0);
+    rdata2: out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of RegFile32 is
+  component Register32
+    port(clk : in bit; d : in bits(31 downto 0); load : in bit; q : out bits(31 downto 0));
+  end component;
+  component DMux8Way
+    port(x : in bit; sel : in bits(2 downto 0); a,b,c,d,e,f,g,h : out bit);
+  end component;
+  component DMux
+    port(x : in bit; sel : in bit; a,b : out bit);
+  end component;
+  component Mux16Way32
+    port(r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r13,r14,r15 : in bits(31 downto 0);
+         sel : in bits(3 downto 0); y : out bits(31 downto 0));
+  end component;
+  signal we_lo, we_hi : bit;
+  signal we0,we1,we2,we3,we4,we5,we6,we7 : bit;
+  signal we8,we9,we10,we11,we12,we13,we14,we15 : bit;
+  signal r0,r1,r2,r3,r4,r5,r6,r7 : bits(31 downto 0);
+  signal r8,r9,r10,r11,r12,r13,r14,r15 : bits(31 downto 0);
+begin
+  u_we_split: DMux port map (x => we, sel => waddr(3), a => we_lo, b => we_hi);
+  u_we_lo: DMux8Way port map (x => we_lo, sel => waddr(2 downto 0),
+    a => we0, b => we1, c => we2, d => we3, e => we4, f => we5, g => we6, h => we7);
+  u_we_hi: DMux8Way port map (x => we_hi, sel => waddr(2 downto 0),
+    a => we8, b => we9, c => we10, d => we11, e => we12, f => we13, g => we14, h => we15);
+
+  reg0:  Register32 port map (clk => clk, d => wdata, load => we0, q => r0);
+  reg1:  Register32 port map (clk => clk, d => wdata, load => we1, q => r1);
+  reg2:  Register32 port map (clk => clk, d => wdata, load => we2, q => r2);
+  reg3:  Register32 port map (clk => clk, d => wdata, load => we3, q => r3);
+  reg4:  Register32 port map (clk => clk, d => wdata, load => we4, q => r4);
+  reg5:  Register32 port map (clk => clk, d => wdata, load => we5, q => r5);
+  reg6:  Register32 port map (clk => clk, d => wdata, load => we6, q => r6);
+  reg7:  Register32 port map (clk => clk, d => wdata, load => we7, q => r7);
+  reg8:  Register32 port map (clk => clk, d => wdata, load => we8, q => r8);
+  reg9:  Register32 port map (clk => clk, d => wdata, load => we9, q => r9);
+  reg10: Register32 port map (clk => clk, d => wdata, load => we10, q => r10);
+  reg11: Register32 port map (clk => clk, d => wdata, load => we11, q => r11);
+  reg12: Register32 port map (clk => clk, d => wdata, load => we12, q => r12);
+  reg13: Register32 port map (clk => clk, d => wdata, load => we13, q => r13);
+  reg14: Register32 port map (clk => clk, d => wdata, load => we14, q => r14);
+  reg15: Register32 port map (clk => clk, d => wdata, load => we15, q => r15);
+
+  u_rd1: Mux16Way32 port map (
+    r0=>r0, r1=>r1, r2=>r2, r3=>r3, r4=>r4, r5=>r5, r6=>r6, r7=>r7,
+    r8=>r8, r9=>r9, r10=>r10, r11=>r11, r12=>r12, r13=>r13, r14=>r14, r15=>r15,
+    sel => raddr1, y => rdata1);
+  u_rd2: Mux16Way32 port map (
+    r0=>r0, r1=>r1, r2=>r2, r3=>r3, r4=>r4, r5=>r5, r6=>r6, r7=>r7,
+    r8=>r8, r9=>r9, r10=>r10, r11=>r11, r12=>r12, r13=>r13, r14=>r14, r15=>r15,
+    sel => raddr2, y => rdata2);
+end architecture;
+```
+
+---
+
 ### Decoder
 
 ```vhdl
@@ -1495,6 +1707,61 @@ end architecture;
 
 ---
 
+### Decoder32
+
+```vhdl
+-- 32-bit Instruction Decoder (A32-Lite)
+entity Decoder32 is
+  port(
+    instr     : in bits(31 downto 0);
+    alu_op    : out bits(3 downto 0);
+    alu_src   : out bit;
+    reg_write : out bit;
+    mem_read  : out bit;
+    mem_write : out bit;
+    branch    : out bit;
+    set_flags : out bit;
+    mem_to_reg: out bit
+  );
+end entity;
+
+architecture rtl of Decoder32 is
+  signal class_bits : bits(2 downto 0);
+  signal is_alu_reg, is_alu_imm, is_alu : bit;
+  signal is_ldst, is_load, is_store : bit;
+  signal is_branch : bit;
+  signal is_cmp, is_tst, is_cmp_tst : bit;
+  signal alu_opcode : bits(3 downto 0);
+begin
+  class_bits <= instr(27 downto 25);
+  alu_opcode <= instr(24 downto 21);
+
+  is_alu_reg <= (class_bits = 0b000);
+  is_alu_imm <= (class_bits = 0b001);
+  is_alu <= is_alu_reg or is_alu_imm;
+  is_ldst <= (class_bits = 0b010);
+  is_branch <= (class_bits = 0b011);
+
+  is_load <= is_ldst and instr(24);
+  is_store <= is_ldst and (not instr(24));
+
+  is_cmp <= is_alu and (alu_opcode = 0b0111);
+  is_tst <= is_alu and (alu_opcode = 0b1000);
+  is_cmp_tst <= is_cmp or is_tst;
+
+  alu_op <= alu_opcode;
+  alu_src <= is_alu_imm;
+  reg_write <= (is_alu and (not is_cmp_tst)) or is_load;
+  mem_read <= is_load;
+  mem_write <= is_store;
+  mem_to_reg <= is_load;
+  branch <= is_branch;
+  set_flags <= (instr(20) and is_alu) or is_cmp_tst;
+end architecture;
+```
+
+---
+
 ### CondCheck
 
 ```vhdl
@@ -1538,6 +1805,82 @@ begin
   mux0: Mux port map (a => eq_result, b => ne_result, sel => cond(0), y => sel0);
   mux1: Mux port map (a => lt_result, b => ge_result, sel => cond(0), y => sel1);
   mux2: Mux port map (a => sel0, b => sel1, sel => cond(1), y => take);
+end architecture;
+```
+
+---
+
+### CondCheck32
+
+```vhdl
+-- Full Condition Checker (16 ARM conditions)
+entity CondCheck32 is
+  port(
+    cond  : in bits(3 downto 0);
+    zero  : in bit;
+    neg   : in bit;
+    carry : in bit;
+    ovf   : in bit;
+    take  : out bit
+  );
+end entity;
+
+architecture rtl of CondCheck32 is
+  component Mux
+    port(a,b : in bit; sel : in bit; y : out bit);
+  end component;
+  signal not_zero, not_carry, not_neg, not_ovf : bit;
+  signal n_xor_v, not_n_xor_v : bit;
+  signal eq_val, ne_val, cs_val, cc_val : bit;
+  signal mi_val, pl_val, vs_val, vc_val : bit;
+  signal hi_val, ls_val, ge_val, lt_val : bit;
+  signal gt_val, le_val, al_val, nv_val : bit;
+  signal s01, s23, s45, s67, s89, sAB, sCD, sEF : bit;
+  signal s0123, s4567, s89AB, sCDEF : bit;
+  signal s_lo, s_hi : bit;
+begin
+  not_zero <= not zero;
+  not_carry <= not carry;
+  not_neg <= not neg;
+  not_ovf <= not ovf;
+  n_xor_v <= neg xor ovf;
+  not_n_xor_v <= not n_xor_v;
+
+  eq_val <= zero;
+  ne_val <= not_zero;
+  cs_val <= carry;
+  cc_val <= not_carry;
+  mi_val <= neg;
+  pl_val <= not_neg;
+  vs_val <= ovf;
+  vc_val <= not_ovf;
+  hi_val <= carry and not_zero;
+  ls_val <= not_carry or zero;
+  ge_val <= not_n_xor_v;
+  lt_val <= n_xor_v;
+  gt_val <= not_zero and not_n_xor_v;
+  le_val <= zero or n_xor_v;
+  al_val <= '1';
+  nv_val <= '0';
+
+  m01: Mux port map (a => eq_val, b => ne_val, sel => cond(0), y => s01);
+  m23: Mux port map (a => cs_val, b => cc_val, sel => cond(0), y => s23);
+  m45: Mux port map (a => mi_val, b => pl_val, sel => cond(0), y => s45);
+  m67: Mux port map (a => vs_val, b => vc_val, sel => cond(0), y => s67);
+  m89: Mux port map (a => hi_val, b => ls_val, sel => cond(0), y => s89);
+  mAB: Mux port map (a => ge_val, b => lt_val, sel => cond(0), y => sAB);
+  mCD: Mux port map (a => gt_val, b => le_val, sel => cond(0), y => sCD);
+  mEF: Mux port map (a => al_val, b => nv_val, sel => cond(0), y => sEF);
+
+  m0123: Mux port map (a => s01, b => s23, sel => cond(1), y => s0123);
+  m4567: Mux port map (a => s45, b => s67, sel => cond(1), y => s4567);
+  m89AB: Mux port map (a => s89, b => sAB, sel => cond(1), y => s89AB);
+  mCDEF: Mux port map (a => sCD, b => sEF, sel => cond(1), y => sCDEF);
+
+  m_lo: Mux port map (a => s0123, b => s4567, sel => cond(2), y => s_lo);
+  m_hi: Mux port map (a => s89AB, b => sCDEF, sel => cond(2), y => s_hi);
+
+  m_final: Mux port map (a => s_lo, b => s_hi, sel => cond(3), y => take);
 end architecture;
 ```
 
@@ -1599,6 +1942,72 @@ begin
 
   -- pc_src = branch AND condition_met
   u_and: And2 port map (a => branch_sig, b => cond_take, y => pc_src);
+end architecture;
+```
+
+---
+
+### Control32
+
+```vhdl
+-- 32-bit Control Unit (A32-Lite)
+entity Control32 is
+  port(
+    instr     : in bits(31 downto 0);
+    zero      : in bit;
+    neg       : in bit;
+    carry     : in bit;
+    ovf       : in bit;
+    alu_op    : out bits(3 downto 0);
+    alu_src   : out bit;
+    reg_write : out bit;
+    mem_read  : out bit;
+    mem_write : out bit;
+    branch    : out bit;
+    set_flags : out bit;
+    mem_to_reg: out bit
+  );
+end entity;
+
+architecture rtl of Control32 is
+  component Decoder32
+    port(instr : in bits(31 downto 0); alu_op : out bits(3 downto 0);
+         alu_src, reg_write, mem_read, mem_write, branch, set_flags, mem_to_reg : out bit);
+  end component;
+  component CondCheck32
+    port(cond : in bits(3 downto 0); zero, neg, carry, ovf : in bit; take : out bit);
+  end component;
+  component And2
+    port(a, b : in bit; y : out bit);
+  end component;
+  signal dec_reg_write, dec_mem_read, dec_mem_write : bit;
+  signal dec_branch, dec_set_flags, dec_mem_to_reg : bit;
+  signal cond_take : bit;
+begin
+  u_dec: Decoder32 port map (
+    instr => instr,
+    alu_op => alu_op,
+    alu_src => alu_src,
+    reg_write => dec_reg_write,
+    mem_read => dec_mem_read,
+    mem_write => dec_mem_write,
+    branch => dec_branch,
+    set_flags => dec_set_flags,
+    mem_to_reg => dec_mem_to_reg
+  );
+
+  u_cond: CondCheck32 port map (
+    cond => instr(31 downto 28),
+    zero => zero, neg => neg, carry => carry, ovf => ovf,
+    take => cond_take
+  );
+
+  u_rw: And2 port map (a => dec_reg_write, b => cond_take, y => reg_write);
+  u_mr: And2 port map (a => dec_mem_read, b => cond_take, y => mem_read);
+  u_mw: And2 port map (a => dec_mem_write, b => cond_take, y => mem_write);
+  u_br: And2 port map (a => dec_branch, b => cond_take, y => branch);
+  u_sf: And2 port map (a => dec_set_flags, b => cond_take, y => set_flags);
+  u_mt: And2 port map (a => dec_mem_to_reg, b => cond_take, y => mem_to_reg);
 end architecture;
 ```
 
