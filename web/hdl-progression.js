@@ -1985,7 +1985,9 @@ entity ALU is
     op   : in bits(1 downto 0);
     y    : out bits(15 downto 0);
     zero : out bit;
-    neg  : out bit
+    neg  : out bit;
+    carry : out bit;
+    overflow : out bit
   );
 end entity;
 
@@ -2009,13 +2011,15 @@ architecture rtl of ALU is
     port(a : in bits(7 downto 0); y : out bit);
   end component;
   signal r_and, r_or, r_add, r_sub, nb, result : bits(15 downto 0);
+  signal add_cout, sub_cout : bit;
+  signal v_add, v_sub : bit;
 begin
   -- YOUR CODE HERE
 end architecture;
 `,
         test: `// Test file for ALU (16-bit Arithmetic Logic Unit)
 // Operations: op=00: AND, op=01: OR, op=10: ADD, op=11: SUB
-// Flags: zero (result is 0), neg (result is negative/MSB set)
+// Flags: zero (result is 0), neg (result is negative/MSB set), carry, overflow
 
 load ALU
 
@@ -2027,6 +2031,8 @@ eval
 expect y 0x000F
 expect zero 0
 expect neg 0
+expect carry 0
+expect overflow 0
 
 set a 0xFFFF
 set b 0xFFFF
@@ -2035,6 +2041,8 @@ eval
 expect y 0xFFFF
 expect zero 0
 expect neg 1
+expect carry 0
+expect overflow 0
 
 set a 0xAAAA
 set b 0x5555
@@ -2043,6 +2051,8 @@ eval
 expect y 0x0000
 expect zero 1
 expect neg 0
+expect carry 0
+expect overflow 0
 
 // ========== OR (op=01) ==========
 set a 0x00FF
@@ -2052,6 +2062,8 @@ eval
 expect y 0x0FFF
 expect zero 0
 expect neg 0
+expect carry 0
+expect overflow 0
 
 set a 0xAAAA
 set b 0x5555
@@ -2060,6 +2072,8 @@ eval
 expect y 0xFFFF
 expect zero 0
 expect neg 1
+expect carry 0
+expect overflow 0
 
 set a 0x0000
 set b 0x0000
@@ -2068,6 +2082,8 @@ eval
 expect y 0x0000
 expect zero 1
 expect neg 0
+expect carry 0
+expect overflow 0
 
 // ========== ADD (op=10) ==========
 set a 0x0001
@@ -2077,6 +2093,8 @@ eval
 expect y 0x0003
 expect zero 0
 expect neg 0
+expect carry 0
+expect overflow 0
 
 set a 0x0000
 set b 0x0000
@@ -2085,6 +2103,8 @@ eval
 expect y 0x0000
 expect zero 1
 expect neg 0
+expect carry 0
+expect overflow 0
 
 set a 0xFFFF
 set b 0x0001
@@ -2093,6 +2113,8 @@ eval
 expect y 0x0000
 expect zero 1
 expect neg 0
+expect carry 1
+expect overflow 0
 
 set a 0x7FFF
 set b 0x0001
@@ -2101,6 +2123,8 @@ eval
 expect y 0x8000
 expect zero 0
 expect neg 1
+expect carry 0
+expect overflow 1
 
 set a 0x1234
 set b 0x5678
@@ -2109,6 +2133,8 @@ eval
 expect y 0x68AC
 expect zero 0
 expect neg 0
+expect carry 0
+expect overflow 0
 
 // ========== SUB (op=11) ==========
 set a 0x0003
@@ -2118,6 +2144,8 @@ eval
 expect y 0x0002
 expect zero 0
 expect neg 0
+expect carry 1
+expect overflow 0
 
 set a 0x0001
 set b 0x0001
@@ -2126,6 +2154,8 @@ eval
 expect y 0x0000
 expect zero 1
 expect neg 0
+expect carry 1
+expect overflow 0
 
 set a 0x0001
 set b 0x0002
@@ -2134,6 +2164,8 @@ eval
 expect y 0xFFFF
 expect zero 0
 expect neg 1
+expect carry 0
+expect overflow 0
 
 set a 0x0000
 set b 0x0001
@@ -2142,6 +2174,8 @@ eval
 expect y 0xFFFF
 expect zero 0
 expect neg 1
+expect carry 0
+expect overflow 0
 
 set a 0x5678
 set b 0x1234
@@ -2150,6 +2184,8 @@ eval
 expect y 0x4444
 expect zero 0
 expect neg 0
+expect carry 1
+expect overflow 0
 
 // ========== Edge cases ==========
 // Large positive - large positive
@@ -2160,6 +2196,8 @@ eval
 expect y 0x0000
 expect zero 1
 expect neg 0
+expect carry 1
+expect overflow 0
 
 // Test all operations with same inputs
 set a 0x1234
@@ -2168,18 +2206,26 @@ set b 0x00FF
 set op 0b00
 eval
 expect y 0x0034
+expect carry 0
+expect overflow 0
 
 set op 0b01
 eval
 expect y 0x12FF
+expect carry 0
+expect overflow 0
 
 set op 0b10
 eval
 expect y 0x1333
+expect carry 0
+expect overflow 0
 
 set op 0b11
 eval
-expect y 0x1135`,
+expect y 0x1135
+expect carry 1
+expect overflow 0`,
         solution: `-- 16-bit ALU
 -- op: 0=AND, 1=OR, 2=ADD, 3=SUB
 
@@ -2190,7 +2236,9 @@ entity ALU is
     op   : in bits(1 downto 0);
     y    : out bits(15 downto 0);
     zero : out bit;
-    neg  : out bit
+    neg  : out bit;
+    carry : out bit;
+    overflow : out bit
   );
 end entity;
 
@@ -2214,17 +2262,18 @@ architecture rtl of ALU is
     port(a : in bits(7 downto 0); y : out bit);
   end component;
   signal r_and, r_or, r_add, r_sub, nb, result : bits(15 downto 0);
-  signal unused_cout1, unused_cout2 : bit;
+  signal add_cout, sub_cout : bit;
+  signal v_add, v_sub : bit;
   signal or_lo, or_hi : bit;
 begin
   -- Compute all operations
   u_and: And16 port map (a => a, b => b, y => r_and);
   u_or: Or16 port map (a => a, b => b, y => r_or);
-  u_add: Add16 port map (a => a, b => b, cin => '0', sum => r_add, cout => unused_cout1);
+  u_add: Add16 port map (a => a, b => b, cin => '0', sum => r_add, cout => add_cout);
 
   -- SUB: a - b = a + (~b) + 1
   u_inv: Inv16 port map (a => b, y => nb);
-  u_sub: Add16 port map (a => a, b => nb, cin => '1', sum => r_sub, cout => unused_cout2);
+  u_sub: Add16 port map (a => a, b => nb, cin => '1', sum => r_sub, cout => sub_cout);
 
   -- Select result based on op
   u_mux: Mux4Way16 port map (a => r_and, b => r_or, c => r_add, d => r_sub, sel => op, y => result);
@@ -2239,6 +2288,18 @@ begin
 
   -- Negative flag: MSB of result
   neg <= result(15);
+
+  -- Carry flag
+  carry <= add_cout when op = b"10" else
+           sub_cout when op = b"11" else '0';
+
+  -- Overflow flag
+  v_add <= (a(15) and b(15) and not result(15))
+        or (not a(15) and not b(15) and result(15));
+  v_sub <= (a(15) and not b(15) and not result(15))
+        or (not a(15) and b(15) and result(15));
+  overflow <= v_add when op = b"10" else
+              v_sub when op = b"11" else '0';
 end architecture;
 `,
     },
@@ -4047,7 +4108,7 @@ architecture rtl of CPU is
   end component;
   component ALU
     port(a,b : in bits(15 downto 0); op : in bits(1 downto 0);
-         y : out bits(15 downto 0); zero,neg : out bit);
+         y : out bits(15 downto 0); zero,neg,carry,overflow : out bit);
   end component;
   component PC
     port(clk : in bit; d : in bits(15 downto 0); inc,load,reset : in bit; q : out bits(15 downto 0));
@@ -4095,7 +4156,7 @@ architecture rtl of CPU is
   end component;
   component ALU
     port(a,b : in bits(15 downto 0); op : in bits(1 downto 0);
-         y : out bits(15 downto 0); zero,neg : out bit);
+         y : out bits(15 downto 0); zero,neg,carry,overflow : out bit);
   end component;
   component PC
     port(clk : in bit; d : in bits(15 downto 0); inc,load,reset : in bit; q : out bits(15 downto 0));
@@ -4129,6 +4190,7 @@ architecture rtl of CPU is
   signal write_data, write_data_alu_mem : bits(15 downto 0);
   signal immediate : bits(15 downto 0);
   signal zero_flag, neg_flag : bit;
+  signal carry_flag, ovf_flag : bit;
   signal not_reset : bit;
   -- MOVI detection: opcode = 0110
   signal is_movi, not_op3, not_op0, movi_t1, movi_t2 : bit;
@@ -4170,7 +4232,8 @@ begin
   -- ALU
   u_alu: ALU port map (
     a => reg_data1, b => reg_data2, op => alu_op,
-    y => alu_result, zero => zero_flag, neg => neg_flag
+    y => alu_result, zero => zero_flag, neg => neg_flag,
+    carry => carry_flag, overflow => ovf_flag
   );
 
   -- Write back mux 1 (ALU result or memory)
