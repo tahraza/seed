@@ -1976,7 +1976,7 @@ expect diff 0xFFFF
         dependencies: ['Add16', 'And16', 'Or16', 'Inv16', 'Mux4Way16', 'Or8Way'],
         template: `-- 16-bit ALU
 -- op: 0=AND, 1=OR, 2=ADD, 3=SUB
--- flags: zero, negative
+-- flags: zero, negative, carry, overflow
 
 entity ALU is
   port(
