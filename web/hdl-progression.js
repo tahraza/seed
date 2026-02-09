@@ -1543,6 +1543,233 @@ end architecture;
 `,
     },
 
+    'Not32': {
+        project: 2,
+        name: 'Not32',
+        description: '32-bit inverter',
+        dependencies: ['Inv16'],
+        template: `-- 32-bit Inverter
+-- y = not a
+
+entity Not32 is
+  port(
+    a : in bits(31 downto 0);
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Not32 is
+  component Inv16
+    port(a : in bits(15 downto 0); y : out bits(15 downto 0));
+  end component;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  -- YOUR CODE HERE
+end architecture;
+`,
+        test: `// Test file for Not32 (32-bit inverter)
+
+load Not32
+
+set a 0x00000000
+eval
+expect y 0xFFFFFFFF
+
+set a 0xFFFFFFFF
+eval
+expect y 0x00000000
+
+set a 0x0000FFFF
+eval
+expect y 0xFFFF0000
+
+set a 0x12345678
+eval
+expect y 0xEDCBA987
+
+set a 0xAAAAAAAA
+eval
+expect y 0x55555555
+`,
+        solution: `-- 32-bit Inverter
+-- y = not a
+
+entity Not32 is
+  port(
+    a : in bits(31 downto 0);
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Not32 is
+  component Inv16
+    port(a : in bits(15 downto 0); y : out bits(15 downto 0));
+  end component;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  u_lo: Inv16 port map (a => a(15 downto 0), y => y_lo);
+  u_hi: Inv16 port map (a => a(31 downto 16), y => y_hi);
+  y <= y_hi & y_lo;
+end architecture;
+`,
+    },
+
+    'And32': {
+        project: 2,
+        name: 'And32',
+        description: '32-bit AND gate',
+        dependencies: ['And16'],
+        template: `-- 32-bit AND gate
+-- y = a and b
+
+entity And32 is
+  port(
+    a : in bits(31 downto 0);
+    b : in bits(31 downto 0);
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of And32 is
+  component And16
+    port(a,b : in bits(15 downto 0); y : out bits(15 downto 0));
+  end component;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  -- YOUR CODE HERE
+end architecture;
+`,
+        test: `// Test file for And32 (32-bit AND gate)
+
+load And32
+
+set a 0xFFFFFFFF
+set b 0xFFFFFFFF
+eval
+expect y 0xFFFFFFFF
+
+set a 0xFFFFFFFF
+set b 0x00000000
+eval
+expect y 0x00000000
+
+set a 0x0000FFFF
+set b 0x00FF00FF
+eval
+expect y 0x000000FF
+
+set a 0xAAAAAAAA
+set b 0x55555555
+eval
+expect y 0x00000000
+
+set a 0x12345678
+set b 0xFF00FF00
+eval
+expect y 0x12005600
+`,
+        solution: `-- 32-bit AND gate
+-- y = a and b
+
+entity And32 is
+  port(
+    a : in bits(31 downto 0);
+    b : in bits(31 downto 0);
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of And32 is
+  component And16
+    port(a,b : in bits(15 downto 0); y : out bits(15 downto 0));
+  end component;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  u_lo: And16 port map (a => a(15 downto 0), b => b(15 downto 0), y => y_lo);
+  u_hi: And16 port map (a => a(31 downto 16), b => b(31 downto 16), y => y_hi);
+  y <= y_hi & y_lo;
+end architecture;
+`,
+    },
+
+    'Or32': {
+        project: 2,
+        name: 'Or32',
+        description: '32-bit OR gate',
+        dependencies: ['Or16'],
+        template: `-- 32-bit OR gate
+-- y = a or b
+
+entity Or32 is
+  port(
+    a : in bits(31 downto 0);
+    b : in bits(31 downto 0);
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Or32 is
+  component Or16
+    port(a,b : in bits(15 downto 0); y : out bits(15 downto 0));
+  end component;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  -- YOUR CODE HERE
+end architecture;
+`,
+        test: `// Test file for Or32 (32-bit OR gate)
+
+load Or32
+
+set a 0x00000000
+set b 0x00000000
+eval
+expect y 0x00000000
+
+set a 0xFFFFFFFF
+set b 0x00000000
+eval
+expect y 0xFFFFFFFF
+
+set a 0x0000FFFF
+set b 0x00FF0000
+eval
+expect y 0x00FFFFFF
+
+set a 0xAAAAAAAA
+set b 0x55555555
+eval
+expect y 0xFFFFFFFF
+
+set a 0x12345678
+set b 0x00FF00FF
+eval
+expect y 0x12FF56FF
+`,
+        solution: `-- 32-bit OR gate
+-- y = a or b
+
+entity Or32 is
+  port(
+    a : in bits(31 downto 0);
+    b : in bits(31 downto 0);
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Or32 is
+  component Or16
+    port(a,b : in bits(15 downto 0); y : out bits(15 downto 0));
+  end component;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  u_lo: Or16 port map (a => a(15 downto 0), b => b(15 downto 0), y => y_lo);
+  u_hi: Or16 port map (a => a(31 downto 16), b => b(31 downto 16), y => y_hi);
+  y <= y_hi & y_lo;
+end architecture;
+`,
+    },
+
     // =========================================================================
     // Project 3: Arithmetic
     // =========================================================================
@@ -6299,8 +6526,8 @@ tock
 // Project order for display
 export const PROJECTS = [
     { id: 1, name: 'Portes Logiques', chips: ['Inv', 'And2', 'Or2', 'Xor2', 'Mux', 'DMux'] },
-    { id: 2, name: 'Multi-bits', chips: ['Inv16', 'And16', 'Or16', 'Mux16', 'Or8Way', 'Mux4Way16', 'Mux8Way16', 'DMux4Way', 'DMux8Way'] },
-    { id: 3, name: 'Arithmetique', chips: ['HalfAdder', 'FullAdder', 'Add16', 'Inc16', 'Sub16', 'ALU', 'And8', 'Mul8'] },
+    { id: 2, name: 'Multi-bits', chips: ['Inv16', 'And16', 'Or16', 'Mux16', 'Or8Way', 'Mux4Way16', 'Mux8Way16', 'DMux4Way', 'DMux8Way', 'Mux32', 'Not32', 'And32', 'Or32'] },
+    { id: 3, name: 'Arithmetique', chips: ['HalfAdder', 'FullAdder', 'Add16', 'Inc16', 'Sub16', 'ALU', 'Add32', 'ALU32', 'And8', 'Mul8'] },
     { id: 4, name: 'Sequentiel', chips: ['DFF1', 'BitReg', 'Register16', 'PC', 'RAM8', 'RAM64', 'RegFile'] },
     { id: 5, name: 'CPU', chips: ['Decoder', 'CondCheck', 'Control', 'CPU'] },
     { id: 6, name: 'CPU Pipeline', chips: ['IF_ID_Reg', 'HazardDetect', 'ForwardUnit', 'CPU_Pipeline'] },

@@ -745,6 +745,89 @@ end architecture;
 
 ---
 
+### Not32
+
+```vhdl
+-- 32-bit Inverter
+-- y = not a
+
+entity Not32 is
+  port(
+    a : in bits(31 downto 0);
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Not32 is
+  component Inv16
+    port(a : in bits(15 downto 0); y : out bits(15 downto 0));
+  end component;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  u_lo: Inv16 port map (a => a(15 downto 0), y => y_lo);
+  u_hi: Inv16 port map (a => a(31 downto 16), y => y_hi);
+  y <= y_hi & y_lo;
+end architecture;
+```
+
+---
+
+### And32
+
+```vhdl
+-- 32-bit AND gate
+-- y = a and b
+
+entity And32 is
+  port(
+    a : in bits(31 downto 0);
+    b : in bits(31 downto 0);
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of And32 is
+  component And16
+    port(a,b : in bits(15 downto 0); y : out bits(15 downto 0));
+  end component;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  u_lo: And16 port map (a => a(15 downto 0), b => b(15 downto 0), y => y_lo);
+  u_hi: And16 port map (a => a(31 downto 16), b => b(31 downto 16), y => y_hi);
+  y <= y_hi & y_lo;
+end architecture;
+```
+
+---
+
+### Or32
+
+```vhdl
+-- 32-bit OR gate
+-- y = a or b
+
+entity Or32 is
+  port(
+    a : in bits(31 downto 0);
+    b : in bits(31 downto 0);
+    y : out bits(31 downto 0)
+  );
+end entity;
+
+architecture rtl of Or32 is
+  component Or16
+    port(a,b : in bits(15 downto 0); y : out bits(15 downto 0));
+  end component;
+  signal y_lo, y_hi : bits(15 downto 0);
+begin
+  u_lo: Or16 port map (a => a(15 downto 0), b => b(15 downto 0), y => y_lo);
+  u_hi: Or16 port map (a => a(31 downto 16), b => b(31 downto 16), y => y_hi);
+  y <= y_hi & y_lo;
+end architecture;
+```
+
+---
+
 ### Mux32
 
 ```vhdl
