@@ -1027,10 +1027,10 @@ kbd {
     color: var(--accent);
 }
 
-/* Panel hiding */
-.main.hide-simulator .simulator-panel { display: none; }
-.main.hide-visualizations .visualizations-panel { display: none; }
-.main.hide-progression .progression-panel { display: none; }
+/* Panel hiding — !important needed to override visualizers.css and .panel */
+.main.hide-simulator .simulator-panel { display: none !important; }
+.main.hide-visualizations .visualizations-panel { display: none !important; }
+.main.hide-progression .progression-panel { display: none !important; }
 
 /* Grid adjustments: 1 panel hidden */
 .main.hide-simulator { grid-template-columns: 1fr 250px 250px; }
