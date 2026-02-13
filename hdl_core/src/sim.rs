@@ -64,7 +64,7 @@ impl Simulator {
         }
         Self {
             netlist,
-            max_comb_iters: 100,
+            max_comb_iters: 1000,
             ram_state,
             rom_state,
         }
