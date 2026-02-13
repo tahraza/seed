@@ -4106,6 +4106,29 @@ function setupEventListeners() {
         }
     });
 
+    // Panel toggle buttons
+    const panelMap = {
+        'toggle-simulator': 'hide-simulator',
+        'toggle-visualizations': 'hide-visualizations',
+        'toggle-progression': 'hide-progression',
+    };
+    Object.entries(panelMap).forEach(([btnId, cssClass]) => {
+        const btn = document.getElementById(btnId);
+        if (btn) {
+            btn.addEventListener('click', () => {
+                const main = document.querySelector('.main');
+                main.classList.toggle(cssClass);
+                btn.classList.toggle('active');
+                // Save state
+                const hidden = ['hide-simulator', 'hide-visualizations', 'hide-progression']
+                    .filter(c => main.classList.contains(c));
+                localStorage.setItem('seed-hidden-panels', JSON.stringify(hidden));
+                // Relayout Monaco after transition
+                setTimeout(() => { if (state.editor) state.editor.layout(); }, 50);
+            });
+        }
+    });
+
     // Window resize
     window.addEventListener('resize', () => {
         if (state.editor) {
@@ -4131,6 +4154,18 @@ async function init() {
     await initSimulator();
 
     setupEventListeners();
+
+    // Restore hidden panels from localStorage
+    try {
+        const hidden = JSON.parse(localStorage.getItem('seed-hidden-panels') || '[]');
+        const main = document.querySelector('.main');
+        const btnMap = { 'hide-simulator': 'toggle-simulator', 'hide-visualizations': 'toggle-visualizations', 'hide-progression': 'toggle-progression' };
+        hidden.forEach(cls => {
+            main.classList.add(cls);
+            const btn = document.getElementById(btnMap[cls]);
+            if (btn) btn.classList.remove('active');
+        });
+    } catch (e) {}
 
     // Navigate to next progression point
     navigateToNextProgressionPoint();

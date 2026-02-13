@@ -994,6 +994,58 @@ kbd {
 }
 
 /* ==========================================================================
+   Panel Toggle Buttons
+   ========================================================================== */
+
+.panel-toggles {
+    display: flex;
+    gap: 4px;
+}
+
+.toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.toggle-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.toggle-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Panel hiding */
+.main.hide-simulator .simulator-panel { display: none; }
+.main.hide-visualizations .visualizations-panel { display: none; }
+.main.hide-progression .progression-panel { display: none; }
+
+/* Grid adjustments: 1 panel hidden */
+.main.hide-simulator { grid-template-columns: 1fr 250px 250px; }
+.main.hide-visualizations { grid-template-columns: 1fr 280px 250px; }
+.main.hide-progression { grid-template-columns: 1fr 280px 250px; }
+
+/* 2 panels hidden */
+.main.hide-simulator.hide-visualizations { grid-template-columns: 1fr 250px; }
+.main.hide-simulator.hide-progression { grid-template-columns: 1fr 250px; }
+.main.hide-visualizations.hide-progression { grid-template-columns: 1fr 280px; }
+
+/* All 3 hidden */
+.main.hide-simulator.hide-visualizations.hide-progression { grid-template-columns: 1fr; }
+
+/* ==========================================================================
    Responsive
    ========================================================================== */
 
