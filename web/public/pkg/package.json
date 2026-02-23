@@ -1,0 +1,15 @@
+{
+  "name": "web_sim",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "web_sim_bg.wasm",
+    "web_sim.js",
+    "web_sim.d.ts"
+  ],
+  "main": "web_sim.js",
+  "types": "web_sim.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
