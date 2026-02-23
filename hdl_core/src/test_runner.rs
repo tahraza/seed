@@ -448,5 +448,111 @@ expect y 0
         assert!(result.passed, "Test échoué: {:?}", result.errors);
         assert_eq!(result.passed_checks, 2);
     }
+
+    #[test]
+    fn test_decoder32_full() {
+        let hdl = r#"
+entity Decoder32 is
+  port(
+    instr     : in bits(31 downto 0);
+    alu_op    : out bits(3 downto 0);
+    alu_src   : out bit;
+    reg_write : out bit;
+    mem_read  : out bit;
+    mem_write : out bit;
+    branch    : out bit;
+    set_flags : out bit;
+    mem_to_reg: out bit
+  );
+end entity;
+
+architecture rtl of Decoder32 is
+  signal class_bits : bits(2 downto 0);
+  signal is_alu_reg, is_alu_imm, is_alu : bit;
+  signal is_ldst, is_load, is_store : bit;
+  signal is_branch : bit;
+  signal is_cmp, is_tst, is_cmp_tst : bit;
+  signal alu_opcode : bits(3 downto 0);
+begin
+  class_bits <= instr(27 downto 25);
+  alu_opcode <= instr(24 downto 21);
+
+  is_alu_reg <= (class_bits = 0b000);
+  is_alu_imm <= (class_bits = 0b001);
+  is_alu <= is_alu_reg or is_alu_imm;
+  is_ldst <= (class_bits = 0b010);
+  is_branch <= (class_bits = 0b011);
+
+  is_load <= is_ldst and instr(24);
+  is_store <= is_ldst and (not instr(24));
+
+  is_cmp <= is_alu and (alu_opcode = 0b0111);
+  is_tst <= is_alu and (alu_opcode = 0b1000);
+  is_cmp_tst <= is_cmp or is_tst;
+
+  alu_op <= alu_opcode;
+  alu_src <= is_alu_imm;
+  reg_write <= (is_alu and (not is_cmp_tst)) or is_load;
+  mem_read <= is_load;
+  mem_write <= is_store;
+  mem_to_reg <= is_load;
+  branch <= is_branch;
+  set_flags <= (instr(20) and is_alu) or is_cmp_tst;
+end architecture;
+"#;
+
+        let test_script = r#"
+load Decoder32
+set instr 0xE0600000
+eval
+expect alu_op 0b0011
+expect alu_src 0
+expect reg_write 1
+expect mem_read 0
+expect mem_write 0
+expect branch 0
+expect set_flags 0
+set instr 0xE0700000
+eval
+expect set_flags 1
+expect reg_write 1
+set instr 0xE260000A
+eval
+expect alu_op 0b0011
+expect alu_src 1
+expect reg_write 1
+expect set_flags 0
+set instr 0xE0F00000
+eval
+expect alu_op 0b0111
+expect reg_write 0
+expect set_flags 1
+set instr 0xE1100000
+eval
+expect alu_op 0b1000
+expect reg_write 0
+expect set_flags 1
+set instr 0xE5000000
+eval
+expect mem_read 1
+expect mem_write 0
+expect reg_write 1
+expect mem_to_reg 1
+set instr 0xE4000000
+eval
+expect mem_read 0
+expect mem_write 1
+expect reg_write 0
+set instr 0xE6000000
+eval
+expect branch 1
+expect reg_write 0
+"#;
+
+        let library = HashMap::new();
+        let result = run_test(hdl, test_script, &library).unwrap();
+        assert!(result.passed, "Decoder32 failed: {:?}", result.errors);
+        assert_eq!(result.passed_checks, 28);
+    }
 }
 
