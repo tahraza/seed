@@ -2040,7 +2040,7 @@ architecture rtl of CPU is
   end component;
   component ALU
     port(a,b : in bits(15 downto 0); op : in bits(1 downto 0);
-         y : out bits(15 downto 0); zero,neg : out bit);
+         y : out bits(15 downto 0); zero,neg,carry,overflow : out bit);
   end component;
   component PC
     port(clk : in bit; d : in bits(15 downto 0); inc,load,reset : in bit; q : out bits(15 downto 0));
@@ -2062,7 +2062,7 @@ architecture rtl of CPU is
   signal pc_val, branch_target : bits(15 downto 0);
   signal reg_data1, reg_data2, alu_result : bits(15 downto 0);
   signal write_data : bits(15 downto 0);
-  signal zero_flag, neg_flag : bit;
+  signal zero_flag, neg_flag, carry_flag, overflow_flag : bit;
   signal not_reset : bit;
   component Inv
     port(a : in bit; y : out bit);
@@ -2092,7 +2092,8 @@ begin
   -- ALU
   u_alu: ALU port map (
     a => reg_data1, b => reg_data2, op => alu_op,
-    y => alu_result, zero => zero_flag, neg => neg_flag
+    y => alu_result, zero => zero_flag, neg => neg_flag,
+    carry => carry_flag, overflow => overflow_flag
   );
 
   -- Write back mux (ALU result or memory)
