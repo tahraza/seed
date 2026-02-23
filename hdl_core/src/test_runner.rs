@@ -413,5 +413,40 @@ expect y 0x5555
         assert!(result.passed, "Test échoué: {:?}", result.errors);
         assert_eq!(result.passed_checks, 3);
     }
+
+    #[test]
+    fn test_eq_comparison_msb_set() {
+        // Regression: comparing a 4-bit signal with MSB=1 against an integer
+        // literal like 0b1000 (parsed as Int(8), 32 bits) must use zero-extension,
+        // not sign-extension, for the shorter bitwise operand.
+        let hdl = r#"
+entity EqTest is
+  port(
+    x : in bits(3 downto 0);
+    y : out bit
+  );
+end entity;
+
+architecture rtl of EqTest is
+begin
+  y <= (x = 0b1000);
+end architecture;
+"#;
+
+        let test_script = r#"
+load EqTest
+set x 0b1000
+eval
+expect y 1
+set x 0b0111
+eval
+expect y 0
+"#;
+
+        let library = HashMap::new();
+        let result = run_test(hdl, test_script, &library).unwrap();
+        assert!(result.passed, "Test échoué: {:?}", result.errors);
+        assert_eq!(result.passed_checks, 2);
+    }
 }
 

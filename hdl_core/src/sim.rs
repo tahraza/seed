@@ -450,8 +450,8 @@ impl Simulator {
 
     fn value_eq(&self, a: &Value, b: &Value) -> bool {
         let w = a.bits.width().max(b.bits.width());
-        let aa = a.bits.resize_sign(w);
-        let bb = b.bits.resize_sign(w);
+        let aa = Self::value_to_width(a, w);
+        let bb = Self::value_to_width(b, w);
         aa == bb
     }
 
