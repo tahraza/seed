@@ -2979,7 +2979,7 @@ Logiques)</h2>
 <span id="cb69-22"><a href="#cb69-22" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end component;</span></span>
 <span id="cb69-23"><a href="#cb69-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">component</span> <span class="dv">ALU</span></span>
 <span id="cb69-24"><a href="#cb69-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">port</span>(a<span class="ot">,</span>b <span class="ot">:</span> <span class="kw">in</span> bits(<span class="dv">15</span> <span class="ot">downto</span> <span class="dv">0</span>); op <span class="ot">:</span> <span class="kw">in</span> bits(<span class="dv">1</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
-<span id="cb69-25"><a href="#cb69-25" aria-hidden="true" tabindex="-1"></a>         y <span class="ot">:</span> <span class="kw">out</span> bits(<span class="dv">15</span> <span class="ot">downto</span> <span class="dv">0</span>); zero<span class="ot">,</span>neg <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span>);</span>
+<span id="cb69-25"><a href="#cb69-25" aria-hidden="true" tabindex="-1"></a>         y <span class="ot">:</span> <span class="kw">out</span> bits(<span class="dv">15</span> <span class="ot">downto</span> <span class="dv">0</span>); zero<span class="ot">,</span>neg<span class="ot">,</span>carry<span class="ot">,</span>overflow <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span>);</span>
 <span id="cb69-26"><a href="#cb69-26" aria-hidden="true" tabindex="-1"></a>  <span class="cf">end component;</span></span>
 <span id="cb69-27"><a href="#cb69-27" aria-hidden="true" tabindex="-1"></a>  <span class="cf">component</span> <span class="dv">PC</span></span>
 <span id="cb69-28"><a href="#cb69-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">port</span>(clk <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; d <span class="ot">:</span> <span class="kw">in</span> bits(<span class="dv">15</span> <span class="ot">downto</span> <span class="dv">0</span>); inc<span class="ot">,</span>load<span class="ot">,</span>reset <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; q <span class="ot">:</span> <span class="kw">out</span> bits(<span class="dv">15</span> <span class="ot">downto</span> <span class="dv">0</span>));</span>
@@ -3001,7 +3001,7 @@ Logiques)</h2>
 <span id="cb69-44"><a href="#cb69-44" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> pc_val<span class="ot">,</span> branch_target <span class="ot">:</span> bits(<span class="dv">15</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
 <span id="cb69-45"><a href="#cb69-45" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> reg_data1<span class="ot">,</span> reg_data2<span class="ot">,</span> alu_result <span class="ot">:</span> bits(<span class="dv">15</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
 <span id="cb69-46"><a href="#cb69-46" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> write_data <span class="ot">:</span> bits(<span class="dv">15</span> <span class="ot">downto</span> <span class="dv">0</span>);</span>
-<span id="cb69-47"><a href="#cb69-47" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> zero_flag<span class="ot">,</span> neg_flag <span class="ot">:</span> <span class="dt">bit</span>;</span>
+<span id="cb69-47"><a href="#cb69-47" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> zero_flag<span class="ot">,</span> neg_flag<span class="ot">,</span> carry_flag<span class="ot">,</span> overflow_flag <span class="ot">:</span> <span class="dt">bit</span>;</span>
 <span id="cb69-48"><a href="#cb69-48" aria-hidden="true" tabindex="-1"></a>  <span class="ot">signal</span> not_reset <span class="ot">:</span> <span class="dt">bit</span>;</span>
 <span id="cb69-49"><a href="#cb69-49" aria-hidden="true" tabindex="-1"></a>  <span class="cf">component</span> <span class="dv">Inv</span></span>
 <span id="cb69-50"><a href="#cb69-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">port</span>(a <span class="ot">:</span> <span class="kw">in</span> <span class="dt">bit</span>; y <span class="ot">:</span> <span class="kw">out</span> <span class="dt">bit</span>);</span>
@@ -3031,28 +3031,29 @@ Logiques)</h2>
 <span id="cb69-74"><a href="#cb69-74" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- ALU</span></span>
 <span id="cb69-75"><a href="#cb69-75" aria-hidden="true" tabindex="-1"></a>  <span class="dv">u_alu</span><span class="ot">:</span> <span class="fu">ALU</span> <span class="kw">port map </span>(</span>
 <span id="cb69-76"><a href="#cb69-76" aria-hidden="true" tabindex="-1"></a>    a <span class="ot">=&gt;</span> reg_data1<span class="ot">,</span> b <span class="ot">=&gt;</span> reg_data2<span class="ot">,</span> op <span class="ot">=&gt;</span> alu_op<span class="ot">,</span></span>
-<span id="cb69-77"><a href="#cb69-77" aria-hidden="true" tabindex="-1"></a>    y <span class="ot">=&gt;</span> alu_result<span class="ot">,</span> zero <span class="ot">=&gt;</span> zero_flag<span class="ot">,</span> neg <span class="ot">=&gt;</span> neg_flag</span>
-<span id="cb69-78"><a href="#cb69-78" aria-hidden="true" tabindex="-1"></a>  );</span>
-<span id="cb69-79"><a href="#cb69-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb69-80"><a href="#cb69-80" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Write back mux (ALU result or memory)</span></span>
-<span id="cb69-81"><a href="#cb69-81" aria-hidden="true" tabindex="-1"></a>  <span class="dv">u_wb_mux</span><span class="ot">:</span> <span class="fu">Mux16</span> <span class="kw">port map </span>(</span>
-<span id="cb69-82"><a href="#cb69-82" aria-hidden="true" tabindex="-1"></a>    a <span class="ot">=&gt;</span> alu_result<span class="ot">,</span> b <span class="ot">=&gt;</span> mem_in<span class="ot">,</span> sel <span class="ot">=&gt;</span> mem_rd<span class="ot">,</span> y <span class="ot">=&gt;</span> write_data</span>
-<span id="cb69-83"><a href="#cb69-83" aria-hidden="true" tabindex="-1"></a>  );</span>
-<span id="cb69-84"><a href="#cb69-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb69-85"><a href="#cb69-85" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Program counter</span></span>
-<span id="cb69-86"><a href="#cb69-86" aria-hidden="true" tabindex="-1"></a>  <span class="dv">inv_reset</span><span class="ot">:</span> <span class="fu">Inv</span> <span class="kw">port map </span>(a <span class="ot">=&gt;</span> reset<span class="ot">,</span> y <span class="ot">=&gt;</span> not_reset);</span>
-<span id="cb69-87"><a href="#cb69-87" aria-hidden="true" tabindex="-1"></a>  branch_target <span class="ot">&lt;=</span> reg_data1;</span>
-<span id="cb69-88"><a href="#cb69-88" aria-hidden="true" tabindex="-1"></a>  <span class="dv">u_pc</span><span class="ot">:</span> <span class="fu">PC</span> <span class="kw">port map </span>(</span>
-<span id="cb69-89"><a href="#cb69-89" aria-hidden="true" tabindex="-1"></a>    clk <span class="ot">=&gt;</span> clk<span class="ot">,</span> d <span class="ot">=&gt;</span> branch_target<span class="ot">,</span></span>
-<span id="cb69-90"><a href="#cb69-90" aria-hidden="true" tabindex="-1"></a>    inc <span class="ot">=&gt;</span> not_reset<span class="ot">,</span> load <span class="ot">=&gt;</span> pc_src<span class="ot">,</span> reset <span class="ot">=&gt;</span> reset<span class="ot">,</span> q <span class="ot">=&gt;</span> pc_val</span>
-<span id="cb69-91"><a href="#cb69-91" aria-hidden="true" tabindex="-1"></a>  );</span>
-<span id="cb69-92"><a href="#cb69-92" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb69-93"><a href="#cb69-93" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Outputs</span></span>
-<span id="cb69-94"><a href="#cb69-94" aria-hidden="true" tabindex="-1"></a>  pc_out <span class="ot">&lt;=</span> pc_val;</span>
-<span id="cb69-95"><a href="#cb69-95" aria-hidden="true" tabindex="-1"></a>  mem_addr <span class="ot">&lt;=</span> alu_result;</span>
-<span id="cb69-96"><a href="#cb69-96" aria-hidden="true" tabindex="-1"></a>  mem_out <span class="ot">&lt;=</span> reg_data2;</span>
-<span id="cb69-97"><a href="#cb69-97" aria-hidden="true" tabindex="-1"></a>  mem_we <span class="ot">&lt;=</span> mem_wr;</span>
-<span id="cb69-98"><a href="#cb69-98" aria-hidden="true" tabindex="-1"></a><span class="cf">end architecture;</span></span></code></pre></div>
+<span id="cb69-77"><a href="#cb69-77" aria-hidden="true" tabindex="-1"></a>    y <span class="ot">=&gt;</span> alu_result<span class="ot">,</span> zero <span class="ot">=&gt;</span> zero_flag<span class="ot">,</span> neg <span class="ot">=&gt;</span> neg_flag<span class="ot">,</span></span>
+<span id="cb69-78"><a href="#cb69-78" aria-hidden="true" tabindex="-1"></a>    carry <span class="ot">=&gt;</span> carry_flag<span class="ot">,</span> overflow <span class="ot">=&gt;</span> overflow_flag</span>
+<span id="cb69-79"><a href="#cb69-79" aria-hidden="true" tabindex="-1"></a>  );</span>
+<span id="cb69-80"><a href="#cb69-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb69-81"><a href="#cb69-81" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Write back mux (ALU result or memory)</span></span>
+<span id="cb69-82"><a href="#cb69-82" aria-hidden="true" tabindex="-1"></a>  <span class="dv">u_wb_mux</span><span class="ot">:</span> <span class="fu">Mux16</span> <span class="kw">port map </span>(</span>
+<span id="cb69-83"><a href="#cb69-83" aria-hidden="true" tabindex="-1"></a>    a <span class="ot">=&gt;</span> alu_result<span class="ot">,</span> b <span class="ot">=&gt;</span> mem_in<span class="ot">,</span> sel <span class="ot">=&gt;</span> mem_rd<span class="ot">,</span> y <span class="ot">=&gt;</span> write_data</span>
+<span id="cb69-84"><a href="#cb69-84" aria-hidden="true" tabindex="-1"></a>  );</span>
+<span id="cb69-85"><a href="#cb69-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb69-86"><a href="#cb69-86" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Program counter</span></span>
+<span id="cb69-87"><a href="#cb69-87" aria-hidden="true" tabindex="-1"></a>  <span class="dv">inv_reset</span><span class="ot">:</span> <span class="fu">Inv</span> <span class="kw">port map </span>(a <span class="ot">=&gt;</span> reset<span class="ot">,</span> y <span class="ot">=&gt;</span> not_reset);</span>
+<span id="cb69-88"><a href="#cb69-88" aria-hidden="true" tabindex="-1"></a>  branch_target <span class="ot">&lt;=</span> reg_data1;</span>
+<span id="cb69-89"><a href="#cb69-89" aria-hidden="true" tabindex="-1"></a>  <span class="dv">u_pc</span><span class="ot">:</span> <span class="fu">PC</span> <span class="kw">port map </span>(</span>
+<span id="cb69-90"><a href="#cb69-90" aria-hidden="true" tabindex="-1"></a>    clk <span class="ot">=&gt;</span> clk<span class="ot">,</span> d <span class="ot">=&gt;</span> branch_target<span class="ot">,</span></span>
+<span id="cb69-91"><a href="#cb69-91" aria-hidden="true" tabindex="-1"></a>    inc <span class="ot">=&gt;</span> not_reset<span class="ot">,</span> load <span class="ot">=&gt;</span> pc_src<span class="ot">,</span> reset <span class="ot">=&gt;</span> reset<span class="ot">,</span> q <span class="ot">=&gt;</span> pc_val</span>
+<span id="cb69-92"><a href="#cb69-92" aria-hidden="true" tabindex="-1"></a>  );</span>
+<span id="cb69-93"><a href="#cb69-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb69-94"><a href="#cb69-94" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Outputs</span></span>
+<span id="cb69-95"><a href="#cb69-95" aria-hidden="true" tabindex="-1"></a>  pc_out <span class="ot">&lt;=</span> pc_val;</span>
+<span id="cb69-96"><a href="#cb69-96" aria-hidden="true" tabindex="-1"></a>  mem_addr <span class="ot">&lt;=</span> alu_result;</span>
+<span id="cb69-97"><a href="#cb69-97" aria-hidden="true" tabindex="-1"></a>  mem_out <span class="ot">&lt;=</span> reg_data2;</span>
+<span id="cb69-98"><a href="#cb69-98" aria-hidden="true" tabindex="-1"></a>  mem_we <span class="ot">&lt;=</span> mem_wr;</span>
+<span id="cb69-99"><a href="#cb69-99" aria-hidden="true" tabindex="-1"></a><span class="cf">end architecture;</span></span></code></pre></div>
 <hr />
 <h3 data-number="2.1.48" id="if_id_reg"><span class="header-section-number">2.1.48</span> IF_ID_Reg</h3>
 <div class="sourceCode" id="cb70"><pre class="sourceCode vhdl"><code class="sourceCode vhdl"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- IF/ID Pipeline Register</span></span>
